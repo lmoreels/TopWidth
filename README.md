@@ -1,6 +1,6 @@
-## TopWidth
+# TopWidth
 
-#Set up CMSSW to get correct ROOT version, ...
+## Set up CMSSW to get correct ROOT version, ...
 
 export SCRAM_ARCH=slc6_amd64_gcc491
 
@@ -12,7 +12,7 @@ cmsenv
 
 git cms-init
 
-# Get TopTreeProducer from git
+## Get TopTreeProducer from git
 
 git clone https://github.com/TopBrussels/TopTreeProducer TopTreeProducer
 
@@ -26,7 +26,7 @@ make
 
 cd ../../..
 
-# Get TopTreeAnalysisBase from git
+## Get TopTreeAnalysisBase from git
 
 git clone https://github.com/TopBrussels/TopTreeAnalysisBase TopTreeAnalysisBase/
 
@@ -38,9 +38,9 @@ make
 
 cd ../../
 
-#Get private code directory from git
+##Get private code directory from git
 
-#Make a new local repository and check the box to create a readme file.
+Make a new local repository and check the box to create a readme file.
 
 git clone https://github.com/lmoreels/TopWidth TopWidth
 
