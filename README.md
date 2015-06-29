@@ -16,7 +16,7 @@ git cms-init
 
 git clone https://github.com/TopBrussels/TopTreeProducer TopTreeProducer
 
-cd TopBrussels/TopTreeProducer/
+cd TopTreeProducer/
 
 git checkout CMSSW_74X
 
@@ -24,24 +24,36 @@ cd src
 
 make
 
-cd ../../..
+cd ../..
+
+scram b -j8
+(I did this after I got all the packages, but then there are problems with TopTreeAnalysisBase.)
 
 ## Get TopTreeAnalysisBase from git
 
 git clone https://github.com/TopBrussels/TopTreeAnalysisBase TopTreeAnalysisBase/
 
-cd TopBrussels/TopTreeAnalysisBase/
+cd TopTreeAnalysisBase/
 
 git checkout CMSSW_74X
 
 make
 
-cd ../../
+cd ..
 
-##Get private code directory from git
+## Get private code directory from git
 
 Make a new local repository and check the box to create a readme file.
 
 git clone https://github.com/lmoreels/TopWidth TopWidth
 
 git checkout master
+
+
+## Compile
+
+source compile.sh
+
+## Run
+
+./testAnalyser

@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
   // Configuration
   /////////////////////
 
-  string xmlFileName ="config/testconfig.xml";
+  string xmlFileName ="config/test.xml";
 
   if (argc > 1)
       xmlFileName = (string)argv[1];
