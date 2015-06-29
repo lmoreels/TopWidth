@@ -43,9 +43,12 @@ cd ..
 
 ## Get private code directory from git
 
-Make a new local repository and check the box to create a readme file.
+--Make a new local repository on the website and check the box to create a readme file.
+Now you can clone this repository in different ways:
+If you use the https link, you will need to enter your username and password each time you push, pull or fetch.
+If you use the ssh link, you need to enter the passphrase of your ssh key.--
 
-git clone https://github.com/lmoreels/TopWidth TopWidth
+git clone ssh://git@github.com/lmoreels/TopWidth TopWidth
 
 git checkout master
 
