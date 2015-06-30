@@ -1,6 +1,8 @@
 # TopWidth
 
-## Set up CMSSW to get correct ROOT version, ...
+## Set up CMSSW
+
+--To get correct versions of ROOT, python, ... (You need ROOT 6)--
 
 export SCRAM_ARCH=slc6_amd64_gcc491
 
@@ -14,9 +16,11 @@ git cms-init
 
 ## Get TopTreeProducer from git
 
-git clone https://github.com/TopBrussels/TopTreeProducer TopTreeProducer
+--Make sure to add the 'TopBrussels' directory. Otherwise the compilation later on will fail.--
 
-cd TopTreeProducer/
+git clone https://github.com/TopBrussels/TopTreeProducer TopBrussels/TopTreeProducer
+
+cd TopBrussels/TopTreeProducer/
 
 git checkout CMSSW_74X
 
@@ -24,22 +28,24 @@ cd src
 
 make
 
-cd ../..
-
-scram b -j8
-(I did this after I got all the packages, but then there are problems with TopTreeAnalysisBase.)
+cd ../../..
 
 ## Get TopTreeAnalysisBase from git
 
-git clone https://github.com/TopBrussels/TopTreeAnalysisBase TopTreeAnalysisBase/
+git clone https://github.com/TopBrussels/TopTreeAnalysisBase TopBrussels/TopTreeAnalysisBase/
 
-cd TopTreeAnalysisBase/
+cd TopBrussels/TopTreeAnalysisBase/
 
 git checkout CMSSW_74X
 
 make
 
-cd ..
+cd ../..
+
+## Compile CMSSW and TopBrussels packages
+
+scram b -j16
+
 
 ## Get private code directory from git
 
@@ -53,7 +59,7 @@ git clone ssh://git@github.com/lmoreels/TopWidth TopWidth
 git checkout master
 
 
-## Compile
+## Compile and make executables of all macros
 
 source compile.sh
 
