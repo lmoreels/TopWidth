@@ -62,6 +62,8 @@ int main (int argc, char *argv[])
   int nofSelectedEvents = 0;
   int nofMatchedEvents = 0;
   int nb_bTags = 0;
+  float genTopMass = 173;
+  float genTopWidth = 1.4915;
   
   
   /// xml file
@@ -186,6 +188,8 @@ int main (int argc, char *argv[])
   histo1D["muon_Eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
   histo1D["leadingJet_pT"] = new TH1F("leadingJet_pT","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
+  histo1D["W_Mass_Reco_matched"] = new TH1F("W_Mass_Reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
+  histo1D["top_Mass_Reco_matched"] = new TH1F("top_Mass_Reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
   
   
   
@@ -484,7 +488,7 @@ int main (int argc, char *argv[])
           if (verbose > 3)
             cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << endl;
           
-          //if ( mcParticles[i]->status() != 3) continue;  // 3 is not correct anymore!!
+          //if ( mcParticles[i]->status() != 3) continue;  // Pythia8: 3 is not correct status anymore!!
           
           if ( mcParticles[i]->type() == pdgID_top )
             topQuark = *mcParticles[i];
@@ -495,26 +499,28 @@ int main (int argc, char *argv[])
           {
             muMinusFromTop = true;
             genmuon = i;  // FIX ME: More than 1 mcparticle corresponds!
+            if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
+            //if (ievt == 406 || ievt == 803)
+              cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           if ( mcParticles[i]->type() == -13 && mcParticles[i]->motherType() == 24 && mcParticles[i]->grannyType() == pdgID_top )		// mu+, W+, t
           {
             muPlusFromTop = true;
             genmuon = i;  // FIX ME: More than 1 mcparticle corresponds!
+            if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
+            //if (ievt == 406 || ievt == 803)
+              cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
 	    		}
           
           if ( abs(mcParticles[i]->type()) < 6 || abs(mcParticles[i]->type()) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
           {
             mcParticlesTLV.push_back(*mcParticles[i]);
             mcParticlesMatching_.push_back(mcParticles[i]);
+            if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
+            //if (ievt == 406 || ievt == 803)
+              cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           
-        }
-        
-        if (verbose > 2)
-        {
-          cout << "Size mcParticles:          " << mcParticles.size() << endl;
-          cout << "Size mcParticlesTLV:       " << mcParticlesTLV.size() << endl;
-          cout << "Size mcParticlesMatching_: " << mcParticlesMatching_.size() << endl;
         }
         
         // take all the selectedJets_ to study the radiation stuff, selectedJets_ are already ordened in decreasing Pt()
@@ -522,15 +528,18 @@ int main (int argc, char *argv[])
           selectedJetsTLV.push_back(*selectedJets[i]);
         
         if (verbose > 2)
-          cout << "selectedJetsTLV " << selectedJetsTLV.size() << endl;
+        {
+          cout << "Size mcParticles:          " << mcParticles.size() << endl;
+          cout << "Size mcParticlesTLV:       " << mcParticlesTLV.size() << endl;
+          cout << "Size mcParticlesMatching_: " << mcParticlesMatching_.size() << endl;
+          cout << "Size selectedJetsTLV:      " << selectedJetsTLV.size() << endl;
+        }
+        
         
         JetPartonMatching matching = JetPartonMatching(mcParticlesTLV, selectedJetsTLV, 2, true, true, 0.3);		// partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
         
         if (matching.getNumberOfAvailableCombinations() != 1)
           cerr << "matching.getNumberOfAvailableCombinations() = "<<matching.getNumberOfAvailableCombinations()<<" .  This should be equal to 1 !!!"<<endl;
-        
-        if (verbose > 2)
-          cout << "Matching done" << endl;
         
         
         vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
@@ -541,6 +550,9 @@ int main (int argc, char *argv[])
           if (matchedJetNumber > -1)
             JetPartonPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
         }
+        
+        if (verbose > 2)
+          cout << "Matching done" << endl;
         
         for (unsigned int i = 0; i < JetPartonPair.size(); i++)
         {
@@ -607,13 +619,34 @@ int main (int argc, char *argv[])
       
       
       
+      //////////////////////////////////
+      ///  TOP PROPAGATOR (MATCHED)  ///
+      //////////////////////////////////
+      
+      if ( all4PartonsMatched )
+      {
+        /// MCPermutation = JetPartonPair[i].first  = jet number
+        ///                 JetPartonPair[i].second = parton number
+        /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+        
+        float WMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]]).M();
+        float topMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]] + *selectedJets[MCPermutation[2]]).M();
+        
+        /// Fill plots
+        histo1D["W_Mass_Reco_matched"]->Fill(WMassReco);
+        histo1D["top_Mass_Reco_matched"]->Fill(topMassReco);
+      }
+      
+      
+      
       ////////////////////
       ///  FILL PLOTS  ///
       ////////////////////
       
       double HT = selectedJets[0]->Pt()+selectedJets[1]->Pt()+selectedJets[2]->Pt()+selectedJets[3]->Pt();
       
-      if ( dataSetName.find("TT") == 0 ) {
+      if ( dataSetName.find("TT") == 0 )
+      {
         histo1D["muon_pT"]->Fill(selectedMuons[0]->Pt());
         histo1D["muon_Eta"]->Fill(selectedMuons[0]->Eta());
         histo1D["leadingJet_pT"]->Fill(selectedJets[0]->Pt());
