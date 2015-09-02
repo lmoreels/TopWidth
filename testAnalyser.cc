@@ -14,6 +14,9 @@
 #include <sys/stat.h>
 #include <map>
 #include <TH1.h>
+#include <TH2.h>
+#include <array>
+#include <vector>
 #include <TLorentzVector.h>
 
 //used TopTreeAnalysis classes
@@ -62,8 +65,6 @@ int main (int argc, char *argv[])
   int nofSelectedEvents = 0;
   int nofMatchedEvents = 0;
   int nb_bTags = 0;
-  float genTopMass = 173;
-  float genTopWidth = 1.4915;
   
   
   /// xml file
@@ -181,8 +182,8 @@ int main (int argc, char *argv[])
   ///  Normal Plots (TH1F* and TH2F*)
   ////////////////////////////////////
 	
-	map<string,TH1F*> histo1D;
-  //map<string,TH2F*> histo2D;
+  map<string,TH1F*> histo1D;
+  map<string,TH2F*> histo2D;
   
   histo1D["muon_pT"] = new TH1F("muon_pT","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
   histo1D["muon_Eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
@@ -190,6 +191,10 @@ int main (int argc, char *argv[])
   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   histo1D["W_Mass_Reco_matched"] = new TH1F("W_Mass_Reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Reco_matched"] = new TH1F("top_Mass_Reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
+  histo1D["top_Mass_Gen_matched"] = new TH1F("top_Mass_Gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
+  
+  histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 169.75, 174.75, 35, 0.55, 4.05);
+  histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 169.75, 174.75, 35, 0.55, 4.05);
   
   
   
@@ -237,6 +242,25 @@ int main (int argc, char *argv[])
   
   
   
+  /////////////////////////////////////////////
+  ///  Define variables for top propagator  ///
+  /////////////////////////////////////////////
+  
+  float genTopMass = 173;  // Check!
+  float genTopWidth = 1.4915;  // Check!
+  float listTopMass[] = {170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5};
+  float listTopWidth[] = {0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0};
+  const int sizeListTopMass = sizeof(listTopMass)/sizeof(listTopMass[0]);
+  const int sizeListTopWidth = sizeof(listTopWidth)/sizeof(listTopWidth[0]);
+  
+  double gammaProp, numTopPropagator;
+  double denomTopPropagator_gen, topPropagator_gen;
+  double denomTopPropagator_reco, topPropagator_reco;
+  double likelihood_gen[sizeListTopMass][sizeListTopWidth] = {{0}};
+  double likelihood_reco[sizeListTopMass][sizeListTopWidth] = {{0}};
+  
+  
+  
   ////////////////////////////////////
   ///  Loop on datasets
   ////////////////////////////////////
@@ -245,9 +269,7 @@ int main (int argc, char *argv[])
     cout << " - Loop over datasets ... " << datasets.size() << " datasets !" << endl;
   
   for (unsigned int d = 0; d < datasets.size(); d++)
-  {
-    if ( (datasets[d]->Name()).find("TT") != 0 ) { cout << "Only consider TTbar at the moment" << endl; continue; }
-    
+  { 
     cout << "equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
     string previousFilename = "";
     int iFile = -1;
@@ -275,8 +297,8 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    for (unsigned int ievt = 0; ievt < 2000; ievt++)
+    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    //for (unsigned int ievt = 0; ievt < 4000; ievt++)
     {
       vector < TRootVertex* > vertex;
       vector < TRootMuon* > init_muons;
@@ -448,7 +470,7 @@ int main (int argc, char *argv[])
       nofSelectedEvents++;
       
       if (verbose > 2)
-        cout << "  Event " << ievt << " is selected" << endl;
+        cout << endl << "  Event " << ievt << " is selected" << endl;
       
       
       
@@ -483,12 +505,28 @@ int main (int argc, char *argv[])
         bool muPlusFromTop = false, muMinusFromTop = false;
         mcParticlesMatching_.clear();
         
+        std::vector<double> previousMCParticle (6, -1.);
+        std::vector<double> currentMCParticle;
+        
         for (unsigned int i = 0; i < mcParticles.size(); i++)
         {
           if (verbose > 3)
             cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << endl;
           
           //if ( mcParticles[i]->status() != 3) continue;  // Pythia8: 3 is not correct status anymore!!
+          if ( mcParticles[i]->status() != 23) continue; 
+          
+          currentMCParticle.clear();
+          currentMCParticle.push_back(mcParticles[i]->type());  currentMCParticle.push_back(mcParticles[i]->motherType()); currentMCParticle.push_back(mcParticles[i]->grannyType()); currentMCParticle.push_back(mcParticles[i]->Pt()); currentMCParticle.push_back(mcParticles[i]->Eta()); currentMCParticle.push_back(mcParticles[i]->Phi());
+          //cout << "Previous MCParticle:     " << previousMCParticle[0] << "   " << previousMCParticle[1] << "   " << previousMCParticle[2] << "   " << previousMCParticle[3] << "   " << previousMCParticle[4] << "   " << previousMCParticle[5] << endl;
+          //cout << "Current MCParticle:      " << currentMCParticle[0] << "   " << currentMCParticle[1] << "   " << currentMCParticle[2] << "   " << currentMCParticle[3] << "   " << currentMCParticle[4] << "   " << currentMCParticle[5] << endl;
+          if ( currentMCParticle[0] == previousMCParticle[0] && currentMCParticle[1] == previousMCParticle[1] && currentMCParticle[2] == previousMCParticle[2] && currentMCParticle[3] == previousMCParticle[3] && currentMCParticle[4] == previousMCParticle[4] && currentMCParticle[5] == previousMCParticle[5] )
+            continue;
+          else
+          {
+            previousMCParticle = currentMCParticle;
+          }
+          //cout << "New Previous MCParticle: " << previousMCParticle[0] << "   " << previousMCParticle[1] << "   " << previousMCParticle[2] << "   " << previousMCParticle[3] << "   " << previousMCParticle[4] << "   " << previousMCParticle[5] << endl << endl;
           
           if ( mcParticles[i]->type() == pdgID_top )
             topQuark = *mcParticles[i];
@@ -498,17 +536,17 @@ int main (int argc, char *argv[])
           if ( mcParticles[i]->type() == 13 && mcParticles[i]->motherType() == -24 && mcParticles[i]->grannyType() == -pdgID_top )		// mu-, W-, tbar
           {
             muMinusFromTop = true;
-            genmuon = i;  // FIX ME: More than 1 mcparticle corresponds!
-            if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
-            //if (ievt == 406 || ievt == 803)
+            genmuon = i;
+            if ( verbose > 2 && (ievt == 1134 || ievt == 1903 || ievt == 2023 || ievt == 3845) )
+            //if (ievt == 19018)
               cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           if ( mcParticles[i]->type() == -13 && mcParticles[i]->motherType() == 24 && mcParticles[i]->grannyType() == pdgID_top )		// mu+, W+, t
           {
             muPlusFromTop = true;
-            genmuon = i;  // FIX ME: More than 1 mcparticle corresponds!
-            if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
-            //if (ievt == 406 || ievt == 803)
+            genmuon = i;
+            if ( verbose > 2 && (ievt == 1134 || ievt == 1903 || ievt == 2023 || ievt == 3845) )
+            //if (ievt == 19018)
               cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
 	    		}
           
@@ -517,7 +555,7 @@ int main (int argc, char *argv[])
             mcParticlesTLV.push_back(*mcParticles[i]);
             mcParticlesMatching_.push_back(mcParticles[i]);
             if ( verbose > 2 && (ievt == 1134 || ievt == 1903) )
-            //if (ievt == 406 || ievt == 803)
+            //if (ievt == 19018)
               cout << i << "  Status: " << mcParticles[i]->status() << "  pdgId: " << mcParticles[i]->type() << "  Mother: " << mcParticles[i]->motherType() << "  Granny: " << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           
@@ -563,6 +601,8 @@ int main (int argc, char *argv[])
             if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == -24 && mcParticlesMatching_[j]->grannyType() == -pdgID_top )
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == 24 && mcParticlesMatching_[j]->grannyType() == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
             {
+              if (verbose > 2)
+                cout << "Light jet: " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               if (hadronicWJet1_.first == 9999)
               {
                 hadronicWJet1_ = JetPartonPair[i];
@@ -578,6 +618,7 @@ int main (int argc, char *argv[])
                 cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
                 cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
                 cerr << " -- pdgId: " << mcParticlesMatching_[j]->type() << " mother: " << mcParticlesMatching_[j]->motherType() << " granny: " << mcParticlesMatching_[j]->grannyType() << " Pt: " << mcParticlesMatching_[j]->Pt() << endl;
+                cerr << " -- ievt: " << ievt << endl;
                 exit(1);
               }
             }
@@ -587,12 +628,16 @@ int main (int argc, char *argv[])
             if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == -pdgID_top )
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
             {
+              if (verbose > 2)
+                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               hadronicBJet_ = JetPartonPair[i];
               MCPermutation[2] = JetPartonPair[i].first;
             }
             else if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == pdgID_top )
               || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == -pdgID_top ) )
             {
+              if (verbose > 2)
+                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               leptonicBJet_ = JetPartonPair[i];
               MCPermutation[3] = JetPartonPair[i].first;
             }
@@ -600,18 +645,19 @@ int main (int argc, char *argv[])
         }  /// End loop over Jet Parton Pairs
         
         
-        if (hadronicWJet1_.first != 9999 && hadronicWJet2_.first != 9999 && hadronicBJet_.first != 9999 && leptonicBJet_.first != 9999) {
+        if (hadronicWJet1_.first != 9999 && hadronicWJet2_.first != 9999 && hadronicBJet_.first != 9999 && leptonicBJet_.first != 9999)
+        {
           
           all4PartonsMatched = true;
           nofMatchedEvents++;
           if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 && leptonicBJet_.first < 4)
             all4JetsMatched_MCdef_ = true;
 	  		}
-        else { cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl; }
+        else if (verbose > 2) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
         
         if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4)
           hadronictopJetsMatched_MCdef_ = true;
-        if (genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR( (TLorentzVector)*mcParticles[genmuon], (TLorentzVector)*selectedMuons[0]) < 0.3)  // FIX ME: More than 1 mcparticle corresponds to genmuon!
+        if (genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR( (TLorentzVector)*mcParticles[genmuon], (TLorentzVector)*selectedMuons[0]) < 0.3)
           muonmatched = true;
         
         
@@ -623,18 +669,46 @@ int main (int argc, char *argv[])
       ///  TOP PROPAGATOR (MATCHED)  ///
       //////////////////////////////////
       
-      if ( all4PartonsMatched )
+      if ( dataSetName.find("TT") == 0 && all4PartonsMatched )
       {
         /// MCPermutation = JetPartonPair[i].first  = jet number
         ///                 JetPartonPair[i].second = parton number
         /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
         
+        
         float WMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]]).M();
         float topMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]] + *selectedJets[MCPermutation[2]]).M();
+        float topMassGen = (*mcParticlesMatching_[hadronicWJet1_.second] + *mcParticlesMatching_[hadronicWJet2_.second] + *mcParticlesMatching_[hadronicBJet_.second]).M();
+        
+        for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
+        {
+          for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
+          {
+            gammaProp = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
+            numTopPropagator = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp ) );
+            
+            /// Generated mass
+            denomTopPropagator_gen = pow( pow(topMassGen, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
+            
+            topPropagator_gen = numTopPropagator/denomTopPropagator_gen;
+            
+            likelihood_gen[jMass][jWidth] += -TMath::Log10(topPropagator_gen);
+            
+            /// Reconstructed mass
+            denomTopPropagator_reco = pow( pow(topMassReco, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
+            
+            topPropagator_reco = numTopPropagator/denomTopPropagator_reco;
+            
+            likelihood_reco[jMass][jWidth] += -TMath::Log10(topPropagator_reco);
+            
+          }  /// End loop jWidth
+        }  /// End loop jMass
+        
         
         /// Fill plots
         histo1D["W_Mass_Reco_matched"]->Fill(WMassReco);
         histo1D["top_Mass_Reco_matched"]->Fill(topMassReco);
+        histo1D["top_Mass_Gen_matched"]->Fill(topMassGen);
       }
       
       
@@ -704,16 +778,29 @@ int main (int argc, char *argv[])
       ///  END OF EVENT  ///
       //////////////////////
       
-    }  //loop on events
+    }  /// Loop on events
     
     cout << endl;
     cout << "Data set " << datasets[d]->Title() << " has " << nofSelectedEvents << " selected events." << endl;
     cout << "Number of matched events: " << nofMatchedEvents << endl;
     
+    /// Fill histogram log likelihood
+    if ( dataSetName.find("TT") == 0 )
+    {
+      for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
+        {
+          for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
+          {
+            histo2D["LogLikeWidthMass_Reco"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco[jMass][jWidth]);
+            histo2D["LogLikeWidthMass_Gen"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen[jMass][jWidth]);
+          }
+        }
+    }
+    
     //important: free memory
     treeLoader.UnLoadDataset();
     
-  }  // Loop on datasets
+  }  /// Loop on datasets
   
   
   ///*****************///
@@ -734,6 +821,7 @@ int main (int argc, char *argv[])
 //     temp->Write(fout, name, true, pathPNG+"MSPlot/");
 //   }
 //   
+  // 1D
   TDirectory* th1dir = fout->mkdir("1D_histograms");
   th1dir->cd();
   for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
@@ -748,7 +836,16 @@ int main (int argc, char *argv[])
     //tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
 	}
 
-  
+  // 2D
+  TDirectory* th2dir = fout->mkdir("2D_histograms");
+  th2dir->cd();
+  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+  {
+    TH2F *temp = it->second;
+    temp->Write();
+    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
+    tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
+  }
   
   
   
@@ -765,7 +862,22 @@ int main (int argc, char *argv[])
   delete tcAnaEnv;
   delete configTree;
   
-  cout << "It took us " << ((double)clock() - start) / CLOCKS_PER_SEC << " s to run the program" << endl;
+  double time = ((double)clock() - start) / CLOCKS_PER_SEC;
+  cout << "It took us " << time << " s to run the program" << endl;
+  if ( time >= 60 )
+  {
+    int mins = time/60;
+    float secs = time - mins*60;
+    
+    if (mins >= 60 )
+    {
+      int hours = mins/60;
+      mins = mins - hours*60;
+      cout << "(This corresponds to " << hours << " hours, " << mins << " min and " << secs << " sec)" << endl;
+    }
+    else
+      cout << "(This corresponds to " << mins << " min and " << secs << " sec)" << endl;
+  }
     
   cout << "********************************************" << endl;
   cout << "           End of the program !!            " << endl;
