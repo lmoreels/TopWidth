@@ -31,7 +31,7 @@
 #include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/ElectronPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/Selection.h"
+#include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
 #include "../TopTreeAnalysisBase/Selection/interface/MuonPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
@@ -297,8 +297,8 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 0; ievt < 4000; ievt++)
+    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    for (unsigned int ievt = 0; ievt < 4000; ievt++)
     {
       vector < TRootVertex* > vertex;
       vector < TRootMuon* > init_muons;
@@ -379,23 +379,16 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Selection selection(init_jets_corrected, init_muons, init_electrons, mets);
+      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets);
       
-      // the default selection is fine for normal use - if you want a special selection you can use the functions here
-      selection.setJetCuts(20,2.5,0.01,1.,0.98,0.3,0.1); //  void setJetCuts(float Pt, float Eta, float EMF, float n90Hits, float fHPD, float dRJetElectron, float dRJetMuon);
-      //selection.setMuonCuts(1,2.5,0.2,0.5,0.3,1,0.5,5,0);
-      selection.setMuonCuts(20,2.5,0.12,0.2,0.3,1,0.5,5,0); // void setMuonCuts(float Pt, float Eta, float RelIso, float d0, float DRJets, int NMatchedStations, float Dz, int NTrackerLayersWithMeas, int NValidPixelHits);
-      selection.setElectronCuts(20,2.5,0.1,2.0,0.5,0.4,0); // void setElectronCuts(float Pt, float Eta, float RelIso, float d0, float MVAId, float DRJets, int MaxMissingHits);
-      selection.setLooseMuonCuts(10,2.5,0.2);
-      selection.setLooseElectronCuts(20,2.5,0.15,0.);
+      bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
-      bool isGoodPV = selection.isPVSelected(vertex, 4, 24, 2.);
+      vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.5, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
+      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(20, 2.5, 0.12);  // GetSelectedMuons(float PtThr, float EtaThr,float MuonRelIso)
+      //vector<TRootElectron*> selectedElectrons = selection.GetSelectedTightElectronsCutsBasedSpring15_50ns(20, 2.5);  // GetSelectedTightElectronsCutsBasedSpring15_50ns(float PtThr, float EtaThr)
+      vector<TRootMuon*> vetoMuons = selection.GetSelectedLooseMuons(10, 2.5, 0.2);  // GetSelectedLooseMuons(float PtThr, float EtaThr,float MuonRelIso)
+      //vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedLooseElectronsCutsBasedSpring15_50ns(20, 2.5);  // GetSelectedLooseElectronsCutsBasedSpring15_50ns(float PtThr, float EtaThr)
       
-      vector<TRootJet*> selectedJets = selection.GetSelectedJets(true);
-      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(vertex[0],selectedJets);
-      //vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(selectedJets);
-      //vector<TRootMuon*> vetoMuons = selection.GetSelectedLooseMuons();
-      //vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedLooseElectrons(30,2.5,0.2);
       
       //if (selectedJets.size() >= 4)
       //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
@@ -404,7 +397,7 @@ int main (int argc, char *argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles,false);
+        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       
@@ -882,6 +875,7 @@ int main (int argc, char *argv[])
   cout << "********************************************" << endl;
   cout << "           End of the program !!            " << endl;
   cout << "********************************************" << endl;
+  cout << " - Goodbye" << endl;
 
   return 0;
   
