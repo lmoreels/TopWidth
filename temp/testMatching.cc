@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////
-/////                                                  /////
-/////  Preliminary macro to try and make some plots    /////
-/////                                                  /////
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+/////                                                            /////
+/////  Preliminary macro to test the matching of ttbar events    /////
+/////                                                            /////
+//////////////////////////////////////////////////////////////////////
 
 
 
@@ -24,7 +24,6 @@
 #include "../TopTreeProducer/interface/TRootEvent.h"
 #include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
 #include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
 #include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
@@ -50,7 +49,7 @@ using namespace TopTree;
 int main (int argc, char *argv[])
 {
   
-  string rootFileName = "testAnalyser_output.root";
+  string rootFileName = "testMatching_output.root";
   
   clock_t start = clock();
   
@@ -112,33 +111,18 @@ int main (int argc, char *argv[])
   
   TTreeLoader treeLoader; 
   vector < Dataset* > datasets;
-  //vector < Dataset* > datasetsMu;
-  //vector < Dataset* > datasetsEl;
   
   cout << " - Loading datasets ..." << endl;
   treeLoader.LoadDatasets(datasets, xmlfile); cout << "Number of datasets: " << datasets.size() << endl;
   for (unsigned int i=0;i<datasets.size();i++) new ((*tcdatasets)[i]) Dataset(*datasets[i]);
   
   float Luminosity = oldLuminosity;
-  //float LuminosityMu = oldLuminosity;
-  //float LuminosityEl = oldLuminosity;
-  
-  //bool foundMu = false;
-  //bool foundEl = false;
   
   for (unsigned int d = 0; d < datasets.size (); d++)
   {
     if (Luminosity > datasets[d]->EquivalentLumi() ) Luminosity = datasets[d]->EquivalentLumi();
     string dataSetName = datasets[d]->Name();
     
-    //if (dataSetName.find("Data_Mu") == 0 || dataSetName.find("data_Mu") == 0 || dataSetName.find("DATA_Mu") == 0) {
-    //  LuminosityMu = datasets[d]->EquivalentLumi();
-    //  foundMu=true;
-    //}
-    //if (dataSetName.find("Data_El") == 0 || dataSetName.find("data_El") == 0 || dataSetName.find("DATA_El") == 0) {
-    //  LuminosityEl = datasets[d]->EquivalentLumi();
-    //  foundEl=true;
-    //}
     
     if ( dataSetName.find("QCD") == 0 ) datasets[d]->SetColor(kYellow);
     if ( dataSetName.find("TT") == 0 ) datasets[d]->SetColor(kRed+1);
@@ -155,11 +139,6 @@ int main (int argc, char *argv[])
     }
     if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 )
       datasets[d]->SetColor(kBlue-2);
-    //if (dataSetName.find("NP") == 0 )
-    //{
-    //	datasets[d]->SetTitle("Signal");
-    //	datasets[d]->SetColor(kGreen+4);
-    //}
   }
   
   if ( Luminosity != oldLuminosity ) cout << "Changed analysis environment luminosity to "<< Luminosity << endl;
@@ -172,8 +151,6 @@ int main (int argc, char *argv[])
   //Global variable
   //TRootEvent* event = 0;
   
-  //nof selected events
-  //double NEvtsData = 0;
   Double_t *nEvents = new Double_t[datasets.size()];
   
   
@@ -183,7 +160,6 @@ int main (int argc, char *argv[])
   ////////////////////////////////////
 	
   map<string,TH1F*> histo1D;
-  map<string,TH2F*> histo2D;
   
   histo1D["muon_pT"] = new TH1F("muon_pT","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
   histo1D["muon_Eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
@@ -192,24 +168,6 @@ int main (int argc, char *argv[])
   histo1D["W_Mass_Reco_matched"] = new TH1F("W_Mass_Reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Reco_matched"] = new TH1F("top_Mass_Reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Gen_matched"] = new TH1F("top_Mass_Gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
-  
-  histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 169.75, 174.75, 35, 0.55, 4.05);
-  histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 169.75, 174.75, 35, 0.55, 4.05);
-  //histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
-  //histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
-  
-  
-  
-  ////////////////////////////////////
-  ///  MultiSamplePlot
-  ////////////////////////////////////
-  
-  map<string,MultiSamplePlot*> MSPlot;
-  
-  MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["muon_Eta"] = new MultiSamplePlot(datasets, "muon_Eta", 60, -3, 3, "Eta");
-  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
   
   
   
@@ -241,26 +199,6 @@ int main (int argc, char *argv[])
   selecTableSemiMu.SetLuminosity(Luminosity);
   if (verbose > 0)
     cout << " - SelectionTable instantiated ..." << endl;
-  
-  
-  
-  /////////////////////////////////////////////
-  ///  Define variables for top propagator  ///
-  /////////////////////////////////////////////
-  
-  //float genTopMass = 172.5;  // Check!
-  //float genTopWidth = 1.3;  // Check!
-  float listTopMass[] = {170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5};
-  //float listTopMass[] = {167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0};  // sample with mt = 169.5
-  float listTopWidth[] = {0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0};
-  const int sizeListTopMass = sizeof(listTopMass)/sizeof(listTopMass[0]);
-  const int sizeListTopWidth = sizeof(listTopWidth)/sizeof(listTopWidth[0]);
-  
-  double gammaProp, numTopPropagator;
-  double denomTopPropagator_gen, topPropagator_gen;
-  double denomTopPropagator_reco, topPropagator_reco;
-  double likelihood_gen[sizeListTopMass][sizeListTopWidth] = {{0}};
-  double likelihood_reco[sizeListTopMass][sizeListTopWidth] = {{0}};
   
   
   
@@ -301,8 +239,10 @@ int main (int argc, char *argv[])
       cout << "	Loop over events " << endl;
     
     for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 5225; ievt < 5230; ievt++)
+    //for (unsigned int ievt = 5224; ievt < 5230; ievt++)
     {
+      
+      //if (!(ievt == 117621 || ievt == 151239)) continue;
       
       vector < TRootVertex* > vertex;
       vector < TRootMuon* > init_muons;
@@ -310,7 +250,6 @@ int main (int argc, char *argv[])
       vector < TRootJet* > init_jets_corrected;
       vector < TRootJet* > init_jets;
       vector < TRootMET* > mets;
-      //vector < TRootGenJet* > genjets;
       
       nEvents[d]++;
       
@@ -325,14 +264,6 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets_corrected, mets);
       
-      //if (! (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0 ) ) {
-      //  genjets = treeLoader.LoadGenJet(ievt,false);
-      //  //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
-      //}
-      
-      
-      // BE CAREFUL: TRootGenEvent is now obsolete!
-      
       
       
       /////////////////////////////////////
@@ -341,21 +272,6 @@ int main (int argc, char *argv[])
       
       // scale factor for the event
       float scaleFactor = 1.;
-      
-      
-      // PU reweighting
-      
-      // old method
-      //cout << "scalefactor " << scaleFactor << endl;
-      double lumiWeight = 1; //LumiWeights.ITweight( (int)event->nTruePU() ); // currently no pile-up reweighting applied
-      
-      if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
-        lumiWeight=1;
-      
-      // up syst -> lumiWeight = LumiWeightsUp.ITweight( (int)event->nTruePU() );
-      // down syst -> lumiWeight = LumiWeightsDown.ITweight( (int)event->nTruePU() );
-      
-      scaleFactor = scaleFactor*lumiWeight;
       
       
       
@@ -460,17 +376,16 @@ int main (int argc, char *argv[])
       /// Do some stuff with selected events
       
       if (! eventSelected )
-      {
-        //cout << "Event no. " << ievt << " was not selected. " << endl;
         continue;
-      }
       
       nofSelectedEvents++;
       
-      if (verbose > 3)
+      if (verbose > 2)
+      {
         cout << endl << "  Event " << ievt << " is selected" << endl;
-      if (verbose > 4)
         cout << "Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
+        //cout << "Pt Jet 1 : " << setw(8) << selectedJets[0]->Pt() << ";  Jet 2 : " << setw(8) << selectedJets[1]->Pt() << ";  Jet 3 : " << setw(8) << selectedJets[2]->Pt() << ";  Jet 4 : " << setw(8) << selectedJets[3]->Pt() << endl;
+      }
       
       
       
@@ -508,14 +423,14 @@ int main (int argc, char *argv[])
         
         for (unsigned int i = 0; i < mcParticles.size(); i++)
         {
-          //if (verbose > 4)
-          //  cout << setw(3) << right << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << setw(7) << left << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
+          if (verbose > 4)
+            cout << setw(3) << right << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << setw(7) << left << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           
           if ( (mcParticles[i]->status() > 1 && mcParticles[i]->status() <= 20) || mcParticles[i]->status() >= 30 ) continue;  /// Final state particle or particle from hardest process
           
-          if (verbose > 4 && ( (mcParticles[i]->status() > 20 && mcParticles[i]->status() < 30) 
-              || ( mcParticles[i]->status() == 1 && (abs(mcParticles[i]->type()) == 13 || abs(mcParticles[i]->type()) == 14) ) ) )
-            cout << setw(3) << right << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << setw(7) << left << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
+          //if (verbose > 4 && ( (mcParticles[i]->status() > 20 && mcParticles[i]->status() < 30) 
+          //    || ( mcParticles[i]->status() == 1 && (abs(mcParticles[i]->type()) == 13 || abs(mcParticles[i]->type()) == 14) ) ) )
+          //  cout << setw(3) << right << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << setw(7) << left << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           
           if ( mcParticles[i]->type() == pdgID_top )
             topQuark = *mcParticles[i];
@@ -526,17 +441,23 @@ int main (int argc, char *argv[])
           {
             muMinusFromTop = true;
             genmuon = i;
+            //if ( verbose > 3 )
+            //  cout << "-----> " << setw(3) << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           if ( mcParticles[i]->status() == 1 && mcParticles[i]->type() == -13 && mcParticles[i]->motherType() == 24 && mcParticles[i]->grannyType() == pdgID_top )		// mu+, W+, t
           {
             muPlusFromTop = true;
             genmuon = i;
+            //if ( verbose > 3 )
+            //  cout << "-----> " << setw(3) << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
 	    		}
           
           if ( abs(mcParticles[i]->type()) < 6 || abs(mcParticles[i]->type()) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
           {
             mcParticlesTLV.push_back(*mcParticles[i]);
             mcParticlesMatching_.push_back(mcParticles[i]);
+            //if ( verbose > 3 )
+            //  cout << "-----> " << setw(3) << i << "  Status: " << setw(2) << mcParticles[i]->status() << "  pdgId: " << setw(3) << mcParticles[i]->type() << "  Mother: " << setw(4) << mcParticles[i]->motherType() << "  Granny: " << setw(4) << mcParticles[i]->grannyType() << "  Pt: " << mcParticles[i]->Pt() << "  Eta: " << mcParticles[i]->Eta() << endl;
           }
           
         }
@@ -581,7 +502,7 @@ int main (int argc, char *argv[])
             if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == -24 && mcParticlesMatching_[j]->grannyType() == -pdgID_top )
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == 24 && mcParticlesMatching_[j]->grannyType() == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
             {
-              if (verbose > 3)
+              if (verbose > 2)
                 cout << "Light jet: " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               if (hadronicWJet1_.first == 9999)
               {
@@ -608,7 +529,7 @@ int main (int argc, char *argv[])
             if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == -pdgID_top )
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
             {
-              if (verbose > 3)
+              if (verbose > 2)
                 cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               hadronicBJet_ = JetPartonPair[i];
               MCPermutation[2] = JetPartonPair[i].first;
@@ -616,7 +537,7 @@ int main (int argc, char *argv[])
             else if ( ( muPlusFromTop && mcParticlesMatching_[j]->motherType() == pdgID_top )
               || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == -pdgID_top ) )
             {
-              if (verbose > 3)
+              if (verbose > 2)
                 cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
               leptonicBJet_ = JetPartonPair[i];
               MCPermutation[3] = JetPartonPair[i].first;
@@ -633,7 +554,7 @@ int main (int argc, char *argv[])
           if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 && leptonicBJet_.first < 4)
             all4JetsMatched_MCdef_ = true;
 	  		}
-        else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
+        else if (verbose > 2) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
         
         if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4)
           hadronictopJetsMatched_MCdef_ = true;
@@ -660,30 +581,6 @@ int main (int argc, char *argv[])
         float topMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]] + *selectedJets[MCPermutation[2]]).M();
         float topMassGen = (*mcParticlesMatching_[hadronicWJet1_.second] + *mcParticlesMatching_[hadronicWJet2_.second] + *mcParticlesMatching_[hadronicBJet_.second]).M();
         
-        for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
-        {
-          for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
-          {
-            gammaProp = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
-            numTopPropagator = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp ) );
-            
-            /// Generated mass
-            denomTopPropagator_gen = pow( pow(topMassGen, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
-            
-            topPropagator_gen = numTopPropagator/denomTopPropagator_gen;
-            
-            likelihood_gen[jMass][jWidth] += -TMath::Log10(topPropagator_gen);
-            
-            /// Reconstructed mass
-            denomTopPropagator_reco = pow( pow(topMassReco, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
-            
-            topPropagator_reco = numTopPropagator/denomTopPropagator_reco;
-            
-            likelihood_reco[jMass][jWidth] += -TMath::Log10(topPropagator_reco);
-            
-          }  /// End loop jWidth
-        }  /// End loop jMass
-        
         
         /// Fill plots
         histo1D["W_Mass_Reco_matched"]->Fill(WMassReco);
@@ -708,51 +605,6 @@ int main (int argc, char *argv[])
       }
       
       
-      /// Fill MSPlots
-      
-      MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_Eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor); 
-      MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
-      
-      
-      
-//       /// Find b jets with highest pT
-//       
-//       int labelBTag1 = -9999;
-//       int labelBTag2 = -9999;
-//       float PtBTag1 = -9999.;
-//       float PtBTag2 = -9999.;
-//       for (unsigned int i = 0; i < selectedJets.size(); i++) {
-//         if ( ! has1bjet ) break;
-//         if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) {		// CSVM
-//           if ( ! has2bjets ) {
-//             labelBTag1 = i;
-//             PtBTag1 = selectedJets[i]->Pt();
-//             break;
-//           }
-//           else {
-//             if (selectedJets[i]->Pt() > PtBTag1) {
-//               // Save previous as second best
-//               if(labelBTag1 >= 0){
-//                 labelBTag2 = labelBTag1;
-//                 PtBTag2 = PtBTag1;
-//               }
-//               // Keep new one
-//               labelBTag1 = i;
-//               PtBTag1 = selectedJets[i]->Pt();
-//             }
-//             else if (selectedJets[i]->Pt() > PtBTag2) {
-//               labelBTag2 = i;
-//               PtBTag2 = selectedJets[i]->Pt();
-//             }
-//           }
-//         }
-//       }
-      
-      
-      
-      
       
       //////////////////////
       ///  END OF EVENT  ///
@@ -764,18 +616,6 @@ int main (int argc, char *argv[])
     cout << "Data set " << datasets[d]->Title() << " has " << nofSelectedEvents << " selected events." << endl;
     cout << "Number of matched events: " << nofMatchedEvents << endl;
     
-    /// Fill histogram log likelihood
-    if ( dataSetName.find("TT") == 0 )
-    {
-      for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
-        {
-          for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
-          {
-            histo2D["LogLikeWidthMass_Reco"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco[jMass][jWidth]);
-            histo2D["LogLikeWidthMass_Gen"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen[jMass][jWidth]);
-          }
-        }
-    }
     
     //important: free memory
     treeLoader.UnLoadDataset();
@@ -790,17 +630,8 @@ int main (int argc, char *argv[])
   string pathPNG = "Plots/";
   mkdir(pathPNG.c_str(),0777);
   
-//   ///Write histograms
-//   fout->cd();
-//   for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
-//   {
-//     //cout << "MSPlot: " << it->first << endl;
-//     MultiSamplePlot *temp = it->second;
-//     string name = it->first;
-//     temp->Draw(name, 0, false, false, false, 1);
-//     temp->Write(fout, name, true, pathPNG+"MSPlot/");
-//   }
-//   
+  ///Write histograms
+  fout->cd();
   // 1D
   TDirectory* th1dir = fout->mkdir("1D_histograms");
   th1dir->cd();
@@ -815,23 +646,11 @@ int main (int argc, char *argv[])
     //TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
     //tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
 	}
-
-  // 2D
-  TDirectory* th2dir = fout->mkdir("2D_histograms");
-  th2dir->cd();
-  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-  {
-    TH2F *temp = it->second;
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
-    tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
-  }
-  
   
   
   ///Selection tables
   selecTableSemiMu.TableCalculator(false, true, true, true, true);
-  string selectiontableMu = "SelectionTable_test_SemiMu.tex";
+  string selectiontableMu = "SelectionTable_testMatching_SemiMu.tex";
   //selecTableSemiMu.Write(selectiontableMu.c_str());
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
