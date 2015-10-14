@@ -239,7 +239,7 @@ int main (int argc, char *argv[])
       cout << "	Loop over events " << endl;
     
     for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 5224; ievt < 5230; ievt++)
+    //for (unsigned int ievt = 13330; ievt < 13340; ievt++)
     {
       
       //if (!(ievt == 117621 || ievt == 151239)) continue;
@@ -384,7 +384,6 @@ int main (int argc, char *argv[])
       {
         cout << endl << "  Event " << ievt << " is selected" << endl;
         cout << "Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
-        //cout << "Pt Jet 1 : " << setw(8) << selectedJets[0]->Pt() << ";  Jet 2 : " << setw(8) << selectedJets[1]->Pt() << ";  Jet 3 : " << setw(8) << selectedJets[2]->Pt() << ";  Jet 4 : " << setw(8) << selectedJets[3]->Pt() << endl;
       }
       
       
@@ -503,7 +502,7 @@ int main (int argc, char *argv[])
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == 24 && mcParticlesMatching_[j]->grannyType() == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
             {
               if (verbose > 2)
-                cout << "Light jet: " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
+                cout << "Light jet: " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << endl;
               if (hadronicWJet1_.first == 9999)
               {
                 hadronicWJet1_ = JetPartonPair[i];
@@ -530,7 +529,7 @@ int main (int argc, char *argv[])
                 || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
             {
               if (verbose > 2)
-                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
+                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << endl;
               hadronicBJet_ = JetPartonPair[i];
               MCPermutation[2] = JetPartonPair[i].first;
             }
@@ -538,7 +537,7 @@ int main (int argc, char *argv[])
               || ( muMinusFromTop && mcParticlesMatching_[j]->motherType() == -pdgID_top ) )
             {
               if (verbose > 2)
-                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << "  T: " << mcParticlesMatching_[j]->T() << endl;
+                cout << "b jet:     " << j << "  Status: " << mcParticlesMatching_[j]->status() << "  pdgId: " << mcParticlesMatching_[j]->type() << "  Mother: " << mcParticlesMatching_[j]->motherType() << "  Granny: " << mcParticlesMatching_[j]->grannyType() << "  Pt: " << mcParticlesMatching_[j]->Pt() << "  Eta: " << mcParticlesMatching_[j]->Eta() << "  Phi: " << mcParticlesMatching_[j]->Phi() << "  Mass: " << mcParticlesMatching_[j]->M() << endl;
               leptonicBJet_ = JetPartonPair[i];
               MCPermutation[3] = JetPartonPair[i].first;
             }
@@ -627,7 +626,7 @@ int main (int argc, char *argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string pathPNG = "Plots/";
+  string pathPNG = "Plots_matching/";
   mkdir(pathPNG.c_str(),0777);
   
   ///Write histograms
