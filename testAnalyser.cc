@@ -64,7 +64,7 @@ int main (int argc, char *argv[])
   bool has2bjets = false;
   int nofSelectedEvents = 0;
   int nofMatchedEvents = 0;
-  int nb_bTags = 0;
+  int nb_bTaggedJets = 0;
   
   
   /// xml file
@@ -186,9 +186,10 @@ int main (int argc, char *argv[])
   map<string,TH2F*> histo2D;
   
   histo1D["muon_pT"] = new TH1F("muon_pT","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
-  histo1D["muon_Eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
+  histo1D["muon_eta"] = new TH1F("muon_eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
   histo1D["leadingJet_pT"] = new TH1F("leadingJet_pT","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
+  
   histo1D["W_Mass_Reco_matched"] = new TH1F("W_Mass_Reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Reco_matched"] = new TH1F("top_Mass_Reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Gen_matched"] = new TH1F("top_Mass_Gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
@@ -211,7 +212,10 @@ int main (int argc, char *argv[])
   map<string,MultiSamplePlot*> MSPlot;
   
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["muon_Eta"] = new MultiSamplePlot(datasets, "muon_Eta", 60, -3, 3, "Eta");
+  MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 60, -3, 3, "Eta");
+  
+  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 11, -0.5, 10.5, "Eta");
+  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 11, -0.5, 10.5, "Eta");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
   
@@ -304,8 +308,8 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 0; ievt < 2000; ievt++)
+    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    for (unsigned int ievt = 0; ievt < 10000; ievt++)
     {
       
       vector < TRootVertex* > vertex;
@@ -412,7 +416,7 @@ int main (int argc, char *argv[])
       eventSelected = false;
       has1bjet = false;
       has2bjets = false;
-      nb_bTags = 0;
+      nb_bTaggedJets = 0;
       
       selecTableSemiMu.Fill(d,0,scaleFactor);
       /// At the moment do not use trigger
@@ -436,16 +440,16 @@ int main (int argc, char *argv[])
                 
                 for (unsigned int i = 0; i < selectedJets.size(); i++)
                 {
-                  if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) nb_bTags++;
+                  if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) nb_bTaggedJets++;
                 }
                 		
-                if ( nb_bTags >= 1 )
+                if ( nb_bTaggedJets >= 1 )
                 {
                   //selecTableSemiMu.Fill(d,7,scaleFactor);
                   selecTableSemiMu.Fill(d,6,scaleFactor);
                   has1bjet = true;
                   
-                  if ( nb_bTags >= 2 )
+                  if ( nb_bTaggedJets >= 2 )
                   {
                     //selecTableSemiMu.Fill(d,8,scaleFactor);
                     selecTableSemiMu.Fill(d,7,scaleFactor);
@@ -715,7 +719,7 @@ int main (int argc, char *argv[])
       if ( dataSetName.find("TT") == 0 )
       {
         histo1D["muon_pT"]->Fill(selectedMuons[0]->Pt());
-        histo1D["muon_Eta"]->Fill(selectedMuons[0]->Eta());
+        histo1D["muon_eta"]->Fill(selectedMuons[0]->Eta());
         histo1D["leadingJet_pT"]->Fill(selectedJets[0]->Pt());
         histo1D["Ht_4leadingJets"]->Fill(HT);
       }
@@ -724,9 +728,12 @@ int main (int argc, char *argv[])
       /// Fill MSPlots
       
       MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_Eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor); 
+      MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+      
+      MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["nBJets"]->Fill(nb_bTaggedJets, datasets[d], true, Luminosity*scaleFactor);
       
       
       
@@ -803,18 +810,19 @@ int main (int argc, char *argv[])
   
   string pathPNG = "Plots/";
   mkdir(pathPNG.c_str(),0777);
+  mkdir((pathPNG+"MSPlot/").c_str(),0777);
   
-//   ///Write histograms
-//   fout->cd();
-//   for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
-//   {
-//     //cout << "MSPlot: " << it->first << endl;
-//     MultiSamplePlot *temp = it->second;
-//     string name = it->first;
-//     temp->Draw(name, 0, false, false, false, 1);
-//     temp->Write(fout, name, true, pathPNG+"MSPlot/");
-//   }
-//   
+  ///Write histograms
+  fout->cd();
+  for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+  {
+    //cout << "MSPlot: " << it->first << endl;
+    MultiSamplePlot *temp = it->second;
+    string name = it->first;
+    temp->Draw(name, 0, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+    temp->Write(fout, name, true, pathPNG+"MSPlot/", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+  }
+  
   // 1D
   TDirectory* th1dir = fout->mkdir("1D_histograms");
   th1dir->cd();
