@@ -213,11 +213,10 @@ int main (int argc, char *argv[])
   
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 60, -3, 3, "Eta");
-  
-  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 11, -0.5, 10.5, "Eta");
-  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 11, -0.5, 10.5, "Eta");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
+  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 11, -0.5, 10.5, "# jets");
+  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 11, -0.5, 10.5, "# b jets");
   
   
   
@@ -230,7 +229,7 @@ int main (int argc, char *argv[])
   CutsSelecTableSemiMu.push_back(string("trigged"));
   CutsSelecTableSemiMu.push_back(string("Good PV"));
   CutsSelecTableSemiMu.push_back(string("1 selected muon"));
-  //CutsSelecTableSemiMu.push_back(string("Veto 2nd muon"));
+  CutsSelecTableSemiMu.push_back(string("Veto 2nd muon"));
   CutsSelecTableSemiMu.push_back(string("Veto electron"));
   
   char LabelNJets[100];
@@ -249,6 +248,42 @@ int main (int argc, char *argv[])
   selecTableSemiMu.SetLuminosity(Luminosity);
   if (verbose > 0)
     cout << " - SelectionTable instantiated ..." << endl;
+  
+  
+  
+  ///////////////////////////
+  ///  Mu+jets Selection  ///
+  ///////////////////////////
+  
+  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
+  
+  muonPTSel = 26; // GeV
+  muonEtaSel = 2.1;
+  muonRelIsoSel = 0.15;  // Tight muon
+  
+  muonPTVeto = 10; // GeV
+  muonEtaVeto = 2.5;
+  muonRelIsoVeto = 0.25;  // Loose muon
+  
+  
+  
+  ///////////////////////////
+  ///  El+jets Selection  ///
+  ///////////////////////////
+  
+  // To do
+  
+  
+  
+  //////////////////////////////////////
+  ///  Working points for b tagging  ///
+  //////////////////////////////////////
+  
+  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+  
+  CSVMv2Loose =  0.605;
+  CSVMv2Medium = 0.890;
+  CSVMv2Tight = 0.970;
   
   
   
@@ -309,7 +344,7 @@ int main (int argc, char *argv[])
       cout << "	Loop over events " << endl;
     
     //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    for (unsigned int ievt = 0; ievt < 10000; ievt++)
+    for (unsigned int ievt = 0; ievt < 1000; ievt++)
     {
       
       vector < TRootVertex* > vertex;
@@ -396,11 +431,15 @@ int main (int argc, char *argv[])
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
       vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.5, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
-      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(25, 2.5, 0.12, "Tight", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(20, 2.5, "Tight", "Spring15_50ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
-      vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(20, 2.5, 0.2, "Loose", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(15, 2.5, "Loose", "Spring15_50ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
+      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, "Tight", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
+      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(26, 2.5, "Tight", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
+      vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
+      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(15, 2.5, "Loose", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
       
+      
+      /// Sort objects according to pT
+      sort(selectedJets.begin(),selectedJets.end(),HighestPt()); // HighestPt() is included from the Selection class)
+        
       
       //if (selectedJets.size() >= 4)
       //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
@@ -427,39 +466,35 @@ int main (int argc, char *argv[])
         if (selectedMuons.size() == 1)
         {
           selecTableSemiMu.Fill(d,3,scaleFactor);
-          //if (vetoMuons.size() == 1) {
-          //  selecTableSemiMu.Fill(d,4,scaleFactor);
+          if (vetoMuons.size() == 1) {
+            selecTableSemiMu.Fill(d,4,scaleFactor);
             if (vetoElectronsSemiMu.size() == 0) {
-              //selecTableSemiMu.Fill(d,5,scaleFactor);
-              selecTableSemiMu.Fill(d,4,scaleFactor);
+              selecTableSemiMu.Fill(d,5,scaleFactor);
               if ( selectedJets.size() >= 4 )
               {
-                //selecTableSemiMu.Fill(d,6,scaleFactor);
-                selecTableSemiMu.Fill(d,5,scaleFactor);
+                selecTableSemiMu.Fill(d,6,scaleFactor);
                 eventSelected = true;
                 
                 for (unsigned int i = 0; i < selectedJets.size(); i++)
                 {
-                  if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) nb_bTaggedJets++;
+                  if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium) nb_bTaggedJets++;
                 }
                 		
                 if ( nb_bTaggedJets >= 1 )
                 {
-                  //selecTableSemiMu.Fill(d,7,scaleFactor);
-                  selecTableSemiMu.Fill(d,6,scaleFactor);
+                  selecTableSemiMu.Fill(d,7,scaleFactor);
                   has1bjet = true;
                   
                   if ( nb_bTaggedJets >= 2 )
                   {
-                    //selecTableSemiMu.Fill(d,8,scaleFactor);
-                    selecTableSemiMu.Fill(d,7,scaleFactor);
+                    selecTableSemiMu.Fill(d,8,scaleFactor);
                     has2bjets = true;
-                  }
-                }
+                  }  // at least 2 b-tagged jets
+                }  // at least 1 b-tagged jets
 
               }  // at least 4 jets
             }  // no loose electrons
-          //}  // no loose muons
+          }  // no additional loose muons (tight muon is also loose muon)
         }  // 1 good muon
       }  // good PV
       
@@ -505,8 +540,6 @@ int main (int argc, char *argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        sort(selectedJets.begin(),selectedJets.end(),HighestPt()); // HighestPt() is included from the Selection class)
-        
         vector<TLorentzVector> mcParticlesTLV, selectedJetsTLV;
         TLorentzVector topQuark, antiTopQuark;
         
@@ -709,6 +742,42 @@ int main (int argc, char *argv[])
       }
       
       
+      ////////////////////////////
+      ///  Find b-tagged jets  ///
+      ////////////////////////////
+      
+      int label_bJet1 = -9999;
+      int label_bJet2 = -9999;
+      float pT_bJet1 = -9999.;
+      float pT_bJet2 = -9999.;
+      for (unsigned int i = 0; i < selectedJets.size(); i++) {
+        if ( ! has1bjet ) break;
+        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium) {
+          if ( ! has2bjets ) {
+            labelBTag1 = i;
+            PtBTag1 = selectedJets[i]->Pt();
+            break;
+          }
+          else {
+            if (selectedJets[i]->Pt() > PtBTag1) {
+              // Save previous as second best
+              if(labelBTag1 >= 0){
+                labelBTag2 = labelBTag1;
+                PtBTag2 = PtBTag1;
+              }
+              // Keep new one
+              labelBTag1 = i;
+              PtBTag1 = selectedJets[i]->Pt();
+            }
+            else if (selectedJets[i]->Pt() > PtBTag2) {
+              labelBTag2 = i;
+              PtBTag2 = selectedJets[i]->Pt();
+            }
+          }
+        }
+      }
+      
+      
       
       ////////////////////
       ///  FILL PLOTS  ///
@@ -735,40 +804,6 @@ int main (int argc, char *argv[])
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["nBJets"]->Fill(nb_bTaggedJets, datasets[d], true, Luminosity*scaleFactor);
       
-      
-      
-//       /// Find b jets with highest pT
-//       
-//       int labelBTag1 = -9999;
-//       int labelBTag2 = -9999;
-//       float PtBTag1 = -9999.;
-//       float PtBTag2 = -9999.;
-//       for (unsigned int i = 0; i < selectedJets.size(); i++) {
-//         if ( ! has1bjet ) break;
-//         if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) {		// CSVM
-//           if ( ! has2bjets ) {
-//             labelBTag1 = i;
-//             PtBTag1 = selectedJets[i]->Pt();
-//             break;
-//           }
-//           else {
-//             if (selectedJets[i]->Pt() > PtBTag1) {
-//               // Save previous as second best
-//               if(labelBTag1 >= 0){
-//                 labelBTag2 = labelBTag1;
-//                 PtBTag2 = PtBTag1;
-//               }
-//               // Keep new one
-//               labelBTag1 = i;
-//               PtBTag1 = selectedJets[i]->Pt();
-//             }
-//             else if (selectedJets[i]->Pt() > PtBTag2) {
-//               labelBTag2 = i;
-//               PtBTag2 = selectedJets[i]->Pt();
-//             }
-//           }
-//         }
-//       }
       
       
       
