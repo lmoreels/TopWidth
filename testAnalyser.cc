@@ -65,6 +65,8 @@ int main (int argc, char *argv[])
   int nofSelectedEvents = 0;
   int nofMatchedEvents = 0;
   int nb_bTaggedJets = 0;
+  int nofEventsWith1BJet = 0;
+  int nofEventsWith2BJets = 0;
   
   
   /// xml file
@@ -196,6 +198,8 @@ int main (int argc, char *argv[])
   histo1D["W_Mass_Reco_first4matched"] = new TH1F("W_Mass_Reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Reco_first4matched"] = new TH1F("top_Mass_Reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 500, 0, 500);
   histo1D["top_Mass_Gen_first4matched"] = new TH1F("top_Mass_Gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 500, 0, 500);
+  histo1D["W_Mass_Reco_notMatched"] = new TH1F("W_Mass_Reco_notMatched","Reconstructed hadronic W mass of unmatched events; M_{W} [GeV]", 500, 0, 500);
+  histo1D["top_Mass_Reco_notMatched"] = new TH1F("top_Mass_Reco_notMatched","Reconstructed top mass of unmatched events; M_{t} [GeV]", 500, 0, 500);
   
   histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 60, 144.75, 174.75, 595, 0.55, 60.05);
   histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 60, 144.75, 174.75, 295, 0.55, 30.05);
@@ -280,6 +284,8 @@ int main (int argc, char *argv[])
   ///////////////////////////////////
   
   // To do
+  float electronEtaSel = 2.5;
+  float electronEtaVeto = 2.5;
   
   
   
@@ -337,6 +343,8 @@ int main (int argc, char *argv[])
     int iFile = -1;
     string dataSetName = datasets[d]->Name();
     nofSelectedEvents = 0;
+    nofEventsWith1BJet = 0;
+    nofEventsWith2BJets = 0;
     
     if (verbose > 1)
       cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
@@ -359,8 +367,8 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    for (unsigned int ievt = 0; ievt < 1000; ievt++)
+    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    //for (unsigned int ievt = 0; ievt < 1000; ievt++)
     {
       
       vector < TRootVertex* > vertex;
@@ -448,9 +456,9 @@ int main (int argc, char *argv[])
       
       vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.5, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
       vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, "Tight", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(26, 2.5, "Tight", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
+      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(26, electronEtaSel, "Tight", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
       vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(15, 2.5, "Loose", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
+      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(15, electronEtaVeto, "Loose", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
       
       
       /// Sort objects according to pT
@@ -795,6 +803,122 @@ int main (int argc, char *argv[])
       
       
       
+      //////////////////////
+      // CHI2 FOR 2 BTAGS //				// !!! chi2WMass, sigmaChi2WMass, chi2TopMass, sigmaChi2TopMass
+      //////////////////////
+      
+      int labelsReco[4] = {-9999,-9999,-9999,-9999};		// 0 = leptonic b-jet, 1 = hadronic b-jet, 2,3 = light jets.
+//      BTagCosThetaCalculation* bTagCosThetaCalculation = new BTagCosThetaCalculation();
+//      float CosThetaCalculation;
+      if (label_bJet1 != -9999 && label_bJet2 != -9999) {
+        nofEventsWith2BJets++;
+        float recoWMass, recoTopMass_bJet1, recoTopMass_bJet2, WTerm, topTerm_bJet1, topTerm_bJet2, chi2_bJet1, chi2_bJet2;
+        float smallestChi2 = 999999.;
+        for (int ijet=0; ijet<4; ijet++) {
+          for (int jjet=ijet+1; jjet<4; jjet++) {
+            if (ijet != label_bJet1 && ijet != label_bJet2 && jjet != label_bJet1 && jjet != label_bJet2) {
+              recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
+              recoTopMass_bJet1 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
+              recoTopMass_bJet2 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet2]).M();
+              
+//               WTerm = pow( (recoWMass - chi2Wmass)/sigmaChi2Wmass, 2);
+//               topTerm_bJet1 = pow( (recoTopMass_bJet1 - chi2Topmass)/sigmaChi2Topmass, 2);
+//               topTerm_bJet2 = pow( (recoTopMass_bJet2 - chi2Topmass)/sigmaChi2Topmass, 2);
+//               
+//               chi2_bJet1 = WTerm + topTerm_bJet1;
+//               chi2_bJet2 = WTerm + topTerm_bJet2;
+//               
+//               
+//               if (chi2_bJet1 < smallestChi2) {
+//                 smallestChi2 = chi2_bJet1;
+//                 labelsReco[0] = label_bJet2;
+//                 labelsReco[1] = label_bJet1;
+//                 labelsReco[2] = ijet;
+//                 labelsReco[3] = jjet;
+//               }
+//               if (chi2_bJet2 < smallestChi2) {
+//                 smallestChi2 = chi2_bJet2;
+//                 labelsReco[0] = label_bJet1;
+//                 labelsReco[1] = label_bJet2;
+//                 labelsReco[2] = ijet;
+//                 labelsReco[3] = jjet;
+//               }
+            }
+          }
+        }
+        
+        if ( dataSetName.find("TT") == 0 )
+          {
+            histo1D["W_Mass_Reco_notMatched"]->Fill(recoWMass);
+            histo1D["top_Mass_Reco_notMatched"]->Fill(recoTopMass_bJet1, 0.5);
+            histo1D["top_Mass_Reco_notMatched"]->Fill(recoTopMass_bJet2, 0.5);
+          }
+        
+//         //Cos Theta*
+//         TLorentzVector lepton = *selectedMuons[0];
+//         vector<TLorentzVector> jets;
+//         jets.clear();
+//         for(int i=0; i< selectedJets.size(); i++) jets.push_back(*selectedJets[i]);
+//         
+//         TLorentzVector Neutrino(999,999,999,999);
+//         
+//         CosThetaCalculation = bTagCosThetaCalculation->CalcOrigKins(labelsReco[0],labelsReco[1],lepton,jets,80.4,172.5);
+//         if(CosThetaCalculation != 999)
+//         {
+//           MSPlot["Cos_Theta*"]->Fill(CosThetaCalculation, datasets[d], true, Luminosity*scaleFactor);
+//           if (CosThetaCalculation > 1)
+//             cout << "Eventnr: " << ievt << "; Cos Theta: " << CosThetaCalculation << endl;
+//           
+//           Neutrino =  bTagCosThetaCalculation->GetNeutrino();
+//         }
+        
+        
+        
+					
+        
+// 	  		//Fill histos
+// 	  		if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999) {
+// 	    		labelsChanged++;
+// 	    		if (useMassesAndResolutions && eventselectedSemiMu) selecTableSemiMu.Fill(d,11,scaleFactor);
+// 	    		//if (useMassesAndResolutions && eventselectedSemiEl) selecTableSemiEl.Fill(d,12,scaleFactor);
+// 
+// 	    		MSPlot["Chi2_2btags"+Flav]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
+// 
+// 					float Wmass_2btags = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
+// 					MSPlot["W_Mass_2btags"+Flav]->Fill(Wmass_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 	    		float HtTop_2btags = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
+// 	    		MSPlot["hadTop_Ht_2btags"+Flav]->Fill(HtTop_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 	    		float hadtopmass_2btags = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
+// 	    		float hadtoppt_2btags = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
+// 	    		MSPlot["hadTop_Mass_2btags"+Flav]->Fill(hadtopmass_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 	    		MSPlot["hadTop_Pt_2btags"+Flav]->Fill(hadtoppt_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 
+// 
+// 	    		if(CosThetaCalculation != 999) {
+// 	      		float leptonicTopMass_2btags = (lepton + Neutrino + jets[labelsReco[0]]).M();
+// 	      		float TTbarMass_2btags = leptonicTopMass_2btags + hadtopmass_2btags;
+// 	      		MSPlot["TTbar_Mass_2btags"+Flav]->Fill(TTbarMass_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 
+// 	      		float leptonicTopAngle_2btags = (lepton + Neutrino + jets[labelsReco[0]]).Phi();
+// 	      		float hadronicTopAngle_2btags = (jets[labelsReco[1]] + jets[labelsReco[2]] + jets[labelsReco[3]]).Phi();
+// 	      		float TTbarAngle_2btags = leptonicTopAngle_2btags - hadronicTopAngle_2btags;
+// 	      		if (TTbarAngle_2btags < 0) {
+// 							TTbarAngle_2btags = - TTbarAngle_2btags;
+// 	      		}
+// 	      		MSPlot["TTbar_Angle_2btags"+Flav]->Fill(TTbarAngle_2btags, datasets[d], true, Luminosity*scaleFactor);
+// 
+// 	    		}
+// 	  		}
+// 	  		else {
+// 	    		//When no Chi2 combination is found:
+// 	    		cout << "Eventnr. " << ievt << ": no Chi2 found." << endl;
+// 	  		}
+      
+      
+      }
+      
+      
+      
       ////////////////////
       ///  FILL PLOTS  ///
       ////////////////////
@@ -845,7 +969,10 @@ int main (int argc, char *argv[])
     
     cout << endl;
     cout << "Data set " << datasets[d]->Title() << " has " << nofSelectedEvents << " selected events." << endl;
+    cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith1BJet << " events with 1 b tagged jet." << endl;
+    cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith2BJets << " events with 2 b tagged jets." << endl;
     cout << "Number of matched events: " << nofMatchedEvents << endl;
+    
     
     /// Fill histogram log likelihood
     if ( dataSetName.find("TT") == 0 )
