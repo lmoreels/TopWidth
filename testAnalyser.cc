@@ -214,9 +214,17 @@ int main (int argc, char *argv[])
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 60, -3, 3, "Eta");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
+  MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
+  
   MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 11, -0.5, 10.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 11, -0.5, 10.5, "# b jets");
+  MSPlot["bJet1_pT"] = new MultiSamplePlot(datasets, "bJet1_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["bJet2_pT"] = new MultiSamplePlot(datasets, "bJet2_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
+  MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
   
   
   
@@ -251,25 +259,33 @@ int main (int argc, char *argv[])
   
   
   
-  ///////////////////////////
-  ///  Mu+jets Selection  ///
-  ///////////////////////////
+  ///////////////////////////////
+  ///  Single Muon Selection  ///
+  ///////////////////////////////
   
   /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
-  muonPTSel = 26; // GeV
-  muonEtaSel = 2.1;
-  muonRelIsoSel = 0.15;  // Tight muon
+  float muonPTSel = 26; // GeV
+  float muonEtaSel = 2.1;
+  float muonRelIsoSel = 0.15;  // Tight muon
   
-  muonPTVeto = 10; // GeV
-  muonEtaVeto = 2.5;
-  muonRelIsoVeto = 0.25;  // Loose muon
+  float muonPTVeto = 10; // GeV
+  float muonEtaVeto = 2.5;
+  float muonRelIsoVeto = 0.25;  // Loose muon
   
   
   
-  ///////////////////////////
-  ///  El+jets Selection  ///
-  ///////////////////////////
+  ///////////////////////////////////
+  ///  Single Electron Selection  ///
+  ///////////////////////////////////
+  
+  // To do
+  
+  
+  
+  ///////////////////////
+  ///  Jet Selection  ///
+  ///////////////////////
   
   // To do
   
@@ -281,9 +297,9 @@ int main (int argc, char *argv[])
   
   /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
-  CSVMv2Loose =  0.605;
-  CSVMv2Medium = 0.890;
-  CSVMv2Tight = 0.970;
+  float CSVMv2Loose =  0.605;
+  float CSVMv2Medium = 0.890;
+  float CSVMv2Tight = 0.970;
   
   
   
@@ -754,24 +770,24 @@ int main (int argc, char *argv[])
         if ( ! has1bjet ) break;
         if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium) {
           if ( ! has2bjets ) {
-            labelBTag1 = i;
-            PtBTag1 = selectedJets[i]->Pt();
+            label_bJet1 = i;
+            pT_bJet1 = selectedJets[label_bJet1]->Pt();
             break;
           }
           else {
-            if (selectedJets[i]->Pt() > PtBTag1) {
+            if (selectedJets[i]->Pt() > pT_bJet1) {
               // Save previous as second best
-              if(labelBTag1 >= 0){
-                labelBTag2 = labelBTag1;
-                PtBTag2 = PtBTag1;
+              if(label_bJet1 >= 0){
+                label_bJet2 = label_bJet1;
+                pT_bJet2 = pT_bJet1;
               }
               // Keep new one
-              labelBTag1 = i;
-              PtBTag1 = selectedJets[i]->Pt();
+              label_bJet1 = i;
+              pT_bJet1 = selectedJets[label_bJet1]->Pt();
             }
-            else if (selectedJets[i]->Pt() > PtBTag2) {
-              labelBTag2 = i;
-              PtBTag2 = selectedJets[i]->Pt();
+            else if (selectedJets[i]->Pt() > pT_bJet2) {
+              label_bJet2 = i;
+              pT_bJet2 = selectedJets[label_bJet2]->Pt();
             }
           }
         }
@@ -799,12 +815,24 @@ int main (int argc, char *argv[])
       MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
       
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["nBJets"]->Fill(nb_bTaggedJets, datasets[d], true, Luminosity*scaleFactor);
-      
-      
+      if (has1bjet)
+      {
+        MSPlot["bJet1_pT"]->Fill(selectedJets[label_bJet1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["bJet1_CSVv2Discr"]->Fill(selectedJets[label_bJet1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        
+        if (has2bjets)
+        {
+          MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        }
+      }
       
       
       
