@@ -192,20 +192,24 @@ int main (int argc, char *argv[])
   histo1D["leadingJet_pT"] = new TH1F("leadingJet_pT","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   
-  histo1D["W_Mass_Reco_matched"] = new TH1F("W_Mass_Reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
-  histo1D["top_Mass_Reco_matched"] = new TH1F("top_Mass_Reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
-  histo1D["top_Mass_Gen_matched"] = new TH1F("top_Mass_Gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
-  histo1D["W_Mass_Reco_first4matched"] = new TH1F("W_Mass_Reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 500, 0, 500);
-  histo1D["top_Mass_Reco_first4matched"] = new TH1F("top_Mass_Reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 500, 0, 500);
-  histo1D["top_Mass_Gen_first4matched"] = new TH1F("top_Mass_Gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 500, 0, 500);
-  histo1D["W_Mass_Reco_notMatched"] = new TH1F("W_Mass_Reco_notMatched","Reconstructed hadronic W mass of unmatched events; M_{W} [GeV]", 500, 0, 500);
-  histo1D["top_Mass_Reco_notMatched"] = new TH1F("top_Mass_Reco_notMatched","Reconstructed top mass of unmatched events; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_matched"] = new TH1F("WMass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
+  histo1D["topMass_reco_matched"] = new TH1F("topMass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
+  histo1D["topMass_gen_matched"] = new TH1F("topMass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_first4matched"] = new TH1F("WMass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 500, 0, 500);
+  histo1D["topMass_reco_first4matched"] = new TH1F("topMass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 500, 0, 500);
+  histo1D["topMass_gen_first4matched"] = new TH1F("topMass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_2b_notMatched"] = new TH1F("WMass_reco_2b_notMatched","Reconstructed hadronic W mass of unmatched events with 2 b-tagged jets; M_{W} [GeV]", 500, 0, 500);
+  histo1D["topMass_reco_2b_notMatched"] = new TH1F("topMass_reco_2b_notMatched","Reconstructed top mass of unmatched events with 2 b-tagged jets; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_1b_notMatched"] = new TH1F("WMass_reco_1b_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet; M_{W} [GeV]", 500, 0, 500);
+  histo1D["topMass_reco_1b_notMatched"] = new TH1F("topMass_reco_1b_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_0b_notMatched"] = new TH1F("WMass_reco_0b_notMatched","Reconstructed hadronic W mass of unmatched events without b tagging; M_{W} [GeV]", 500, 0, 500);
+  histo1D["topMass_reco_0b_notMatched"] = new TH1F("topMass_reco_0b_notMatched","Reconstructed top mass of unmatched events without b tagging; M_{t} [GeV]", 500, 0, 500);
   
-  histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 60, 144.75, 174.75, 595, 0.55, 60.05);
-  histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 60, 144.75, 174.75, 295, 0.55, 30.05);
-  histo2D["LogLikeWidthMass_Reco_zoom"] = new TH2F("LogLikeWidthMass_Reco_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 60, 144.75, 174.75, 400, 12.05, 52.05);
-  //histo2D["LogLikeWidthMass_Reco"] = new TH2F("LogLikeWidthMass_Reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
-  //histo2D["LogLikeWidthMass_Gen"] = new TH2F("LogLikeWidthMass_Gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
+  histo2D["logLikeWidthMass_reco_matched"] = new TH2F("logLikeWidthMass_reco_matched", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 30, 160.75, 175.75, 595, 0.55, 60.05);
+  histo2D["logLikeWidthMass_gen_matched"] = new TH2F("logLikeWidthMass_gen_matched", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 30, 160.75, 175.75, 295, 0.55, 30.05);
+  histo2D["logLikeWidthMass_reco_matched_zoom"] = new TH2F("logLikeWidthMass_reco_matched_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 30, 160.75, 175.75, 400, 12.05, 52.05);
+  //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
+  //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
   
   
@@ -315,17 +319,17 @@ int main (int argc, char *argv[])
   
   //float genTopMass = 172.5;  // Check!
   //float genTopWidth = 1.3;  // Check!
-  float listTopMass[] = {145.0, 145.5, 146.0, 146.5, 147.0, 147.5, 148.0, 148.5, 149.0, 149.5, 150.0, 150.5, 151.0, 151.5, 152.0, 152.5, 153.0, 153.5, 154.0, 154.5, 155.0, 155.5, 156.0, 156.5, 157.0, 157.5, 158.0, 158.5, 159.0, 159.5, 160.0, 160.5, 161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5};
-  //float listTopMass[] = {167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0};  // sample with mt = 169.5
+  //float listTopMass[] = {145.0, 145.5, 146.0, 146.5, 147.0, 147.5, 148.0, 148.5, 149.0, 149.5, 150.0, 150.5, 151.0, 151.5, 152.0, 152.5, 153.0, 153.5, 154.0, 154.5, 155.0, 155.5, 156.0, 156.5, 157.0, 157.5, 158.0, 158.5, 159.0, 159.5, 160.0, 160.5, 161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5};
+  float listTopMass[] = {161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5, 175.0, 175.5};
   float listTopWidth[] = {0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.0, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 7.0, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 9.0, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10.0, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 11.0, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 12.0, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 13.0, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 14.0, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 15.0, 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8, 15.9, 16.0, 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9, 17.0, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.7, 17.8, 17.9, 18.0, 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.7, 18.8, 18.9, 19.0, 19.1, 19.2, 19.3, 19.4, 19.5, 19.6, 19.7, 19.8, 19.9, 20.0, 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7, 20.8, 20.9, 21.0, 21.1, 21.2, 21.3, 21.4, 21.5, 21.6, 21.7, 21.8, 21.9, 22.0, 22.1, 22.2, 22.3, 22.4, 22.5, 22.6, 22.7, 22.8, 22.9, 23.0, 23.1, 23.2, 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.9, 24.0, 24.1, 24.2, 24.3, 24.4, 24.5, 24.6, 24.7, 24.8, 24.9, 25.0, 25.1, 25.2, 25.3, 25.4, 25.5, 25.6, 25.7, 25.8, 25.9, 26.0, 26.1, 26.2, 26.3, 26.4, 26.5, 26.6, 26.7, 26.8, 26.9, 27.0, 27.1, 27.2, 27.3, 27.4, 27.5, 27.6, 27.7, 27.8, 27.9, 28.0, 28.1, 28.2, 28.3, 28.4, 28.5, 28.6, 28.7, 28.8, 28.9, 29.0, 29.1, 29.2, 29.3, 29.4, 29.5, 29.6, 29.7, 29.8, 29.9, 30.0, 30.1, 30.2, 30.3, 30.4, 30.5, 30.6, 30.7, 30.8, 30.9, 31.0, 31.1, 31.2, 31.3, 31.4, 31.5, 31.6, 31.7, 31.8, 31.9, 32.0, 32.1, 32.2, 32.3, 32.4, 32.5, 32.6, 32.7, 32.8, 32.9, 33.0, 33.1, 33.2, 33.3, 33.4, 33.5, 33.6, 33.7, 33.8, 33.9, 34.0, 34.1, 34.2, 34.3, 34.4, 34.5, 34.6, 34.7, 34.8, 34.9, 35.0, 35.1, 35.2, 35.3, 35.4, 35.5, 35.6, 35.7, 35.8, 35.9, 36.0, 36.1, 36.2, 36.3, 36.4, 36.5, 36.6, 36.7, 36.8, 36.9, 37.0, 37.1, 37.2, 37.3, 37.4, 37.5, 37.6, 37.7, 37.8, 37.9, 38.0, 38.1, 38.2, 38.3, 38.4, 38.5, 38.6, 38.7, 38.8, 38.9, 39.0, 39.1, 39.2, 39.3, 39.4, 39.5, 39.6, 39.7, 39.8, 39.9, 40.0, 40.1, 40.2, 40.3, 40.4, 40.5, 40.6, 40.7, 40.8, 40.9, 41.0, 41.1, 41.2, 41.3, 41.4, 41.5, 41.6, 41.7, 41.8, 41.9, 42.0, 42.1, 42.2, 42.3, 42.4, 42.5, 42.6, 42.7, 42.8, 42.9, 43.0, 43.1, 43.2, 43.3, 43.4, 43.5, 43.6, 43.7, 43.8, 43.9, 44.0, 44.1, 44.2, 44.3, 44.4, 44.5, 44.6, 44.7, 44.8, 44.9, 45.0, 45.1, 45.2, 45.3, 45.4, 45.5, 45.6, 45.7, 45.8, 45.9, 46.0, 46.1, 46.2, 46.3, 46.4, 46.5, 46.6, 46.7, 46.8, 46.9, 47.0, 47.1, 47.2, 47.3, 47.4, 47.5, 47.6, 47.7, 47.8, 47.9, 48.0, 48.1, 48.2, 48.3, 48.4, 48.5, 48.6, 48.7, 48.8, 48.9, 49.0, 49.1, 49.2, 49.3, 49.4, 49.5, 49.6, 49.7, 49.8, 49.9, 50.0, 50.1, 50.2, 50.3, 50.4, 50.5, 50.6, 50.7, 50.8, 50.9, 51.0, 51.1, 51.2, 51.3, 51.4, 51.5, 51.6, 51.7, 51.8, 51.9, 52.0, 52.1, 52.2, 52.3, 52.4, 52.5, 52.6, 52.7, 52.8, 52.9, 53.0, 53.1, 53.2, 53.3, 53.4, 53.5, 53.6, 53.7, 53.8, 53.9, 54.0, 54.1, 54.2, 54.3, 54.4, 54.5, 54.6, 54.7, 54.8, 54.9, 55.0, 55.1, 55.2, 55.3, 55.4, 55.5, 55.6, 55.7, 55.8, 55.9, 56.0, 56.1, 56.2, 56.3, 56.4, 56.5, 56.6, 56.7, 56.8, 56.9, 57.0, 57.1, 57.2, 57.3, 57.4, 57.5, 57.6, 57.7, 57.8, 57.9, 58.0, 58.1, 58.2, 58.3, 58.4, 58.5, 58.6, 58.7, 58.8, 58.9, 59.0, 59.1, 59.2, 59.3, 59.4, 59.5, 59.6, 59.7, 59.8, 59.9, 60.0};
   const int sizeListTopMass = sizeof(listTopMass)/sizeof(listTopMass[0]);
   const int sizeListTopWidth = sizeof(listTopWidth)/sizeof(listTopWidth[0]);
   
-  double gammaProp, numTopPropagator;
-  double denomTopPropagator_gen, topPropagator_gen;
-  double denomTopPropagator_reco, topPropagator_reco;
-  double likelihood_gen[sizeListTopMass][sizeListTopWidth] = {{0}};
-  double likelihood_reco[sizeListTopMass][sizeListTopWidth] = {{0}};
+  double gammaProp_matched, numTopPropagator_matched;
+  double denomTopPropagator_gen_matched, topPropagator_gen_matched;
+  double denomTopPropagator_reco_matched, topPropagator_reco_matched;
+  double likelihood_gen_matched[sizeListTopMass][sizeListTopWidth] = {{0}};
+  double likelihood_reco_matched[sizeListTopMass][sizeListTopWidth] = {{0}};
   
   
   
@@ -724,44 +728,44 @@ int main (int argc, char *argv[])
         /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
         
         
-        float WMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]]).M();
-        float topMassReco = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]] + *selectedJets[MCPermutation[2]]).M();
-        float topMassGen = (*mcParticlesMatching_[hadronicWJet1_.second] + *mcParticlesMatching_[hadronicWJet2_.second] + *mcParticlesMatching_[hadronicBJet_.second]).M();
+        float WMassReco_matched = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]]).M();
+        float topMassReco_matched = (*selectedJets[MCPermutation[0]] + *selectedJets[MCPermutation[1]] + *selectedJets[MCPermutation[2]]).M();
+        float topMassGen_matched = (*mcParticlesMatching_[hadronicWJet1_.second] + *mcParticlesMatching_[hadronicWJet2_.second] + *mcParticlesMatching_[hadronicBJet_.second]).M();
         
         for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
         {
           for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
           {
-            gammaProp = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
-            numTopPropagator = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp ) );
+            gammaProp_matched = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
+            numTopPropagator_matched = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp_matched ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp_matched ) );
             
             /// Generated mass
-            denomTopPropagator_gen = pow( pow(topMassGen, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
+            denomTopPropagator_gen_matched = pow( pow(topMassGen_matched, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
             
-            topPropagator_gen = numTopPropagator/denomTopPropagator_gen;
+            topPropagator_gen_matched = numTopPropagator_matched/denomTopPropagator_gen_matched;
             
-            likelihood_gen[jMass][jWidth] += -TMath::Log10(topPropagator_gen);
+            likelihood_gen_matched[jMass][jWidth] += -TMath::Log10(topPropagator_gen_matched);
             
             /// Reconstructed mass
-            denomTopPropagator_reco = pow( pow(topMassReco, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
+            denomTopPropagator_reco_matched = pow( pow(topMassReco_matched, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
             
-            topPropagator_reco = numTopPropagator/denomTopPropagator_reco;
+            topPropagator_reco_matched = numTopPropagator_matched/denomTopPropagator_reco_matched;
             
-            likelihood_reco[jMass][jWidth] += -TMath::Log10(topPropagator_reco);
+            likelihood_reco_matched[jMass][jWidth] += -TMath::Log10(topPropagator_reco_matched);
             
           }  /// End loop jWidth
         }  /// End loop jMass
         
         
         /// Fill plots
-        histo1D["W_Mass_Reco_matched"]->Fill(WMassReco);
-        histo1D["top_Mass_Reco_matched"]->Fill(topMassReco);
-        histo1D["top_Mass_Gen_matched"]->Fill(topMassGen);
+        histo1D["WMass_reco_matched"]->Fill(WMassReco_matched);
+        histo1D["topMass_reco_matched"]->Fill(topMassReco_matched);
+        histo1D["topMass_gen_matched"]->Fill(topMassGen_matched);
         if ( all4JetsMatched_MCdef_ )
         {
-          histo1D["W_Mass_Reco_first4matched"]->Fill(WMassReco);
-          histo1D["top_Mass_Reco_first4matched"]->Fill(topMassReco);
-          histo1D["top_Mass_Gen_first4matched"]->Fill(topMassGen);
+          histo1D["WMass_reco_first4matched"]->Fill(WMassReco_matched);
+          histo1D["topMass_reco_first4matched"]->Fill(topMassReco_matched);
+          histo1D["topMass_gen_first4matched"]->Fill(topMassGen_matched);
         }
       }
       
@@ -774,18 +778,24 @@ int main (int argc, char *argv[])
       int label_bJet2 = -9999;
       float pT_bJet1 = -9999.;
       float pT_bJet2 = -9999.;
-      for (unsigned int i = 0; i < selectedJets.size(); i++) {
+      for (unsigned int i = 0; i < selectedJets.size(); i++)
+      {
         if ( ! has1bjet ) break;
-        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium) {
-          if ( ! has2bjets ) {
+        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium)
+        {
+          if ( ! has2bjets )
+          {
             label_bJet1 = i;
             pT_bJet1 = selectedJets[label_bJet1]->Pt();
             break;
           }
-          else {
-            if (selectedJets[i]->Pt() > pT_bJet1) {
+          else
+          {
+            if (selectedJets[i]->Pt() > pT_bJet1)
+            {
               // Save previous as second best
-              if(label_bJet1 >= 0){
+              if(label_bJet1 >= 0)
+              {
                 label_bJet2 = label_bJet1;
                 pT_bJet2 = pT_bJet1;
               }
@@ -793,7 +803,8 @@ int main (int argc, char *argv[])
               label_bJet1 = i;
               pT_bJet1 = selectedJets[label_bJet1]->Pt();
             }
-            else if (selectedJets[i]->Pt() > pT_bJet2) {
+            else if (selectedJets[i]->Pt() > pT_bJet2)
+            {
               label_bJet2 = i;
               pT_bJet2 = selectedJets[label_bJet2]->Pt();
             }
@@ -808,15 +819,18 @@ int main (int argc, char *argv[])
       //////////////////////
       
       int labelsReco[4] = {-9999,-9999,-9999,-9999};		// 0 = leptonic b-jet, 1 = hadronic b-jet, 2,3 = light jets.
-//      BTagCosThetaCalculation* bTagCosThetaCalculation = new BTagCosThetaCalculation();
-//      float CosThetaCalculation;
-      if (label_bJet1 != -9999 && label_bJet2 != -9999) {
+      float recoWMass, recoTopMass, chi2_mass;
+      if ( label_bJet1 != -9999 && label_bJet2 != -9999 )
+      {
         nofEventsWith2BJets++;
-        float recoWMass, recoTopMass_bJet1, recoTopMass_bJet2, WTerm, topTerm_bJet1, topTerm_bJet2, chi2_bJet1, chi2_bJet2;
+        float recoTopMass_bJet1, recoTopMass_bJet2, WTerm, topTerm_bJet1, topTerm_bJet2, chi2_bJet1, chi2_bJet2;
         float smallestChi2 = 999999.;
-        for (int ijet=0; ijet<4; ijet++) {
-          for (int jjet=ijet+1; jjet<4; jjet++) {
-            if (ijet != label_bJet1 && ijet != label_bJet2 && jjet != label_bJet1 && jjet != label_bJet2) {
+        for (int ijet = 0; ijet < 4; ijet++)
+        {
+          for (int jjet = ijet+1; jjet < 4; jjet++)
+          {
+            if ( ijet != label_bJet1 && ijet != label_bJet2 && jjet != label_bJet1 && jjet != label_bJet2 )
+            {
               recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
               recoTopMass_bJet1 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
               recoTopMass_bJet2 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet2]).M();
@@ -835,6 +849,7 @@ int main (int argc, char *argv[])
 //                 labelsReco[1] = label_bJet1;
 //                 labelsReco[2] = ijet;
 //                 labelsReco[3] = jjet;
+//                 recoTopMass = recoTopMass_bJet1;
 //               }
 //               if (chi2_bJet2 < smallestChi2) {
 //                 smallestChi2 = chi2_bJet2;
@@ -842,47 +857,28 @@ int main (int argc, char *argv[])
 //                 labelsReco[1] = label_bJet2;
 //                 labelsReco[2] = ijet;
 //                 labelsReco[3] = jjet;
+//                 recoTopMass = recoTopMass_bJet2;
 //               }
+//               chi2_mass = smallestChi2;
             }
           }
         }
         
-        if ( dataSetName.find("TT") == 0 )
+        
+ 	  		//Fill histos
+// 	  		if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+//        {
+ 	    		//if (useMassesAndResolutions && eventselectedSemiMu) selecTableSemiMu.Fill(d,11,scaleFactor);
+ 	    		//if (useMassesAndResolutions && eventselectedSemiEl) selecTableSemiEl.Fill(d,12,scaleFactor);
+          
+          if ( dataSetName.find("TT") == 0 )
           {
-            histo1D["W_Mass_Reco_notMatched"]->Fill(recoWMass);
-            histo1D["top_Mass_Reco_notMatched"]->Fill(recoTopMass_bJet1, 0.5);
-            histo1D["top_Mass_Reco_notMatched"]->Fill(recoTopMass_bJet2, 0.5);
+            histo1D["WMass_reco_2b_notMatched"]->Fill(recoWMass);
+            histo1D["topMass_reco_2b_notMatched"]->Fill(recoTopMass_bJet1, 0.5);
+            histo1D["topMass_reco_2b_notMatched"]->Fill(recoTopMass_bJet2, 0.5);
           }
-        
-//         //Cos Theta*
-//         TLorentzVector lepton = *selectedMuons[0];
-//         vector<TLorentzVector> jets;
-//         jets.clear();
-//         for(int i=0; i< selectedJets.size(); i++) jets.push_back(*selectedJets[i]);
-//         
-//         TLorentzVector Neutrino(999,999,999,999);
-//         
-//         CosThetaCalculation = bTagCosThetaCalculation->CalcOrigKins(labelsReco[0],labelsReco[1],lepton,jets,80.4,172.5);
-//         if(CosThetaCalculation != 999)
-//         {
-//           MSPlot["Cos_Theta*"]->Fill(CosThetaCalculation, datasets[d], true, Luminosity*scaleFactor);
-//           if (CosThetaCalculation > 1)
-//             cout << "Eventnr: " << ievt << "; Cos Theta: " << CosThetaCalculation << endl;
-//           
-//           Neutrino =  bTagCosThetaCalculation->GetNeutrino();
-//         }
-        
-        
-        
-					
-        
-// 	  		//Fill histos
-// 	  		if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999) {
-// 	    		labelsChanged++;
-// 	    		if (useMassesAndResolutions && eventselectedSemiMu) selecTableSemiMu.Fill(d,11,scaleFactor);
-// 	    		//if (useMassesAndResolutions && eventselectedSemiEl) selecTableSemiEl.Fill(d,12,scaleFactor);
 // 
-// 	    		MSPlot["Chi2_2btags"+Flav]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
+// 	    		MSPlot["Chi2_2btags"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
 // 
 // 					float Wmass_2btags = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
 // 					MSPlot["W_Mass_2btags"+Flav]->Fill(Wmass_2btags, datasets[d], true, Luminosity*scaleFactor);
@@ -892,30 +888,119 @@ int main (int argc, char *argv[])
 // 	    		float hadtoppt_2btags = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
 // 	    		MSPlot["hadTop_Mass_2btags"+Flav]->Fill(hadtopmass_2btags, datasets[d], true, Luminosity*scaleFactor);
 // 	    		MSPlot["hadTop_Pt_2btags"+Flav]->Fill(hadtoppt_2btags, datasets[d], true, Luminosity*scaleFactor);
-// 
-// 
-// 	    		if(CosThetaCalculation != 999) {
-// 	      		float leptonicTopMass_2btags = (lepton + Neutrino + jets[labelsReco[0]]).M();
-// 	      		float TTbarMass_2btags = leptonicTopMass_2btags + hadtopmass_2btags;
-// 	      		MSPlot["TTbar_Mass_2btags"+Flav]->Fill(TTbarMass_2btags, datasets[d], true, Luminosity*scaleFactor);
-// 
-// 	      		float leptonicTopAngle_2btags = (lepton + Neutrino + jets[labelsReco[0]]).Phi();
-// 	      		float hadronicTopAngle_2btags = (jets[labelsReco[1]] + jets[labelsReco[2]] + jets[labelsReco[3]]).Phi();
-// 	      		float TTbarAngle_2btags = leptonicTopAngle_2btags - hadronicTopAngle_2btags;
-// 	      		if (TTbarAngle_2btags < 0) {
-// 							TTbarAngle_2btags = - TTbarAngle_2btags;
-// 	      		}
-// 	      		MSPlot["TTbar_Angle_2btags"+Flav]->Fill(TTbarAngle_2btags, datasets[d], true, Luminosity*scaleFactor);
-// 
-// 	    		}
 // 	  		}
-// 	  		else {
+// 	  		else
+//        {
 // 	    		//When no Chi2 combination is found:
 // 	    		cout << "Eventnr. " << ievt << ": no Chi2 found." << endl;
 // 	  		}
       
       
-      }
+      }  // end 2 b tags
+      
+      
+      
+      /////////////////////
+      // CHI2 FOR 1 BTAG //
+      /////////////////////
+      
+      else if ( label_bJet1 != -9999 && label_bJet2 == -9999 )
+      {
+        nofEventsWith1BJet++;
+        float WTerm, topTerm, chi2;
+        float smallestChi2 = 999999.;
+        for (int ijet = 0; ijet < 4; ijet++)
+        {
+          for (int jjet = ijet+1; jjet < 4; jjet++)
+          {
+            if ( ijet != label_bJet1 && jjet != label_bJet1 )
+            {
+              recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
+              recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
+              
+//               WTerm = pow( (recoWMass - chi2Wmass)/sigmaChi2Wmass, 2);
+//               topTerm = pow( (recoTopMass_bJet1 - chi2Topmass)/sigmaChi2Topmass, 2);
+//               
+//               chi2 = WTerm + topTerm;
+//               
+//               
+//               if (chi2 < smallestChi2) {
+//                 smallestChi2 = chi2;
+//                 //labelsReco[0] = ;
+//                 labelsReco[1] = label_bJet1;
+//                 labelsReco[2] = ijet;
+//                 labelsReco[3] = jjet;
+//               }
+//               chi2_mass = smallestChi2;
+            }
+          }
+        }
+        
+        //Fill histos
+// 	  		if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+//        { 
+          if ( dataSetName.find("TT") == 0 )
+          {
+            histo1D["WMass_reco_1b_notMatched"]->Fill(recoWMass);
+            histo1D["topMass_reco_1b_notMatched"]->Fill(recoTopMass);
+          }
+// 	  		}
+        
+      }  // end 1 b tag
+      
+      
+      
+      ///////////////////////
+      // CHI2 FOR NO BTAGS //
+      ///////////////////////
+      
+      else
+      {
+        float WTerm, topTerm, chi2;
+        float smallestChi2 = 999999.;
+        for (int ijet = 0; ijet < 4; ijet++)
+        {
+          for (int jjet = ijet+1; jjet < 4; jjet++)
+          {
+            for (int kjet = 0; kjet < 4; kjet++)
+            {
+              if ( ijet != kjet && jjet != kjet )
+              {
+                recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
+                recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[kjet]).M();
+                
+//                 WTerm = pow( (recoWMass - chi2Wmass)/sigmaChi2Wmass, 2);
+//                 topTerm = pow( (recoTopMass_bJet1 - chi2Topmass)/sigmaChi2Topmass, 2);
+// 
+//                 chi2 = WTerm + topTerm;
+// 
+// 
+//                 if (chi2 < smallestChi2) {
+//                   smallestChi2 = chi2;
+//                   //labelsReco[0] = ;
+//                   labelsReco[1] = kjet;
+//                   labelsReco[2] = ijet;
+//                   labelsReco[3] = jjet;
+//                 }
+//                 chi2_mass = smallestChi2;
+              }
+            }
+          }
+        }
+        
+        //Fill histos
+// 	  		if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+//        { 
+          if ( dataSetName.find("TT") == 0 )
+          {
+            histo1D["WMass_reco_0b_notMatched"]->Fill(recoWMass);
+            histo1D["topMass_reco_0b_notMatched"]->Fill(recoTopMass);
+          }
+// 	  		}
+//       histo1D["WMass_reco_0b_notMatched"]
+//       histo1D["topMass_reco_0b_notMatched"]
+         
+      }  // end no b tags
       
       
       
@@ -981,9 +1066,9 @@ int main (int argc, char *argv[])
         {
           for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
           {
-            histo2D["LogLikeWidthMass_Reco"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco[jMass][jWidth]);
-            histo2D["LogLikeWidthMass_Reco_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco[jMass][jWidth]);
-            histo2D["LogLikeWidthMass_Gen"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen[jMass][jWidth]);
+            histo2D["logLikeWidthMass_reco_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+            histo2D["logLikeWidthMass_reco_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+            histo2D["logLikeWidthMass_gen_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen_matched[jMass][jWidth]);
           }
         }
     }
@@ -1044,7 +1129,6 @@ int main (int argc, char *argv[])
   ///Selection tables
   selecTableSemiMu.TableCalculator(false, true, true, true, true);
   string selectiontableMu = "SelectionTable_test_SemiMu.tex";
-  //selecTableSemiMu.Write(selectiontableMu.c_str());
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
   fout->Close();
