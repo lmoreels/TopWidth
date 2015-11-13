@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 /////                                                  /////
-/////  Preliminary macro to try and make some plots    /////
+/////  Preliminary macro to test genJet properties     /////
 /////                                                  /////
 ////////////////////////////////////////////////////////////
 
@@ -186,7 +186,7 @@ int main (int argc, char *argv[])
   //map<string,TH2F*> histo2D;
   
   histo1D["muon_pT"] = new TH1F("muon_pT","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
-  histo1D["muon_Eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
+  histo1D["muon_eta"] = new TH1F("muon_Eta","Pseudorapidity of the muon; #eta", 60, -3, 3);
   histo1D["leadingJet_pT"] = new TH1F("leadingJet_pT","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   
@@ -200,18 +200,13 @@ int main (int argc, char *argv[])
   histo1D["genJets_n90"] = new TH1F("genJets_n90","Number of constituents that carry 90% of energy of genJets; # constituents; # genJets", 101, -0.5, 100.5);
   histo1D["genJets_n60"] = new TH1F("genJets_n60","Number of constituents that carry 60% of energy of genJets; # constituents; # genJets", 101, -0.5, 100.5);
   
-  
-  
-  ////////////////////////////////////
-  ///  MultiSamplePlot
-  ////////////////////////////////////
-  
-  map<string,MultiSamplePlot*> MSPlot;
-  
-  MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 20, 460, "p_{T} [GeV]");
-  MSPlot["muon_Eta"] = new MultiSamplePlot(datasets, "muon_Eta", 60, -3, 3, "Eta");
-  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
+  histo1D["diff_jets_pT"] = new TH1F("diff_jets_pT","Vectorial difference between the transverse momentum of jets and their corresponding genJet; p_{T} [GeV]", 200, 0, 50);
+  histo1D["diff_jets_scal_pT"] = new TH1F("diff_jets_scal_pT","Scalar difference between the transverse momentum of jets and their corresponding genJet; p_{T} [GeV]", 400, -50, 50);
+  histo1D["diff_jets_eta"] = new TH1F("diff_jets_eta","Difference between the pseudorapidity of jets and their corresponding genJet; #eta", 100, -5, 5);
+  histo1D["diff_jets_scal_eta"] = new TH1F("diff_jets_scal_eta","Scalar difference between the pseudorapidity of jets and their corresponding genJet; #eta", 100, -5, 5);
+  histo1D["diff_jets_phi"] = new TH1F("diff_jets_phi","Difference between the phi angle of jets and their corresponding genJet; #phi", 80, -4, 4);
+  histo1D["diff_jets_scal_phi"] = new TH1F("diff_jets_scal_phi","Scalar difference between the phi angle of jets and their corresponding genJet; #phi", 80, -4, 4);
+  histo1D["diff_jets_deltaR"] = new TH1F("diff_jets_deltaR","Difference between the deltaR of jets and their corresponding genJet; #Delta R", 60, -0.5, 1);
   
   
   
@@ -261,8 +256,10 @@ int main (int argc, char *argv[])
     string dataSetName = datasets[d]->Name();
     nofSelectedEvents = 0;
     
+    //if ( dataSetName.find("TT") != 0 ) continue;
+      
     if (verbose > 1)
-      cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
+      cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
     if (verbose > 1)
       cout << "      -> This sample contains, " << datasets[d]->NofEvtsToRunOver() << " events." << endl;
     
@@ -379,13 +376,13 @@ int main (int argc, char *argv[])
       //if (selectedJets.size() >= 4)
       //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
       
-      vector<TRootMCParticle*> mcParticles;
+      //vector<TRootMCParticle*> mcParticles;
       
-      if ( dataSetName.find("TT") == 0 )
-      {
-        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
-        sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
-      }
+      //if ( dataSetName.find("TT") == 0 )
+      //{
+      //  treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
+      //  sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
+      //}
       
       eventSelected = false;
       has1bjet = false;
@@ -456,76 +453,81 @@ int main (int argc, char *argv[])
       
       
       
+      ////////////////////////////
+      ///  (GEN) JET MATCHING  ///
+      ////////////////////////////
+      
+      vector<TLorentzVector> genJetsTLV, selectedJetsTLV;
+      
+      // Put the objects in TLorentzVectors, already ordened in decreasing Pt()
+      for (unsigned int i = 0; i < selectedJets.size(); i++)
+        selectedJetsTLV.push_back(*selectedJets[i]);
+      for (unsigned int i = 0; i < genjets.size(); i++)
+        genJetsTLV.push_back(*genjets[i]);
+      
+      JetPartonMatching matching = JetPartonMatching(genJetsTLV, selectedJetsTLV, 2, true, true, 0.3);		// genJets, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
+      
+      if (matching.getNumberOfAvailableCombinations() != 1)
+        cerr << "matching.getNumberOfAvailableCombinations() = " << matching.getNumberOfAvailableCombinations() << " .  This should be equal to 1 !!!" << endl;
+      
+      vector< pair<unsigned int, unsigned int> > GenJetPair; // First one is jet number, second one is genJet number
+      
+      for (unsigned int i = 0; i < genJetsTLV.size(); i++)
+      {
+        int matchedJetNumber = matching.getMatchForParton(i, 0);  // Get match for genJet
+        if (matchedJetNumber > -1)
+          GenJetPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
+      }
+      
+      
+      
       ////////////////////
       ///  FILL PLOTS  ///
       ////////////////////
       
       double HT = selectedJets[0]->Pt()+selectedJets[1]->Pt()+selectedJets[2]->Pt()+selectedJets[3]->Pt();
+      TLorentzVector diffGenJet;
+      double diffPT, diffEta, diffPhi, deltaR;
       
-      if ( dataSetName.find("TT") == 0 )
+      histo1D["muon_pT"]->Fill(selectedMuons[0]->Pt());
+      histo1D["muon_eta"]->Fill(selectedMuons[0]->Eta());
+      histo1D["leadingJet_pT"]->Fill(selectedJets[0]->Pt());
+      histo1D["Ht_4leadingJets"]->Fill(HT);
+      for (unsigned int iGenJet = 0; iGenJet < genjets.size(); iGenJet++)
       {
-        histo1D["muon_pT"]->Fill(selectedMuons[0]->Pt());
-        histo1D["muon_Eta"]->Fill(selectedMuons[0]->Eta());
-        histo1D["leadingJet_pT"]->Fill(selectedJets[0]->Pt());
-        histo1D["Ht_4leadingJets"]->Fill(HT);
-        for (unsigned int iGenJet = 0; iGenJet < genjets.size(); iGenJet++)
-        {
-          histo1D["genJets_pT"]->Fill(genjets[iGenJet]->Pt());
-          histo1D["genJets_eta"]->Fill(genjets[iGenJet]->Eta());
-          histo1D["genJets_nConstit"]->Fill(genjets[iGenJet]->nConstituents());
-          histo1D["genJets_maxDistance"]->Fill(genjets[iGenJet]->maxDistance());
-          histo1D["genJets_emEnergy"]->Fill(genjets[iGenJet]->emEnergy());
-          histo1D["genJets_hadEnergy"]->Fill(genjets[iGenJet]->hadEnergy());
-          histo1D["genJets_invEnergy"]->Fill(genjets[iGenJet]->invisibleEnergy());
-          histo1D["genJets_n90"]->Fill(genjets[iGenJet]->n90());
-          histo1D["genJets_n60"]->Fill(genjets[iGenJet]->n60());
-        }
+        histo1D["genJets_pT"]->Fill(genjets[iGenJet]->Pt());
+        histo1D["genJets_eta"]->Fill(genjets[iGenJet]->Eta());
+        histo1D["genJets_nConstit"]->Fill(genjets[iGenJet]->nConstituents());
+        histo1D["genJets_maxDistance"]->Fill(genjets[iGenJet]->maxDistance());
+        histo1D["genJets_emEnergy"]->Fill(genjets[iGenJet]->emEnergy());
+        histo1D["genJets_hadEnergy"]->Fill(genjets[iGenJet]->hadEnergy());
+        histo1D["genJets_invEnergy"]->Fill(genjets[iGenJet]->invisibleEnergy());
+        histo1D["genJets_n90"]->Fill(genjets[iGenJet]->n90());
+        histo1D["genJets_n60"]->Fill(genjets[iGenJet]->n60());
       }
-      
-      
-      /// Fill MSPlots
-      
-      MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_Eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor); 
-      MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
-      
-      
-      
-//       /// Find b jets with highest pT
-//       
-//       int labelBTag1 = -9999;
-//       int labelBTag2 = -9999;
-//       float PtBTag1 = -9999.;
-//       float PtBTag2 = -9999.;
-//       for (unsigned int i = 0; i < selectedJets.size(); i++) {
-//         if ( ! has1bjet ) break;
-//         if (selectedJets[i]->btag_combinedSecondaryVertexBJetTags() > 0.679) {		// CSVM
-//           if ( ! has2bjets ) {
-//             labelBTag1 = i;
-//             PtBTag1 = selectedJets[i]->Pt();
-//             break;
-//           }
-//           else {
-//             if (selectedJets[i]->Pt() > PtBTag1) {
-//               // Save previous as second best
-//               if(labelBTag1 >= 0){
-//                 labelBTag2 = labelBTag1;
-//                 PtBTag2 = PtBTag1;
-//               }
-//               // Keep new one
-//               labelBTag1 = i;
-//               PtBTag1 = selectedJets[i]->Pt();
-//             }
-//             else if (selectedJets[i]->Pt() > PtBTag2) {
-//               labelBTag2 = i;
-//               PtBTag2 = selectedJets[i]->Pt();
-//             }
-//           }
-//         }
-//       }
-      
-      
+
+      for (unsigned int iPair = 0; iPair < GenJetPair.size(); iPair++)
+      {
+        diffGenJet = selectedJetsTLV[GenJetPair[iPair].first] - genJetsTLV[GenJetPair[iPair].second];
+        deltaR = selectedJetsTLV[GenJetPair[iPair].first].DeltaR(genJetsTLV[GenJetPair[iPair].second]);
+        
+        histo1D["diff_jets_pT"]->Fill(diffGenJet.Pt());
+        histo1D["diff_jets_eta"]->Fill(diffGenJet.Eta());
+        histo1D["diff_jets_phi"]->Fill(diffGenJet.Phi());
+        histo1D["diff_jets_deltaR"]->Fill(deltaR);
+        
+        diffPT = selectedJetsTLV[GenJetPair[iPair].first].Pt() - genJetsTLV[GenJetPair[iPair].second].Pt();
+        diffEta = selectedJetsTLV[GenJetPair[iPair].first].Eta() - genJetsTLV[GenJetPair[iPair].second].Eta();
+        diffPhi = selectedJetsTLV[GenJetPair[iPair].first].Phi() - genJetsTLV[GenJetPair[iPair].second].Phi();
+        if ( diffPhi > TMath::Pi() )
+          diffPhi -= TMath::Pi();
+        else if ( diffPhi < -TMath::Pi() )
+          diffPhi += TMath::Pi();
+        
+        histo1D["diff_jets_scal_pT"]->Fill(diffPT);
+        histo1D["diff_jets_scal_eta"]->Fill(diffEta);
+        histo1D["diff_jets_scal_phi"]->Fill(diffPhi);
+      }
       
       
       
@@ -550,23 +552,12 @@ int main (int argc, char *argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string pathPNG = "Plots/";
+  string pathPNG = "Plots_genJets/";
   mkdir(pathPNG.c_str(),0777);
   
-//   ///Write histograms
-//   fout->cd();
-//   for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
-//   {
-//     //cout << "MSPlot: " << it->first << endl;
-//     MultiSamplePlot *temp = it->second;
-//     string name = it->first;
-//     temp->Draw(name, 0, false, false, false, 1);
-//     temp->Write(fout, name, true, pathPNG+"MSPlot/");
-//   }
-//   
+  ///Write histograms
+  fout->cd();
   // 1D
-  TDirectory* th1dir = fout->mkdir("1D_histograms");
-  th1dir->cd();
   for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
   {
     TH1F *temp = it->second;
@@ -575,8 +566,8 @@ int main (int argc, char *argv[])
     temp->SetBinContent(N+1,0);
     temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
     temp->Write();
-    //TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
-    //tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
+    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
+    tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
 	}
 
 //   // 2D
