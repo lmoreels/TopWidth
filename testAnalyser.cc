@@ -50,7 +50,7 @@ using namespace TopTree;
 int main (int argc, char *argv[])
 {
   
-  string rootFileName = "testAnalyser_output.root";
+  string rootFileName = "testAnalyser_output_oneFourthOfDataSets.root";
   
   clock_t start = clock();
   
@@ -227,8 +227,8 @@ int main (int argc, char *argv[])
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
   
-  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 11, -0.5, 10.5, "# jets");
-  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 11, -0.5, 10.5, "# b jets");
+  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 13, -0.5, 12.5, "# b jets");
   MSPlot["bJet1_pT"] = new MultiSamplePlot(datasets, "bJet1_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["bJet2_pT"] = new MultiSamplePlot(datasets, "bJet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
@@ -374,6 +374,7 @@ int main (int argc, char *argv[])
     for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
     //for (unsigned int ievt = 0; ievt < 1000; ievt++)
     {
+      if ( ievt%4 != 0 ) continue;
       
       vector < TRootVertex* > vertex;
       vector < TRootMuon* > init_muons;
@@ -385,8 +386,10 @@ int main (int argc, char *argv[])
       
       nEvents[d]++;
       
-      if (ievt%1000 == 0)
-        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
+//      if (ievt%1000 == 0)
+//        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
+      if (((int)nEvents[d])%1000 == 0)
+        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]/((double)datasets[d]->NofEvtsToRunOver())*4)*100  << "%)" << flush << "\r";
       
       
       
@@ -629,7 +632,7 @@ int main (int argc, char *argv[])
         JetPartonMatching matching = JetPartonMatching(mcParticlesTLV, selectedJetsTLV, 2, true, true, 0.3);		// partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
         
         if (matching.getNumberOfAvailableCombinations() != 1)
-          cerr << "matching.getNumberOfAvailableCombinations() = "<<matching.getNumberOfAvailableCombinations()<<" .  This should be equal to 1 !!!"<<endl;
+          cerr << "matching.getNumberOfAvailableCombinations() = " << matching.getNumberOfAvailableCombinations() << " .  This should be equal to 1 !!!" << endl;
         
         
         vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
@@ -1056,7 +1059,8 @@ int main (int argc, char *argv[])
     cout << "Data set " << datasets[d]->Title() << " has " << nofSelectedEvents << " selected events." << endl;
     cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith1BJet << " events with 1 b tagged jet." << endl;
     cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith2BJets << " events with 2 b tagged jets." << endl;
-    cout << "Number of matched events: " << nofMatchedEvents << endl;
+    if ( dataSetName.find("TT") == 0 )
+      cout << "Number of matched events: " << nofMatchedEvents << endl;
     
     
     /// Fill histogram log likelihood
@@ -1083,7 +1087,7 @@ int main (int argc, char *argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string pathPNG = "Plots/";
+  string pathPNG = "PlotsOneFourth/";
   mkdir(pathPNG.c_str(),0777);
   mkdir((pathPNG+"MSPlot/").c_str(),0777);
   
@@ -1128,7 +1132,7 @@ int main (int argc, char *argv[])
   
   ///Selection tables
   selecTableSemiMu.TableCalculator(false, true, true, true, true);
-  string selectiontableMu = "SelectionTable_test_SemiMu.tex";
+  string selectiontableMu = "SelectionTable_testOneFourth_SemiMu.tex";
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
   fout->Close();
