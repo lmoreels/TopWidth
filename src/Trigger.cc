@@ -38,15 +38,17 @@ void Trigger::bookTriggers(bool isData)
     }
   }
   
-//  if (electron)
-//  {
-//    triggerList.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf_v1");
-//    triggerList.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf_TriCentralPFJet30_v1");
-//    triggerList.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf_TriCentralPFJet50_40_30_v1");
-//    triggerList.push_back("HLT_Ele27_eta2p1_WP75_Gsf_v1");
-//    triggerList.push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet30_v1");
-//    triggerList.push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet50_40_30_v1");    	
-//  }
+  if (electron)
+  {
+    if (isData)
+     {
+       triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*");  // Data, restricted to eta < 2.1
+     }
+     else
+     {
+       triggerList.push_back("HLT_Ele22_eta2p1_WP75_Gsf_v*");  // MC
+     }   	
+   }
   
   for(UInt_t iTrig = 0; iTrig < triggerList.size(); iTrig++)
   {
