@@ -40,6 +40,7 @@
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
+#include "./interface/Trigger.h"
 
 
 using namespace std;
@@ -49,8 +50,39 @@ using namespace TopTree;
 
 int main (int argc, char *argv[])
 {
+  bool useOneFourthOfDataSets = false;
+  bool useOneTenthOfDataSets = false;
+  bool useOneFiftiethOfDataSets = false;
+  bool useTestSample = true;
   
-  string rootFileName = "testAnalyser_output_oneFourthOfDataSets.root";
+  string rootFileName = "testAnalyser_output_FullDataSet.root";
+  string selectiontableMu = "SelectionTable_testFull_SemiMu.tex";
+  int iReducedDataSets = 1;
+  
+  if (useOneFourthOfDataSets)
+  {
+    rootFileName = "testAnalyser_output_oneFourthOfDataSets.root";
+    selectiontableMu = "SelectionTable_testOneFourth_SemiMu.tex";
+    iReducedDataSets = 4;
+  }
+  if (useOneTenthOfDataSets)
+  {
+    rootFileName = "testAnalyser_output_oneTenthOfDataSets.root";
+    selectiontableMu = "SelectionTable_testOneTenth_SemiMu.tex";
+    iReducedDataSets = 10;
+  }
+  if (useOneFiftiethOfDataSets)
+  {
+    rootFileName = "testAnalyser_output_oneFiftiethOfDataSets.root";
+    selectiontableMu = "SelectionTable_testOneFiftieth_SemiMu.tex";
+    iReducedDataSets = 50;
+  }
+  if (useTestSample)
+  {
+    rootFileName = "testAnalyser_output_testSample.root";
+    selectiontableMu = "SelectionTable_testSample_SemiMu.tex";
+    iReducedDataSets = 200;
+  }
   
   clock_t start = clock();
   
@@ -73,7 +105,9 @@ int main (int argc, char *argv[])
   string xmlFileName ="config/topWidth.xml";
   
   if (argc > 1)
+  {
     xmlFileName = (string)argv[1];
+  }
   
   const char *xmlfile = xmlFileName.c_str();
   
@@ -130,7 +164,7 @@ int main (int argc, char *argv[])
   
   for (unsigned int d = 0; d < datasets.size (); d++)
   {
-    if (Luminosity > datasets[d]->EquivalentLumi() ) Luminosity = datasets[d]->EquivalentLumi();
+    if (Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
     string dataSetName = datasets[d]->Name();
     
     //if (dataSetName.find("Data_Mu") == 0 || dataSetName.find("data_Mu") == 0 || dataSetName.find("DATA_Mu") == 0) {
@@ -142,21 +176,20 @@ int main (int argc, char *argv[])
     //  foundEl=true;
     //}
     
-    if ( dataSetName.find("QCD") == 0 ) datasets[d]->SetColor(kYellow);
-    if ( dataSetName.find("TT") == 0 ) datasets[d]->SetColor(kRed+1);
+    if ( dataSetName.find("QCD") == 0 ) { datasets[d]->SetColor(kYellow);}
+    if ( dataSetName.find("TT") == 0 ) { datasets[d]->SetColor(kRed+1);}
     //if ( dataSetName.find("TTbarJets_Other") == 0 ) datasets[d]->SetColor(kRed-7);
     if ( dataSetName.find("WJets") == 0 )
     {
       datasets[d]->SetTitle("W#rightarrowl#nu");
       datasets[d]->SetColor(kGreen-3);
     }
-    if ( dataSetName.find("ZJets") == 0 )
+    if ( dataSetName.find("ZJets") == 0 || dataSetName.find("DY") == 0 )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
       datasets[d]->SetColor(kMagenta);
     }
-    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 )
-      datasets[d]->SetColor(kBlue-2);
+    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 ) { datasets[d]->SetColor(kBlue-2);}
     //if (dataSetName.find("NP") == 0 )
     //{
     //	datasets[d]->SetTitle("Signal");
@@ -267,13 +300,22 @@ int main (int argc, char *argv[])
   
   
   
+  ////////////////////////////
+  ///  Initialise trigger  ///
+  ////////////////////////////
+  
+  //Trigger* trigger = new Trigger(hasMuon, hasElectron);
+  Trigger* trigger = new Trigger(1, 0);
+  
+  
+  
   ///////////////////////////////
   ///  Single Muon Selection  ///
   ///////////////////////////////
   
   /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
-  float muonPTSel = 26; // GeV
+  float muonPTSel = 20; // GeV
   float muonEtaSel = 2.1;
   float muonRelIsoSel = 0.15;  // Tight muon
   
@@ -342,14 +384,15 @@ int main (int argc, char *argv[])
   
   for (unsigned int d = 0; d < datasets.size(); d++)
   { 
-    cout << "equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
-    string previousFilename = "";
-    int iFile = -1;
-    string dataSetName = datasets[d]->Name();
     nofSelectedEvents = 0;
     nofEventsWith1BJet = 0;
     nofEventsWith2BJets = 0;
+    bool isData = false;
+    string previousFilename = "";
+    int iFile = -1;
+    string dataSetName = datasets[d]->Name();
     
+    cout << "equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
     if (verbose > 1)
       cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
     if (verbose > 1)
@@ -360,6 +403,13 @@ int main (int argc, char *argv[])
     treeLoader.LoadDataset(datasets[d], anaEnv);
     cout << "LoadEvent" << endl;
     
+    if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
+    {
+      isData = true;
+    }
+    
+    /// book triggers
+    trigger->bookTriggers(isData);
     
     
     ////////////////////////////////////
@@ -371,10 +421,11 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 0; ievt < 1000; ievt++)
+    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    for (unsigned int ievt = 0; ievt < 1000; ievt++)
     {
-      if ( ievt%4 != 0 ) continue;
+      
+      if ( ievt%iReducedDataSets != 0 ) { continue;}
       
       vector < TRootVertex* > vertex;
       vector < TRootMuon* > init_muons;
@@ -389,7 +440,7 @@ int main (int argc, char *argv[])
 //      if (ievt%1000 == 0)
 //        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
       if (((int)nEvents[d])%1000 == 0)
-        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]/((double)datasets[d]->NofEvtsToRunOver())*4)*100  << "%)" << flush << "\r";
+        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
       
       
       
@@ -399,7 +450,7 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets_corrected, mets);
       
-      //if (! (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0 ) ) {
+      //if (! isData ) {
       //  genjets = treeLoader.LoadGenJet(ievt,false);
       //  //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
       //}
@@ -423,7 +474,7 @@ int main (int argc, char *argv[])
       //cout << "scalefactor " << scaleFactor << endl;
       double lumiWeight = 1; //LumiWeights.ITweight( (int)event->nTruePU() ); // currently no pile-up reweighting applied
       
-      if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
+      if (isData)
         lumiWeight=1;
       
       // up syst -> lumiWeight = LumiWeightsUp.ITweight( (int)event->nTruePU() );
@@ -437,18 +488,36 @@ int main (int argc, char *argv[])
       ///  Include trigger set up here when using data
       ////////////////////////////
       
-      string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-      if (previousFilename != currentFilename)
-      {
-        previousFilename = currentFilename;
-        iFile++;
-        cout << "File changed!!! => iFile = " << iFile << endl;
-      }
+      bool trigged = false;
+      
+      /// Fill selection table before trigger
+      selecTableSemiMu.Fill(d,0,scaleFactor);
+      
+//       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
+//       if (previousFilename != currentFilename)
+//       {
+//         previousFilename = currentFilename;
+//         iFile++;
+//         cout << "File changed!!! => iFile = " << iFile << endl;
+//       }
+      
       
       int currentRun = event->runId();
+      trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
+      trigged = trigger->checkIfFired();
       
-      if (previousRun != currentRun)
-        previousRun = currentRun;
+//       if (previousRun != currentRun)
+//         previousRun = currentRun;
+      
+      //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
+      //string triggerData_muon = "HLT_IsoMu18_v";
+      //int lengthTriggerMC_muon = triggerMC_muon.length();
+      //int lengthTriggerData_muon = triggerData_muon.length();
+      
+      if (! trigged ) { continue;}
+      
+      /// Fill selection table after trigger
+      selecTableSemiMu.Fill(d,1,scaleFactor);
       
       
       
@@ -461,7 +530,7 @@ int main (int argc, char *argv[])
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
-      vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.5, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
+      vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.4, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
       vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, "Tight", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
       vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(26, electronEtaSel, "Tight", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
       vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
@@ -488,9 +557,7 @@ int main (int argc, char *argv[])
       has2bjets = false;
       nb_bTaggedJets = 0;
       
-      selecTableSemiMu.Fill(d,0,scaleFactor);
-      /// At the moment do not use trigger
-      selecTableSemiMu.Fill(d,1,scaleFactor);
+      /// Continue with selection table
       if (isGoodPV)
       {
         selecTableSemiMu.Fill(d,2,scaleFactor);
@@ -1132,7 +1199,6 @@ int main (int argc, char *argv[])
   
   ///Selection tables
   selecTableSemiMu.TableCalculator(false, true, true, true, true);
-  string selectiontableMu = "SelectionTable_testOneFourth_SemiMu.tex";
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
   fout->Close();
