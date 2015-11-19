@@ -12,10 +12,6 @@ cd CMSSW_7_4_12_patch4/src
 
 cmsenv
 
-git cms-init
-
---You will get a warning that you did not fork cmssw and that you will thus not be able to push your changes to the directory. Ignore this, this is not the intension anyway.--
-
 ## Get TopTreeProducer from git
 
 --Make sure to add the 'TopBrussels' directory. Otherwise the compilation later on will fail.--
