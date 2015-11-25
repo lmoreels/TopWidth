@@ -36,11 +36,12 @@
 #include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
-#include "./interface/Trigger.h"
+//#include "./interface/Trigger.h"
 
 
 using namespace std;
@@ -57,30 +58,35 @@ int main (int argc, char *argv[])
   
   string rootFileName = "testAnalyser_output_FullDataSet.root";
   string selectiontableMu = "SelectionTable_testFull_SemiMu.tex";
+  string pathPNG = "Plots/";
   int iReducedDataSets = 1;
   
   if (useOneFourthOfDataSets)
   {
     rootFileName = "testAnalyser_output_oneFourthOfDataSets.root";
     selectiontableMu = "SelectionTable_testOneFourth_SemiMu.tex";
+    pathPNG = "PlotsOneFourth/";
     iReducedDataSets = 4;
   }
   if (useOneTenthOfDataSets)
   {
     rootFileName = "testAnalyser_output_oneTenthOfDataSets.root";
     selectiontableMu = "SelectionTable_testOneTenth_SemiMu.tex";
+    pathPNG = "PlotsOneTenth/";
     iReducedDataSets = 10;
   }
   if (useOneFiftiethOfDataSets)
   {
     rootFileName = "testAnalyser_output_oneFiftiethOfDataSets.root";
     selectiontableMu = "SelectionTable_testOneFiftieth_SemiMu.tex";
+    pathPNG = "PlotsOneFiftieth/";
     iReducedDataSets = 50;
   }
   if (useTestSample)
   {
     rootFileName = "testAnalyser_output_testSample.root";
     selectiontableMu = "SelectionTable_testSample_SemiMu.tex";
+    pathPNG = "PlotsTestSample/";
     iReducedDataSets = 200;
   }
   
@@ -164,7 +170,7 @@ int main (int argc, char *argv[])
   
   for (unsigned int d = 0; d < datasets.size (); d++)
   {
-    if (Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
+    if ( Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
     string dataSetName = datasets[d]->Name();
     
     //if (dataSetName.find("Data_Mu") == 0 || dataSetName.find("data_Mu") == 0 || dataSetName.find("DATA_Mu") == 0) {
@@ -305,7 +311,27 @@ int main (int argc, char *argv[])
   ////////////////////////////
   
   //Trigger* trigger = new Trigger(hasMuon, hasElectron);
-  Trigger* trigger = new Trigger(1, 0);
+//  Trigger* trigger = new Trigger(1, 0);
+  
+  
+  
+  //////////////////////////////////
+  ///  Initialise scale factors  ///
+  //////////////////////////////////
+  
+  string pathCalLept = "../TopTreeAnalysisBase/Calibrations/LeptonSF/";
+  string pathCalBTag = "../TopTreeAnalysisBase/Calibrations/BTagging/";
+  string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
+  
+  /// Leptons
+  MuonSFWeight *muonSFWeight_ = new MuonSFWeight (pathCalLept+"Muon_SF_TopEA.root","SF_totErr", false, false); // (... , ... , debug, print warning)
+  ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight (pathCalLept+"Elec_SF_TopEA.root","GlobalSF", false, false); // (... , ... , debug, print warning)
+  
+  /// B tag
+  
+  /// Pile-up
+  cout << " - Loading pile-up scale factors ..." << endl;
+  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup","pileup");
   
   
   
@@ -318,9 +344,10 @@ int main (int argc, char *argv[])
   float muonPTSel = 20; // GeV
   float muonEtaSel = 2.1;
   float muonRelIsoSel = 0.15;  // Tight muon
+  string muonWP = "Tight";
   
   float muonPTVeto = 10; // GeV
-  float muonEtaVeto = 2.5;
+  float muonEtaVeto = 2.1;
   float muonRelIsoVeto = 0.25;  // Loose muon
   
   
@@ -330,7 +357,11 @@ int main (int argc, char *argv[])
   ///////////////////////////////////
   
   // To do
+  float electronPTSel = 24; // GeV
   float electronEtaSel = 2.5;
+  string electronWP = "Tight";
+  
+  float electronPTVeto = 15; // GeV
   float electronEtaVeto = 2.5;
   
   
@@ -340,6 +371,8 @@ int main (int argc, char *argv[])
   ///////////////////////
   
   // To do
+  float jetPT = 20; // GeV
+  float jetEta = 2.4;  // to allow b tagging
   
   
   
@@ -394,9 +427,10 @@ int main (int argc, char *argv[])
     
     cout << "equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
     if (verbose > 1)
+    {
       cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
-    if (verbose > 1)
       cout << "      -> This sample contains, " << datasets[d]->NofEvtsToRunOver() << " events." << endl;
+    }
     
     //open files and load
     cout << "LoadEvent" << endl;
@@ -408,8 +442,44 @@ int main (int argc, char *argv[])
       isData = true;
     }
     
+    
     /// book triggers
-    trigger->bookTriggers(isData);
+//    trigger->bookTriggers(isData);
+    
+    
+    
+    ///////////////////////////////////////////
+    ///  Initialise Jet Energy Corrections  ///
+    ///////////////////////////////////////////
+    
+    vector<JetCorrectorParameters> vCorrParam;
+    string pathCalJEC = "../TopTreeAnalysisBase/Calibrations/JECFiles/";
+
+    if (isData)
+    {
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L1FastJet_AK4PFchs.txt");
+      vCorrParam.push_back(*L1JetCorPar);
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L2Relative_AK4PFchs.txt");
+      vCorrParam.push_back(*L2JetCorPar);
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L3Absolute_AK4PFchs.txt");
+      vCorrParam.push_back(*L3JetCorPar);
+      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L2L3Residual_AK4PFchs.txt");
+      vCorrParam.push_back(*L2L3ResJetCorPar);
+    }
+    else
+    {
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L1FastJet_AK4PFchs.txt");
+      vCorrParam.push_back(*L1JetCorPar);
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L2Relative_AK4PFchs.txt");
+      vCorrParam.push_back(*L2JetCorPar);
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L3Absolute_AK4PFchs.txt");
+      vCorrParam.push_back(*L3JetCorPar);
+    }
+    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer15_25nsV2_MC_Uncertainty_AK4PFchs.txt");
+    
+    JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
+    
+    
     
     
     ////////////////////////////////////
@@ -421,8 +491,8 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    //for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    for (unsigned int ievt = 0; ievt < 1000; ievt++)
+    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
+    //for (unsigned int ievt = 0; ievt < 1000; ievt++)
     {
       
       if ( ievt%iReducedDataSets != 0 ) { continue;}
@@ -433,7 +503,7 @@ int main (int argc, char *argv[])
       vector < TRootJet* > init_jets_corrected;
       vector < TRootJet* > init_jets;
       vector < TRootMET* > mets;
-      //vector < TRootGenJet* > genjets;
+      vector < TRootGenJet* > genjets;
       
       nEvents[d]++;
       
@@ -450,10 +520,10 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets_corrected, mets);
       
-      //if (! isData ) {
-      //  genjets = treeLoader.LoadGenJet(ievt,false);
-      //  //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
-      //}
+      if (! isData ) {
+        genjets = treeLoader.LoadGenJet(ievt,false);
+        //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
+      }
       
       
       // BE CAREFUL: TRootGenEvent is now obsolete!
@@ -493,28 +563,28 @@ int main (int argc, char *argv[])
       /// Fill selection table before trigger
       selecTableSemiMu.Fill(d,0,scaleFactor);
       
-//       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-//       if (previousFilename != currentFilename)
-//       {
-//         previousFilename = currentFilename;
-//         iFile++;
-//         cout << "File changed!!! => iFile = " << iFile << endl;
-//       }
+      string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
+      if (previousFilename != currentFilename)
+      {
+        previousFilename = currentFilename;
+        iFile++;
+        cout << "File changed!!! => iFile = " << iFile << endl;
+      }
       
-      
-      int currentRun = event->runId();
-      trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
-      trigged = trigger->checkIfFired();
-      
-//       if (previousRun != currentRun)
-//         previousRun = currentRun;
-      
-      //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
-      //string triggerData_muon = "HLT_IsoMu18_v";
-      //int lengthTriggerMC_muon = triggerMC_muon.length();
-      //int lengthTriggerData_muon = triggerData_muon.length();
-      
-      if (! trigged ) { continue;}
+
+//         int currentRun = event->runId();
+//         trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
+//         trigged = trigger->checkIfFired();
+// 
+//   //       if (previousRun != currentRun)
+//   //         previousRun = currentRun;
+// 
+//         //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
+//         //string triggerData_muon = "HLT_IsoMu18_v";
+//         //int lengthTriggerMC_muon = triggerMC_muon.length();
+//         //int lengthTriggerData_muon = triggerData_muon.length();
+// 
+//         if (! trigged ) { continue;}
       
       /// Fill selection table after trigger
       selecTableSemiMu.Fill(d,1,scaleFactor);
@@ -530,15 +600,15 @@ int main (int argc, char *argv[])
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
-      vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(20, 2.4, true, "Tight");  // GetSelectedJets(float PtThr, float EtaThr, bool applyJetID, std::string TightLoose)
-      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, "Tight", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(26, electronEtaSel, "Tight", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
-      vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // GetSelectedMuons(float PtThr, float etaThr, float relIso, string WorkingPoint, string ProductionCampaign)
-      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(15, electronEtaVeto, "Loose", "Spring15_25ns", true);  // GetSelectedElectrons(float PtThr, float etaThr, string WorkingPoint, string ProductionCampaign, bool CutsBased)
+      vector<TRootPFJet*> selectedJets = selection.GetSelectedJets(jetPT, jetEta, true, "Tight");  // PtThr, EtaThr, applyJetID, TightLoose
+      vector<TRootMuon*> selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, muonWP, "Spring15");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
+      vector<TRootElectron*> selectedElectrons = selection.GetSelectedElectrons(electronPTSel, electronEtaSel, electronWP, "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
+      vector<TRootMuon*> vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
+      vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       
       
-      /// Sort objects according to pT
-      sort(selectedJets.begin(),selectedJets.end(),HighestPt()); // HighestPt() is included from the Selection class)
+//      /// Sort objects according to pT
+//      sort(selectedJets.begin(),selectedJets.end(),HighestPt()); // HighestPt() is included from the Selection class)
         
       
       //if (selectedJets.size() >= 4)
@@ -564,6 +634,12 @@ int main (int argc, char *argv[])
         if (selectedMuons.size() == 1)
         {
           selecTableSemiMu.Fill(d,3,scaleFactor);
+          /// Apply muon scale factor
+          if (! isData )
+          {
+            double muonTrigSF = muonSFWeight_->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
+            scaleFactor = scaleFactor*muonTrigSF;
+          }
           if (vetoMuons.size() == 1) {
             selecTableSemiMu.Fill(d,4,scaleFactor);
             if (vetoElectronsSemiMu.size() == 0) {
@@ -1154,7 +1230,7 @@ int main (int argc, char *argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string pathPNG = "PlotsOneFourth/";
+  //string pathPNG = "PlotsOneFourth/";
   mkdir(pathPNG.c_str(),0777);
   mkdir((pathPNG+"MSPlot/").c_str(),0777);
   
