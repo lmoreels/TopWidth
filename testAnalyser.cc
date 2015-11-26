@@ -250,6 +250,8 @@ int main (int argc, char *argv[])
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
+  histo2D["muon_trigSF"] = new TH2F("muon_trigSF", "Muon scale factors in function of p_{T} and #eta; p_{T} [GeV]; #eta", 100, 0, 1000, 30, 0, 3);
+  
   
   
   ////////////////////////////////////
@@ -258,6 +260,23 @@ int main (int argc, char *argv[])
   
   map<string,MultiSamplePlot*> MSPlot;
   
+  /// Plots before event selection
+  MSPlot["init_nJets"] = new MultiSamplePlot(datasets, "init_nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["init_nMuons"] = new MultiSamplePlot(datasets, "init_nMuons", 13, -0.5, 12.5, "# muons");
+  MSPlot["init_nElectrons"] = new MultiSamplePlot(datasets, "init_nElectrons", 13, -0.5, 12.5, "# electrons");
+  MSPlot["init_nPVs_before"] = new MultiSamplePlot(datasets, "init_nPVs_before", 13, -0.5, 12.5, "# PVs before reweighting");
+  MSPlot["init_nPVs_after"] = new MultiSamplePlot(datasets, "init_nPVs_after", 13, -0.5, 12.5, "# PVs after reweighting");
+  
+  MSPlot["init_leadingJet_pT"] = new MultiSamplePlot(datasets, "init_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["init_leadingJet_eta"] = new MultiSamplePlot(datasets, "init_leadingJet_eta", 60, -3, 3, "Eta");
+  MSPlot["init_leadingMuon_pT"] = new MultiSamplePlot(datasets, "init_leadingMuon_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 60, -3, 3, "Eta");
+  MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
+  MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["init_met_eta"] = new MultiSamplePlot(datasets, "init_met_eta", 60, -3, 3, "Eta");
+  
+  /// Plots after event selection
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 60, -3, 3, "Eta");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
@@ -265,6 +284,8 @@ int main (int argc, char *argv[])
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
+  MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 60, -3, 3, "Eta");
   
   MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 13, -0.5, 12.5, "# b jets");
@@ -538,19 +559,26 @@ int main (int argc, char *argv[])
       float scaleFactor = 1.;
       
       
-      // PU reweighting
+      /// Plot number of primary vertices before PU reweighting
+      MSPlot["init_nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity*scaleFactor);
       
-      // old method
-      //cout << "scalefactor " << scaleFactor << endl;
-      double lumiWeight = 1; //LumiWeights.ITweight( (int)event->nTruePU() ); // currently no pile-up reweighting applied
       
-      if (isData)
-        lumiWeight=1;
+      /// PU reweighting
+      double lumiWeight = 1.;
       
-      // up syst -> lumiWeight = LumiWeightsUp.ITweight( (int)event->nTruePU() );
-      // down syst -> lumiWeight = LumiWeightsDown.ITweight( (int)event->nTruePU() );
+      if (! isData )
+      {
+        lumiWeight = LumiWeights.ITweight( vertex.size() );
+        /// Outdated syst up/down !
+        // up syst -> lumiWeight = LumiWeightsUp.ITweight( (int)event->nTruePU() );
+        // down syst -> lumiWeight = LumiWeightsDown.ITweight( (int)event->nTruePU() );
+      }
       
       scaleFactor = scaleFactor*lumiWeight;
+      
+      
+      /// Plot number of primary vertices after PU reweighting
+      MSPlot["init_nPVs_after"]->Fill(vertex.size(), datasets[d], true, Luminosity*scaleFactor);
       
       
       
@@ -591,6 +619,24 @@ int main (int argc, char *argv[])
       
       
       
+      //////////////////////////////////////
+      ///  Jet Energy Scale Corrections  ///
+      //////////////////////////////////////
+      
+      if (! isData)
+      {
+        jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "nominal", false);
+        //jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "minus", false);
+        //jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "plus", false);
+        
+        /// Example how to apply JES systematics
+        //jetTools->correctJetJESUnc(init_jets_corrected, "minus", 1);
+        //jetTools->correctJetJESUnc(init_jets_corrected, "plus", 1);
+        //cout << "JER smeared!!! " << endl;
+      }
+      
+      
+      
       /////////////////////////
       ///  EVENT SELECTION  ///
       /////////////////////////
@@ -622,6 +668,34 @@ int main (int argc, char *argv[])
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       
+      
+      /// Fill control plots
+      MSPlot["init_nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nMuons"]->Fill(selectedMuons.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nElectrons"]->Fill(selectedElectrons.size(), datasets[d], true, Luminosity*scaleFactor);
+      
+      if ( selectedJets.size() > 0 )
+      {
+        MSPlot["init_leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_eta"]->Fill(selectedJets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( selectedMuons.size() > 0 )
+      {
+        MSPlot["init_leadingMuon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( selectedElectrons.size() > 0 )
+      {
+        MSPlot["init_leadingElectron_pT"]->Fill(selectedElectrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingElectron_eta"]->Fill(selectedElectrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( mets.size() > 0 )
+      {
+         MSPlot["init_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["init_met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      
+      
       eventSelected = false;
       has1bjet = false;
       has2bjets = false;
@@ -638,6 +712,7 @@ int main (int argc, char *argv[])
           if (! isData )
           {
             double muonTrigSF = muonSFWeight_->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
+            histo2D["muon_trigSF"]->Fill(selectedMuons[0]->Pt(), selectedMuons[0]->Eta(), muonTrigSF);
             scaleFactor = scaleFactor*muonTrigSF;
           }
           if (vetoMuons.size() == 1) {
@@ -1174,6 +1249,11 @@ int main (int argc, char *argv[])
       MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+      if ( mets.size() > 0 )
+      {
+         MSPlot["met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
       
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["nBJets"]->Fill(nb_bTaggedJets, datasets[d], true, Luminosity*scaleFactor);
