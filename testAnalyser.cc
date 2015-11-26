@@ -7,16 +7,18 @@
 
 
 #include "TStyle.h"
+#include <ctime>
 #include <cmath>
+#include <ostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
 #include <map>
-#include <TH1.h>
-#include <TH2.h>
 #include <array>
 #include <vector>
+#include <TH1.h>
+#include <TH2.h>
 #include <TLorentzVector.h>
 
 //used TopTreeAnalysis classes
@@ -49,6 +51,38 @@ using namespace reweight;
 using namespace TopTree;
 
 
+string ConvertIntToString(int Number)
+{
+  ostringstream convert;
+  convert.clear();
+  convert << Number;
+  return convert.str();
+}
+
+string MakeTimeStamp()
+{
+  time_t t = time(0);   // get time now
+  struct tm * now = localtime( & t );
+  
+  int year = now->tm_year + 1900;
+  int month = now->tm_mon + 1;
+  int day = now->tm_mday;
+  int hour = now->tm_hour;
+  int min = now->tm_min;
+  int sec = now->tm_sec;
+  
+  string year_str = ConvertIntToString(year);
+  string month_str = ConvertIntToString(month);
+  string day_str = ConvertIntToString(day);
+  string hour_str = ConvertIntToString(hour);
+  string min_str = ConvertIntToString(min);
+  string sec_str = ConvertIntToString(sec);
+  
+  string date_str = year_str + month_str + day_str + "_" + hour_str + min_str + sec_str;
+  return date_str;
+}
+
+
 int main (int argc, char *argv[])
 {
   bool useOneFourthOfDataSets = false;
@@ -56,37 +90,39 @@ int main (int argc, char *argv[])
   bool useOneFiftiethOfDataSets = false;
   bool useTestSample = true;
   
-  string rootFileName = "testAnalyser_output_FullDataSet.root";
-  string selectiontableMu = "SelectionTable_testFull_SemiMu.tex";
-  string pathPNG = "Plots/";
+  string dateString = MakeTimeStamp();
+  
+  string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
+  string selectiontableMu = "SelectionTable_testFull_SemiMu_"+dateString+".tex";
+  string pathPNG = "Plots_"+dateString+"/";
   int iReducedDataSets = 1;
   
   if (useOneFourthOfDataSets)
   {
-    rootFileName = "testAnalyser_output_oneFourthOfDataSets.root";
-    selectiontableMu = "SelectionTable_testOneFourth_SemiMu.tex";
-    pathPNG = "PlotsOneFourth/";
+    rootFileName = "testAnalyser_output_oneFourthOfDataSets_"+dateString+".root";
+    selectiontableMu = "SelectionTable_testOneFourth_SemiMu_"+dateString+".tex";
+    pathPNG = "PlotsOneFourth_"+dateString+"/";
     iReducedDataSets = 4;
   }
   if (useOneTenthOfDataSets)
   {
-    rootFileName = "testAnalyser_output_oneTenthOfDataSets.root";
-    selectiontableMu = "SelectionTable_testOneTenth_SemiMu.tex";
-    pathPNG = "PlotsOneTenth/";
+    rootFileName = "testAnalyser_output_oneTenthOfDataSets_"+dateString+".root";
+    selectiontableMu = "SelectionTable_testOneTenth_SemiMu_"+dateString+".tex";
+    pathPNG = "PlotsOneTenth_"+dateString+"/";
     iReducedDataSets = 10;
   }
   if (useOneFiftiethOfDataSets)
   {
-    rootFileName = "testAnalyser_output_oneFiftiethOfDataSets.root";
-    selectiontableMu = "SelectionTable_testOneFiftieth_SemiMu.tex";
-    pathPNG = "PlotsOneFiftieth/";
+    rootFileName = "testAnalyser_output_oneFiftiethOfDataSets_"+dateString+".root";
+    selectiontableMu = "SelectionTable_testOneFiftieth_SemiMu_"+dateString+".tex";
+    pathPNG = "PlotsOneFiftieth_"+dateString+"/";
     iReducedDataSets = 50;
   }
   if (useTestSample)
   {
-    rootFileName = "testAnalyser_output_testSample.root";
-    selectiontableMu = "SelectionTable_testSample_SemiMu.tex";
-    pathPNG = "PlotsTestSample/";
+    rootFileName = "testAnalyser_output_testSample_"+dateString+".root";
+    selectiontableMu = "SelectionTable_testSample_SemiMu_"+dateString+".tex";
+    pathPNG = "PlotsTestSample_"+dateString+"/";
     iReducedDataSets = 200;
   }
   
@@ -250,7 +286,7 @@ int main (int argc, char *argv[])
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
-  histo2D["muon_trigSF"] = new TH2F("muon_trigSF", "Muon scale factors in function of p_{T} and #eta; p_{T} [GeV]; #eta", 100, 0, 1000, 30, 0, 3);
+  histo2D["muon_trigSF"] = new TH2F("muon_trigSF", "Muon scale factors in function of p_{T} and #eta; p_{T} [GeV]; #eta", 60, 0, 600, 21, 0, 2.1);
   
   
   
@@ -596,7 +632,7 @@ int main (int argc, char *argv[])
       {
         previousFilename = currentFilename;
         iFile++;
-        cout << "File changed!!! => iFile = " << iFile << endl;
+        cout << "File changed!!! => iFile = " << iFile << endl << endl;
       }
       
 
