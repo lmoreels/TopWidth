@@ -204,10 +204,13 @@ int main (int argc, char *argv[])
   //bool foundMu = false;
   //bool foundEl = false;
   
+  
   for (unsigned int d = 0; d < datasets.size (); d++)
   {
-    if ( Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
+    //if ( Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
     string dataSetName = datasets[d]->Name();
+    
+    if ( (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0) && Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
     
     //if (dataSetName.find("Data_Mu") == 0 || dataSetName.find("data_Mu") == 0 || dataSetName.find("DATA_Mu") == 0) {
     //  LuminosityMu = datasets[d]->EquivalentLumi();
@@ -229,9 +232,14 @@ int main (int argc, char *argv[])
     if ( dataSetName.find("ZJets") == 0 || dataSetName.find("DY") == 0 )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
-      datasets[d]->SetColor(kMagenta);
+      datasets[d]->SetColor(kCyan);
+      //datasets[d]->SetColor(kMagenta);
     }
-    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 ) { datasets[d]->SetColor(kBlue-2);}
+    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 )
+    { 
+      datasets[d]->SetColor(kBlue-2);
+      if ( dataSetName.find("tW") == 0 ) { datasets[d]->SetTitle("ST tW");}
+    }
     //if (dataSetName.find("NP") == 0 )
     //{
     //	datasets[d]->SetTitle("Signal");
@@ -286,7 +294,8 @@ int main (int argc, char *argv[])
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
-  histo2D["muon_trigSF"] = new TH2F("muon_trigSF", "Muon scale factors in function of p_{T} and #eta; p_{T} [GeV]; #eta", 60, 0, 600, 21, 0, 2.1);
+  histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 50, 0, 500);
+  histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 50, 0, 500);
   
   
   
@@ -330,6 +339,9 @@ int main (int argc, char *argv[])
   MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
   MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
   
+  /// Scale factors
+  MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 40, 0, 2, "lumiWeight");
+  
   
   
   ////////////////////////////////////
@@ -350,8 +362,8 @@ int main (int argc, char *argv[])
   
   //CutsSelecTableSemiMu.push_back("Missing $E_T$");
   //CutsSelecTableSemiMu.push_back("$H_T$ cut");
-  CutsSelecTableSemiMu.push_back("$\\geq$ 1 b-jet (CSVM)");
-  CutsSelecTableSemiMu.push_back("$\\geq$ 2 b-jets (CSVM)");
+  CutsSelecTableSemiMu.push_back("$\\geq$ 1 b-jet (CSVMv2)");
+  CutsSelecTableSemiMu.push_back("$\\geq$ 2 b-jets (CSVMv2)");
   
   if (verbose > 0)
     cout << " - CutsSelectionTable instantiated ..." << endl;
@@ -381,8 +393,20 @@ int main (int argc, char *argv[])
   string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
   
   /// Leptons
-  MuonSFWeight *muonSFWeight_ = new MuonSFWeight (pathCalLept+"Muon_SF_TopEA.root","SF_totErr", false, false); // (... , ... , debug, print warning)
-  ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight (pathCalLept+"Elec_SF_TopEA.root","GlobalSF", false, false); // (... , ... , debug, print warning)
+  double muonSFID, muonSFIso;
+  //MuonSFWeight *muonSFWeight_ = new MuonSFWeight(pathCalLept+"Muon_SF_TopEA.root","SF_totErr", false, false); // (... , ... , debug, print warning)
+  MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
+  MuonSFWeight *muonSFWeightID_M = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_MediumID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
+//  MuonSFWeight *muonSFWeightID_L = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_LooseID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
+  
+  MuonSFWeight *muonSFWeightIso_TT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Tight RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_TM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_TightRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Tight RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Loose ID
+  
+      
+  //ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight(pathCalLept+"Elec_SF_TopEA.root","GlobalSF", false, false); // (... , ... , debug, print warning)
   
   /// B tag
   
@@ -439,9 +463,9 @@ int main (int argc, char *argv[])
   
   /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
-  float CSVMv2Loose =  0.605;
-  float CSVMv2Medium = 0.890;
-  float CSVMv2Tight = 0.970;
+  float CSVv2Loose =  0.605;
+  float CSVv2Medium = 0.890;
+  float CSVv2Tight = 0.970;
   
   
   
@@ -632,7 +656,7 @@ int main (int argc, char *argv[])
       {
         previousFilename = currentFilename;
         iFile++;
-        cout << "File changed!!! => iFile = " << iFile << endl << endl;
+        cout << "File changed!!! => iFile = " << iFile << endl;
       }
       
 
@@ -747,9 +771,11 @@ int main (int argc, char *argv[])
           /// Apply muon scale factor
           if (! isData )
           {
-            double muonTrigSF = muonSFWeight_->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
-            histo2D["muon_trigSF"]->Fill(selectedMuons[0]->Pt(), selectedMuons[0]->Eta(), muonTrigSF);
-            scaleFactor = scaleFactor*muonTrigSF;
+            muonSFID = muonSFWeightID_T->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
+            muonSFIso = muonSFWeightIso_TT->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
+            histo2D["muon_SF_ID"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFID);
+            histo2D["muon_SF_Iso"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFIso);
+            scaleFactor = scaleFactor*muonSFID*muonSFIso;
           }
           if (vetoMuons.size() == 1) {
             selecTableSemiMu.Fill(d,4,scaleFactor);
@@ -762,7 +788,7 @@ int main (int argc, char *argv[])
                 
                 for (unsigned int i = 0; i < selectedJets.size(); i++)
                 {
-                  if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium) nb_bTaggedJets++;
+                  if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium) nb_bTaggedJets++;
                 }
                 		
                 if ( nb_bTaggedJets >= 1 )
@@ -1038,7 +1064,7 @@ int main (int argc, char *argv[])
       for (unsigned int i = 0; i < selectedJets.size(); i++)
       {
         if ( ! has1bjet ) break;
-        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVMv2Medium)
+        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium)
         {
           if ( ! has2bjets )
           {
@@ -1305,6 +1331,7 @@ int main (int argc, char *argv[])
         }
       }
       
+      MSPlot["pileup_SF"]->Fill(lumiWeight, datasets[d], true, Luminosity*scaleFactor);
       
       
       
