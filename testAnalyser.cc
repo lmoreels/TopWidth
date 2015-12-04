@@ -43,7 +43,7 @@
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
-//#include "./interface/Trigger.h"
+#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
 
 
 using namespace std;
@@ -51,10 +51,11 @@ using namespace reweight;
 using namespace TopTree;
 
 
-string ConvertIntToString(int Number)
+string ConvertIntToString(int Number, bool pad)
 {
   ostringstream convert;
   convert.clear();
+  if ( pad && Number < 10 ) { convert << std::setw(2) << std::setfill('0');}
   convert << Number;
   return convert.str();
 }
@@ -64,33 +65,40 @@ string MakeTimeStamp()
   time_t t = time(0);   // get time now
   struct tm * now = localtime( & t );
   
-  int year = now->tm_year + 1900;
+  int year = now->tm_year - 100;  /// + 1900 to get current year
   int month = now->tm_mon + 1;
   int day = now->tm_mday;
   int hour = now->tm_hour;
   int min = now->tm_min;
-  int sec = now->tm_sec;
+  //int sec = now->tm_sec;
   
-  string year_str = ConvertIntToString(year);
-  string month_str = ConvertIntToString(month);
-  string day_str = ConvertIntToString(day);
-  string hour_str = ConvertIntToString(hour);
-  string min_str = ConvertIntToString(min);
-  string sec_str = ConvertIntToString(sec);
+  string year_str = ConvertIntToString(year, true);
+  string month_str = ConvertIntToString(month, true);
+  string day_str = ConvertIntToString(day, true);
+  string hour_str = ConvertIntToString(hour, true);
+  string min_str = ConvertIntToString(min, true);
+  //string sec_str = ConvertIntToString(sec, true);
   
-  string date_str = year_str + month_str + day_str + "_" + hour_str + min_str + sec_str;
+  string date_str = year_str + month_str + day_str + "_" + hour_str + min_str;
   return date_str;
 }
 
 
 int main (int argc, char *argv[])
 {
-  bool useOneFourthOfDataSets = false;
+  string dateString = MakeTimeStamp();
+  cout << "***********************************" << endl;
+  cout << "***   Beginning of program      ***" << endl;
+  cout << "***********************************" << endl;
+  cout << "Current time: " << dateString << endl;
+  
+  clock_t start = clock();
+  
+  bool useOneFourthOfDataSets = true;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = true;
+  bool useTestSample = false;
   
-  string dateString = MakeTimeStamp();
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
   string selectiontableMu = "SelectionTable_testFull_SemiMu_"+dateString+".tex";
@@ -126,13 +134,13 @@ int main (int argc, char *argv[])
     iReducedDataSets = 200;
   }
   
-  clock_t start = clock();
   
   
   /////////////////////
   ///  Configuration
   /////////////////////
   
+  bool findTriggers = false;
   bool eventSelected = false;
   bool has1bjet = false;
   bool has2bjets = false;
@@ -144,7 +152,7 @@ int main (int argc, char *argv[])
   
   
   /// xml file
-  string xmlFileName ="config/topWidth.xml";
+  string xmlFileName ="config/topWidth_skimmed.xml";
   
   if (argc > 1)
   {
@@ -294,8 +302,8 @@ int main (int argc, char *argv[])
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
-  histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 50, 0, 500);
-  histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 50, 0, 500);
+  histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
+  histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
   
   
   
@@ -309,17 +317,21 @@ int main (int argc, char *argv[])
   MSPlot["init_nJets"] = new MultiSamplePlot(datasets, "init_nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["init_nMuons"] = new MultiSamplePlot(datasets, "init_nMuons", 13, -0.5, 12.5, "# muons");
   MSPlot["init_nElectrons"] = new MultiSamplePlot(datasets, "init_nElectrons", 13, -0.5, 12.5, "# electrons");
-  MSPlot["init_nPVs_before"] = new MultiSamplePlot(datasets, "init_nPVs_before", 13, -0.5, 12.5, "# PVs before reweighting");
-  MSPlot["init_nPVs_after"] = new MultiSamplePlot(datasets, "init_nPVs_after", 13, -0.5, 12.5, "# PVs after reweighting");
+  MSPlot["init_nPVs_before"] = new MultiSamplePlot(datasets, "init_nPVs_before", 41, -0.5, 40.5, "# PVs before reweighting");
+  MSPlot["init_nPVs_after"] = new MultiSamplePlot(datasets, "init_nPVs_after", 41, -0.5, 40.5, "# PVs after reweighting");
   
   MSPlot["init_leadingJet_pT"] = new MultiSamplePlot(datasets, "init_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["init_leadingJet_eta"] = new MultiSamplePlot(datasets, "init_leadingJet_eta", 60, -3, 3, "Eta");
+  MSPlot["init_leadingJet_CSVv2Discr"] = new MultiSamplePlot(datasets, "init_leadingJet_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
   MSPlot["init_leadingMuon_pT"] = new MultiSamplePlot(datasets, "init_leadingMuon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 60, -3, 3, "Eta");
   MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
   MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["init_met_eta"] = new MultiSamplePlot(datasets, "init_met_eta", 60, -3, 3, "Eta");
+  
+  /// Event Selection
+  MSPlot["Selection"] = new MultiSamplePlot(datasets, "Selection", 13, -0.5, 12.5, "Selection");
   
   /// Plots after event selection
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
@@ -328,7 +340,7 @@ int main (int argc, char *argv[])
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 25, 0, 500, "p_{T} [GeV]");
-  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 120, 0, 1200, "H_{T} [GeV]");
+  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
   MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 60, -3, 3, "Eta");
   
@@ -336,11 +348,11 @@ int main (int argc, char *argv[])
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 13, -0.5, 12.5, "# b jets");
   MSPlot["bJet1_pT"] = new MultiSamplePlot(datasets, "bJet1_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["bJet2_pT"] = new MultiSamplePlot(datasets, "bJet2_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
-  MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
+  MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
+  MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
   
   /// Scale factors
-  MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 40, 0, 2, "lumiWeight");
+  MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
   
   
   
@@ -380,7 +392,9 @@ int main (int argc, char *argv[])
   ////////////////////////////
   
   //Trigger* trigger = new Trigger(hasMuon, hasElectron);
-//  Trigger* trigger = new Trigger(1, 0);
+  Trigger* trigger = new Trigger(1, 0);
+//   ofstream foutTriggerList;
+//   if (findTriggers) { foutTriggerList.open("TriggerList.txt");}
   
   
   
@@ -525,7 +539,7 @@ int main (int argc, char *argv[])
     
     
     /// book triggers
-//    trigger->bookTriggers(isData);
+    trigger->bookTriggers(isData);
     
     
     
@@ -647,35 +661,55 @@ int main (int argc, char *argv[])
       ////////////////////////////
       
       bool trigged = false;
+      bool fileChanged = false;
+      bool runChanged = false;
       
       /// Fill selection table before trigger
       selecTableSemiMu.Fill(d,0,scaleFactor);
+      MSPlot["Selection"]->Fill(0, datasets[d], true, Luminosity*scaleFactor);
       
       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-      if (previousFilename != currentFilename)
+      int currentRun = event->runId();
+      if (findTriggers)
       {
-        previousFilename = currentFilename;
-        iFile++;
-        cout << "File changed!!! => iFile = " << iFile << endl;
-      }
-      
+        if ( previousFilename != currentFilename )
+        {
+          fileChanged = true;
+          previousFilename = currentFilename;
+          iFile++;
+          cout << "File changed!!! => iFile = " << iFile << endl;
+        }
 
-//         int currentRun = event->runId();
-//         trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
-//         trigged = trigger->checkIfFired();
-// 
-//   //       if (previousRun != currentRun)
-//   //         previousRun = currentRun;
-// 
-//         //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
-//         //string triggerData_muon = "HLT_IsoMu18_v";
-//         //int lengthTriggerMC_muon = triggerMC_muon.length();
-//         //int lengthTriggerData_muon = triggerData_muon.length();
-// 
-//         if (! trigged ) { continue;}
+        if ( previousRun != currentRun )
+        {
+          runChanged = true;
+          previousRun = currentRun;
+        }
+
+        if ( fileChanged || runChanged )
+        {
+          if (fileChanged) { cout << "**File changed. New file name is " << currentFilename << endl;}
+          if (runChanged) { cout << "**Run changed. New run number is " << currentRun << endl; }
+
+          treeLoader.ListTriggers(currentRun, iFile);
+        }
+      }
+      else
+      {
+        trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
+        trigged = trigger->checkIfFired();
+
+        //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
+        //string triggerData_muon = "HLT_IsoMu18_v";
+        //int lengthTriggerMC_muon = triggerMC_muon.length();
+        //int lengthTriggerData_muon = triggerData_muon.length();
+
+        if (! trigged ) { continue;}
+      }
       
       /// Fill selection table after trigger
       selecTableSemiMu.Fill(d,1,scaleFactor);
+      MSPlot["Selection"]->Fill(1, datasets[d], true, Luminosity*scaleFactor);
       
       
       
@@ -738,6 +772,7 @@ int main (int argc, char *argv[])
       {
         MSPlot["init_leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         MSPlot["init_leadingJet_eta"]->Fill(selectedJets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_CSVv2Discr"]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
       }
       if ( selectedMuons.size() > 0 )
       {
@@ -765,9 +800,11 @@ int main (int argc, char *argv[])
       if (isGoodPV)
       {
         selecTableSemiMu.Fill(d,2,scaleFactor);
+        MSPlot["Selection"]->Fill(2, datasets[d], true, Luminosity*scaleFactor);
         if (selectedMuons.size() == 1)
         {
           selecTableSemiMu.Fill(d,3,scaleFactor);
+          MSPlot["Selection"]->Fill(3, datasets[d], true, Luminosity*scaleFactor);
           /// Apply muon scale factor
           if (! isData )
           {
@@ -779,11 +816,14 @@ int main (int argc, char *argv[])
           }
           if (vetoMuons.size() == 1) {
             selecTableSemiMu.Fill(d,4,scaleFactor);
+            MSPlot["Selection"]->Fill(4, datasets[d], true, Luminosity*scaleFactor);
             if (vetoElectronsSemiMu.size() == 0) {
               selecTableSemiMu.Fill(d,5,scaleFactor);
+              MSPlot["Selection"]->Fill(5, datasets[d], true, Luminosity*scaleFactor);
               if ( selectedJets.size() >= 4 )
               {
                 selecTableSemiMu.Fill(d,6,scaleFactor);
+                MSPlot["Selection"]->Fill(6, datasets[d], true, Luminosity*scaleFactor);
                 eventSelected = true;
                 
                 for (unsigned int i = 0; i < selectedJets.size(); i++)
@@ -794,11 +834,13 @@ int main (int argc, char *argv[])
                 if ( nb_bTaggedJets >= 1 )
                 {
                   selecTableSemiMu.Fill(d,7,scaleFactor);
+                  MSPlot["Selection"]->Fill(7, datasets[d], true, Luminosity*scaleFactor);
                   has1bjet = true;
                   
                   if ( nb_bTaggedJets >= 2 )
                   {
                     selecTableSemiMu.Fill(d,8,scaleFactor);
+                    MSPlot["Selection"]->Fill(8, datasets[d], true, Luminosity*scaleFactor);
                     has2bjets = true;
                   }  // at least 2 b-tagged jets
                 }  // at least 1 b-tagged jets
@@ -1421,6 +1463,7 @@ int main (int argc, char *argv[])
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
   fout->Close();
+//  foutTriggerList.close();
   
   delete fout;
   delete tcdatasets;

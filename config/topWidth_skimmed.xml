@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<datasets>
+
+<!-- Cross sections from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeVInclusive . Last updated: 04/11/15 -->
+
+<d name="TTJets"  title="t\bar{t}+jets powheg"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="23924.5695874" xsection="831.76"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/TT_powheg_pythia8/27112015_153026/*.root"/>
+
+<d name="ST_T_tW"  title="ST t tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="27771.2691771" xsection="35.85"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_tW_t_5f_powheg_pythia8/03122015_172225/Skimmed_TOPTREE_1.root" CombineName="Ttw__nominal"/>
+
+<d name="ST_Tbar_tW"  title="ST tbar tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="27771.2691771" xsection="35.85"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_tW_tbar_5f_powheg_pythia8/03122015_180425/Skimmed_TOPTREE_1.root"  CombineName="Ttw__nominal"/>
+
+<d name="ST_t" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="91499.1842942" xsection="216.99" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_t_4f_amc@nlo_pythia8/03122015_075511/*.root"/>
+
+<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="4751.00046471" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/DY_amc@nloFXFX_pythia8/02122015_223002/*.root"  CombineName="DY__nominal"/>
+
+<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="392.5331604" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Wjets_amc@nloFXFX_pythia8/02122015_145139/*.root"  CombineName="W__nominal"/>
+
+<d name="data" title="data Single Muon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="552.672886226" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Single_Muon_Run2015D_05Oct2015-v1_Prompt_v2_ReReco/03122015_121503/*.root"/>
+
+</datasets>
+
+
+<analysis>
+<a type="Collections" PVCollection="PrimaryVertex" JetType="2" JetCollection="PFJets_slimmedJets" METType="2" METCollection="PFMET_slimmedMETs" MuonCollection="Muons_slimmedMuons" ElectronCollection="Electrons_slimmedElectrons" loadGenJetCollection="1" GenJetCollection="GenJets_slimmedGenJets" loadGenEventCollection="0" GenEventCollection="GenEvent" loadNPGenEventCollection="0" NPGenEventCollection="NPGenEvent" loadMCParticles="1" MCParticlesCollection="MCParticles" loadTrackMETCollection="0" TrackMETCollection="" loadFatJetCollection="0" FatJetCollection="FatJets_slimmedJetsAK8"/>
+
+<a type="Selection" PVertexNdofCut="4" PVertexZCut="24." PVertexRhoCut="2." MuonPtCutSR="20." MuonEtaCutSR="2.1" MuonRelIsoCutSR="0.05" MuonNHitsCutSR="10" MuonD0CutSR="0.02" MuonDRJetsCut="0.3" MuonPtCutVetoSR="10." MuonEtaCutVetoSR="2.5" MuonRelIsoCutVetoSR="0.2" ElectronPtCut="15." ElectronEtaCut="2.5" ElectronRelIsoCut="0.2" JetsPtCutSR="30." JetsEtaCutSR="2.4" applyJetID="1" JetEMFCut="0.01" n90HitsCut="1" fHPDCut="0.98" NofJets="4" NofJetBins="2"/>
+
+<a type="Conditions" isMC="1" MCRound="0" Vars_ByFile="0" VarsFile="m0_100_m12_100" IntToCut="4" Verbose="2" Luminosity="9999999" JES="1." nPseudoExp="0" nPseudoSession="0" runonTTrees="0" doABCD="1" doVJEstim="1" doVJEstPE="1" doTtJEstim="1" doTemplComp="0" doSystematics="0"/><!-- Luminosity in pb-1 -->
+</analysis>
+
