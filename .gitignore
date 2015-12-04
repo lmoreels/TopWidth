@@ -2,8 +2,10 @@
 *.o
 *.root
 *.tex
+*.bk
 Plots*/*
 nohup*.txt
+src/Makefile
 testAnalyser
 testMatching
 testGenJets
