@@ -1,3 +1,5 @@
+*.d
+*.o
 *.root
 *.tex
 Plots*/*
@@ -5,3 +7,4 @@ nohup*.txt
 testAnalyser
 testMatching
 testGenJets
+testSkims

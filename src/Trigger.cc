@@ -30,11 +30,13 @@ void Trigger::bookTriggers(bool isData)
   {
     if (isData)
     {
-      triggerList.push_back("HLT_IsoMu18_v*");  // Data
+      triggerList.push_back("HLT_IsoMu18_v2");  // Data
+      triggerList.push_back("HLT_IsoMu18_v1");
     }
     else
     {
-      triggerList.push_back("HLT_IsoMu17_eta2p1_v*");  // MC
+      triggerList.push_back("HLT_IsoMu17_eta2p1_v2");  // MC
+      triggerList.push_back("HLT_IsoMu17_eta2p1_v1");
     }
   }
   

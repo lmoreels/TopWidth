@@ -1,7 +1,5 @@
-#ifndef _INTERFACE_TRIGGER_H
-#define _INTERFACE_TRIGGER_H
-
-#define _USE_MATH_DEFINES
+#ifndef INTERFACE_TRIGGER_H
+#define INTERFACE_TRIGGER_H
 
 #include <cmath>
 #include <fstream>
@@ -12,16 +10,16 @@
 #include <map>
 
 //user code
-#include "../../TopTreeProducer/interface/TRootRun.h"
-#include "../../TopTreeProducer/interface/TRootEvent.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeProducer/interface/TRootRun.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeProducer/interface/TRootEvent.h"
 
-#include "../../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
-#include "../../TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "../../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
-#include "../../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "../../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
-#include "../../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Content/interface/Dataset.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
+#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
 
 
 class Trigger{
@@ -29,7 +27,7 @@ class Trigger{
 		Trigger(bool isMuon, bool isElectron);
 		~Trigger();
 		void bookTriggers(bool isData);
-		void checkAvail(int currentRun, vector < Dataset* > datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event);
+		void checkAvail(int currentRun, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event);
 		int checkIfFired();
 
 
