@@ -1,8 +1,7 @@
 #include "../interface/Trigger.h"
 
 Trigger::Trigger(bool isMuon, bool isElectron):
-muon(false), electron(false), trigged(false), redotrigmap(false), triggerList(), currentRun(0), previousRun(-1), currentFilename(""),
-previousFilename(""), iFile(-1), triggermap()
+muon(false), electron(false), trigged(false), redotrigmap(false), triggerList(), currentRunTrig(0), previousRunTrig(-1), currentFilenameTrig(""), previousFilenameTrig(""), iFileTrig(-1), triggermap()
 {
   if (isMuon)
   {
@@ -63,27 +62,27 @@ void Trigger::bookTriggers(bool isData)
   // }    
 }
 
-void Trigger::checkAvail(int currentRun, vector < Dataset* > datasets, unsigned int d, TTreeLoader *treeLoader, TRootEvent* event)
+void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsigned int d, TTreeLoader *treeLoader, TRootEvent* event)
 {
   redotrigmap = false;
-  currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-  if (previousFilename != currentFilename)
+  currentFilenameTrig = datasets[d]->eventTree()->GetFile()->GetName();
+  if (previousFilenameTrig != currentFilenameTrig)
   {
-    previousFilename = currentFilename;
-    iFile++;
+    previousFilenameTrig = currentFilenameTrig;
+    iFileTrig++;
     redotrigmap = true;
-    cout << "File changed!!! => iFile = " << iFile << " new file is " << datasets[d]->eventTree()->GetFile()->GetName() << " in sample " << datasets[d]->Name() << endl;
+    cout << "File changed!!! => iFile = " << iFileTrig << " new file is " << currentFilenameTrig << " in sample " << datasets[d]->Name() << endl;
   }
-  if (previousRun != currentRun)
+  if (previousRunTrig != currentRunTrig)
   {
-    previousRun = currentRun;
+    previousRunTrig = currentRunTrig;
     //cout << "*****!!!!new run!!!! => new run = " << previousRun << " *****" << endl;
     redotrigmap=true;
   }
   
   if (redotrigmap)
   {
-    //treeLoader->ListTriggers(currentRun, iFile);
+    //treeLoader->ListTriggers(currentRunTrig, iFileTrig);
   }
   
   
@@ -92,9 +91,9 @@ void Trigger::checkAvail(int currentRun, vector < Dataset* > datasets, unsigned 
   {
     if (redotrigmap)
     {
-      Int_t loc = treeLoader->iTrigger(iter->first, currentRun, iFile);
+      Int_t loc = treeLoader->iTrigger(iter->first, currentRunTrig, iFileTrig);
       string trigname = iter->first;
-      //cout << "trigname: " << trigname << "  location: " << loc << endl;
+      cout << "trigname: " << trigname << "  location: " << loc << "  " << currentFilenameTrig << "  " << currentRunTrig << endl;
       
       iter->second.first = loc;
     }

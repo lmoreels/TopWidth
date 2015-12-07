@@ -27,7 +27,7 @@ class Trigger{
 		Trigger(bool isMuon, bool isElectron);
 		~Trigger();
 		void bookTriggers(bool isData);
-		void checkAvail(int currentRun, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event);
+		void checkAvail(int currentRunTrig, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event);
 		int checkIfFired();
 
 
@@ -37,11 +37,11 @@ class Trigger{
 		bool trigged;
 		bool redotrigmap;
 	  std::vector<std::string> triggerList;
-	  int currentRun;
-	  int previousRun;
-		string currentFilename;
-		string previousFilename;
-		int iFile;
+	  int currentRunTrig;
+	  int previousRunTrig;
+		string currentFilenameTrig;
+		string previousFilenameTrig;
+		int iFileTrig;
 	  std::map<std::string,std::pair<int,bool> > triggermap;
 };
 
