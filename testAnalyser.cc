@@ -94,10 +94,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneFourthOfDataSets = true;
+  bool useOneFourthOfDataSets = false;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = false;
+  bool useTestSample = true;
   
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
@@ -141,6 +141,7 @@ int main (int argc, char *argv[])
   /////////////////////
   
   bool findTriggers = false;
+  bool applyTriggers = true;
   bool eventSelected = false;
   bool has1bjet = false;
   bool has2bjets = false;
@@ -264,6 +265,7 @@ int main (int argc, char *argv[])
   
   //Global variable
   //TRootEvent* event = 0;
+  //TRootRun *runInfos = new TRootRun();
   
   //nof selected events
   //double NEvtsData = 0;
@@ -539,7 +541,7 @@ int main (int argc, char *argv[])
     
     
     /// book triggers
-    trigger->bookTriggers(isData);
+    if (applyTriggers) { trigger->bookTriggers(isData);}
     
     
     
@@ -583,6 +585,10 @@ int main (int argc, char *argv[])
     
     nEvents[d] = 0;
     int itriggerSemiMu = -1,itriggerSemiEl = -1, previousRun = -1;
+    
+    //datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
+    //datasets[d]->runTree()->SetBranchAddress("runInfos",&runInfos);
+    
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
@@ -670,16 +676,17 @@ int main (int argc, char *argv[])
       
       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
       int currentRun = event->runId();
+      
+      if ( previousFilename != currentFilename )
+      {
+        fileChanged = true;
+        previousFilename = currentFilename;
+        iFile++;
+        cout << "File changed!!! => iFile = " << iFile << endl;
+      }
+
       if (findTriggers)
       {
-        if ( previousFilename != currentFilename )
-        {
-          fileChanged = true;
-          previousFilename = currentFilename;
-          iFile++;
-          cout << "File changed!!! => iFile = " << iFile << endl;
-        }
-
         if ( previousRun != currentRun )
         {
           runChanged = true;
@@ -692,9 +699,11 @@ int main (int argc, char *argv[])
           if (runChanged) { cout << "**Run changed. New run number is " << currentRun << endl; }
 
           treeLoader.ListTriggers(currentRun, iFile);
+          //datasets[d]->runTree()->GetEntry(iFile);
+          //if (runInfos != 0) runInfos->getHLTinfo(runID).hltPath(triggerName);
         }
       }
-      else
+      else if (applyTriggers)
       {
         trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
         trigged = trigger->checkIfFired();
