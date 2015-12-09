@@ -24,6 +24,7 @@ Trigger::~Trigger()
 
 void Trigger::bookTriggers(bool isData)
 {
+  iFileTrig = -1;
   triggerList.clear();
   if (muon)
   {
@@ -71,7 +72,7 @@ void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsig
     previousFilenameTrig = currentFilenameTrig;
     iFileTrig++;
     redotrigmap = true;
-    cout << "File changed!!! => iFile = " << iFileTrig << " new file is " << currentFilenameTrig << " in sample " << datasets[d]->Name() << endl;
+    cout << endl << "File changed!!! => iFile = " << iFileTrig << " new file is " << currentFilenameTrig << " in sample " << datasets[d]->Name() << endl;
   }
   if (previousRunTrig != currentRunTrig)
   {

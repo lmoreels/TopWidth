@@ -9,6 +9,7 @@
 #include "TStyle.h"
 #include <ctime>
 #include <cmath>
+#include <iostream>
 #include <ostream>
 #include <fstream>
 #include <sstream>
@@ -142,6 +143,10 @@ int main (int argc, char *argv[])
   
   bool findTriggers = false;
   bool applyTriggers = true;
+  bool applyJER = true;
+  bool applyLeptonSF = false;
+  bool applyPU = true;
+  bool nlo = false;
   bool eventSelected = false;
   bool has1bjet = false;
   bool has2bjets = false;
@@ -150,6 +155,7 @@ int main (int argc, char *argv[])
   int nb_bTaggedJets = 0;
   int nofEventsWith1BJet = 0;
   int nofEventsWith2BJets = 0;
+  int nofNegWeights = 0;
   
   
   /// xml file
@@ -265,11 +271,12 @@ int main (int argc, char *argv[])
   
   //Global variable
   //TRootEvent* event = 0;
-  //TRootRun *runInfos = new TRootRun();
+  TRootRun *runInfos = new TRootRun();
   
   //nof selected events
   //double NEvtsData = 0;
   Double_t *nEvents = new Double_t[datasets.size()];
+  Double_t mc_baseweight = 0;
   
   
   
@@ -355,6 +362,7 @@ int main (int argc, char *argv[])
   
   /// Scale factors
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
+  MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -1.5, 3.5, "0: None; 1: Central scale variation 1; 2: scale_variation 1");
   
   
   
@@ -378,6 +386,7 @@ int main (int argc, char *argv[])
   //CutsSelecTableSemiMu.push_back("$H_T$ cut");
   CutsSelecTableSemiMu.push_back("$\\geq$ 1 b-jet (CSVMv2)");
   CutsSelecTableSemiMu.push_back("$\\geq$ 2 b-jets (CSVMv2)");
+  CutsSelecTableSemiMu.push_back("actually trigged");
   
   if (verbose > 0)
     cout << " - CutsSelectionTable instantiated ..." << endl;
@@ -438,12 +447,12 @@ int main (int argc, char *argv[])
   
   /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
-  float muonPTSel = 20; // GeV
+  float muonPTSel = 20.; // GeV
   float muonEtaSel = 2.1;
   float muonRelIsoSel = 0.15;  // Tight muon
   string muonWP = "Tight";
   
-  float muonPTVeto = 10; // GeV
+  float muonPTVeto = 10.; // GeV
   float muonEtaVeto = 2.1;
   float muonRelIsoVeto = 0.25;  // Loose muon
   
@@ -454,11 +463,11 @@ int main (int argc, char *argv[])
   ///////////////////////////////////
   
   // To do
-  float electronPTSel = 24; // GeV
+  float electronPTSel = 24.; // GeV
   float electronEtaSel = 2.5;
   string electronWP = "Tight";
   
-  float electronPTVeto = 15; // GeV
+  float electronPTVeto = 15.; // GeV
   float electronEtaVeto = 2.5;
   
   
@@ -468,7 +477,7 @@ int main (int argc, char *argv[])
   ///////////////////////
   
   // To do
-  float jetPT = 20; // GeV
+  float jetPT = 20.; // GeV
   float jetEta = 2.4;  // to allow b tagging
   
   
@@ -517,6 +526,8 @@ int main (int argc, char *argv[])
     nofSelectedEvents = 0;
     nofEventsWith1BJet = 0;
     nofEventsWith2BJets = 0;
+    nofNegWeights = 0;
+    nlo = false;
     bool isData = false;
     string previousFilename = "";
     int iFile = -1;
@@ -539,6 +550,10 @@ int main (int argc, char *argv[])
       isData = true;
     }
     
+    if ( dataSetName.find("DY") == 0 || dataSetName.find("ZJets") == 0 || dataSetName.find("Zjets") == 0 || dataSetName.find("WJets") == 0 || dataSetName.find("Wjets") == 0 || dataSetName.find("ST_tch") == 0 )
+    {
+      nlo = true;
+    }
     
     /// book triggers
     if (applyTriggers) { trigger->bookTriggers(isData);}
@@ -586,8 +601,9 @@ int main (int argc, char *argv[])
     nEvents[d] = 0;
     int itriggerSemiMu = -1,itriggerSemiEl = -1, previousRun = -1;
     
-    //datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
-    //datasets[d]->runTree()->SetBranchAddress("runInfos",&runInfos);
+    /// Get run information
+    datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
+    datasets[d]->runTree()->SetBranchAddress("runInfos",&runInfos);
     
     if (verbose > 1)
       cout << "	Loop over events " << endl;
@@ -621,6 +637,9 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets_corrected, mets);
       
+      string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
+      int currentRun = event->runId();
+      
       if (! isData ) {
         genjets = treeLoader.LoadGenJet(ievt,false);
         //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
@@ -630,13 +649,45 @@ int main (int argc, char *argv[])
       // BE CAREFUL: TRootGenEvent is now obsolete!
       
       
+      /// Fix negative event weights for amc@nlo
+      if ( nlo )
+      {
+        if(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")>=0)
+        {
+          mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")))/(abs(event->originalXWGTUP()));
+          //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 5"))/(abs(event->originalXWGTUP()));
+          //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 9"))/(abs(event->originalXWGTUP()));
+          MSPlot["weightIndex"]->Fill(1, datasets[d], true, Luminosity);
+        }
+        else if(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")>=0)
+        {
+          mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")))/(abs(event->originalXWGTUP()));
+          //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 5"))/(abs(event->originalXWGTUP()));
+          //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 9"))/(abs(event->originalXWGTUP()));
+          MSPlot["weightIndex"]->Fill(2, datasets[d], true, Luminosity);
+        }
+        else
+        {
+          mc_baseweight = 1.;
+          //mc_scaleupweight = mc_scaledownweight = 1.;
+          MSPlot["weightIndex"]->Fill(0, datasets[d], true, Luminosity);
+        }
+      }
+      
+      
       
       /////////////////////////////////////
       ///  DETERMINE EVENT SCALEFACTOR  ///
       /////////////////////////////////////
       
       // scale factor for the event
-      float scaleFactor = 1.;
+      double scaleFactor = 1.;
+      
+      if ( nlo && mc_baseweight < 0.0 )
+      {
+        scaleFactor = -1.;
+        nofNegWeights++;
+      }
       
       
       /// Plot number of primary vertices before PU reweighting
@@ -646,9 +697,10 @@ int main (int argc, char *argv[])
       /// PU reweighting
       double lumiWeight = 1.;
       
-      if (! isData )
+      if ( applyPU && ! isData )
       {
-        lumiWeight = LumiWeights.ITweight( vertex.size() );
+        lumiWeight = LumiWeights.ITweight( (int)event->nTruePU() );
+        //lumiWeight = LumiWeights.ITweight( vertex.size() );
         /// Outdated syst up/down !
         // up syst -> lumiWeight = LumiWeightsUp.ITweight( (int)event->nTruePU() );
         // down syst -> lumiWeight = LumiWeightsDown.ITweight( (int)event->nTruePU() );
@@ -674,10 +726,10 @@ int main (int argc, char *argv[])
       selecTableSemiMu.Fill(d,0,scaleFactor);
       MSPlot["Selection"]->Fill(0, datasets[d], true, Luminosity*scaleFactor);
       
-      string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-      int currentRun = event->runId();
+      //string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
+      //int currentRun = event->runId();
       
-      if ( previousFilename != currentFilename )
+      if ( ! applyTriggers && previousFilename != currentFilename )
       {
         fileChanged = true;
         previousFilename = currentFilename;
@@ -713,7 +765,7 @@ int main (int argc, char *argv[])
         //int lengthTriggerMC_muon = triggerMC_muon.length();
         //int lengthTriggerData_muon = triggerData_muon.length();
 
-        if (! trigged ) { continue;}
+        //if (! trigged ) { continue;}
       }
       
       /// Fill selection table after trigger
@@ -726,7 +778,7 @@ int main (int argc, char *argv[])
       ///  Jet Energy Scale Corrections  ///
       //////////////////////////////////////
       
-      if (! isData)
+      if (applyJER && ! isData)
       {
         jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "nominal", false);
         //jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "minus", false);
@@ -815,7 +867,7 @@ int main (int argc, char *argv[])
           selecTableSemiMu.Fill(d,3,scaleFactor);
           MSPlot["Selection"]->Fill(3, datasets[d], true, Luminosity*scaleFactor);
           /// Apply muon scale factor
-          if (! isData )
+          if (applyLeptonSF && ! isData )
           {
             muonSFID = muonSFWeightID_T->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
             muonSFIso = muonSFWeightIso_TT->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
@@ -860,6 +912,10 @@ int main (int argc, char *argv[])
         }  // 1 good muon
       }  // good PV
       
+      
+      if ( applyTriggers && ! trigged ) { continue;}
+      selecTableSemiMu.Fill(d,9,scaleFactor);
+      MSPlot["Selection"]->Fill(9, datasets[d], true, Luminosity*scaleFactor);
       
       
       /// Do some stuff with selected events
@@ -1398,6 +1454,8 @@ int main (int argc, char *argv[])
     cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith2BJets << " events with 2 b tagged jets." << endl;
     if ( dataSetName.find("TT") == 0 )
       cout << "Number of matched events: " << nofMatchedEvents << endl;
+    if ( nlo )
+      cout << "Data set " << datasets[d]->Title() << " has " << nofNegWeights << " events with negative weights." << endl;
     
     
     /// Fill histogram log likelihood
