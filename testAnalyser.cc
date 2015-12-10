@@ -606,7 +606,8 @@ int main (int argc, char *argv[])
     datasets[d]->runTree()->SetBranchAddress("runInfos",&runInfos);
     
     if (verbose > 1)
-      cout << "	Loop over events " << endl;
+      //cout << "	Loop over events " << endl;
+      cout << "	Loop over events  (" << ((int)((double)datasets[d]->NofEvtsToRunOver())/((double)iReducedDataSets)) << "/" << datasets[d]->NofEvtsToRunOver() << ")" << endl;
     
     for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
     //for (unsigned int ievt = 0; ievt < 1000; ievt++)
@@ -627,7 +628,8 @@ int main (int argc, char *argv[])
 //      if (ievt%1000 == 0)
 //        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
       if (((int)nEvents[d])%1000 == 0)
-        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
+        //std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
+        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << std::endl;
       
       
       

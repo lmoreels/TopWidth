@@ -26,6 +26,7 @@ void Trigger::bookTriggers(bool isData)
 {
   iFileTrig = -1;
   triggerList.clear();
+  triggermap.clear();
   if (muon)
   {
     if (isData)
