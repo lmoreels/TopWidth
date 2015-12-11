@@ -27,7 +27,7 @@ class Trigger{
 		Trigger(bool isMuon, bool isElectron);
 		~Trigger();
 		void bookTriggers(bool isData);
-		void checkAvail(int currentRunTrig, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event);
+		void checkAvail(int currentRunTrig, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event, bool verbose);
 		int checkIfFired();
 
 

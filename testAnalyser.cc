@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
   ///  Configuration
   /////////////////////
   
-  bool findTriggers = false;
+  bool findTriggers = true;
   bool applyTriggers = true;
   bool applyJER = true;
   bool applyLeptonSF = false;
@@ -639,6 +639,7 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets_corrected, mets);
       
+      datasets[d]->eventTree()->LoadTree(ievt);
       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
       int currentRun = event->runId();
       
@@ -728,8 +729,6 @@ int main (int argc, char *argv[])
       selecTableSemiMu.Fill(d,0,scaleFactor);
       MSPlot["Selection"]->Fill(0, datasets[d], true, Luminosity*scaleFactor);
       
-      //string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
-      //int currentRun = event->runId();
       
       if ( ! applyTriggers && previousFilename != currentFilename )
       {
@@ -738,35 +737,12 @@ int main (int argc, char *argv[])
         iFile++;
         cout << "File changed!!! => iFile = " << iFile << endl;
       }
-
-      if (findTriggers)
+      
+      if (applyTriggers)
       {
-        if ( previousRun != currentRun )
-        {
-          runChanged = true;
-          previousRun = currentRun;
-        }
-
-        if ( fileChanged || runChanged )
-        {
-          if (fileChanged) { cout << "**File changed. New file name is " << currentFilename << endl;}
-          if (runChanged) { cout << "**Run changed. New run number is " << currentRun << endl; }
-
-          treeLoader.ListTriggers(currentRun, iFile);
-          //datasets[d]->runTree()->GetEntry(iFile);
-          //if (runInfos != 0) runInfos->getHLTinfo(runID).hltPath(triggerName);
-        }
-      }
-      else if (applyTriggers)
-      {
-        trigger->checkAvail(currentRun, datasets, d, &treeLoader, event);
+        trigger->checkAvail(currentRun, datasets, d, &treeLoader, event, findTriggers);
         trigged = trigger->checkIfFired();
-
-        //string triggerMC_muon = "HLT_IsoMu17_eta2p1_v";
-        //string triggerData_muon = "HLT_IsoMu18_v";
-        //int lengthTriggerMC_muon = triggerMC_muon.length();
-        //int lengthTriggerData_muon = triggerData_muon.length();
-
+        
         //if (! trigged ) { continue;}
       }
       

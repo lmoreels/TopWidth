@@ -24,9 +24,15 @@ Trigger::~Trigger()
 
 void Trigger::bookTriggers(bool isData)
 {
-  iFileTrig = -1;
+  /// This function is called in the dataset loop
+  //  Reset all quantities here
   triggerList.clear();
+  currentRunTrig = 0;
+  previousRunTrig = -1;
+  currentFilenameTrig = previousFilenameTrig = "";
+  iFileTrig = -1;
   triggermap.clear();
+  
   if (muon)
   {
     if (isData)
@@ -58,13 +64,9 @@ void Trigger::bookTriggers(bool isData)
     triggermap[triggerList[iTrig]] = std::pair<int,bool> (-999,false);
   }
   
-  // for(std::map<std::string,std::pair<int,bool> >::iterator trigiter = triggermap.begin(); trigiter != triggermap.end(); trigiter++){
-  //     std::pair<int,bool> bla = trigiter->second;
-  //     std::string bla2 = trigiter->first; 
-  // }    
 }
 
-void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsigned int d, TTreeLoader *treeLoader, TRootEvent* event)
+void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsigned int d, TTreeLoader *treeLoader, TRootEvent* event, bool verbose)
 {
   redotrigmap = false;
   currentFilenameTrig = datasets[d]->eventTree()->GetFile()->GetName();
@@ -73,18 +75,18 @@ void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsig
     previousFilenameTrig = currentFilenameTrig;
     iFileTrig++;
     redotrigmap = true;
-    cout << endl << "File changed!!! => iFile = " << iFileTrig << " new file is " << currentFilenameTrig << " in sample " << datasets[d]->Name() << endl;
+    cout << endl << "*****File changed!!! => iFile = " << iFileTrig << " new file is " << currentFilenameTrig << " in sample " << datasets[d]->Name() << " *****" << endl;
   }
   if (previousRunTrig != currentRunTrig)
   {
     previousRunTrig = currentRunTrig;
-    //cout << "*****!!!!new run!!!! => new run = " << previousRun << " *****" << endl;
+    cout << "*****Run changed!!! => new run = " << previousRunTrig << " *****" << endl;
     redotrigmap=true;
   }
   
-  if (redotrigmap)
+  if (verbose && redotrigmap)
   {
-    //treeLoader->ListTriggers(currentRunTrig, iFileTrig);
+    treeLoader->ListTriggers(currentRunTrig, iFileTrig);
   }
   
   
