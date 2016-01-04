@@ -95,10 +95,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneFourthOfDataSets = false;
+  bool useOneFourthOfDataSets = true;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = true;
+  bool useTestSample = false;
   
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
   ///  Configuration
   /////////////////////
   
-  bool findTriggers = true;
+  bool printTriggers = false;
   bool applyTriggers = true;
   bool applyJER = true;
   bool applyLeptonSF = false;
@@ -330,28 +330,32 @@ int main (int argc, char *argv[])
   MSPlot["init_nPVs_after"] = new MultiSamplePlot(datasets, "init_nPVs_after", 41, -0.5, 40.5, "# PVs after reweighting");
   
   MSPlot["init_leadingJet_pT"] = new MultiSamplePlot(datasets, "init_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["init_leadingJet_eta"] = new MultiSamplePlot(datasets, "init_leadingJet_eta", 60, -3, 3, "Eta");
+  MSPlot["init_leadingJet_eta"] = new MultiSamplePlot(datasets, "init_leadingJet_eta", 30, -3, 3, "Eta");
   MSPlot["init_leadingJet_CSVv2Discr"] = new MultiSamplePlot(datasets, "init_leadingJet_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
   MSPlot["init_leadingMuon_pT"] = new MultiSamplePlot(datasets, "init_leadingMuon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 60, -3, 3, "Eta");
+  MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 30, -3, 3, "Eta");
+  MSPlot["init_leadingMuon_phi"] = new MultiSamplePlot(datasets, "init_leadingMuon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
   MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["init_met_eta"] = new MultiSamplePlot(datasets, "init_met_eta", 60, -3, 3, "Eta");
+  MSPlot["init_met_eta"] = new MultiSamplePlot(datasets, "init_met_eta", 30, -3, 3, "Eta");
+  MSPlot["init_met_phi"] = new MultiSamplePlot(datasets, "init_met_phi", 32, -3.2, 3.2, "Phi");
   
   /// Event Selection
   MSPlot["Selection"] = new MultiSamplePlot(datasets, "Selection", 13, -0.5, 12.5, "Selection");
   
   /// Plots after event selection
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 60, -3, 3, "Eta");
+  MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 30, -3, 3, "Eta");
+  MSPlot["muon_phi"] = new MultiSamplePlot(datasets, "muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
   MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 60, -3, 3, "Eta");
+  MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 30, -3, 3, "Eta");
+  MSPlot["met_phi"] = new MultiSamplePlot(datasets, "met_phi", 32, -3.2, 3.2, "Phi");
   
   MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 13, -0.5, 12.5, "# b jets");
@@ -359,6 +363,9 @@ int main (int argc, char *argv[])
   MSPlot["bJet2_pT"] = new MultiSamplePlot(datasets, "bJet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
   MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
+  
+  MSPlot["nPVs_before"] = new MultiSamplePlot(datasets, "nPVs_before", 41, -0.5, 40.5, "# PVs before reweighting");
+  MSPlot["nPVs_after"] = new MultiSamplePlot(datasets, "nPVs_after", 41, -0.5, 40.5, "# PVs after reweighting");
   
   /// Scale factors
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
@@ -386,7 +393,7 @@ int main (int argc, char *argv[])
   //CutsSelecTableSemiMu.push_back("$H_T$ cut");
   CutsSelecTableSemiMu.push_back("$\\geq$ 1 b-jet (CSVMv2)");
   CutsSelecTableSemiMu.push_back("$\\geq$ 2 b-jets (CSVMv2)");
-  CutsSelecTableSemiMu.push_back("actually trigged");
+  //CutsSelecTableSemiMu.push_back("actually trigged");
   
   if (verbose > 0)
     cout << " - CutsSelectionTable instantiated ..." << endl;
@@ -405,7 +412,7 @@ int main (int argc, char *argv[])
   //Trigger* trigger = new Trigger(hasMuon, hasElectron);
   Trigger* trigger = new Trigger(1, 0);
 //   ofstream foutTriggerList;
-//   if (findTriggers) { foutTriggerList.open("TriggerList.txt");}
+//   if (printTriggers) { foutTriggerList.open("TriggerList.txt");}
   
   
   
@@ -464,11 +471,11 @@ int main (int argc, char *argv[])
   
   // To do
   float electronPTSel = 24.; // GeV
-  float electronEtaSel = 2.5;
+  float electronEtaSel = 2.1;
   string electronWP = "Tight";
   
   float electronPTVeto = 15.; // GeV
-  float electronEtaVeto = 2.5;
+  float electronEtaVeto = 2.1;
   
   
   
@@ -628,8 +635,8 @@ int main (int argc, char *argv[])
 //      if (ievt%1000 == 0)
 //        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
       if (((int)nEvents[d])%1000 == 0)
-        //std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
-        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << std::endl;
+        std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
+        //std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << std::endl;
       
       
       
@@ -694,7 +701,7 @@ int main (int argc, char *argv[])
       
       
       /// Plot number of primary vertices before PU reweighting
-      MSPlot["init_nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity);
       
       
       /// PU reweighting
@@ -713,7 +720,7 @@ int main (int argc, char *argv[])
       
       
       /// Plot number of primary vertices after PU reweighting
-      MSPlot["init_nPVs_after"]->Fill(vertex.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nPVs_after"]->Fill(vertex.size(), datasets[d], true, Luminosity*lumiWeight);
       
       
       
@@ -740,10 +747,10 @@ int main (int argc, char *argv[])
       
       if (applyTriggers)
       {
-        trigger->checkAvail(currentRun, datasets, d, &treeLoader, event, findTriggers);
+        trigger->checkAvail(currentRun, datasets, d, &treeLoader, event, printTriggers);
         trigged = trigger->checkIfFired();
         
-        //if (! trigged ) { continue;}
+        if (! trigged ) { continue;}
       }
       
       /// Fill selection table after trigger
@@ -786,9 +793,6 @@ int main (int argc, char *argv[])
       vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       
       
-//      /// Sort objects according to pT
-//      sort(selectedJets.begin(),selectedJets.end(),HighestPt()); // HighestPt() is included from the Selection class)
-        
       
       //if (selectedJets.size() >= 4)
       //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
@@ -807,26 +811,28 @@ int main (int argc, char *argv[])
       MSPlot["init_nMuons"]->Fill(selectedMuons.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["init_nElectrons"]->Fill(selectedElectrons.size(), datasets[d], true, Luminosity*scaleFactor);
       
-      if ( selectedJets.size() > 0 )
+      if ( init_jets_corrected.size() > 0 )
       {
-        MSPlot["init_leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingJet_eta"]->Fill(selectedJets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingJet_CSVv2Discr"]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_pT"]->Fill(init_jets_corrected[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_eta"]->Fill(init_jets_corrected[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_CSVv2Discr"]->Fill(init_jets_corrected[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
       }
-      if ( selectedMuons.size() > 0 )
+      if ( init_muons.size() > 0 )
       {
-        MSPlot["init_leadingMuon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingMuon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_pT"]->Fill(init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_eta"]->Fill(init_muons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_phi"]->Fill(init_muons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
       }
-      if ( selectedElectrons.size() > 0 )
+      if ( init_electrons.size() > 0 )
       {
-        MSPlot["init_leadingElectron_pT"]->Fill(selectedElectrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingElectron_eta"]->Fill(selectedElectrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingElectron_pT"]->Fill(init_electrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingElectron_eta"]->Fill(init_electrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
       }
       if ( mets.size() > 0 )
       {
          MSPlot["init_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
          MSPlot["init_met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["init_met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
       }
       
       
@@ -891,9 +897,9 @@ int main (int argc, char *argv[])
       }  // good PV
       
       
-      if ( applyTriggers && ! trigged ) { continue;}
-      selecTableSemiMu.Fill(d,9,scaleFactor);
-      MSPlot["Selection"]->Fill(9, datasets[d], true, Luminosity*scaleFactor);
+//       if ( applyTriggers && ! trigged ) { continue;}
+//       selecTableSemiMu.Fill(d,9,scaleFactor);
+//       MSPlot["Selection"]->Fill(9, datasets[d], true, Luminosity*scaleFactor);
       
       
       /// Do some stuff with selected events
@@ -910,6 +916,11 @@ int main (int argc, char *argv[])
         cout << endl << "  Event " << ievt << " is selected" << endl;
       if (verbose > 4)
         cout << "Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
+      
+      
+      /// Pile-up
+      MSPlot["nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity);
+      MSPlot["nPVs_after"]->Fill(vertex.size(), datasets[d], true, Luminosity*lumiWeight);
       
       
       
@@ -1391,6 +1402,7 @@ int main (int argc, char *argv[])
       
       MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
@@ -1400,6 +1412,7 @@ int main (int argc, char *argv[])
       {
          MSPlot["met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
          MSPlot["met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
       }
       
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);

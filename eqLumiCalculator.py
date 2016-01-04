@@ -29,7 +29,7 @@ for n_sample in range(0,len(topTrees)):
     files = glob(path)
     root_files = []
     for f in files:
-    	root_files.append('dcap://maite.iihe.ac.be' + f)
+    	root_files.append('dcap://maite.iihe.ac.be/' + f)
     #print root_files
     chain = TChain('eventTree')
     for rf in root_files:
