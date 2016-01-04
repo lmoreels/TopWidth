@@ -97,7 +97,7 @@ void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsig
     {
       Int_t loc = treeLoader->iTrigger(iter->first, currentRunTrig, iFileTrig);
       string trigname = iter->first;
-      cout << "trigname: " << trigname << "  location: " << loc << "  " << currentFilenameTrig << "  " << currentRunTrig << endl;
+      cout << "trigname: " << trigname << "  location: " << loc << /*"  " << currentFilenameTrig << "  " << currentRunTrig <<*/ endl;
       
       iter->second.first = loc;
     }
