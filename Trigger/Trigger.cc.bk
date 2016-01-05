@@ -1,7 +1,7 @@
 #include "../interface/Trigger.h"
 
-Trigger::Trigger(bool isMuon, bool isElectron):
-muon(false), electron(false), trigged(false), redotrigmap(false), triggerList(), currentRunTrig(0), previousRunTrig(-1), currentFilenameTrig(""), previousFilenameTrig(""), iFileTrig(-1), triggermap()
+Trigger::Trigger(bool isMuon, bool isElectron, bool trigSingleLep, bool trigDoubleLep):
+muon(false), electron(false), singleLep(false), doubleLep(false), fullHadr(false), trigged(false), redotrigmap(false), triggerList(), currentRunTrig(0), previousRunTrig(-1), currentFilenameTrig(""), previousFilenameTrig(""), iFileTrig(-1), triggermap()
 {
   if (isMuon)
   {
@@ -14,6 +14,19 @@ muon(false), electron(false), trigged(false), redotrigmap(false), triggerList(),
   else
   {
     cout << "TRIGGER::TRIGGER - No selected lepton..." << endl;
+  }
+  if (trigSingleLep)
+  {
+    singleLep = true;
+  }
+  if (trigDoubleLep)
+  {
+    doubleLep = true;
+  }
+  if (! trigSingleLep && ! trigDoubleLep)
+  {
+    fullHadr = true;
+    cout << "TRIGGER::TRIGGER - Do you really want no lepton triggers?" << endl;
   }
 }
 
@@ -33,31 +46,66 @@ void Trigger::bookTriggers(bool isData)
   iFileTrig = -1;
   triggermap.clear();
   
-  if (muon)
+  /// Add relevant triggers to triggerlist
+  //  Recommended triggers for TOP analyses
+  //  Last updated: 5 Jan 2016. https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopTrigger
+  if (singleLep)
   {
-    if (isData)
+    if (muon)
     {
-      triggerList.push_back("HLT_IsoMu18_v2");  // Data
-      triggerList.push_back("HLT_IsoMu18_v1");
+      if (isData)
+      {
+        triggerList.push_back("HLT_IsoMu18_v*");  // Data
+        //triggerList.push_back("HLT_IsoMu18_v1");
+      }
+      else
+      {
+        triggerList.push_back("HLT_IsoMu17_eta2p1_v*");  // MC
+      }
     }
-    else
+    if (electron)
     {
-      triggerList.push_back("HLT_IsoMu17_eta2p1_v2");  // MC
-      triggerList.push_back("HLT_IsoMu17_eta2p1_v1");
+      if (isData)
+      {
+        triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*");  // Data, restricted to eta < 2.1
+      }
+      else
+      {
+        triggerList.push_back("HLT_Ele22_eta2p1_WP75_Gsf_v*");  // MC
+      }   	
     }
   }
   
-  if (electron)
+  if (doubleLep)   // Triggers for data & MC are the same
+  {
+    if (muon)
+    {
+      triggerList.push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*");
+    }
+    if (electron)
+    {
+      triggerList.push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
+    }
+    if (muon && electron)
+    {
+      triggerList.push_back("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*");
+      triggerList.push_back("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v*");
+    }
+  }
+  
+  if (fullHadr)
   {
     if (isData)
-     {
-       triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*");  // Data, restricted to eta < 2.1
-     }
-     else
-     {
-       triggerList.push_back("HLT_Ele22_eta2p1_WP75_Gsf_v*");  // MC
-     }   	
-   }
+    {
+      triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV0p72_v*");
+      triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p55_2PFBTagCSV0p72_v*");
+    }
+    else
+    {
+      triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV_v*");
+      triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p5_2PFBTagCSV_v*");
+    }
+  }
   
   for(UInt_t iTrig = 0; iTrig < triggerList.size(); iTrig++)
   {

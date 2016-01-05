@@ -9,22 +9,23 @@
 #include <iostream>
 #include <map>
 
-//user code
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeProducer/interface/TRootRun.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeProducer/interface/TRootEvent.h"
+//TopTree classes
+#include "TopTreeProducer/interface/TRootRun.h"
+#include "TopTreeProducer/interface/TRootEvent.h"
 
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
-#include "/user/lmoreels/CMSSW_7_4_15_patch1/src/TopBrussels/TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
+//TopTreeAnalysisBase classes
+#include "TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
+#include "TopTreeAnalysisBase/Content/interface/Dataset.h"
+#include "TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
+#include "TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
+#include "TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
 
 
 class Trigger{
 	public:
-		Trigger(bool isMuon, bool isElectron);
+		Trigger(bool isMuon, bool isElectron, bool trigSingleLep, bool trigDoubleLep);
 		~Trigger();
 		void bookTriggers(bool isData);
 		void checkAvail(int currentRunTrig, vector<Dataset*> datasets, unsigned int d, TTreeLoader* treeLoader, TRootEvent* event, bool verbose);
@@ -34,6 +35,9 @@ class Trigger{
 	private:
 		bool muon;
 		bool electron;
+    bool singleLep;
+    bool doubleLep;
+    bool fullHadr;
 		bool trigged;
 		bool redotrigmap;
 	  std::vector<std::string> triggerList;
