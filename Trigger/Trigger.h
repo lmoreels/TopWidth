@@ -46,6 +46,7 @@ class Trigger{
 		string currentFilenameTrig;
 		string previousFilenameTrig;
 		int iFileTrig;
+    int treeNumberTrig;
 	  std::map<std::string,std::pair<int,bool> > triggermap;
 };
 

@@ -1,7 +1,7 @@
 #include "../interface/Trigger.h"
 
 Trigger::Trigger(bool isMuon, bool isElectron, bool trigSingleLep, bool trigDoubleLep):
-muon(false), electron(false), singleLep(false), doubleLep(false), fullHadr(false), trigged(false), redotrigmap(false), triggerList(), currentRunTrig(0), previousRunTrig(-1), currentFilenameTrig(""), previousFilenameTrig(""), iFileTrig(-1), triggermap()
+muon(false), electron(false), singleLep(false), doubleLep(false), fullHadr(false), trigged(false), redotrigmap(false), triggerList(), currentRunTrig(0), previousRunTrig(-1), currentFilenameTrig(""), previousFilenameTrig(""), iFileTrig(-1), treeNumberTrig(-1), triggermap()
 {
   if (isMuon)
   {
@@ -44,6 +44,7 @@ void Trigger::bookTriggers(bool isData)
   previousRunTrig = -1;
   currentFilenameTrig = previousFilenameTrig = "";
   iFileTrig = -1;
+  treeNumberTrig = -1;
   triggermap.clear();
   
   /// Add relevant triggers to triggerlist
@@ -117,6 +118,7 @@ void Trigger::bookTriggers(bool isData)
 void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsigned int d, TTreeLoader *treeLoader, TRootEvent* event, bool verbose)
 {
   redotrigmap = false;
+  treeNumberTrig = datasets[d]->eventTree()->GetTreeNumber();
   currentFilenameTrig = datasets[d]->eventTree()->GetFile()->GetName();
   if (previousFilenameTrig != currentFilenameTrig)
   {
@@ -134,7 +136,7 @@ void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsig
   
   if (verbose && redotrigmap)
   {
-    treeLoader->ListTriggers(currentRunTrig, iFileTrig);
+    treeLoader->ListTriggers(currentRunTrig, treeNumberTrig);
   }
   
   
@@ -143,7 +145,7 @@ void Trigger::checkAvail(int currentRunTrig, vector < Dataset* > datasets, unsig
   {
     if (redotrigmap)
     {
-      Int_t loc = treeLoader->iTrigger(iter->first, currentRunTrig, iFileTrig);
+      Int_t loc = treeLoader->iTrigger(iter->first, currentRunTrig, treeNumberTrig);
       string trigname = iter->first;
       cout << "trigname: " << trigname << "  location: " << loc << /*"  " << currentFilenameTrig << "  " << currentRunTrig <<*/ endl;
       
