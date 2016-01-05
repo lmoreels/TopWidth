@@ -95,10 +95,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneFourthOfDataSets = true;
+  bool useOneFourthOfDataSets = false;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = false;
+  bool useTestSample = true;
   
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
@@ -147,6 +147,7 @@ int main (int argc, char *argv[])
   bool applyLeptonSF = false;
   bool applyPU = true;
   bool nlo = false;
+  bool hasNegWeight = false;
   bool eventSelected = false;
   bool has1bjet = false;
   bool has2bjets = false;
@@ -276,7 +277,7 @@ int main (int argc, char *argv[])
   //nof selected events
   //double NEvtsData = 0;
   Double_t *nEvents = new Double_t[datasets.size()];
-  Double_t mc_baseweight = 0;
+  Double_t mc_baseweight = 0, mc_baseweight1 = 0, mc_baseweight2 = 0;
   
   
   
@@ -369,7 +370,9 @@ int main (int argc, char *argv[])
   
   /// Scale factors
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
-  MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -1.5, 3.5, "0: None; 1: Central scale variation 1; 2: scale_variation 1");
+  MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -2.5, 2.5, "0: None; 1: Central scale variation 1; 2: scale_variation 1");
+  MSPlot["weightIndex_diffs"] = new MultiSamplePlot(datasets,"weightIndex_diffs", 2, -0.5, 1.5, "Central scale variation 1 equals scale_variation 1");
+  MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 40, -2.0, 2.0, "weights for amc@nlo samples");
   
   
   
@@ -409,10 +412,8 @@ int main (int argc, char *argv[])
   ///  Initialise trigger  ///
   ////////////////////////////
   
-  //Trigger* trigger = new Trigger(hasMuon, hasElectron);
-  Trigger* trigger = new Trigger(1, 0);
-//   ofstream foutTriggerList;
-//   if (printTriggers) { foutTriggerList.open("TriggerList.txt");}
+  //Trigger* trigger = new Trigger(hasMuon, hasElectron, trigSingleLep, trigDoubleLep);
+  Trigger* trigger = new Trigger(1, 0, 1, 0);
   
   
   
@@ -444,7 +445,7 @@ int main (int argc, char *argv[])
   
   /// Pile-up
   cout << " - Loading pile-up scale factors ..." << endl;
-  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup","pileup");
+  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup60","pileup");
   
   
   
@@ -662,19 +663,29 @@ int main (int argc, char *argv[])
       /// Fix negative event weights for amc@nlo
       if ( nlo )
       {
-        if(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")>=0)
+        if ( runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1") >= 0 )
         {
           mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")))/(abs(event->originalXWGTUP()));
           //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 5"))/(abs(event->originalXWGTUP()));
           //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 9"))/(abs(event->originalXWGTUP()));
           MSPlot["weightIndex"]->Fill(1, datasets[d], true, Luminosity);
         }
-        else if(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")>=0)
+        else if ( runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1") >= 0 )
         {
           mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")))/(abs(event->originalXWGTUP()));
           //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 5"))/(abs(event->originalXWGTUP()));
           //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 9"))/(abs(event->originalXWGTUP()));
           MSPlot["weightIndex"]->Fill(2, datasets[d], true, Luminosity);
+        }
+        if ( runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1") < 0 )
+        {
+          mc_baseweight1 = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")))/(abs(event->originalXWGTUP()));
+          MSPlot["weightIndex"]->Fill(-1, datasets[d], true, Luminosity);
+        }
+        if ( runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1") < 0 )
+        {
+          mc_baseweight2 = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")))/(abs(event->originalXWGTUP()));
+          MSPlot["weightIndex"]->Fill(-2, datasets[d], true, Luminosity);
         }
         else
         {
@@ -682,6 +693,19 @@ int main (int argc, char *argv[])
           //mc_scaleupweight = mc_scaledownweight = 1.;
           MSPlot["weightIndex"]->Fill(0, datasets[d], true, Luminosity);
         }
+        
+        if ( mc_baseweight1 != 0 && mc_baseweight2 != 0 )
+        {
+          if (mc_baseweight1 == mc_baseweight2)
+          {
+            mc_baseweight = mc_baseweight1;
+            MSPlot["weightIndex_diffs"]->Fill(1, datasets[d], true, Luminosity);
+          }
+          else MSPlot["weightIndex_diffs"]->Fill(1, datasets[d], true, Luminosity);
+        }
+        
+        MSPlot["nloWeight"]->Fill(mc_baseweight, datasets[d], true, Luminosity);
+        
       }
       
       
@@ -693,10 +717,11 @@ int main (int argc, char *argv[])
       // scale factor for the event
       double scaleFactor = 1.;
       
+      hasNegWeight = false;
       if ( nlo && mc_baseweight < 0.0 )
       {
-        scaleFactor = -1.;
-        nofNegWeights++;
+        //scaleFactor = -1.;
+        hasNegWeight = true;
       }
       
       
@@ -911,6 +936,10 @@ int main (int argc, char *argv[])
       }
       
       nofSelectedEvents++;
+      if (hasNegWeight)
+      {
+        nofNegWeights++;
+      }
       
       if (verbose > 3)
         cout << endl << "  Event " << ievt << " is selected" << endl;
@@ -1521,7 +1550,6 @@ int main (int argc, char *argv[])
   selecTableSemiMu.Write(selectiontableMu.c_str(), true, true, true, true, true, true, false);
   
   fout->Close();
-//  foutTriggerList.close();
   
   delete fout;
   delete tcdatasets;
