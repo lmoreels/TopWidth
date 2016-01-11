@@ -7,14 +7,11 @@ muon(false), electron(false), singleLep(false), doubleLep(false), fullHadr(false
   {
     muon = true;
   }
-  else if (isElectron)
+  if (isElectron)
   {
     electron = true;
   }
-  else
-  {
-    cout << "TRIGGER::TRIGGER - No selected lepton..." << endl;
-  }
+  
   if (trigSingleLep)
   {
     singleLep = true;
@@ -57,7 +54,6 @@ void Trigger::bookTriggers(bool isData)
       if (isData)
       {
         triggerList.push_back("HLT_IsoMu18_v*");  // Data
-        //triggerList.push_back("HLT_IsoMu18_v1");
       }
       else
       {
@@ -79,11 +75,11 @@ void Trigger::bookTriggers(bool isData)
   
   if (doubleLep)   // Triggers for data & MC are the same
   {
-    if (muon)
+    if (muon && ! electron)
     {
       triggerList.push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*");
     }
-    if (electron)
+    if (! muon && electron)
     {
       triggerList.push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
     }
