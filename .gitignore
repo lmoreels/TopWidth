@@ -2,6 +2,7 @@
 *.o
 *.root
 *.tex
+*.xml.bk
 Plots*/*
 nohup*.txt
 Trigger/*.txt

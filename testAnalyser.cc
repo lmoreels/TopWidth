@@ -144,6 +144,7 @@ int main (int argc, char *argv[])
   bool printTriggers = false;
   bool applyTriggers = true;
   bool applyJER = true;
+  bool applyJEC = true;
   bool applyLeptonSF = false;
   bool applyPU = true;
   bool nlo = false;
@@ -264,7 +265,11 @@ int main (int argc, char *argv[])
   }
   
   if ( Luminosity != oldLuminosity ) cout << "Changed analysis environment luminosity to "<< Luminosity << endl;
-  
+  if ( iReducedDataSets != 1 )
+  {
+    Luminosity = Luminosity/((double) iReducedDataSets);
+    cout << "Running over 1/" << iReducedDataSets << " of the dataset, so luminosity changed to " << Luminosity << endl;
+  }
   
   cout << " - Recreate output file ..." << endl;
   TFile *fout = new TFile (rootFileName.c_str(), "RECREATE");
@@ -336,6 +341,8 @@ int main (int argc, char *argv[])
   MSPlot["init_leadingMuon_pT"] = new MultiSamplePlot(datasets, "init_leadingMuon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 30, -3, 3, "Eta");
   MSPlot["init_leadingMuon_phi"] = new MultiSamplePlot(datasets, "init_leadingMuon_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["init_muon_relIso"] = new MultiSamplePlot(datasets, "init_muon_relIso", 30, 0, 0.3, "relIso");
+  MSPlot["init_muon_d0"] = new MultiSamplePlot(datasets, "init_muon_d0", 50, 0, 5, "d_{0}");
   MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
   MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 40, 0, 800, "p_{T} [GeV]");
@@ -349,6 +356,8 @@ int main (int argc, char *argv[])
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 30, -3, 3, "Eta");
   MSPlot["muon_phi"] = new MultiSamplePlot(datasets, "muon_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["muon_relIso"] = new MultiSamplePlot(datasets, "muon_relIso", 30, 0, 0.3, "relIso");
+  MSPlot["muon_d0"] = new MultiSamplePlot(datasets, "muon_d0", 50, 0, 5, "d_{0}");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
@@ -365,6 +374,17 @@ int main (int argc, char *argv[])
   MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
   MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 20, 0.8, 1.3, "CSVv2 discriminant value");
   
+  MSPlot["1b_muon_pT"] = new MultiSamplePlot(datasets, "1b_muon_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["1b_muon_eta"] = new MultiSamplePlot(datasets, "1b_muon_eta", 30, -3, 3, "Eta");
+  MSPlot["1b_muon_phi"] = new MultiSamplePlot(datasets, "1b_muon_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["1b_muon_relIso"] = new MultiSamplePlot(datasets, "1b_muon_relIso", 30, 0, 0.3, "relIso");
+  MSPlot["1b_muon_d0"] = new MultiSamplePlot(datasets, "1b_muon_d0", 50, 0, 5, "d_{0}");
+  MSPlot["1b_leadingJet_pT"] = new MultiSamplePlot(datasets, "1b_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["1b_jet2_pT"] = new MultiSamplePlot(datasets, "1b_jet2_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["1b_jet3_pT"] = new MultiSamplePlot(datasets, "1b_jet3_pT", 25, 0, 500, "p_{T} [GeV]");
+  MSPlot["1b_jet4_pT"] = new MultiSamplePlot(datasets, "1b_jet4_pT", 25, 0, 500, "p_{T} [GeV]");
+  MSPlot["1b_Ht_4leadingJets"] = new MultiSamplePlot(datasets,"1b_Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
+  
   MSPlot["nPVs_before"] = new MultiSamplePlot(datasets, "nPVs_before", 41, -0.5, 40.5, "# PVs before reweighting");
   MSPlot["nPVs_after"] = new MultiSamplePlot(datasets, "nPVs_after", 41, -0.5, 40.5, "# PVs after reweighting");
   
@@ -372,7 +392,7 @@ int main (int argc, char *argv[])
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
   MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -2.5, 2.5, "0: None; 1: Central scale variation 1; 2: scale_variation 1");
   MSPlot["weightIndex_diffs"] = new MultiSamplePlot(datasets,"weightIndex_diffs", 2, -0.5, 1.5, "Central scale variation 1 equals scale_variation 1");
-  MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 40, -2.0, 2.0, "weights for amc@nlo samples");
+  MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 400, -20.0, 20.0, "weights for amc@nlo samples");
   
   
   
@@ -426,6 +446,10 @@ int main (int argc, char *argv[])
   string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
   
   /// Leptons
+  cout << " - Loading lepton scale factors ...";
+  if (! applyLeptonSF) { cout << "    --- At the moment these are not used in the analysis";}
+  cout << endl;
+  
   double muonSFID, muonSFIso;
   //MuonSFWeight *muonSFWeight_ = new MuonSFWeight(pathCalLept+"Muon_SF_TopEA.root","SF_totErr", false, false); // (... , ... , debug, print warning)
   MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
@@ -441,11 +465,17 @@ int main (int argc, char *argv[])
       
   //ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight(pathCalLept+"Elec_SF_TopEA.root","GlobalSF", false, false); // (... , ... , debug, print warning)
   
+  
   /// B tag
   
+  
   /// Pile-up
-  cout << " - Loading pile-up scale factors ..." << endl;
-  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup60","pileup");
+  cout << " - Loading pile-up scale factors ...";
+  if (! applyPU) { cout << "   --- At the moment these are not used in the analysis";}
+  cout << endl;
+  
+  //LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup60","pileup");  // old PU
+  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run246908-260627Cert.root","pileup50","pileup");  // new PU
   
   
   
@@ -494,7 +524,7 @@ int main (int argc, char *argv[])
   ///  Working points for b tagging  ///
   //////////////////////////////////////
   
-  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+  /// Updated 14/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
   float CSVv2Loose =  0.605;
   float CSVv2Medium = 0.890;
@@ -577,25 +607,25 @@ int main (int argc, char *argv[])
 
     if (isData)
     {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L1FastJet_AK4PFchs.txt");
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
       vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L2Relative_AK4PFchs.txt");
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L2Relative_AK4PFchs.txt");
       vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L3Absolute_AK4PFchs.txt");
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
       vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_DATA_L2L3Residual_AK4PFchs.txt");
+      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
       vCorrParam.push_back(*L2L3ResJetCorPar);
     }
     else
     {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L1FastJet_AK4PFchs.txt");
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L1FastJet_AK4PFchs.txt");
       vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L2Relative_AK4PFchs.txt");
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L2Relative_AK4PFchs.txt");
       vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV2_MC_L3Absolute_AK4PFchs.txt");
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L3Absolute_AK4PFchs.txt");
       vCorrParam.push_back(*L3JetCorPar);
     }
-    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer15_25nsV2_MC_Uncertainty_AK4PFchs.txt");
+    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer15_25nsV6_MC_Uncertainty_AK4PFchs.txt");
     
     JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
     
@@ -801,6 +831,44 @@ int main (int argc, char *argv[])
       }
       
       
+      if (applyJEC)
+      {
+        jetTools->correctJets(init_jets_corrected, event->fixedGridRhoFastjetAll(), isData);
+      }
+      
+      
+      /// Fill control plots
+      MSPlot["init_nJets"]->Fill(init_jets_corrected.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nMuons"]->Fill(init_muons.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["init_nElectrons"]->Fill(init_electrons.size(), datasets[d], true, Luminosity*scaleFactor);
+      
+      if ( init_jets_corrected.size() > 0 )
+      {
+        MSPlot["init_leadingJet_pT"]->Fill(init_jets_corrected[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_eta"]->Fill(init_jets_corrected[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingJet_CSVv2Discr"]->Fill(init_jets_corrected[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( init_muons.size() > 0 )
+      {
+        MSPlot["init_leadingMuon_pT"]->Fill(init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_eta"]->Fill(init_muons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingMuon_phi"]->Fill(init_muons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_muon_relIso"]->Fill( ( init_muons[0]->chargedHadronIso(4) + max( 0.0, init_muons[0]->neutralHadronIso(4) + init_muons[0]->photonIso(4) - 0.5*init_muons[0]->puChargedHadronIso(4) ) ) / init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_muon_d0"]->Fill(init_muons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( init_electrons.size() > 0 )
+      {
+        MSPlot["init_leadingElectron_pT"]->Fill(init_electrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["init_leadingElectron_eta"]->Fill(init_electrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      if ( mets.size() > 0 )
+      {
+         MSPlot["init_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["init_met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+         MSPlot["init_met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+      }
+      
+      
       
       /////////////////////////
       ///  EVENT SELECTION  ///
@@ -828,36 +896,6 @@ int main (int argc, char *argv[])
       {
         treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
-      }
-      
-      
-      /// Fill control plots
-      MSPlot["init_nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["init_nMuons"]->Fill(selectedMuons.size(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["init_nElectrons"]->Fill(selectedElectrons.size(), datasets[d], true, Luminosity*scaleFactor);
-      
-      if ( init_jets_corrected.size() > 0 )
-      {
-        MSPlot["init_leadingJet_pT"]->Fill(init_jets_corrected[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingJet_eta"]->Fill(init_jets_corrected[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingJet_CSVv2Discr"]->Fill(init_jets_corrected[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-      }
-      if ( init_muons.size() > 0 )
-      {
-        MSPlot["init_leadingMuon_pT"]->Fill(init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingMuon_eta"]->Fill(init_muons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingMuon_phi"]->Fill(init_muons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-      }
-      if ( init_electrons.size() > 0 )
-      {
-        MSPlot["init_leadingElectron_pT"]->Fill(init_electrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_leadingElectron_eta"]->Fill(init_electrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-      }
-      if ( mets.size() > 0 )
-      {
-         MSPlot["init_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-         MSPlot["init_met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-         MSPlot["init_met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
       }
       
       
@@ -1378,7 +1416,7 @@ int main (int argc, char *argv[])
                 recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[kjet]).M();
                 
 //                 WTerm = pow( (recoWMass - chi2Wmass)/sigmaChi2Wmass, 2);
-//                 topTerm = pow( (recoTopMass_bJet1 - chi2Topmass)/sigmaChi2Topmass, 2);
+//                 topTerm = pow( (recoTopMass - chi2Topmass)/sigmaChi2Topmass, 2);
 // 
 //                 chi2 = WTerm + topTerm;
 // 
@@ -1417,6 +1455,7 @@ int main (int argc, char *argv[])
       ////////////////////
       
       double HT = selectedJets[0]->Pt()+selectedJets[1]->Pt()+selectedJets[2]->Pt()+selectedJets[3]->Pt();
+      double relIsoMu = ( selectedMuons[0]->chargedHadronIso(4) + max( 0.0, selectedMuons[0]->neutralHadronIso(4) + selectedMuons[0]->photonIso(4) - 0.5*selectedMuons[0]->puChargedHadronIso(4) ) ) / selectedMuons[0]->Pt();  // dR = 0.4, dBeta corrected
       
       if ( dataSetName.find("TT") == 0 )
       {
@@ -1432,6 +1471,8 @@ int main (int argc, char *argv[])
       MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_relIso"]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_d0"]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
@@ -1456,7 +1497,19 @@ int main (int argc, char *argv[])
           MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
           MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
         }
-      }
+        
+        MSPlot["1b_muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_muon_relIso"]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_muon_d0"]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+        
+      }  /// end 1b
       
       MSPlot["pileup_SF"]->Fill(lumiWeight, datasets[d], true, Luminosity*scaleFactor);
       
