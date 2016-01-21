@@ -46,19 +46,13 @@ void Trigger::bookTriggers(bool isData)
   
   /// Add relevant triggers to triggerlist
   //  Recommended triggers for TOP analyses
-  //  Last updated: 5 Jan 2016. https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopTrigger
+  //  Last updated: 19 Jan 2016. https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopTrigger
   if (singleLep)
   {
-    if (muon)
+    if (muon)   // Triggers for data & MC are the same
     {
-      if (isData)
-      {
-        triggerList.push_back("HLT_IsoMu18_v*");  // Data
-      }
-      else
-      {
-        triggerList.push_back("HLT_IsoMu17_eta2p1_v*");  // MC
-      }
+      triggerList.push_back("HLT_IsoMu20_v*");
+      triggerList.push_back("HLT_IsoTkMu20_v*");
     }
     if (electron)
     {
