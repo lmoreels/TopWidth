@@ -145,7 +145,7 @@ int main (int argc, char *argv[])
   bool applyTriggers = true;
   bool applyJER = true;
   bool applyJEC = true;
-  bool applyLeptonSF = false;
+  bool applyLeptonSF = true;
   bool applyPU = true;
   bool nlo = false;
   bool hasNegWeight = false;
@@ -158,6 +158,7 @@ int main (int argc, char *argv[])
   int nofEventsWith1BJet = 0;
   int nofEventsWith2BJets = 0;
   int nofNegWeights = 0;
+  int nofPosWeights = 0;
   
   
   /// xml file
@@ -265,11 +266,11 @@ int main (int argc, char *argv[])
   }
   
   if ( Luminosity != oldLuminosity ) cout << "Changed analysis environment luminosity to "<< Luminosity << endl;
-  if ( iReducedDataSets != 1 )
-  {
-    Luminosity = Luminosity/((double) iReducedDataSets);
-    cout << "Running over 1/" << iReducedDataSets << " of the dataset, so luminosity changed to " << Luminosity << endl;
-  }
+//   if ( iReducedDataSets != 1 )
+//   {
+//     Luminosity = Luminosity/((double) iReducedDataSets);
+//     cout << "Running over 1/" << iReducedDataSets << " of the dataset, so luminosity changed to " << Luminosity << endl;
+//   }
   
   cout << " - Recreate output file ..." << endl;
   TFile *fout = new TFile (rootFileName.c_str(), "RECREATE");
@@ -350,7 +351,7 @@ int main (int argc, char *argv[])
   MSPlot["init_met_phi"] = new MultiSamplePlot(datasets, "init_met_phi", 32, -3.2, 3.2, "Phi");
   
   /// Event Selection
-  MSPlot["Selection"] = new MultiSamplePlot(datasets, "Selection", 13, -0.5, 12.5, "Selection");
+  MSPlot["Selection"] = new MultiSamplePlot(datasets, "Selection", 13, -0.5, 12.5, "Cutflow");
   
   /// Plots after event selection
   MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
@@ -390,9 +391,8 @@ int main (int argc, char *argv[])
   
   /// Scale factors
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
-  MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -2.5, 2.5, "0: None; 1: Central scale variation 1; 2: scale_variation 1");
-  MSPlot["weightIndex_diffs"] = new MultiSamplePlot(datasets,"weightIndex_diffs", 2, -0.5, 1.5, "Central scale variation 1 equals scale_variation 1");
-  MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 400, -20.0, 20.0, "weights for amc@nlo samples");
+  MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 200, -2.0, 2.0, "weights for amc@nlo samples");
+  MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -2.5, 2.5, "0: None; 1: scale_variation 1; 2: Central scale variation 1");
   
   
   
@@ -450,20 +450,22 @@ int main (int argc, char *argv[])
   if (! applyLeptonSF) { cout << "    --- At the moment these are not used in the analysis";}
   cout << endl;
   
-  double muonSFID, muonSFIso;
-  //MuonSFWeight *muonSFWeight_ = new MuonSFWeight(pathCalLept+"Muon_SF_TopEA.root","SF_totErr", false, false); // (... , ... , debug, print warning)
-  MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
-  MuonSFWeight *muonSFWeightID_M = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_MediumID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
-//  MuonSFWeight *muonSFWeightID_L = new MuonSFWeight(pathCalLept+"MuonID_Z_RunD_Reco74X_Nov20.root", "NUM_LooseID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);
+  double muonSFID, muonSFIso, muonSFTrig;
+  //MuonSFWeight *muonSFWeight_ = new MuonSFWeight(pathCalLept+"Muon_SF_TopEA.root","SF_totErr", true, false, false); // (... , ... , extendRange, debug, print warning)
+  MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightID_M = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_MediumID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+//  MuonSFWeight *muonSFWeightID_L = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
   
-  MuonSFWeight *muonSFWeightIso_TT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Tight RelIso, Tight ID
-//   MuonSFWeight *muonSFWeightIso_TM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_TightRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Tight RelIso, Medium ID
-//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Tight ID
-//   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Medium ID
-//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunD_Reco74X_Nov20.root", "NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", false, false);  // Loose RelIso, Loose ID
+  MuonSFWeight *muonSFWeightIso_TT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_TM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_TightRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Loose ID
   
-      
-  //ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight(pathCalLept+"Elec_SF_TopEA.root","GlobalSF", false, false); // (... , ... , debug, print warning)
+  MuonSFWeight *muonSFWeightTrigHLTv4p2 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightTrigHLTv4p3 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio", true, false, false);
+  
+  //ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight(pathCalLept+"Elec_SF_TopEA.root","GlobalSF", true, false, false); // (... , ... , extendRange, debug, print warning)
   
   
   /// B tag
@@ -483,15 +485,15 @@ int main (int argc, char *argv[])
   ///  Single Muon Selection  ///
   ///////////////////////////////
   
-  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
+  /// Updated 19/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
-  float muonPTSel = 20.; // GeV
+  float muonPTSel = 26.; // GeV
   float muonEtaSel = 2.1;
   float muonRelIsoSel = 0.15;  // Tight muon
   string muonWP = "Tight";
   
   float muonPTVeto = 10.; // GeV
-  float muonEtaVeto = 2.1;
+  float muonEtaVeto = 2.5;
   float muonRelIsoVeto = 0.25;  // Loose muon
   
   
@@ -502,11 +504,11 @@ int main (int argc, char *argv[])
   
   // To do
   float electronPTSel = 24.; // GeV
-  float electronEtaSel = 2.1;
+  float electronEtaSel = 2.1;  // because of electron trigger
   string electronWP = "Tight";
   
   float electronPTVeto = 15.; // GeV
-  float electronEtaVeto = 2.1;
+  float electronEtaVeto = 2.5;
   
   
   
@@ -514,7 +516,7 @@ int main (int argc, char *argv[])
   ///  Jet Selection  ///
   ///////////////////////
   
-  // To do
+  // Updated 19/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopJME
   float jetPT = 20.; // GeV
   float jetEta = 2.4;  // to allow b tagging
   
@@ -565,16 +567,18 @@ int main (int argc, char *argv[])
     nofEventsWith1BJet = 0;
     nofEventsWith2BJets = 0;
     nofNegWeights = 0;
+    nofPosWeights = 0;
+    double nloSF = 1;
     nlo = false;
     bool isData = false;
     string previousFilename = "";
     int iFile = -1;
     string dataSetName = datasets[d]->Name();
     
-    cout << "equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
     if (verbose > 1)
     {
       cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
+      cout << "      -> Equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
       cout << "      -> This sample contains, " << datasets[d]->NofEvtsToRunOver() << " events." << endl;
     }
     
@@ -588,7 +592,7 @@ int main (int argc, char *argv[])
       isData = true;
     }
     
-    if ( dataSetName.find("DY") == 0 || dataSetName.find("ZJets") == 0 || dataSetName.find("Zjets") == 0 || dataSetName.find("WJets") == 0 || dataSetName.find("Wjets") == 0 || dataSetName.find("ST_tch") == 0 )
+    if ( dataSetName.find("DY") == 0 || dataSetName.find("ZJets") == 0 || dataSetName.find("Zjets") == 0 || dataSetName.find("Z+jets") == 0 || dataSetName.find("WJets") == 0 || dataSetName.find("Wjets") == 0 || dataSetName.find("W+jets") == 0 || dataSetName.find("ST_tch") == 0 )
     {
       nlo = true;
     }
@@ -691,47 +695,54 @@ int main (int argc, char *argv[])
       
       
       /// Fix negative event weights for amc@nlo
+      hasNegWeight = false;
       if ( nlo )
       {
-        if ( runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1") >= 0 )
+        if ( event->getWeight(1001) != -9999. )
         {
-          mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")))/(abs(event->originalXWGTUP()));
-          //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 5"))/(abs(event->originalXWGTUP()));
-          //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 9"))/(abs(event->originalXWGTUP()));
-          MSPlot["weightIndex"]->Fill(1, datasets[d], true, Luminosity);
-        }
-        else if ( runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1") >= 0 )
-        {
-          mc_baseweight = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")))/(abs(event->originalXWGTUP()));
-          //mc_scaleupweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 5"))/(abs(event->originalXWGTUP()));
-          //mc_scaledownweight = event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 9"))/(abs(event->originalXWGTUP()));
-          MSPlot["weightIndex"]->Fill(2, datasets[d], true, Luminosity);
-        }
-        if ( runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1") < 0 )
-        {
-          mc_baseweight1 = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("Central scale variation 1")))/(abs(event->originalXWGTUP()));
-          MSPlot["weightIndex"]->Fill(-1, datasets[d], true, Luminosity);
-        }
-        if ( runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1") < 0 )
-        {
-          mc_baseweight2 = (event->getWeight(runInfos->getWeightInfo(currentRun).weightIndex("scale_variation 1")))/(abs(event->originalXWGTUP()));
-          MSPlot["weightIndex"]->Fill(-2, datasets[d], true, Luminosity);
-        }
-        else
-        {
-          mc_baseweight = 1.;
-          //mc_scaleupweight = mc_scaledownweight = 1.;
-          MSPlot["weightIndex"]->Fill(0, datasets[d], true, Luminosity);
-        }
-        
-        if ( mc_baseweight1 != 0 && mc_baseweight2 != 0 )
-        {
-          if (mc_baseweight1 == mc_baseweight2)
+          mc_baseweight = event->getWeight(1001)/abs(event->originalXWGTUP());
+          //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
+          //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
+          if ( mc_baseweight >= 0 ) 
           {
-            mc_baseweight = mc_baseweight1;
-            MSPlot["weightIndex_diffs"]->Fill(1, datasets[d], true, Luminosity);
+            nofPosWeights++;
+            MSPlot["weightIndex"]->Fill(1, datasets[d], false, Luminosity);
           }
-          else MSPlot["weightIndex_diffs"]->Fill(1, datasets[d], true, Luminosity);
+          else
+          {
+            hasNegWeight = true;
+            nofNegWeights++;
+            MSPlot["weightIndex"]->Fill(-1, datasets[d], false, Luminosity);
+          }
+        }
+        if ( event->getWeight(1) != -9999. )
+        {
+          mc_baseweight = event->getWeight(1)/abs(event->originalXWGTUP());
+          //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
+          //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
+          if ( mc_baseweight >= 0 )
+          {
+            nofPosWeights++;
+            MSPlot["weightIndex"]->Fill(2, datasets[d], false, Luminosity);
+          }
+          else
+          {
+            hasNegWeight = true;
+            nofNegWeights++;
+            MSPlot["weightIndex"]->Fill(-2, datasets[d], false, Luminosity);
+          }
+        }
+        if ( event->getWeight(1001) == -9999. && event->getWeight(1) == -9999. )
+        {
+          cout << "WARNING: No weight found for event " << ievt << " in dataset " << dataSetName << endl;
+          cout << "         Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
+          cout << "         Weight type is different from 'scale_variation' (1001) or 'Central scale variation' (1)." << endl;
+        }
+        if ( event->getWeight(1001) != -9999. && event->getWeight(1) != -9999. )
+        {
+          cout << "WARNING: Two weight types found for event " << ievt << " in dataset " << dataSetName << endl;
+          cout << "         Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
+          cout << "         Check which weight type should be used when." << endl;
         }
         
         MSPlot["nloWeight"]->Fill(mc_baseweight, datasets[d], true, Luminosity);
@@ -747,11 +758,9 @@ int main (int argc, char *argv[])
       // scale factor for the event
       double scaleFactor = 1.;
       
-      hasNegWeight = false;
-      if ( nlo && mc_baseweight < 0.0 )
+      if (hasNegWeight)
       {
-        //scaleFactor = -1.;
-        hasNegWeight = true;
+        scaleFactor = -1.;
       }
       
       
@@ -886,9 +895,11 @@ int main (int argc, char *argv[])
       vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       
       
+      if (selectedJets.size() >= 4)
+      {
+        if (selectedJets[3]->Pt() < 30) selectedJets.clear();
+      }
       
-      //if (selectedJets.size() >= 4)
-      //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
       
       vector<TRootMCParticle*> mcParticles;
       
@@ -1527,8 +1538,15 @@ int main (int argc, char *argv[])
     cout << "Data set " << datasets[d]->Title() << " has " << nofEventsWith2BJets << " events with 2 b tagged jets." << endl;
     if ( dataSetName.find("TT") == 0 )
       cout << "Number of matched events: " << nofMatchedEvents << endl;
-    if ( nlo )
-      cout << "Data set " << datasets[d]->Title() << " has " << nofNegWeights << " events with negative weights." << endl;
+    
+    if (nlo)
+    {
+      cout << "Data set " << datasets[d]->Title() << " has " << nofPosWeights << " events with positive weights and " << nofNegWeights << " events with negative weights." << endl;
+      
+      /// Determine scale factor due to negative weights
+      nloSF = ((double) (nofPosWeights - nofNegWeights))/((double) (nofPosWeights + nofNegWeights));
+      cout << "This corresponds to an event scale factor of " << nloSF << endl;
+    }
     
     
     /// Fill histogram log likelihood
