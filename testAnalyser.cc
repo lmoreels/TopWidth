@@ -159,6 +159,8 @@ int main (int argc, char *argv[])
   int nofEventsWith2BJets = 0;
   int nofNegWeights = 0;
   int nofPosWeights = 0;
+  int nofEventsHLTv2 = 0;
+  int nofEventsHLTv3 = 0;
   
   
   /// xml file
@@ -320,6 +322,7 @@ int main (int argc, char *argv[])
   
   histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
   histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
+  histo2D["muon_SF_Trig"] = new TH2F("muon_SF_Trig", "Muon trigger scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
   
   
   
@@ -462,6 +465,7 @@ int main (int argc, char *argv[])
 //   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Medium ID
 //   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Loose ID
   
+  double weightMuonHLTv2, weightMuonHLTv3;
   MuonSFWeight *muonSFWeightTrigHLTv4p2 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio", true, false, false);
   MuonSFWeight *muonSFWeightTrigHLTv4p3 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio", true, false, false);
   
@@ -684,6 +688,24 @@ int main (int argc, char *argv[])
       datasets[d]->eventTree()->LoadTree(ievt);
       string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
       int currentRun = event->runId();
+      
+      if (isData)
+      {
+        if ( currentRun < 256630 )
+        {
+          cerr << "-- Dataset 2015C included..." << endl;
+          exit(1);
+        }
+        else if ( currentRun >= 256630 && currentRun <= 257819 )
+        {
+          nofEventsHLTv2++;
+        }
+        else
+        {
+          nofEventsHLTv3++;
+        }
+      }
+      
       
       if (! isData ) {
         genjets = treeLoader.LoadGenJet(ievt,false);
@@ -914,6 +936,8 @@ int main (int argc, char *argv[])
       has1bjet = false;
       has2bjets = false;
       nb_bTaggedJets = 0;
+      muonSFID = muonSFIso = muonSFTrig = 1.;
+      
       
       /// Continue with selection table
       if (isGoodPV)
@@ -929,9 +953,12 @@ int main (int argc, char *argv[])
           {
             muonSFID = muonSFWeightID_T->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
             muonSFIso = muonSFWeightIso_TT->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
+            muonSFTrig = weightMuonHLTv2 * muonSFWeightTrigHLTv4p2->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0) + weightMuonHLTv3 * muonSFWeightTrigHLTv4p3->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);
+            
             histo2D["muon_SF_ID"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFID);
             histo2D["muon_SF_Iso"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFIso);
-            scaleFactor = scaleFactor*muonSFID*muonSFIso;
+            histo2D["muon_SF_Trig"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFTrig);
+            scaleFactor = scaleFactor*muonSFID*muonSFIso*muonSFTrig;
           }
           if (vetoMuons.size() == 1) {
             selecTableSemiMu.Fill(d,4,scaleFactor);
@@ -985,10 +1012,6 @@ int main (int argc, char *argv[])
       }
       
       nofSelectedEvents++;
-      if (hasNegWeight)
-      {
-        nofNegWeights++;
-      }
       
       if (verbose > 3)
         cout << endl << "  Event " << ievt << " is selected" << endl;
@@ -1546,6 +1569,13 @@ int main (int argc, char *argv[])
       /// Determine scale factor due to negative weights
       nloSF = ((double) (nofPosWeights - nofNegWeights))/((double) (nofPosWeights + nofNegWeights));
       cout << "This corresponds to an event scale factor of " << nloSF << endl;
+    }
+    
+    if (isData)
+    {
+      weightMuonHLTv2 = ((double) nofEventsHLTv2) / ((double) (nofEventsHLTv2 + nofEventsHLTv3));
+      weightMuonHLTv3 = ((double) nofEventsHLTv3) / ((double) (nofEventsHLTv2 + nofEventsHLTv3));
+      cout << "The muon trigger scale factors will be scaled by " << weightMuonHLTv2 << " for HLTv2 and " << weightMuonHLTv3 << " for HLTv3." << endl;
     }
     
     
