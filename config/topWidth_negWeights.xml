@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<datasets>
+
+<!-- Cross sections from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/SummaryTable1G25ns . Last updated: 15/01/16 -->
+
+<d name="TTJets"  title="t\bar{t}+jets amc@nlo"   add="0"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="1" xsection="831.76"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_74X_v8/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/crab_TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8-RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1-CMSSW_74X_v8-MCRUN2_74_V9/151020_160712/0000/*.root"/>
+
+<d name="ST_t" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="1" xsection="70.69" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_74X_v8/ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/crab_ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1-RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1-CMSSW_74X_v8-MCRUN2_74_V9/151020_160315/0000/*.root"/>
+
+<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="1" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_74X_v8/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/crab_DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8-RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v3-CMSSW_74X_v8-MCRUN2_74_V9/151029_124746/0000/*.root"  CombineName="DY__nominal"/>
+
+<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="1" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_74X_v8/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/crab_WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8-RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1-CMSSW_74X_v8-MCRUN2_74_V9/151020_161108/0000/*.root" CombineName="W__nominal"/>
+
+</datasets>
+
+
+<analysis>
+<a type="Collections" PVCollection="PrimaryVertex" JetType="2" JetCollection="PFJets_slimmedJets" METType="2" METCollection="PFMET_slimmedMETs" MuonCollection="Muons_slimmedMuons" ElectronCollection="Electrons_slimmedElectrons" loadGenJetCollection="1" GenJetCollection="GenJets_slimmedGenJets" loadGenEventCollection="0" GenEventCollection="GenEvent" loadNPGenEventCollection="0" NPGenEventCollection="NPGenEvent" loadMCParticles="1" MCParticlesCollection="MCParticles" loadTrackMETCollection="0" TrackMETCollection="" loadFatJetCollection="0" FatJetCollection="FatJets_slimmedJetsAK8"/>
+
+<a type="Selection" PVertexNdofCut="4" PVertexZCut="24." PVertexRhoCut="2." MuonPtCutSR="20." MuonEtaCutSR="2.1" MuonRelIsoCutSR="0.05" MuonNHitsCutSR="10" MuonD0CutSR="0.02" MuonDRJetsCut="0.3" MuonPtCutVetoSR="10." MuonEtaCutVetoSR="2.5" MuonRelIsoCutVetoSR="0.2" ElectronPtCut="15." ElectronEtaCut="2.5" ElectronRelIsoCut="0.2" JetsPtCutSR="30." JetsEtaCutSR="2.4" applyJetID="1" JetEMFCut="0.01" n90HitsCut="1" fHPDCut="0.98" NofJets="4" NofJetBins="2"/>
+
+<a type="Conditions" isMC="1" MCRound="0" Vars_ByFile="0" VarsFile="m0_100_m12_100" IntToCut="4" Verbose="2" Luminosity="999999" JES="1." nPseudoExp="0" nPseudoSession="0" runonTTrees="0" doABCD="1" doVJEstim="1" doVJEstPE="1" doTtJEstim="1" doTemplComp="0" doSystematics="0"/><!-- Luminosity in pb-1 -->
+</analysis>
