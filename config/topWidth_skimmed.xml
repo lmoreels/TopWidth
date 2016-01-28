@@ -13,11 +13,12 @@
 
 <d name="ST_tWch_Tbar"  title="ST tbar tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="28089.8876404" xsection="35.6"   PreselEff="0.0"   filenames="dcap://maite.iihe.ac.be//pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_tW_tbar_5f_powheg_pythia8/03122015_180425/Skimmed_TOPTREE_1.root"  CombineName="Ttw__nominal"/>
 
-<d name="ST_tch" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="280865.865045" xsection="70.69" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_t_4f_amc@nlo_pythia8/03122015_075511/*.root"/>
+<d name="ST_tch" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="280865.865045*0.215616" xsection="70.69" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_t_4f_amc@nlo_pythia8/03122015_075511/*.root"/>
 
-<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="4751.00046471" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/DY_amc@nloFXFX_pythia8/14122015_183009/*.root"  CombineName="DY__nominal"/>
+<!-- Check norm factor due to negative weights for DY sample -->
+<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="4751.00046471*0.669935" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/DY_amc@nloFXFX_pythia8/14122015_183009/*.root"  CombineName="DY__nominal"/>
 
-<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="392.5331604" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Wjets_amc@nloFXFX_pythia8/14122015_140233/*.root"  CombineName="W__nominal"/>
+<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="392.5331604*0.683948" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Wjets_amc@nloFXFX_pythia8/14122015_140233/*.root"  CombineName="W__nominal"/>
 
 </datasets>
 

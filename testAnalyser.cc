@@ -95,10 +95,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneFourthOfDataSets = false;
+  bool useOneFourthOfDataSets = true;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = true;
+  bool useTestSample = false;
   
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
@@ -285,7 +285,7 @@ int main (int argc, char *argv[])
   //nof selected events
   //double NEvtsData = 0;
   Double_t *nEvents = new Double_t[datasets.size()];
-  Double_t mc_baseweight = 0, mc_baseweight1 = 0, mc_baseweight2 = 0;
+  Double_t mc_baseweight = 0;
   
   
   
@@ -388,7 +388,14 @@ int main (int argc, char *argv[])
   MSPlot["1b_jet3_pT"] = new MultiSamplePlot(datasets, "1b_jet3_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["1b_jet4_pT"] = new MultiSamplePlot(datasets, "1b_jet4_pT", 25, 0, 500, "p_{T} [GeV]");
   MSPlot["1b_Ht_4leadingJets"] = new MultiSamplePlot(datasets,"1b_Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
+  MSPlot["1b_nJets"] = new MultiSamplePlot(datasets, "1b_nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["1b_met_pT"] = new MultiSamplePlot(datasets, "1b_met_pT", 40, 0, 800, "p_{T} [GeV]");
   
+  MSPlot["muon_pT_noJetCut"] = new MultiSamplePlot(datasets, "muon_pT_noJetCut", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_relIso_noJetCut"] = new MultiSamplePlot(datasets, "muon_relIso_noJetCut", 30, 0, 0.3, "relIso");
+  MSPlot["met_pT_noJetCut"] = new MultiSamplePlot(datasets, "met_pT_noJetCut", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["nJets_noJetCut"] = new MultiSamplePlot(datasets, "nJets_noJetCut", 13, -0.5, 12.5, "# jets");
+      
   MSPlot["nPVs_before"] = new MultiSamplePlot(datasets, "nPVs_before", 41, -0.5, 40.5, "# PVs before reweighting");
   MSPlot["nPVs_after"] = new MultiSamplePlot(datasets, "nPVs_after", 41, -0.5, 40.5, "# PVs after reweighting");
   
@@ -573,6 +580,7 @@ int main (int argc, char *argv[])
     nofNegWeights = 0;
     nofPosWeights = 0;
     double nloSF = 1;
+    double sumWeights = 0.;
     nlo = false;
     bool isData = false;
     string previousFilename = "";
@@ -718,7 +726,8 @@ int main (int argc, char *argv[])
       
       /// Fix negative event weights for amc@nlo
       hasNegWeight = false;
-      if ( nlo )
+      //if ( nlo )
+      if (! isData && dataSetName.find("ST") != 0 )  // not data & not ST tW channel
       {
         if ( event->getWeight(1001) != -9999. )
         {
@@ -728,13 +737,13 @@ int main (int argc, char *argv[])
           if ( mc_baseweight >= 0 ) 
           {
             nofPosWeights++;
-            MSPlot["weightIndex"]->Fill(1, datasets[d], false, Luminosity);
+            MSPlot["weightIndex"]->Fill(1., datasets[d], false, Luminosity);
           }
           else
           {
-            hasNegWeight = true;
+            if (nlo) hasNegWeight = true;
             nofNegWeights++;
-            MSPlot["weightIndex"]->Fill(-1, datasets[d], false, Luminosity);
+            MSPlot["weightIndex"]->Fill(-1., datasets[d], false, Luminosity);
           }
         }
         if ( event->getWeight(1) != -9999. )
@@ -745,13 +754,13 @@ int main (int argc, char *argv[])
           if ( mc_baseweight >= 0 )
           {
             nofPosWeights++;
-            MSPlot["weightIndex"]->Fill(2, datasets[d], false, Luminosity);
+            MSPlot["weightIndex"]->Fill(2., datasets[d], false, Luminosity);
           }
           else
           {
-            hasNegWeight = true;
+            if (nlo) hasNegWeight = true;
             nofNegWeights++;
-            MSPlot["weightIndex"]->Fill(-2, datasets[d], false, Luminosity);
+            MSPlot["weightIndex"]->Fill(-2., datasets[d], false, Luminosity);
           }
         }
         if ( event->getWeight(1001) == -9999. && event->getWeight(1) == -9999. )
@@ -767,8 +776,8 @@ int main (int argc, char *argv[])
           cout << "         Check which weight type should be used when." << endl;
         }
         
-        MSPlot["nloWeight"]->Fill(mc_baseweight, datasets[d], true, Luminosity);
-        
+        MSPlot["nloWeight"]->Fill(mc_baseweight, datasets[d], false, Luminosity);
+        sumWeights += mc_baseweight;
       }
       
       
@@ -917,10 +926,10 @@ int main (int argc, char *argv[])
       vector<TRootElectron*> vetoElectronsSemiMu = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       
       
-      if (selectedJets.size() >= 4)
-      {
-        if (selectedJets[3]->Pt() < 30) selectedJets.clear();
-      }
+//       if (selectedJets.size() >= 4)
+//       {
+//         if (selectedJets[3]->Pt() < 30) selectedJets.clear();
+//       }
       
       
       vector<TRootMCParticle*> mcParticles;
@@ -966,6 +975,20 @@ int main (int argc, char *argv[])
             if (vetoElectronsSemiMu.size() == 0) {
               selecTableSemiMu.Fill(d,5,scaleFactor);
               MSPlot["Selection"]->Fill(5, datasets[d], true, Luminosity*scaleFactor);
+              
+              double testRelIso = ( selectedMuons[0]->chargedHadronIso(4) + max( 0.0, selectedMuons[0]->neutralHadronIso(4) + selectedMuons[0]->photonIso(4) - 0.5*selectedMuons[0]->puChargedHadronIso(4) ) ) / selectedMuons[0]->Pt();  // dR = 0.4, dBeta corrected
+              MSPlot["muon_pT_noJetCut"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+              MSPlot["muon_relIso_noJetCut"]->Fill(testRelIso, datasets[d], true, Luminosity*scaleFactor);
+              MSPlot["met_pT_noJetCut"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+              MSPlot["nJets_noJetCut"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+              
+              /// First 4 jets need pT > 30 GeV
+              if (selectedJets.size() >= 4)
+              {
+                if (selectedJets[3]->Pt() < 30) selectedJets.clear();
+              }
+              
+              
               if ( selectedJets.size() >= 4 )
               {
                 selecTableSemiMu.Fill(d,6,scaleFactor);
@@ -1074,12 +1097,12 @@ int main (int argc, char *argv[])
           else if( mcParticles[i]->type() == -pdgID_top )
             antiTopQuark = *mcParticles[i];
 					
-          if ( mcParticles[i]->status() == 1 && mcParticles[i]->type() == 13 && mcParticles[i]->motherType() == -24 && mcParticles[i]->grannyType() == -pdgID_top )		// mu-, W-, tbar
+          if ( mcParticles[i]->status() == 23 && mcParticles[i]->type() == 13 && mcParticles[i]->motherType() == -24 && mcParticles[i]->grannyType() == -pdgID_top )		// mu-, W-, tbar
           {
             muMinusFromTop = true;
             genmuon = i;
           }
-          if ( mcParticles[i]->status() == 1 && mcParticles[i]->type() == -13 && mcParticles[i]->motherType() == 24 && mcParticles[i]->grannyType() == pdgID_top )		// mu+, W+, t
+          if ( mcParticles[i]->status() == 23 && mcParticles[i]->type() == -13 && mcParticles[i]->motherType() == 24 && mcParticles[i]->grannyType() == pdgID_top )		// mu+, W+, t
           {
             muPlusFromTop = true;
             genmuon = i;
@@ -1189,7 +1212,7 @@ int main (int argc, char *argv[])
         
         if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4)
           hadronictopJetsMatched_MCdef_ = true;
-        if (genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR( (TLorentzVector)*mcParticles[genmuon], (TLorentzVector)*selectedMuons[0]) < 0.3)
+        if (genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR( (TLorentzVector)*mcParticles[genmuon], (TLorentzVector)*selectedMuons[0]) < 0.1)
           muonmatched = true;
         
         
@@ -1542,6 +1565,8 @@ int main (int argc, char *argv[])
         MSPlot["1b_jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         MSPlot["1b_jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         MSPlot["1b_Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+        if ( mets.size() > 0 ) MSPlot["1b_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         
       }  /// end 1b
       
@@ -1562,13 +1587,16 @@ int main (int argc, char *argv[])
     if ( dataSetName.find("TT") == 0 )
       cout << "Number of matched events: " << nofMatchedEvents << endl;
     
-    if (nlo)
+    //if (nlo)
+    if (! isData && dataSetName.find("ST") != 0 )  // not data & not ST tW channel
     {
       cout << "Data set " << datasets[d]->Title() << " has " << nofPosWeights << " events with positive weights and " << nofNegWeights << " events with negative weights." << endl;
+      cout << "         Pos - neg is " << nofPosWeights - nofNegWeights << ", pos + neg is " << nofPosWeights + nofNegWeights << endl;
+      cout << "The sum of the weights is " << ((int)sumWeights) << ", whereas the total number of events is " << ((int)nEvents[d]) << endl;
       
       /// Determine scale factor due to negative weights
       nloSF = ((double) (nofPosWeights - nofNegWeights))/((double) (nofPosWeights + nofNegWeights));
-      cout << "This corresponds to an event scale factor of " << nloSF << endl;
+      cout << "This corresponds to an event scale factor of " << nloSF << " (NB: not necessarily representative for whole sample, this is skimmed set!)" << endl;
     }
     
     if (isData)
@@ -1577,6 +1605,7 @@ int main (int argc, char *argv[])
       weightMuonHLTv3 = ((double) nofEventsHLTv3) / ((double) (nofEventsHLTv2 + nofEventsHLTv3));
       cout << "The muon trigger scale factors will be scaled by " << weightMuonHLTv2 << " for HLTv2 and " << weightMuonHLTv3 << " for HLTv3." << endl;
     }
+    cout << endl;
     
     
     /// Fill histogram log likelihood
@@ -1614,7 +1643,7 @@ int main (int argc, char *argv[])
     //cout << "MSPlot: " << it->first << endl;
     MultiSamplePlot *temp = it->second;
     string name = it->first;
-    temp->Draw(name, 0, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+    temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
     temp->Write(fout, name, true, pathPNG+"MSPlot/", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
   }
   
