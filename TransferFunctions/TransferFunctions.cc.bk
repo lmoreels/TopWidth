@@ -253,7 +253,7 @@ void TransferFunctions::writeOutputFiles()
   histoTr2D["Eparton_vs_Etabjet"]->Write();
   histoTr2D["Eparton_vs_Phinonbjet"]->Write();
   histoTr2D["Eparton_vs_Phibjet"]->Write();
-    
+  
   histoTr2D["Eparton_vs_Eparton-Enonbjet"]->Write();
   histoTr2D["Eparton_vs_Eparton-Ebjet"]->Write();
   histoTr2D["Eparton_vs_Thparton-Thnonbjet"]->Write();
@@ -262,6 +262,13 @@ void TransferFunctions::writeOutputFiles()
   histoTr2D["Eparton_vs_Etaparton-Etabjet"]->Write();
   histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]->Write();
   histoTr2D["Eparton_vs_Phiparton-Phibjet"]->Write();
+  
+  histoTr2D["Thparton_vs_Thparton-Thnonbjet"]->Write();
+  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Write();
+  histoTr2D["Etaparton_vs_Etaparton-Etanonbjet"]->Write();
+  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Write();
+  histoTr2D["Phiparton_vs_Phiparton-Phinonbjet"]->Write();
+  histoTr2D["Phiparton_vs_Phiparton-Phibjet"]->Write();
   
   if (muon)
   {
@@ -277,6 +284,10 @@ void TransferFunctions::writeOutputFiles()
     histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"]->Write();
     histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"]->Write();
     histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]->Write();
+    
+    histoTr2D["ThgenMu_vs_ThgenMu-ThrecMu"]->Write();
+    histoTr2D["EtagenMu_vs_EtagenMu-EtarecMu"]->Write();
+    histoTr2D["PhigenMu_vs_PhigenMu-PhirecMu"]->Write();
   }
   
   if (electron)
@@ -293,9 +304,11 @@ void TransferFunctions::writeOutputFiles()
     histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"]->Write();
     histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"]->Write();
     histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"]->Write();
+    
+    histoTr2D["ThgenEl_vs_ThgenEl-ThrecEl"]->Write();
+    histoTr2D["EtagenEl_vs_EtagenEl-EtarecEl"]->Write();
+    histoTr2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Write();
   }
-  
-  std::cout << "TransferFunctions::writeOutputFiles -- Histograms should have been written to ROOT file. Check this." << std::endl;
   
   
   /// Fit distributions
