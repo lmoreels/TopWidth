@@ -7,6 +7,7 @@ Plots*/*
 nohup*.txt
 Trigger/*.txt
 Trigger/Makefile
+negWeightsCalculator
 testAnalyser
 testMatching
 testGenJets

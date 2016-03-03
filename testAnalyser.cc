@@ -45,6 +45,7 @@
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
 
 
 using namespace std;
@@ -95,10 +96,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneFourthOfDataSets = true;
+  bool useOneFourthOfDataSets = false;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
-  bool useTestSample = false;
+  bool useTestSample = true;
   
   
   string rootFileName = "testAnalyser_output_FullDataSet_"+dateString+".root";
@@ -141,13 +142,15 @@ int main (int argc, char *argv[])
   ///  Configuration
   /////////////////////
   
+  bool testTTbarOnly = false;  
+  bool calculateTransferFunctions = true;
   bool printTriggers = false;
   bool applyTriggers = true;
   bool applyJER = true;
   bool applyJEC = true;
   bool applyLeptonSF = true;
   bool applyPU = true;
-  bool nlo = false;
+  
   bool hasNegWeight = false;
   bool eventSelected = false;
   bool has1bjet = false;
@@ -320,9 +323,9 @@ int main (int argc, char *argv[])
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
-  histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
-  histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
-  histo2D["muon_SF_Trig"] = new TH2F("muon_SF_Trig", "Muon trigger scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
+  //histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
+  //histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
+  //histo2D["muon_SF_Trig"] = new TH2F("muon_SF_Trig", "Muon trigger scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
   
   
   
@@ -346,7 +349,7 @@ int main (int argc, char *argv[])
   MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 30, -3, 3, "Eta");
   MSPlot["init_leadingMuon_phi"] = new MultiSamplePlot(datasets, "init_leadingMuon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["init_muon_relIso"] = new MultiSamplePlot(datasets, "init_muon_relIso", 30, 0, 0.3, "relIso");
-  MSPlot["init_muon_d0"] = new MultiSamplePlot(datasets, "init_muon_d0", 50, 0, 5, "d_{0}");
+  MSPlot["init_muon_d0"] = new MultiSamplePlot(datasets, "init_muon_d0", 50, 0, 0.5, "d_{0}");
   MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
   MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 40, 0, 800, "p_{T} [GeV]");
@@ -361,7 +364,7 @@ int main (int argc, char *argv[])
   MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 30, -3, 3, "Eta");
   MSPlot["muon_phi"] = new MultiSamplePlot(datasets, "muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso"] = new MultiSamplePlot(datasets, "muon_relIso", 30, 0, 0.3, "relIso");
-  MSPlot["muon_d0"] = new MultiSamplePlot(datasets, "muon_d0", 50, 0, 5, "d_{0}");
+  MSPlot["muon_d0"] = new MultiSamplePlot(datasets, "muon_d0", 50, 0, 0.5, "d_{0}");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 25, 0, 500, "p_{T} [GeV]");
@@ -382,7 +385,7 @@ int main (int argc, char *argv[])
   MSPlot["1b_muon_eta"] = new MultiSamplePlot(datasets, "1b_muon_eta", 30, -3, 3, "Eta");
   MSPlot["1b_muon_phi"] = new MultiSamplePlot(datasets, "1b_muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["1b_muon_relIso"] = new MultiSamplePlot(datasets, "1b_muon_relIso", 30, 0, 0.3, "relIso");
-  MSPlot["1b_muon_d0"] = new MultiSamplePlot(datasets, "1b_muon_d0", 50, 0, 5, "d_{0}");
+  MSPlot["1b_muon_d0"] = new MultiSamplePlot(datasets, "1b_muon_d0", 50, 0, 0.5, "d_{0}");
   MSPlot["1b_leadingJet_pT"] = new MultiSamplePlot(datasets, "1b_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["1b_jet2_pT"] = new MultiSamplePlot(datasets, "1b_jet2_pT", 40, 0, 800, "p_{T} [GeV]");
   MSPlot["1b_jet3_pT"] = new MultiSamplePlot(datasets, "1b_jet3_pT", 25, 0, 500, "p_{T} [GeV]");
@@ -435,6 +438,14 @@ int main (int argc, char *argv[])
   selecTableSemiMu.SetLuminosity(Luminosity);
   if (verbose > 0)
     cout << " - SelectionTable instantiated ..." << endl;
+  
+  
+  
+  ///////////////////////////////////////
+  ///  Initialise Transfer Functions  ///
+  ///////////////////////////////////////
+  
+  TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
   
   
   
@@ -545,6 +556,19 @@ int main (int argc, char *argv[])
   
   
   
+  ////////////////////////////////
+  ///  Define TLorentzVectors  ///
+  ////////////////////////////////
+  
+  // Matching
+  vector<TLorentzVector> mcParticlesTLV, selectedJetsTLV;
+  TLorentzVector topQuark, antiTopQuark;
+  // Transfer functions
+  vector<TLorentzVector*> partonTLV, jetTLV;
+  //TLorentzVector genMuTLV, selMuTLV, genElTLV, selElTLV;
+  
+  
+  
   /////////////////////////////////////////////
   ///  Define variables for top propagator  ///
   /////////////////////////////////////////////
@@ -569,23 +593,37 @@ int main (int argc, char *argv[])
   ///  Loop on datasets
   ////////////////////////////////////
   
+  double timePerDataSet[datasets.size()] = {0};
+  
   if (verbose > 0)
     cout << " - Loop over datasets ... " << datasets.size() << " datasets !" << endl;
   
   for (unsigned int d = 0; d < datasets.size(); d++)
-  { 
+  {
+    clock_t startDataSet = clock();
+    
     nofSelectedEvents = 0;
     nofEventsWith1BJet = 0;
     nofEventsWith2BJets = 0;
     nofNegWeights = 0;
     nofPosWeights = 0;
-    double nloSF = 1;
-    double sumWeights = 0.;
-    nlo = false;
-    bool isData = false;
-    string previousFilename = "";
+    float sumWeights = 0.;
+    double nloSF = 1.;
     int iFile = -1;
+    string previousFilename = "";
+    mcParticlesTLV.clear(); selectedJetsTLV.clear();  // vector<TLV>
+    partonTLV.clear(); jetTLV.clear();  // vector<TLV*>
+    topQuark.Clear(); antiTopQuark.Clear(); //genMuTLV.Clear(); selMuTLV.Clear(); genElTLV.Clear(); selElTLV.Clear();
+    
+    bool nlo = false;
+    bool isData = false;
+    
     string dataSetName = datasets[d]->Name();
+    if ( testTTbarOnly && dataSetName.find("TT") != 0 )
+    {
+      cout << "Skipping data set " << dataSetName << " ..." << endl;
+      continue;
+    }
     
     if (verbose > 1)
     {
@@ -715,26 +753,32 @@ int main (int argc, char *argv[])
       }
       
       
-      if (! isData ) {
+      if (! isData )
+      {
         genjets = treeLoader.LoadGenJet(ievt,false);
         //sort(genjets.begin(),genjets.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       
       
-      // BE CAREFUL: TRootGenEvent is now obsolete!
+      
+      /////////////////////////////////////
+      ///  DETERMINE EVENT SCALEFACTOR  ///
+      /////////////////////////////////////
+      
+      // scale factor for the event
+      double scaleFactor = 1.;
       
       
       /// Fix negative event weights for amc@nlo
       hasNegWeight = false;
-      //if ( nlo )
-      if (! isData && dataSetName.find("ST") != 0 )  // not data & not ST tW channel
+      if (! isData && dataSetName.find("tW") != 0 )  // not data & not ST tW channel
       {
         if ( event->getWeight(1001) != -9999. )
         {
           mc_baseweight = event->getWeight(1001)/abs(event->originalXWGTUP());
           //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
           //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
-          if ( mc_baseweight >= 0 ) 
+          if ( mc_baseweight >= 0. ) 
           {
             nofPosWeights++;
             MSPlot["weightIndex"]->Fill(1., datasets[d], false, Luminosity);
@@ -751,7 +795,7 @@ int main (int argc, char *argv[])
           mc_baseweight = event->getWeight(1)/abs(event->originalXWGTUP());
           //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
           //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
-          if ( mc_baseweight >= 0 )
+          if ( mc_baseweight >= 0. )
           {
             nofPosWeights++;
             MSPlot["weightIndex"]->Fill(2., datasets[d], false, Luminosity);
@@ -778,22 +822,15 @@ int main (int argc, char *argv[])
         
         MSPlot["nloWeight"]->Fill(mc_baseweight, datasets[d], false, Luminosity);
         sumWeights += mc_baseweight;
+        
+        scaleFactor *= mc_baseweight;
       }
       
       
       
-      /////////////////////////////////////
-      ///  DETERMINE EVENT SCALEFACTOR  ///
-      /////////////////////////////////////
-      
-      // scale factor for the event
-      double scaleFactor = 1.;
-      
-      if (hasNegWeight)
-      {
-        scaleFactor = -1.;
-      }
-      
+      /////////////////
+      ///  Pile-up  ///
+      /////////////////
       
       /// Plot number of primary vertices before PU reweighting
       MSPlot["init_nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity);
@@ -825,7 +862,6 @@ int main (int argc, char *argv[])
       
       bool trigged = false;
       bool fileChanged = false;
-      bool runChanged = false;
       
       /// Fill selection table before trigger
       selecTableSemiMu.Fill(d,0,scaleFactor);
@@ -850,7 +886,7 @@ int main (int argc, char *argv[])
       
       /// Fill selection table after trigger
       selecTableSemiMu.Fill(d,1,scaleFactor);
-      MSPlot["Selection"]->Fill(1, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["Selection"]->Fill(1., datasets[d], true, Luminosity*scaleFactor);
       
       
       
@@ -964,9 +1000,9 @@ int main (int argc, char *argv[])
             muonSFIso = muonSFWeightIso_TT->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
             muonSFTrig = weightMuonHLTv2 * muonSFWeightTrigHLTv4p2->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0) + weightMuonHLTv3 * muonSFWeightTrigHLTv4p3->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);
             
-            histo2D["muon_SF_ID"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFID);
-            histo2D["muon_SF_Iso"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFIso);
-            histo2D["muon_SF_Trig"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFTrig);
+            //histo2D["muon_SF_ID"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFID);
+            //histo2D["muon_SF_Iso"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFIso);
+            //histo2D["muon_SF_Trig"]->Fill(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), muonSFTrig);
             scaleFactor = scaleFactor*muonSFID*muonSFIso*muonSFTrig;
           }
           if (vetoMuons.size() == 1) {
@@ -1071,8 +1107,8 @@ int main (int argc, char *argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        vector<TLorentzVector> mcParticlesTLV, selectedJetsTLV;
-        TLorentzVector topQuark, antiTopQuark;
+        mcParticlesTLV.clear(); selectedJetsTLV.clear();  // vector<TLV>
+        topQuark.Clear(); antiTopQuark.Clear();
         
         bool muPlusFromTop = false, muMinusFromTop = false;
         mcParticlesMatching_.clear();
@@ -1216,6 +1252,34 @@ int main (int argc, char *argv[])
           muonmatched = true;
         
         
+        
+        ///////////////////
+        ///  Transfer functions
+        ///////////////////
+        
+        if (all4PartonsMatched && calculateTransferFunctions)
+        {
+          partonTLV.clear(); jetTLV.clear();  // vector<TLV*>
+          //genMuTLV.Clear(); selMuTLV.Clear(); genElTLV.Clear(); selElTLV.Clear();
+          
+          for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+          {
+            /// JetPartonPair[i].first  = jet number
+            /// JetPartonPair[i].second = parton number
+            /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+            
+            partonTLV.push_back(mcParticles[JetPartonPair[iMatch].second]);
+            jetTLV.push_back(selectedJets[JetPartonPair[iMatch].first]);
+          }
+          
+          tf->fillJets(partonTLV, jetTLV);
+          
+          if (muonmatched) tf->fillMuon((TLorentzVector*) mcParticles[genmuon], (TLorentzVector*) selectedMuons[0]);
+          //if (electronmatched) tf->fillElectron(...)
+          
+        }  // end tf
+        
+        
       }  /// End matching
       
       
@@ -1270,7 +1334,8 @@ int main (int argc, char *argv[])
           histo1D["topMass_reco_first4matched"]->Fill(topMassReco_matched);
           histo1D["topMass_gen_first4matched"]->Fill(topMassGen_matched);
         }
-      }
+        
+      }  // end TT && matched
       
       
       ////////////////////////////
@@ -1608,24 +1673,45 @@ int main (int argc, char *argv[])
     cout << endl;
     
     
-    /// Fill histogram log likelihood
+    /// Fill histogram log likelihood && Transfer functions
     if ( dataSetName.find("TT") == 0 )
     {
       for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
+      {
+        for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
         {
-          for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
-          {
-            histo2D["logLikeWidthMass_reco_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
-            histo2D["logLikeWidthMass_reco_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
-            histo2D["logLikeWidthMass_gen_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen_matched[jMass][jWidth]);
-          }
+          histo2D["logLikeWidthMass_reco_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_reco_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_gen_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen_matched[jMass][jWidth]);
         }
-    }
+      }
+      
+      
+      /// Transfer functions
+      TFile *foutTF = new TFile("PlotsForTransferFunctions.root", "RECREATE");
+      foutTF->cd();
+      
+      tf->writeOutputFiles();
+      
+      foutTF->Close();
+      delete foutTF;
+      
+    }  // end TT
     
     //important: free memory
     treeLoader.UnLoadDataset();
     
+    timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
+    
   }  /// Loop on datasets
+  
+  
+  cout << "Processing time per dataset: " << endl;
+  for (unsigned int d = 0; d < datasets.size(); d++)
+  {
+    cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
+  }
+  
   
   
   ///*****************///
