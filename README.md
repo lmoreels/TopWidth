@@ -4,11 +4,11 @@
 
 --To get correct versions of ROOT, python, ... (You need ROOT 6)--
 
-export SCRAM_ARCH=slc6_amd64_gcc491
+export SCRAM_ARCH=slc6_amd64_gcc493
 
-cmsrel CMSSW_7_4_15_patch1
+cmsrel CMSSW_7_6_3
 
-cd CMSSW_7_4_15_patch1/src
+cd CMSSW_7_6_3/src
 
 cmsenv
 
@@ -16,7 +16,7 @@ cmsenv
 
 --Make sure to add the 'TopBrussels' directory. Otherwise the compilation later on will fail.--
 
-git clone -b CMSSW_74X https://github.com/TopBrussels/TopTreeProducer TopBrussels/TopTreeProducer
+git clone -b CMSSW_76X https://github.com/TopBrussels/TopTreeProducer TopBrussels/TopTreeProducer/
 
 cd TopBrussels/TopTreeProducer/src/
 
@@ -26,7 +26,7 @@ cd ../../..
 
 ## Get TopTreeAnalysisBase from git
 
-git clone -b CMSSW_74X https://github.com/TopBrussels/TopTreeAnalysisBase TopBrussels/TopTreeAnalysisBase/
+git clone -b CMSSW_76X https://github.com/TopBrussels/TopTreeAnalysisBase TopBrussels/TopTreeAnalysisBase/
 
 cd TopBrussels/TopTreeAnalysisBase/
 
@@ -36,7 +36,7 @@ cd ../..
 
 ## Compile CMSSW and TopBrussels packages
 
-scram b -j16
+scram b -j 16
 
 
 ## Get private code directory from git
