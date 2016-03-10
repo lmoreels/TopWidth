@@ -25,25 +25,22 @@
 //used TopTreeAnalysis classes
 #include "../TopTreeProducer/interface/TRootRun.h"
 #include "../TopTreeProducer/interface/TRootEvent.h"
-#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
-#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
-#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/ElectronPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
-#include "../TopTreeAnalysisBase/Selection/interface/MuonPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
+#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
+#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
+#include "../TopTreeAnalysisBase/Tools/interface/BTagWeightTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
+#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
-#include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
+#include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
 
 
@@ -206,7 +203,7 @@ int main (int argc, char *argv[])
     nofNegWeights = 0;
     nofPosWeights = 0;
     double nloSF = 1.;
-    double sumWeights = 0.;
+    float sumWeights = 0.;
     int sumWeightsInt = 0.; 
     string dataSetName = datasets[d]->Name();
     

@@ -25,25 +25,22 @@
 //used TopTreeAnalysis classes
 #include "../TopTreeProducer/interface/TRootRun.h"
 #include "../TopTreeProducer/interface/TRootEvent.h"
-#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
-#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
-#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/ElectronPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
-#include "../TopTreeAnalysisBase/Selection/interface/MuonPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
+#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
+#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
+#include "../TopTreeAnalysisBase/Tools/interface/BTagWeightTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
+#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
-#include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
+#include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
 
@@ -473,19 +470,20 @@ int main (int argc, char *argv[])
   
   double muonSFID, muonSFIso, muonSFTrig;
   //MuonSFWeight *muonSFWeight_ = new MuonSFWeight(pathCalLept+"Muon_SF_TopEA.root","SF_totErr", true, false, false); // (... , ... , extendRange, debug, print warning)
-  MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
-  MuonSFWeight *muonSFWeightID_M = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_MediumID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
-//  MuonSFWeight *muonSFWeightID_L = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightID_T = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightID_M = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_MediumID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+//  MuonSFWeight *muonSFWeightID_L = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_LooseID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);
+//  MuonSFWeight *muonSFWeightID_S = new MuonSFWeight(pathCalLept+"MuonID_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_SoftID_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Soft ID
   
-  MuonSFWeight *muonSFWeightIso_TT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
-//   MuonSFWeight *muonSFWeightIso_TM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_TightRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Medium ID
-//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Tight ID
-//   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Medium ID
-//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco74X_Dec1.root", "NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Loose ID
+  MuonSFWeight *muonSFWeightIso_TT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_TM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_TightRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Tight RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_LooseRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Tight ID
+//   MuonSFWeight *muonSFWeightIso_LM = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_LooseRelIso_DEN_MediumID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Medium ID
+//   MuonSFWeight *muonSFWeightIso_LT = new MuonSFWeight(pathCalLept+"MuonIso_Z_RunCD_Reco76X_Feb15.root", "MC_NUM_LooseRelIso_DEN_LooseID_PAR_pt_spliteta_bin1/abseta_pt_ratio", true, false, false);  // Loose RelIso, Loose ID
   
   double weightMuonHLTv2, weightMuonHLTv3;
-  MuonSFWeight *muonSFWeightTrigHLTv4p2 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio", true, false, false);
-  MuonSFWeight *muonSFWeightTrigHLTv4p3 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco74X_Dec1.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightTrigHLTv4p2 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio", true, false, false);
+  MuonSFWeight *muonSFWeightTrigHLTv4p3 = new MuonSFWeight(pathCalLept+"SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.root", "runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio", true, false, false);
   
   //ElectronSFWeight *electronSFWeight_ = new ElectronSFWeight(pathCalLept+"Elec_SF_TopEA.root","GlobalSF", true, false, false); // (... , ... , extendRange, debug, print warning)
   
@@ -498,8 +496,7 @@ int main (int argc, char *argv[])
   if (! applyPU) { cout << "   --- At the moment these are not used in the analysis";}
   cout << endl;
   
-  //LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run254231-258750Cert/nominal.root","pileup60","pileup");  // old PU
-  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIISpring15DR74-Asympt25ns.root",pathCalPileup+"pileup_2015Data74X_25ns-Run246908-260627Cert.root","pileup50","pileup");  // new PU
+  LumiReWeighting LumiWeights(pathCalPileup+"pileup_MC_RunIIFall15DR76-Asympt25ns.root",pathCalPileup+"pileup_2015Data76X_25ns-Run246908-260627Cert.root","pileup","pileup");
   
   
   
@@ -507,7 +504,7 @@ int main (int argc, char *argv[])
   ///  Single Muon Selection  ///
   ///////////////////////////////
   
-  /// Updated 19/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
   float muonPTSel = 26.; // GeV
   float muonEtaSel = 2.1;
@@ -526,7 +523,7 @@ int main (int argc, char *argv[])
   
   // To do
   float electronPTSel = 24.; // GeV
-  float electronEtaSel = 2.1;  // because of electron trigger
+  float electronEtaSel = 2.5;
   string electronWP = "Tight";
   
   float electronPTVeto = 15.; // GeV
@@ -538,8 +535,9 @@ int main (int argc, char *argv[])
   ///  Jet Selection  ///
   ///////////////////////
   
-  // Updated 19/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopJME
-  float jetPT = 20.; // GeV
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopJME
+  
+  float jetPT = 20.; // GeV, 30 GeV for selected jets
   float jetEta = 2.4;  // to allow b tagging
   
   
@@ -548,11 +546,11 @@ int main (int argc, char *argv[])
   ///  Working points for b tagging  ///
   //////////////////////////////////////
   
-  /// Updated 14/01/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
-  float CSVv2Loose =  0.605;
-  float CSVv2Medium = 0.890;
-  float CSVv2Tight = 0.970;
+  float CSVv2Loose =  0.460;
+  float CSVv2Medium = 0.800;
+  float CSVv2Tight = 0.935;
   
   
   
@@ -661,25 +659,25 @@ int main (int argc, char *argv[])
 
     if (isData)
     {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_DATA_L1FastJet_AK4PFchs.txt");
       vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L2Relative_AK4PFchs.txt");
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_DATA_L2Relative_AK4PFchs.txt");
       vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_DATA_L3Absolute_AK4PFchs.txt");
       vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
+      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_DATA_L2L3Residual_AK4PFchs.txt");
       vCorrParam.push_back(*L2L3ResJetCorPar);
     }
     else
     {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L1FastJet_AK4PFchs.txt");
+      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_MC_L1FastJet_AK4PFchs.txt");
       vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L2Relative_AK4PFchs.txt");
+      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_MC_L2Relative_AK4PFchs.txt");
       vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer15_25nsV6_MC_L3Absolute_AK4PFchs.txt");
+      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Fall15_25nsV2_MC_L3Absolute_AK4PFchs.txt");
       vCorrParam.push_back(*L3JetCorPar);
     }
-    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer15_25nsV6_MC_Uncertainty_AK4PFchs.txt");
+    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Fall15_25nsV2_MC_Uncertainty_AK4PFchs.txt");
     
     JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
     
@@ -712,6 +710,7 @@ int main (int argc, char *argv[])
       vector < TRootElectron* > init_electrons;
       vector < TRootJet* > init_jets_corrected;
       vector < TRootJet* > init_jets;
+      vector < TRootJet* > init_fatjets;
       vector < TRootMET* > mets;
       vector < TRootGenJet* > genjets;
       
@@ -951,7 +950,7 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets);
+      Run2Selection selection(init_jets_corrected, init_fatjets, init_muons, init_electrons, mets);
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
@@ -972,7 +971,7 @@ int main (int argc, char *argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
+        treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       
