@@ -31,6 +31,7 @@
 #include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
 #include "../TopTreeAnalysisBase/Tools/interface/BTagWeightTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/BTagCalibrationStandalone.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
@@ -41,6 +42,8 @@
 #include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
+
+// user defined
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
 
@@ -86,10 +89,12 @@ string MakeTimeStamp()
 int main (int argc, char *argv[])
 {
   string dateString = MakeTimeStamp();
-  cout << "***********************************" << endl;
-  cout << "***   Beginning of program      ***" << endl;
-  cout << "***********************************" << endl;
-  cout << "Current time: " << dateString << endl;
+  cout << "*********************************************" << endl;
+  cout << "***         Beginning of program          ***" << endl;
+  cout << "*********************************************" << endl;
+  cout << "*********************************************" << endl;
+  cout << "* Current time: " << dateString << "                 *" << endl;
+  cout << "*********************************************" << endl;
   
   clock_t start = clock();
   
@@ -143,10 +148,55 @@ int main (int argc, char *argv[])
   bool calculateTransferFunctions = true;
   bool printTriggers = false;
   bool applyTriggers = true;
-  bool applyJER = true;
-  bool applyJEC = true;
   bool applyLeptonSF = true;
   bool applyPU = true;
+  bool applyPUup = false;
+  bool applyPUdown = false;
+  bool applyJER = true;
+  bool applyJERup = false;
+  bool applyJERdown = false;
+  bool applyJEC = true;
+  bool applyJESup = false;
+  bool applyJESdown = false;
+  bool calculateBTagSF = false;
+  bool applyBTagSF = true;
+  
+  if (  (applyPUup    && (             applyPUdown || applyJERup || applyJERdown || applyJESup || applyJESdown))
+     || (applyPUdown  && (applyPUup ||                applyJERup || applyJERdown || applyJESup || applyJESdown))
+     || (applyJERup   && (applyPUup || applyPUdown ||               applyJERdown || applyJESup || applyJESdown))
+     || (applyJERdown && (applyPUup || applyPUdown || applyJERup ||                 applyJESup || applyJESdown))
+     || (applyJESup   && (applyPUup || applyPUdown || applyJERup || applyJERdown ||               applyJESdown))
+     || (applyJESdown && (applyPUup || applyPUdown || applyJERup || applyJERdown || applyJESup                )) )
+  {
+    cerr << "SCALE FACTORS: Cannot scale up/down multiple scale factors at once!" << endl;
+    cerr << "  - Stopping the program... " << endl;
+    exit(1);
+  }
+  if (calculateBTagSF && applyBTagSF)
+  {
+    cerr << "SCALE FACTORS: Cannot calculate & apply b-tag scale factors at the same time!" << endl;
+    cerr << "  - Stopping the program... " << endl;
+    exit(1);
+  }
+  
+  cout << "* The following scale factors are applied:  *" << endl;
+  if (applyTriggers) cout << "*   - Triggers                              *" << endl;
+  if (applyLeptonSF) cout << "*   - Lepton scale factors                  *" << endl;
+  if (applyPU)       cout << "*   - Pile up                               *" << endl;
+  if (applyJER)
+  {
+    cout << "*   - Jet Energy Resolution: ";
+    if (applyJERdown)    cout << "scale down     *" << endl;
+    else if (applyJERup) cout << "scale up       *" << endl;
+    else                 cout << "nominal        *" << endl;
+  }
+  if (applyJEC)         cout << "*   - Jet Energy Corrections                *" << endl;
+  if (applyJESdown)     cout << "*   - Jet Energy Scale: scale down          *" << endl;
+  else if (applyJESup)  cout << "*   - Jet Energy Scale: scale up            *" << endl;
+  if (calculateBTagSF)  cout << "*   - Preparing histos for b tag SFs...     *" << endl;
+  else if (applyBTagSF) cout << "*   - B tag scale factors                   *" << endl;
+  cout << "*********************************************" << endl;
+  
   
   bool hasNegWeight = false;
   bool eventSelected = false;
@@ -401,6 +451,7 @@ int main (int argc, char *argv[])
   
   /// Scale factors
   MSPlot["pileup_SF"] = new MultiSamplePlot(datasets,"pileup_SF", 80, 0, 4, "lumiWeight");
+  MSPlot["bTag_SF"] = new MultiSamplePlot(datasets,"bTag_SF", 75, 0.5, 2, "b-tag weight");
   MSPlot["nloWeight"] = new MultiSamplePlot(datasets,"nloWeight", 200, -2.0, 2.0, "weights for amc@nlo samples");
   MSPlot["weightIndex"] = new MultiSamplePlot(datasets,"weightIndex", 5, -2.5, 2.5, "0: None; 1: scale_variation 1; 2: Central scale variation 1");
   
@@ -489,6 +540,12 @@ int main (int argc, char *argv[])
   
   
   /// B tag
+  // documentation at http://mon.iihe.ac.be/~smoortga/TopTrees/BTagSF/BTaggingSF_inTopTrees.pdf
+  cout << " - Loading b tag scale factors ...";
+  if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis";}
+  BTagCalibration *bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2_76X_combToMujets.csv"); 
+  BTagCalibrationReader *bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets","central");
+  BTagWeightTools *bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"PlotsForBTagSFs.root",30., 999., 2.4);
   
   
   /// Pile-up
@@ -640,9 +697,11 @@ int main (int argc, char *argv[])
       isData = true;
     }
     
-    if ( dataSetName.find("DY") == 0 || dataSetName.find("ZJets") == 0 || dataSetName.find("Zjets") == 0 || dataSetName.find("Z+jets") == 0 || dataSetName.find("WJets") == 0 || dataSetName.find("Wjets") == 0 || dataSetName.find("W+jets") == 0 || dataSetName.find("ST_tch") == 0 )
+    //if ( dataSetName.find("DY") == 0 || dataSetName.find("ZJets") == 0 || dataSetName.find("Zjets") == 0 || dataSetName.find("Z+jets") == 0 || dataSetName.find("WJets") == 0 || dataSetName.find("Wjets") == 0 || dataSetName.find("W+jets") == 0 || dataSetName.find("ST_tch") == 0 )
+    if ( (datasets[d]->Title()).find("amc@nlo") == 0 )
     {
       nlo = true;
+      cout << "         This is an amc@nlo sample." << endl;
     }
     
     /// book triggers
@@ -769,6 +828,7 @@ int main (int argc, char *argv[])
       
       
       /// Fix negative event weights for amc@nlo
+      nloSF = 1.;
       hasNegWeight = false;
       if (! isData && dataSetName.find("ST_tW") != 0 )  // not data & not ST tW channel
       {
@@ -895,9 +955,10 @@ int main (int argc, char *argv[])
       
       if (applyJER && ! isData)
       {
-        jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "nominal", false);
-        //jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "minus", false);
-        //jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "plus", false);
+        if (applyJERdown)    jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "minus", false);
+        else if (applyJERup) jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "plus", false);
+        else                 jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "nominal", false);
+        
         
         /// Example how to apply JES systematics
         //jetTools->correctJetJESUnc(init_jets_corrected, "minus", 1);
@@ -905,6 +966,9 @@ int main (int argc, char *argv[])
         //cout << "JER smeared!!! " << endl;
       }
       
+      /// Example how to apply JES systematics
+      //if (applyJESdown && ! isData)    jetTools->correctJetJESUnc(init_jets_corrected, "minus", 1);
+      //else if (applyJESup && ! isData) jetTools->correctJetJESUnc(init_jets_corrected, "plus", 1);
       
       if (applyJEC)
       {
@@ -950,7 +1014,7 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Run2Selection selection(init_jets_corrected, init_fatjets, init_muons, init_electrons, mets);
+      Run2Selection selection(init_jets_corrected, init_fatjets, init_muons, init_electrons, mets, event->fixedGridRhoFastjetAll());
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
@@ -993,7 +1057,7 @@ int main (int argc, char *argv[])
           selecTableSemiMu.Fill(d,3,scaleFactor);
           MSPlot["Selection"]->Fill(3, datasets[d], true, Luminosity*scaleFactor);
           /// Apply muon scale factor
-          if (applyLeptonSF && ! isData )
+          if (applyLeptonSF && ! isData)
           {
             muonSFID = muonSFWeightID_T->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
             muonSFIso = muonSFWeightIso_TT->at(selectedMuons[0]->Eta(), selectedMuons[0]->Pt(), 0);  // eta, pt, shiftUpDown
@@ -1047,6 +1111,14 @@ int main (int argc, char *argv[])
                     MSPlot["Selection"]->Fill(8, datasets[d], true, Luminosity*scaleFactor);
                     has2bjets = true;
                   }  // at least 2 b-tagged jets
+                  
+                  if (applyBTagSF && ! isData)
+                  {
+                    double bTagSF = bTagHistoTool_M->getMCEventWeight(selectedJets);
+                    scaleFactor = scaleFactor*bTagSF;
+                    MSPlot["bTag_SF"]->Fill(bTagSF, datasets[d], true, Luminosity*scaleFactor);
+                  }
+                  
                 }  // at least 1 b-tagged jets
 
               }  // at least 4 jets
@@ -1080,6 +1152,12 @@ int main (int argc, char *argv[])
       /// Pile-up
       MSPlot["nPVs_before"]->Fill(vertex.size(), datasets[d], true, Luminosity);
       MSPlot["nPVs_after"]->Fill(vertex.size(), datasets[d], true, Luminosity*lumiWeight);
+      
+      /// B-tagging
+      if (calculateBTagSF && ! isData)
+      {
+        bTagHistoTool_M->FillMCEfficiencyHistos(selectedJets);
+      }
       
       
       
@@ -1687,12 +1765,16 @@ int main (int argc, char *argv[])
       
       
       /// Transfer functions
-      TFile *foutTF = new TFile("PlotsForTransferFunctions.root", "RECREATE");
+      string tfFileName = "PlotsForTransferFunctions.root";
+      TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
       foutTF->cd();
       
       tf->writeOutputFiles();
       
       foutTF->Close();
+      
+      //tf->writeTable(tfFileName);
+      
       delete foutTF;
       
     }  // end TT
@@ -1710,6 +1792,9 @@ int main (int argc, char *argv[])
   {
     cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
   }
+  
+  /// To write plots b tagging:
+  delete bTagHistoTool_M;
   
   
   
