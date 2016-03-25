@@ -8,8 +8,13 @@
 
 #include "../interface/TransferFunctions.h"
 
+const std::string TransferFunctions::histoNames[] = {"Eparton_vs_Eparton-Ebjet", "Eparton_vs_Thparton-Thbjet", "Eparton_vs_Etaparton-Etabjet", "Eparton_vs_Phiparton-Phibjet", "Eparton_vs_Eparton-Enonbjet", "Eparton_vs_Thparton-Thnonbjet", "Eparton_vs_Etaparton-Etanonbjet", "Eparton_vs_Phiparton-Phinonbjet", "InvPtgenMu_vs_InvPtgenMu-InvPtrecMu", "InvPtgenMu_vs_ThgenMu-ThrecMu", "InvPtgenMu_vs_EtagenMu-EtarecMu", "InvPtgenMu_vs_PhigenMu-PhirecMu", "EgenEl_vs_EgenEl-ErecEl", "genEl_vs_ThgenEl-ThrecEl", "EgenEl_vs_EtagenEl-EtarecEl", "EgenEl_vs_PhigenEl-PhirecEl"};
+
+const std::string TransferFunctions::histoDescription[] = {"b jet energy", "b jet theta", "b jet eta", "b jet phi", "non-b jet energy", "non-b jet theta", "non-b jet eta", "non-b jet phi", "muon inv. pt", "muon theta", "muon eta", "muon phi", "electron energy", "electron theta", "electron eta", "electron phi"};
+
+
 TransferFunctions::TransferFunctions(bool calculateTransferFunctions):
-muon(false), electron(false), histoTr2D(), filename("PlotsForTransferFunctions.root")
+muon(false), electron(false), histoTr2D(), inputFileName("PlotsForTransferFunctions.root"), nHistos(-1)
 {
   std::cout << "TransferFunctions::TransferFunctions - Initialising..." << std::endl;
   
@@ -26,6 +31,14 @@ muon(false), electron(false), histoTr2D(), filename("PlotsForTransferFunctions.r
 TransferFunctions::~TransferFunctions()
 {
   /// Clean output files, etc.?
+}
+
+std::string TransferFunctions::toStr(int number)
+{
+  std::ostringstream convert;
+  convert.clear();
+  convert << number;
+  return convert.str();
 }
 
 void TransferFunctions::bookHistograms()
@@ -102,7 +115,7 @@ void TransferFunctions::bookHistograms()
   histoTr2D["InvPtgenMu_vs_PhirecMu"] = new TH2F("InvPtgenMu_vs_PhirecMu","InvPtgenMu_vs_PhirecMu", 50, 0, 0.05, 120, -3.2, 3.2);
   histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("InvPtgenMu_vs_PhigenMu-PhirecMu","InvPtgenMu_vs_PhigenMu-PhirecMu", 5, 0.002, 0.04, 120, -0.05, 0.05);
   
-  std::cout << "   - Histograms booked..." << std::endl;
+  std::cout << "   - Histograms booked" << std::endl;
 }
 
 void TransferFunctions::fillJets(std::vector<TLorentzVector*> parton, std::vector<TLorentzVector*> jet)
@@ -234,7 +247,7 @@ void TransferFunctions::fillElectron(TLorentzVector* genEl, TLorentzVector* recE
   
 }
 
-void TransferFunctions::writeOutputFiles()
+void TransferFunctions::writeHistograms()
 {
   /// Define output file outside of function
   // Give it as argument?
@@ -310,45 +323,232 @@ void TransferFunctions::writeOutputFiles()
     histoTr2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Write();
   }
   
+  std::cout << "TransferFunctions: Histograms written to file" << std::endl;
+  makeFit();
+}
+
+void TransferFunctions::makeFit()
+{
+  std::cout << "                   Starting fit procedure... " << std::endl;
   
-  /// Fit distributions
-  for (unsigned int f = 0; f < 16; f++)
+  nHistos = sizeof(histoNames)/sizeof(histoNames[0]);
+    
+  
+  for (int f = 0; f < nHistos; f++)
   {
     if (! muon && (f == 8 || f == 9 || f == 10 || f == 11) ) continue;
     if (! electron && (f == 12 || f == 13 || f == 14 || f == 15) ) continue;
     
-    TH2F* histo;
+    if (electron) std::cout << "TransferFunctions::WriteOutputFiles -- WARNING: Electron fitting not yet implemented" << std::endl;
+    if ( f == 2 || f == 6 || f == 10 || f == 14 ) continue;  // eta later
     
-    if (f == 0) histo=histoTr2D["Eparton_vs_Eparton-Enonbjet"];     //1
-    if (f == 1) histo=histoTr2D["Eparton_vs_Eparton-Ebjet"];        //2
-    if (f == 2) histo=histoTr2D["Eparton_vs_Thparton-Thnonbjet"];   //4
-    if (f == 3) histo=histoTr2D["Eparton_vs_Thparton-Thbjet"];      //5
-    if (f == 4) histo=histoTr2D["Eparton_vs_Etaparton-Etanonbjet"];
-    if (f == 5) histo=histoTr2D["Eparton_vs_Etaparton-Etabjet"];
-    if (f == 6) histo=histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]; //8
-    if (f == 7) histo=histoTr2D["Eparton_vs_Phiparton-Phibjet"];    //9
-    if (f == 8) histo=histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"]; //3
-    if (f == 9) histo=histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"];   //7
-    if (f == 10) histo=histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"];
-    if (f == 11) histo=histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]; //11
-    if (f == 12) histo=histoTr2D["EgenEl_vs_EgenEl-ErecEl"];         //3
-    if (f == 13) histo=histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"];      //6
-    if (f == 14) histo=histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"];
-    if (f == 15) histo=histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"];    //10
+    TH2F* histo=histoTr2D[(histoNames[f]).c_str()];
+       
+//    if (f == 0) histo=histoTr2D["Eparton_vs_Eparton-Enonbjet"];     //1
+//    if (f == 1) histo=histoTr2D["Eparton_vs_Eparton-Ebjet"];        //2
+//    if (f == 2) histo=histoTr2D["Eparton_vs_Thparton-Thnonbjet"];   //4
+//    if (f == 3) histo=histoTr2D["Eparton_vs_Thparton-Thbjet"];      //5
+//    if (f == 4) histo=histoTr2D["Eparton_vs_Etaparton-Etanonbjet"];
+//    if (f == 5) histo=histoTr2D["Eparton_vs_Etaparton-Etabjet"];
+//    if (f == 6) histo=histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]; //8
+//    if (f == 7) histo=histoTr2D["Eparton_vs_Phiparton-Phibjet"];    //9
+//    if (f == 8) histo=histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"]; //3
+//    if (f == 9) histo=histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"];   //7
+//    if (f == 10) histo=histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"];
+//    if (f == 11) histo=histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]; //11
+//    if (f == 12) histo=histoTr2D["EgenEl_vs_EgenEl-ErecEl"];         //3
+//    if (f == 13) histo=histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"];      //6
+//    if (f == 14) histo=histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"];
+//    if (f == 15) histo=histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"];    //10
+    
+    int nBins = histo->GetXaxis()->GetNbins();
+    std::cout << "nbins: " << nBins << std::endl;
+    int nPar = 6;
+    
+    /// Create one histogram for each function parameter -> 6 histograms for each 2D plot
+    TH1D **hlist = new TH1D*[nPar];
+    std::string parnames[nPar]={"a1","a2","a3","a4","a5","a6"};
+    std::string name=""; std::string title="";
+    const TArrayD *bins = histo->GetXaxis()->GetXbins();
+    for (int iPar = 0; iPar < nPar; iPar++)
+    {
+      name = std::string(histo->GetName())+ "_" + parnames[iPar];
+      title = std::string(histo->GetName())+ ": Fitted value of " + parnames[iPar] ;
+      hlist[iPar] = new TH1D(name.c_str(), title.c_str(), nBins, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
+      hlist[iPar]->GetXaxis()->SetTitle(histo->GetXaxis()->GetTitle());
+    }
+    
+    /// Loop on all bins in X, generate a projection along Y
+    int cut = 0;  // require a minimum number of bins in the slice to be filled
+    for (int xBin = 1; xBin < nBins+1; xBin++)
+    {
+      /// Make projection
+      std::string projection_title = std::string(histo->GetName())+"_sliceXbin"+toStr(xBin);
+      TH1D *hp = histo->ProjectionY(projection_title.c_str(), xBin, xBin, "e");
+      if(xBin == nBins) hp = histo->ProjectionY(projection_title.c_str(), xBin, xBin+1, "e");  //include overflow in last bin
+      if(xBin == 1) hp = histo->ProjectionY(projection_title.c_str(), xBin-1, xBin, "e");  //include underflow in first bin
+      if (hp == 0) continue;
+      float nEntries = float(hp->GetEntries());
+      if (nEntries == 0 || nEntries < cut) {delete hp; continue;}
+      
+      
+      /// Declare the fit function
+      //  ! Its range depends on the jet/lepton energy range (hence, the Y-axis)
+      TF1 *myfit = new TF1("myfit", "[2]*(TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2)))+[5]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))))");
+      
+      //  Give names to the parameters
+      myfit->SetParName(0,"a1");
+      myfit->SetParName(1,"a2");
+      myfit->SetParName(2,"a3");
+      myfit->SetParName(3,"a4");
+      myfit->SetParName(4,"a5");
+      myfit->SetParName(5,"a6");
+      //  Set initial values
+      if ( f == 0 || f == 4 )  // energy (non-)b jet
+      {
+        myfit->SetParameter(0, -8); //central value of first, broad gaussian
+        myfit->SetParameter(1, 18); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 63); //constant value of first, broad gaussian
+        myfit->SetParameter(3, 0); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 8.6); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 4.1); //constant value of second, narrow gaussian
+      }
+      else if ( f == 1 || f == 3 || f == 5 || f == 7 )  // theta & phi of jet (CHECK: also eta??)
+      {
+        myfit->SetParameter(0, 0); 		 //central value of first, broad gaussian
+        myfit->SetParameter(1, 0.038); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 77); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, 0.004); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.011); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 6.5);   //constant value of second, narrow gaussian
+      }
+      else if ( f == 8 )  // inv pt muon
+      {
+        myfit->SetParameter(0, -0.0008); 		 //central value of first, broad gaussian
+        myfit->SetParameter(1, 0.001); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 24); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, -0.0001); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.0001); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 4);   //constant value of second, narrow gaussian
+      }
+      else if ( f == 9 || f == 11 )  // theta & phi of muon (CHECK: also eta??)
+      {
+        myfit->SetParameter(0, 0); 		 //central value of first, broad gaussian
+        myfit->SetParameter(1, 0.01); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 24); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, 0); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.001); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 4);   //constant value of second, narrow gaussian
+      }
+      
+      //  Fit
+      std::string func_title = std::string(histo->GetName())+"_sliceXbin"+toStr(xBin)+"_Fitted";
+      myfit->SetName(func_title.c_str());
+      hp->Fit(myfit);
+      int npFits = myfit->GetNumberFitPoints();
+      if (npFits > nPar && npFits >= cut)
+      {
+        int binOn = xBin + 1/2;
+        for (int iPar = 0; iPar < nPar; iPar++)
+        {
+          //std::cout << "histo->GetXaxis()->GetBinCenter(binOn): " << histo->GetXaxis()->GetBinCenter(binOn) << std::endl;
+          //std::cout << "myfit->GetParameter("<<ipar<<") " << myfit->GetParameter(ipar) << std::endl;
+          hlist[iPar]->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetParameter(iPar)); // fill histogram for parameter i
+          hlist[iPar]->SetBinError(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetParError(iPar));
+        }
+        //hchi2->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetChisquare()/(npfits-npar));
+      }
+      hp->Write();
+      myfit->Write();
+      
+      delete hp;
+      delete myfit;
+      
+    }  // end loop bins
     
     
+    /// Define the fitfunction for all parameters (6):
+    //  ai = ai0 + ai1*Ep + ai2*sqrt(Ep)
+    //  Its range depends on the parton energy range (hence, the X-axis)
+    TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*sqrt(x)+[2]*x", histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
+    // Give names to the parameters
+    myfit2->SetParName(0,"ai0");
+    myfit2->SetParName(1,"ai1");
+    myfit2->SetParName(2,"ai2");
+
+    for (int iPar = 0; iPar < nPar; iPar++){
+      int paramname = iPar+1;
+      std::string func_title2 = std::string(histo->GetName())+"_a"+toStr(paramname)+"_Fitted";
+      myfit2->SetName(func_title2.c_str());
+      hlist[iPar]->Fit(myfit2);
+      hlist[iPar]->Write();
+      myfit2->Write();
+    }
     
+    delete [] hlist;
+    delete myfit2;
     
-    
-    
-  }
+  }  /// end loop on histos (f)
+  
   
   std::cout << "TransferFunctions::writeOutputFiles -- Parameter fitting should have been done here -- under construction" << std::endl;
   
-  writeTable();
+  //writeTable();
 }
 
-void TransferFunctions::writeTable()
+void TransferFunctions::writeTable(std::string inputFileName)
 {
   std::cout << "TransferFunctions::writeTable -- Table with parameters will be written here..." << std::endl;
+  
+  std::ofstream myTransferFunctions;
+  std::string myTransferFunctions_TABLE = "TransferFunctions_TABLE.txt";
+  myTransferFunctions.open(myTransferFunctions_TABLE.c_str());
+  
+  for(int f = 0; f < nHistos; f++)
+  {
+    TF1 *TF_par1,*TF_par2,*TF_par3,*TF_par4,*TF_par5,*TF_par6;
+    std::string name1 = histoNames[f]+"_a1_Fitted";
+    std::string name2 = histoNames[f]+"_a2_Fitted";
+    std::string name3 = histoNames[f]+"_a3_Fitted";
+    std::string name4 = histoNames[f]+"_a4_Fitted";
+    std::string name5 = histoNames[f]+"_a5_Fitted";
+    std::string name6 = histoNames[f]+"_a6_Fitted";
+    
+    TFile* tf = new TFile(inputFileName.c_str(),"READ");
+    tf->cd();
+    TF_par1 = (TF1*)tf->Get(name1.c_str());
+    TF_par2 = (TF1*)tf->Get(name2.c_str());
+    TF_par3 = (TF1*)tf->Get(name3.c_str());
+    TF_par4 = (TF1*)tf->Get(name4.c_str());
+    TF_par5 = (TF1*)tf->Get(name5.c_str());
+    TF_par6 = (TF1*)tf->Get(name6.c_str());
+    
+    /// Write values to table
+    if (TF_par1 && TF_par2 && TF_par3 && TF_par4 && TF_par5 && TF_par6)
+    {
+      myTransferFunctions<< std::endl;
+      myTransferFunctions<<"\\begin{table}" << std::endl;
+      myTransferFunctions<<"\\caption{Parameters of the transfer function for the " << histoDescription[f]  << "}" << std::endl;
+      myTransferFunctions<<"\\label{tab:}" << std::endl;
+      myTransferFunctions<<"\\centering" << std::endl;
+      myTransferFunctions<<"\\begin{tabular}{c|ccc}" << std::endl;
+      myTransferFunctions<<"\\hline" << std::endl;
+      myTransferFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($\\sqrt{E}$) & $a_{i2}$ ($E$)" << "\\\\" << std::endl;
+      myTransferFunctions<<"\\hline" << std::endl;
+      myTransferFunctions << "Mean broad gaussian & $a_{10}$ = " << TF_par1->GetParameter(0) << "$\\pm$" << TF_par1->GetParError(0) << " & $a_{11}$ = " << TF_par1->GetParameter(1) << "$\\pm$" << TF_par1->GetParError(1) << " & $a_{12}$ = " << TF_par1->GetParameter(2) << "$\\pm$" << TF_par1->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions << "Width broad gaussian & $a_{20}$ = " << TF_par2->GetParameter(0) << "$\\pm$" << TF_par2->GetParError(0) << " & $a_{21}$ = " << TF_par2->GetParameter(1) << "$\\pm$" << TF_par2->GetParError(1) << " & $a_{22}$ = " << TF_par2->GetParameter(2) << "$\\pm$" << TF_par2->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions << "Constant broad gaussian & $a_{30}$ = " << TF_par3->GetParameter(0) << "$\\pm$" << TF_par3->GetParError(0) << " & $a_{31}$ = " << TF_par3->GetParameter(1) << "$\\pm$" << TF_par3->GetParError(1) << " & $a_{32}$ = " << TF_par3->GetParameter(2) << "$\\pm$" << TF_par3->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions << "Mean narrow gaussian & $a_{40}$ = " << TF_par4->GetParameter(0) << "$\\pm$" << TF_par4->GetParError(0) << " & $a_{41}$ = " << TF_par4->GetParameter(1) << "$\\pm$" << TF_par4->GetParError(1) << " & $a_{42}$ = " << TF_par4->GetParameter(2) << "$\\pm$" << TF_par4->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions << "Width narrow gaussian & $a_{50}$ = " << TF_par5->GetParameter(0) << "$\\pm$" << TF_par5->GetParError(0) << " & $a_{51}$ = " << TF_par5->GetParameter(1) << "$\\pm$" << TF_par5->GetParError(1) << " & $a_{52}$ = " << TF_par5->GetParameter(2) << "$\\pm$" << TF_par5->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions << "Constant narrow gaussian & $a_{60}$ = " << TF_par6->GetParameter(0) << "$\\pm$" << TF_par6->GetParError(0) << " & $a_{61}$ = " << TF_par6->GetParameter(1) << "$\\pm$" << TF_par6->GetParError(1) << " & $a_{62}$ = " << TF_par6->GetParameter(2) << "$\\pm$" << TF_par6->GetParError(2) << "\\\\" << std::endl;
+      myTransferFunctions<<"\\hline" << std::endl;
+      myTransferFunctions<<"\\end{tabular}"<< std::endl;
+      myTransferFunctions<<"\\end{table}"<<std::endl;
+      myTransferFunctions<< std::endl;
+    }
+    tf->Close();
+  }
+  
+  myTransferFunctions.close();
+  
 }
