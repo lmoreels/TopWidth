@@ -25,6 +25,10 @@ muon(false), electron(false), singleLep(false), doubleLep(false), fullHadr(false
     fullHadr = true;
     cout << "TRIGGER::TRIGGER - Do you really want no lepton triggers?" << endl;
   }
+  else if ( trigSingleLep && trigDoubleLep )
+  {
+    cout << "TRIGGER::TRIGGER - Doing logical OR between double and single lepton triggers..." << endl;
+  }
 }
 
 Trigger::~Trigger()
@@ -46,24 +50,18 @@ void Trigger::bookTriggers(bool isData)
   
   /// Add relevant triggers to triggerlist
   //  Recommended triggers for TOP analyses
-  //  Last updated: 19 Jan 2016. https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopTrigger
+  //  Last updated: 30 March 2016. https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopTrigger
   if (singleLep)
   {
     if (muon)   // Triggers for data & MC are the same
     {
-      triggerList.push_back("HLT_IsoMu20_v*");
-      triggerList.push_back("HLT_IsoTkMu20_v*");
+      triggerList.push_back("HLT_IsoMu18_v*");  // Not available for Run C: 254231 - 254907
+//      triggerList.push_back("HLT_IsoMu20_v*");
+//      triggerList.push_back("HLT_IsoTkMu20_v*");
     }
     if (electron)
     {
-      if (isData)
-      {
-        triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*");  // Data, restricted to eta < 2.1
-      }
-      else
-      {
-        triggerList.push_back("HLT_Ele22_eta2p1_WP75_Gsf_v*");  // MC
-      }   	
+      triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*"); 	
     }
   }
   
@@ -86,16 +84,8 @@ void Trigger::bookTriggers(bool isData)
   
   if (fullHadr)
   {
-    if (isData)
-    {
-      triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV0p72_v*");
-      triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p55_2PFBTagCSV0p72_v*");
-    }
-    else
-    {
-      triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV_v*");
-      triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p5_2PFBTagCSV_v*");
-    }
+    triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV0p72_v*");
+    triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p55_2PFBTagCSV0p72_v*");
   }
   
   for(UInt_t iTrig = 0; iTrig < triggerList.size(); iTrig++)
