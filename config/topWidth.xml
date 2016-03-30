@@ -3,9 +3,9 @@
 <datasets>
 
 <!-- Cross sections from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/SummaryTable1G25ns . Last updated: 09/03/16 -->
-<!-- Lumi calculated at 09/03/2016, with triggerpath "HLT_IsoMu20_v*" (less for "HLT_IsoMu18_v*??") -->
+<!-- Lumi calculated at 30/03/2016, with triggerpath "HLT_IsoMu18_v*" -->
 
-<d name="data" title="data Single Muon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="2580.110129184" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_76X_v1-GOLD/SingleMuon/crab_SingleMuon-Run2015D-16Dec2015-v1-SILVER-76X_dataRun2_16Dec2015_v0/160301_135206/0000/*.root,/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_76X_v1-GOLD/SingleMuon/crab_SingleMuon-Run2015D-16Dec2015-v1-SILVER-76X_dataRun2_16Dec2015_v0/160301_135206/0001/*.root"/>
+<d name="data" title="data Single Muon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="2245.572141981" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_76X_v1-GOLD/SingleMuon/crab_SingleMuon-Run2015D-16Dec2015-v1-SILVER-76X_dataRun2_16Dec2015_v0/160301_135206/0000/*.root,/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_76X_v1-GOLD/SingleMuon/crab_SingleMuon-Run2015D-16Dec2015-v1-SILVER-76X_dataRun2_16Dec2015_v0/160301_135206/0001/*.root"/>
 
 <d name="TTJets"  title="t\bar{t}+jets powheg"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="116589.596759" xsection="831.76"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_76X_v1/TT_TuneCUETP8M1_13TeV-powheg-pythia8/crab_ythia8Fall15PU25nsData2015v176XmcRun2asymptoticv12ext3v1SILVER76XmcRun2asymptoticFall15DR76v1crab34/160301_144354/0000/*.root"/>
 
