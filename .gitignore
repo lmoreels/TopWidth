@@ -5,6 +5,7 @@
 *.xml.bk
 Plots*/*
 nohup*.txt
+TransferFunctions/*.txt
 Trigger/*.txt
 Trigger/Makefile
 negWeightsCalculator
