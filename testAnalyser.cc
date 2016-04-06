@@ -485,23 +485,28 @@ int main (int argc, char *argv[])
   
   /// Chi2
   MSPlot["Chi2_2b"] = new MultiSamplePlot(datasets, "Chi2_2b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_2b"] = new MultiSamplePlot(datasets, "WMass_2b", 200, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_2b"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b", 200, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_2b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_4jets", 200, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Pt_2b"] = new MultiSamplePlot(datasets, "hadTop_Pt_2b", 200, 0, 1000, "p_{T} [GeV]");
-  MSPlot["hadTop_Ht_2b"] = new MultiSamplePlot(datasets, "hadTop_Ht_2b", 200, 0, 1000, "H_{T} [GeV]");
+  MSPlot["WMass_2b"] = new MultiSamplePlot(datasets, "WMass_2b", 100, 0, 1000, "M_{W} [GeV]");
+  MSPlot["hadTop_Mass_2b"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Mass_2b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_4jets", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Pt_2b"] = new MultiSamplePlot(datasets, "hadTop_Pt_2b", 100, 0, 1000, "p_{T} [GeV]");
+  MSPlot["hadTop_Ht_2b"] = new MultiSamplePlot(datasets, "hadTop_Ht_2b", 100, 0, 1000, "H_{T} [GeV]");
+  
+  MSPlot["lepTop_Mass_2b"] = new MultiSamplePlot(datasets, "lepTop_Mass_2b", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["lepTop_Mass_2b_4jets"] = new MultiSamplePlot(datasets, "lepTop_Mass_2b_4jets", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Mass_2b_mlb_cut"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_mlb_cut", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Mass_2b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_4jets_mlb_cut", 100, 0, 1000, "M_{t} [GeV]");
   
   MSPlot["Chi2_1b"] = new MultiSamplePlot(datasets, "Chi2_1b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_1b"] = new MultiSamplePlot(datasets, "WMass_1b", 200, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_1b"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b", 200, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_1b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b_4jets", 200, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Pt_1b"] = new MultiSamplePlot(datasets, "hadTop_Pt_1b", 200, 0, 1000, "p_{T} [GeV]");
-  MSPlot["hadTop_Ht_1b"] = new MultiSamplePlot(datasets, "hadTop_Ht_1b", 200, 0, 1000, "H_{T} [GeV]");
+  MSPlot["WMass_1b"] = new MultiSamplePlot(datasets, "WMass_1b", 100, 0, 1000, "M_{W} [GeV]");
+  MSPlot["hadTop_Mass_1b"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Mass_1b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b_4jets", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Pt_1b"] = new MultiSamplePlot(datasets, "hadTop_Pt_1b", 100, 0, 1000, "p_{T} [GeV]");
+  MSPlot["hadTop_Ht_1b"] = new MultiSamplePlot(datasets, "hadTop_Ht_1b", 100, 0, 1000, "H_{T} [GeV]");
   
   MSPlot["Chi2_0b"] = new MultiSamplePlot(datasets, "Chi2_0b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_0b"] = new MultiSamplePlot(datasets, "WMass_0b", 200, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_0b"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b", 200, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_0b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b_4jets", 200, 0, 1000, "M_{t} [GeV]");
+  MSPlot["WMass_0b"] = new MultiSamplePlot(datasets, "WMass_0b", 100, 0, 1000, "M_{W} [GeV]");
+  MSPlot["hadTop_Mass_0b"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["hadTop_Mass_0b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b_4jets", 100, 0, 1000, "M_{t} [GeV]");
   
   
   
@@ -1628,6 +1633,16 @@ int main (int argc, char *argv[])
           if (hasExactly4Jets)
             MSPlot["hadTop_Mass_2b_4jets"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
           
+          MSPlot["lepTop_Mass_2b"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
+          if (hasExactly4Jets)
+            MSPlot["lepTop_Mass_2b_4jets"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
+          if ( leptopmass_2b < 250 )
+          {
+            MSPlot["hadTop_Mass_2b_mlb_cut"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
+            if (hasExactly4Jets)
+              MSPlot["hadTop_Mass_2b_4jets_mlb_cut"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
+          }
+          
           if ( dataSetName.find("TT") == 0 )
           {
             histo1D["W_mass_reco_2b_notMatched"]->Fill(recoWMass);
@@ -1846,12 +1861,12 @@ int main (int argc, char *argv[])
         }
         for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
         {
-          MSPlot["CSVv2Discr_allJets"]->Fill(selectedJets[iJet]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["CSVv2Discr_allJets"]->Fill(selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
         }
-        MSPlot["CSVv2Discr_leadingJet"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet2"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet3"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet4"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_leadingJet"]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet2"]->Fill(selectedJets[1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet3"]->Fill(selectedJets[2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet4"]->Fill(selectedJets[3]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
         
         MSPlot["1b_muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         MSPlot["1b_muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
