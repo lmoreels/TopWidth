@@ -145,7 +145,7 @@ int main (int argc, char *argv[])
   /////////////////////
   
   bool testTTbarOnly = false;  
-  bool calculateTransferFunctions = true;
+  bool calculateTransferFunctions = false;
   bool printTriggers = false;
   bool applyTriggers = true;
   bool applyLeptonSF = true;
@@ -1636,7 +1636,7 @@ int main (int argc, char *argv[])
           MSPlot["lepTop_Mass_2b"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
           if (hasExactly4Jets)
             MSPlot["lepTop_Mass_2b_4jets"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          if ( leptopmass_2b < 250 )
+          if ( leptopmass_2b < 180 )
           {
             MSPlot["hadTop_Mass_2b_mlb_cut"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
             if (hasExactly4Jets)
@@ -1943,18 +1943,20 @@ int main (int argc, char *argv[])
       
       
       /// Transfer functions
-      string tfFileName = "PlotsForTransferFunctions.root";
-      TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
-      foutTF->cd();
-      
-      tf->writeHistograms();
-      
-      foutTF->Close();
-      
-      tf->writeTable(tfFileName);
-      
-      delete foutTF;
-      
+      if (calculateTransferFunctions)
+      {
+        string tfFileName = "PlotsForTransferFunctions.root";
+        TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
+        foutTF->cd();
+
+        tf->writeHistograms();
+
+        foutTF->Close();
+
+        tf->writeTable(tfFileName);
+
+        delete foutTF;
+      }
     }  // end TT
     
     //important: free memory
