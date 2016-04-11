@@ -207,7 +207,6 @@ int main (int argc, char *argv[])
   int nofMatchedEvents = 0;
   int nofCorrectlyMatched = 0;
   int nofNotCorrectlyMatched = 0;
-  int nb_bTaggedJets = 0;
   int nofEventsWith1BJet = 0;
   int nofEventsWith2BJets = 0;
   int nofNegWeights = 0;
@@ -354,44 +353,84 @@ int main (int argc, char *argv[])
 //   histo1D["leadingJet_pT"] = new TH1F("leadingJet_pT","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
 //   histo1D["Ht_4leadingJets"] = new TH1F("Ht_4leadingJets","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   
-  histo1D["WMass_reco_matched"] = new TH1F("WMass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 500, 0, 500);
-  histo1D["topMass_reco_matched"] = new TH1F("topMass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 500, 0, 500);
-  histo1D["topMass_gen_matched"] = new TH1F("topMass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 500, 0, 500);
-  histo1D["WMass_reco_first4matched"] = new TH1F("WMass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 500, 0, 500);
-  histo1D["topMass_reco_first4matched"] = new TH1F("topMass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 500, 0, 500);
-  histo1D["topMass_gen_first4matched"] = new TH1F("topMass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 500, 0, 500);
+  histo1D["WMass_reco_matched"] = new TH1F("WMass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 50, 0, 500);
+  histo1D["topMass_reco_matched"] = new TH1F("topMass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 50, 0, 500);
+  histo1D["topMass_gen_matched"] = new TH1F("topMass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 50, 0, 500);
+  histo1D["WMass_reco_first4matched"] = new TH1F("WMass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 50, 0, 500);
+  histo1D["topMass_reco_first4matched"] = new TH1F("topMass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 50, 0, 500);
+  histo1D["topMass_gen_first4matched"] = new TH1F("topMass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 50, 0, 500);
   
-  histo1D["W_mass_reco_2b_notMatched"] = new TH1F("W_mass_reco_2b_notMatched","Reconstructed hadronic W mass of unmatched events with 2 b-tagged jets; M_{W} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_2b_notMatched"] = new TH1F("top_mass_reco_2b_notMatched","Reconstructed top mass of unmatched events with 2 b-tagged jets; M_{t} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_2b_notMatched_4jets"] = new TH1F("top_mass_reco_2b_notMatched_4jets","Reconstructed top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{t} [GeV]", 500, 0, 1000);
-  histo1D["top_pT_reco_2b_notMatched"] = new TH1F("top_pT_reco_2b_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 2 b-tagged jets; p_{T} [GeV]", 500, 0, 1000);
-  histo1D["top_HT_reco_2b_notMatched"] = new TH1F("top_HT_reco_2b_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 2 b-tagged jets; H_{T} [GeV]", 500, 0, 1000);
+//  histo1D["2b_W_mass_reco_notMatched"] = new TH1F("2b_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 2 b-tagged jets; M_{W} [GeV]", 80, 0, 800);
+//  histo1D["2b_top_mass_reco_notMatched"] = new TH1F("2b_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 2 b-tagged jets; M_{t} [GeV]", 80, 0, 800);
+//  histo1D["2b_top_mass_reco_notMatched_4jets"] = new TH1F("2b_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{t} [GeV]", 80, 0, 800);
+//  histo1D["2b_top_pT_reco_notMatched"] = new TH1F("2b_top_pT_reco_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 2 b-tagged jets; p_{T} [GeV]", 80, 0, 800);
+//  histo1D["2b_top_HT_reco_notMatched"] = new TH1F("2b_top_HT_reco_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 2 b-tagged jets; H_{T} [GeV]", 80, 0, 800);
+//  
+//  histo1D["1b_W_mass_reco_notMatched"] = new TH1F("1b_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet; M_{W} [GeV]", 80, 0, 800);
+//  histo1D["1b_top_mass_reco_notMatched"] = new TH1F("1b_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet; M_{t} [GeV]", 80, 0, 800);
+//  histo1D["1b_top_mass_reco_notMatched_4jets"] = new TH1F("1b_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 1 b-tagged jet out of 4 in total; M_{t} [GeV]", 80, 0, 800);
+//  histo1D["1b_top_pT_reco_notMatched"] = new TH1F("1b_top_pT_reco_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 1 b-tagged jets; p_{T} [GeV]", 80, 0, 800);
+//  histo1D["1b_top_HT_reco_notMatched"] = new TH1F("1b_top_HT_reco_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 1 b-tagged jets; H_{T} [GeV]", 80, 0, 800);
+//  
+//  histo1D["0b_W_mass_reco_notMatched"] = new TH1F("0b_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with no b-tagged jets; M_{W} [GeV]", 80, 0, 800);
+//  histo1D["0b_top_mass_reco_notMatched"] = new TH1F("0b_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with no b-tagged jets; M_{t} [GeV]", 80, 0, 800);
+//  histo1D["0b_top_mass_reco_notMatched_4jets"] = new TH1F("0b_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with no b-tagged jets out of 4 in total; M_{t} [GeV]", 80, 0, 800);
   
-  histo1D["W_mass_reco_1b_notMatched"] = new TH1F("W_mass_reco_1b_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet; M_{W} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_1b_notMatched"] = new TH1F("top_mass_reco_1b_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet; M_{t} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_1b_notMatched_4jets"] = new TH1F("top_mass_reco_1b_notMatched_4jets","Reconstructed top mass of unmatched events with 1 b-tagged jet out of 4 in total; M_{t} [GeV]", 500, 0, 1000);
-  histo1D["top_pT_reco_1b_notMatched"] = new TH1F("top_pT_reco_1b_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 1 b-tagged jets; p_{T} [GeV]", 500, 0, 1000);
-  histo1D["top_HT_reco_1b_notMatched"] = new TH1F("top_HT_reco_1b_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 1 b-tagged jets; H_{T} [GeV]", 500, 0, 1000);
+  // Chi2 free
+  histo1D["2b_Chi2Free_W_mass_reco_notMatched"] = new TH1F("2b_Chi2Free_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 2 b-tagged jets (free Chi2); M_{W} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Free_top_mass_reco_notMatched"] = new TH1F("2b_Chi2Free_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 2 b-tagged jets (free Chi2); M_{t} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Free_top_mass_reco_notMatched_4jets"] = new TH1F("2b_Chi2Free_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 2 b-tagged jets out of 4 in total (free Chi2); M_{t} [GeV]", 80, 0, 800);
   
-  histo1D["W_mass_reco_0b_notMatched"] = new TH1F("W_mass_reco_0b_notMatched","Reconstructed hadronic W mass of unmatched events without b tagging; M_{W} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_0b_notMatched"] = new TH1F("top_mass_reco_0b_notMatched","Reconstructed top mass of unmatched events without b tagging; M_{t} [GeV]", 500, 0, 1000);
-  histo1D["top_mass_reco_0b_notMatched_4jets"] = new TH1F("top_mass_reco_0b_notMatched_4jets","Reconstructed top mass of unmatched events with no b-tagged jets out of 4 in total; M_{t} [GeV]", 500, 0, 1000);
+  histo1D["1b_Chi2Free_W_mass_reco_notMatched"] = new TH1F("1b_Chi2Free_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet (free Chi2); M_{W} [GeV]", 80, 0, 800);
+  histo1D["1b_Chi2Free_top_mass_reco_notMatched"] = new TH1F("1b_Chi2Free_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet (free Chi2); M_{t} [GeV]", 80, 0, 800);
+  histo1D["1b_Chi2Free_top_mass_reco_notMatched_4jets"] = new TH1F("1b_Chi2Free_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 1 b-tagged jet out of 4 in total (free Chi2); M_{t} [GeV]", 80, 0, 800);
   
-  histo1D["lepTop_mass_matched_corr"] = new TH1F("lepTop_mass_matched_corr","Reconstructed leptonic top mass of correctly matched events; M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_matched_wrong"] = new TH1F("lepTop_mass_matched_wrong","Reconstructed leptonic top mass of wrongly matched events; M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_matched_wrong_hadrB"] = new TH1F("lepTop_mass_matched_wrong_hadrB","Reconstructed leptonic top mass of wrongly matched events (using hadronic b jet); M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_matched_wrong_noB"] = new TH1F("lepTop_mass_matched_wrong_noB","Reconstructed leptonic top mass of wrongly matched events (b jet is mistagged); M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_matched_corr_4jets"] = new TH1F("lepTop_mass_matched_corr_4jets","Reconstructed leptonic top mass of correctly matched events with exactly 4 jets; M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_matched_wrong_4jets"] = new TH1F("lepTop_mass_matched_wrong_4jets","Reconstructed leptonic top mass of wrongly matched events with exactly 4 jets; M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_2b_notMatched"] = new TH1F("lepTop_mass_2b_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 500, 0, 1000);
-  histo1D["lepTop_mass_2b_notMatched_4jets"] = new TH1F("lepTop_mass_2b_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 500, 0, 1000);
+  histo1D["0b_Chi2Free_W_mass_reco_notMatched"] = new TH1F("0b_Chi2Free_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with no b-tagged jets (free Chi2); M_{W} [GeV]", 80, 0, 800);
+  histo1D["0b_Chi2Free_top_mass_reco_notMatched"] = new TH1F("0b_Chi2Free_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with no b-tagged jets (free Chi2); M_{t} [GeV]", 80, 0, 800);
+  histo1D["0b_Chi2Free_top_mass_reco_notMatched_4jets"] = new TH1F("0b_Chi2Free_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with no b-tagged jets out of 4 in total (free Chi2); M_{t} [GeV]", 80, 0, 800);
   
-  histo2D["logLikeWidthMass_reco_matched"] = new TH2F("logLikeWidthMass_reco_matched", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
+  // Chi2 constrained
+  histo1D["2b_Chi2Constr_W_mass_reco_notMatched"] = new TH1F("2b_Chi2Constr_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 2 b-tagged jets (constrained Chi2); M_{W} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_top_mass_reco_notMatched"] = new TH1F("2b_Chi2Constr_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 2 b-tagged jets (constrained Chi2); M_{t} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_top_mass_reco_notMatched_4jets"] = new TH1F("2b_Chi2Constr_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 2 b-tagged jets out of 4 in total (constrained Chi2); M_{t} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_top_pT_reco_notMatched"] = new TH1F("2b_Chi2Constr_top_pT_reco_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 2 b-tagged jets (constrained Chi2); p_{T} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_top_HT_reco_notMatched"] = new TH1F("2b_Chi2Constr_top_HT_reco_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 2 b-tagged jets (constrained Chi2); H_{T} [GeV]", 80, 0, 800);
+  
+//  histo1D["1b_Chi2Constr_W_mass_reco_notMatched"] = new TH1F("1b_Chi2Constr_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet (constrained Chi2); M_{W} [GeV]", 80, 0, 800);
+//  histo1D["1b_Chi2Constr_top_mass_reco_notMatched"] = new TH1F("1b_Chi2Constr_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet (constrained Chi2); M_{t} [GeV]", 80, 0, 800);
+//  histo1D["1b_Chi2Constr_top_mass_reco_notMatched_4jets"] = new TH1F("1b_Chi2Constr_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 1 b-tagged jet out of 4 in total (constrained Chi2); M_{t} [GeV]", 80, 0, 800);
+//  histo1D["1b_Chi2Constr_top_pT_reco_notMatched"] = new TH1F("1b_Chi2Constr_top_pT_reco_notMatched","Reconstructed p_{T} of the top quark of unmatched events with 1 b-tagged jet (constrained Chi2); p_{T} [GeV]", 80, 0, 800);
+//  histo1D["1b_Chi2Constr_top_HT_reco_notMatched"] = new TH1F("1b_Chi2Constr_top_HT_reco_notMatched","Reconstructed H_{T} of the top quark of unmatched events with 1 b-tagged jet (constrained Chi2); H_{T} [GeV]", 80, 0, 800);
+  
+  
+  /// Leptonic top quark
+  histo1D["lepTop_mass_matched_corr"] = new TH1F("lepTop_mass_matched_corr","Reconstructed leptonic top mass of correctly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong"] = new TH1F("lepTop_mass_matched_wrong","Reconstructed leptonic top mass of wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_hadrB"] = new TH1F("lepTop_mass_matched_wrong_hadrB","Reconstructed leptonic top mass of wrongly matched events (using hadronic b jet); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_noB"] = new TH1F("lepTop_mass_matched_wrong_noB","Reconstructed leptonic top mass of wrongly matched events (b jet is mistagged); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_corr_4jets"] = new TH1F("lepTop_mass_matched_corr_4jets","Reconstructed leptonic top mass of correctly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_4jets"] = new TH1F("lepTop_mass_matched_wrong_4jets","Reconstructed leptonic top mass of wrongly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  
+//  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
+//  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
+  
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched_4jets"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched_4jets","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched_mlb_cut"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched_mlb_cut","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched_4jets_mlb_cut"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched_4jets_mlb_cut","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched_wrong_hadrB"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched_wrong_hadrB","Wrong reconstruction (hadr b) of the leptonic top mass using unmatched events with 2 b-tagged jets (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["2b_Chi2Constr_lepTop_mass_notMatched_wrong_hadrB_4jets"] = new TH1F("2b_Chi2Constr_lepTop_mass_notMatched_wrong_hadrB_4jets","Wrong reconstruction (hadr b) of the leptonic top mass using unmatched events with 2 b-tagged jets out of 4 in total (constrained Chi2); M_{lb} [GeV]", 80, 0, 800);
+  
+  /// log likelihood
   histo2D["logLikeWidthMass_gen_matched"] = new TH2F("logLikeWidthMass_gen_matched", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 295, 0.55, 30.05);
-  histo2D["logLikeWidthMass_reco_matched_zoom"] = new TH2F("logLikeWidthMass_reco_matched_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 400, 12.05, 52.05);
+  histo2D["logLikeWidthMass_reco_matched"] = new TH2F("logLikeWidthMass_reco_matched", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
+  //histo2D["logLikeWidthMass_reco_notMatched"] = new TH2F("logLikeWidthMass_reco_notMatched", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
   histo2D["logLikeWidthMass_gen_matched_zoom"] = new TH2F("logLikeWidthMass_gen_matched_zoom", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 295, 0.55, 30.05);
+  histo2D["logLikeWidthMass_reco_matched_zoom"] = new TH2F("logLikeWidthMass_reco_matched_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
+  //histo2D["logLikeWidthMass_reco_notMatched_zoom"] = new TH2F("logLikeWidthMass_reco_notMatched_zoom", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
+  
   
   //histo2D["muon_SF_ID"] = new TH2F("muon_SF_ID", "Muon ID scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
   //histo2D["muon_SF_Iso"] = new TH2F("muon_SF_Iso", "Muon relIso scale factors in function of #eta (x) and p_{T} (y); #eta, p_{T} [GeV]", 21, 0, 2.1, 15, 0, 150);
@@ -443,19 +482,26 @@ int main (int argc, char *argv[])
   MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 30, -3, 3, "Eta");
   MSPlot["met_phi"] = new MultiSamplePlot(datasets, "met_phi", 32, -3.2, 3.2, "Phi");
-  
+
   MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 9, -0.5, 8.5, "# b jets");
+  MSPlot["CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+  MSPlot["CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+  MSPlot["CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+  MSPlot["CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+  
   MSPlot["bJet1_pT"] = new MultiSamplePlot(datasets, "bJet1_pT", 60, 0, 600, "p_{T} [GeV]");
   MSPlot["bJet2_pT"] = new MultiSamplePlot(datasets, "bJet2_pT", 60, 0, 600, "p_{T} [GeV]");
   MSPlot["bJet1_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet1_CSVv2Discr", 18, 0.75, 1.2, "CSVv2 discriminant value");
   MSPlot["bJet2_CSVv2Discr"] = new MultiSamplePlot(datasets, "bJet2_CSVv2Discr", 18, 0.75, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value");
   
+  MSPlot["muon_pT_noJetCut"] = new MultiSamplePlot(datasets, "muon_pT_noJetCut", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_relIso_noJetCut"] = new MultiSamplePlot(datasets, "muon_relIso_noJetCut", 20, 0, 0.2, "relIso");
+  MSPlot["met_pT_noJetCut"] = new MultiSamplePlot(datasets, "met_pT_noJetCut", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["nJets_noJetCut"] = new MultiSamplePlot(datasets, "nJets_noJetCut", 13, -0.5, 12.5, "# jets");
+
+  // Plots for events with 1 b-tagged jet
   MSPlot["1b_muon_pT"] = new MultiSamplePlot(datasets, "1b_muon_pT", 22, 0, 440, "p_{T} [GeV]");
   MSPlot["1b_muon_eta"] = new MultiSamplePlot(datasets, "1b_muon_eta", 30, -3, 3, "Eta");
   MSPlot["1b_muon_phi"] = new MultiSamplePlot(datasets, "1b_muon_phi", 32, -3.2, 3.2, "Phi");
@@ -466,14 +512,41 @@ int main (int argc, char *argv[])
   MSPlot["1b_jet3_pT"] = new MultiSamplePlot(datasets, "1b_jet3_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["1b_jet4_pT"] = new MultiSamplePlot(datasets, "1b_jet4_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["1b_Ht_4leadingJets"] = new MultiSamplePlot(datasets,"1b_Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
-  MSPlot["1b_nJets"] = new MultiSamplePlot(datasets, "1b_nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["1b_met_pT"] = new MultiSamplePlot(datasets, "1b_met_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["1b_met_eta"] = new MultiSamplePlot(datasets, "1b_met_eta", 30, -3, 3, "Eta");
+  MSPlot["1b_met_phi"] = new MultiSamplePlot(datasets, "1b_met_phi", 32, -3.2, 3.2, "Phi");
+
+  MSPlot["1b_nJets"] = new MultiSamplePlot(datasets, "1b_nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["1b_nBJets"] = new MultiSamplePlot(datasets, "1b_nBJets", 9, -0.5, 8.5, "# b jets");
+  MSPlot["1b_CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
+  MSPlot["1b_CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+  MSPlot["1b_CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+  MSPlot["1b_CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+  MSPlot["1b_CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
   
-  MSPlot["muon_pT_noJetCut"] = new MultiSamplePlot(datasets, "muon_pT_noJetCut", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["muon_relIso_noJetCut"] = new MultiSamplePlot(datasets, "muon_relIso_noJetCut", 20, 0, 0.2, "relIso");
-  MSPlot["met_pT_noJetCut"] = new MultiSamplePlot(datasets, "met_pT_noJetCut", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["nJets_noJetCut"] = new MultiSamplePlot(datasets, "nJets_noJetCut", 13, -0.5, 12.5, "# jets");
-      
+  // Plots for events with 2 b-tagged jets
+  MSPlot["2b_muon_pT"] = new MultiSamplePlot(datasets, "2b_muon_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["2b_muon_eta"] = new MultiSamplePlot(datasets, "2b_muon_eta", 30, -3, 3, "Eta");
+  MSPlot["2b_muon_phi"] = new MultiSamplePlot(datasets, "2b_muon_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["2b_muon_relIso"] = new MultiSamplePlot(datasets, "2b_muon_relIso", 20, 0, 0.2, "relIso");
+  MSPlot["2b_muon_d0"] = new MultiSamplePlot(datasets, "2b_muon_d0", 50, 0, 0.03, "d_{0}");
+  MSPlot["2b_leadingJet_pT"] = new MultiSamplePlot(datasets, "2b_leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
+  MSPlot["2b_jet2_pT"] = new MultiSamplePlot(datasets, "2b_jet2_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["2b_jet3_pT"] = new MultiSamplePlot(datasets, "2b_jet3_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["2b_jet4_pT"] = new MultiSamplePlot(datasets, "2b_jet4_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["2b_Ht_4leadingJets"] = new MultiSamplePlot(datasets,"2b_Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
+  MSPlot["2b_met_pT"] = new MultiSamplePlot(datasets, "2b_met_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["2b_met_eta"] = new MultiSamplePlot(datasets, "2b_met_eta", 30, -3, 3, "Eta");
+  MSPlot["2b_met_phi"] = new MultiSamplePlot(datasets, "2b_met_phi", 32, -3.2, 3.2, "Phi");
+  
+  MSPlot["2b_nJets"] = new MultiSamplePlot(datasets, "2b_nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["2b_nBJets"] = new MultiSamplePlot(datasets, "2b_nBJets", 9, -0.5, 8.5, "# b jets");
+  MSPlot["2b_CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
+  MSPlot["2b_CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+  MSPlot["2b_CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+  MSPlot["2b_CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+  MSPlot["2b_CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+  
   MSPlot["nPVs_before"] = new MultiSamplePlot(datasets, "nPVs_before", 36, -0.5, 35.5, "# PVs before reweighting");
   MSPlot["nPVs_after"] = new MultiSamplePlot(datasets, "nPVs_after", 36, -0.5, 35.5, "# PVs after reweighting");
   
@@ -483,30 +556,79 @@ int main (int argc, char *argv[])
   MSPlot["nloWeight"] = new MultiSamplePlot(datasets, "nloWeight", 150, -1.2, 2.3, "weights for amc@nlo samples");
   MSPlot["weightIndex"] = new MultiSamplePlot(datasets, "weightIndex", 6, -2.5, 3.5, "0: None; 1: scale_variation 1; 2: Central scale variation 1");
   
+  
   /// Chi2
-  MSPlot["Chi2_2b"] = new MultiSamplePlot(datasets, "Chi2_2b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_2b"] = new MultiSamplePlot(datasets, "WMass_2b", 100, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_2b"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_2b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_4jets", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Pt_2b"] = new MultiSamplePlot(datasets, "hadTop_Pt_2b", 100, 0, 1000, "p_{T} [GeV]");
-  MSPlot["hadTop_Ht_2b"] = new MultiSamplePlot(datasets, "hadTop_Ht_2b", 100, 0, 1000, "H_{T} [GeV]");
+  //  First fix light jets (W mass)
+//  MSPlot["2b_Chi2W"] = new MultiSamplePlot(datasets, "2b_Chi2W", 200, 0, 200, "#chi^{2} value");
+//  MSPlot["2b_Chi2W_W_mass"] = new MultiSamplePlot(datasets, "2b_Chi2W_W_mass", 40, 0, 800, "M_{W} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_pT"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_HT"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
+//  
+//  MSPlot["2b_Chi2W_lepTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2W_lepTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2W_lepTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2W_lepTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2W_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2W_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+//  
+//  MSPlot["1b_Chi2W"] = new MultiSamplePlot(datasets, "1b_Chi2W", 200, 0, 200, "#chi^{2} value");
+//  MSPlot["1b_Chi2W_W_mass"] = new MultiSamplePlot(datasets, "1b_Chi2W_W_mass", 40, 0, 800, "M_{W} [GeV]");
+//  MSPlot["1b_Chi2W_hadTop_mass"] = new MultiSamplePlot(datasets, "1b_Chi2W_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["1b_Chi2W_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2W_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["1b_Chi2W_hadTop_pT"] = new MultiSamplePlot(datasets, "1b_Chi2W_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+//  MSPlot["1b_Chi2W_hadTop_HT"] = new MultiSamplePlot(datasets, "1b_Chi2W_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
+//  
+//  MSPlot["0b_Chi2W"] = new MultiSamplePlot(datasets, "0b_Chi2W", 200, 0, 200, "#chi^{2} value");
+//  MSPlot["0b_Chi2W_W_mass"] = new MultiSamplePlot(datasets, "0b_Chi2W_W_mass", 40, 0, 800, "M_{W} [GeV]");
+//  MSPlot["0b_Chi2W_hadTop_mass"] = new MultiSamplePlot(datasets, "0b_Chi2W_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["0b_Chi2W_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "0b_Chi2W_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
   
-  MSPlot["lepTop_Mass_2b"] = new MultiSamplePlot(datasets, "lepTop_Mass_2b", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["lepTop_Mass_2b_4jets"] = new MultiSamplePlot(datasets, "lepTop_Mass_2b_4jets", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_2b_mlb_cut"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_mlb_cut", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_2b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "hadTop_Mass_2b_4jets_mlb_cut", 100, 0, 1000, "M_{t} [GeV]");
+  //  All jets at the same time, free permutation (no b tag info)
+  MSPlot["2b_Chi2Free"] = new MultiSamplePlot(datasets, "2b_Chi2Free", 200, 0, 200, "#chi^{2} value");
+  MSPlot["2b_Chi2Free_W_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Free_W_mass", 40, 0, 800, "M_{W} [GeV]");
+  MSPlot["2b_Chi2Free_hadTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Free_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Free_hadTop_pT"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["2b_Chi2Free_hadTop_HT"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
   
-  MSPlot["Chi2_1b"] = new MultiSamplePlot(datasets, "Chi2_1b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_1b"] = new MultiSamplePlot(datasets, "WMass_1b", 100, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_1b"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_1b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_1b_4jets", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Pt_1b"] = new MultiSamplePlot(datasets, "hadTop_Pt_1b", 100, 0, 1000, "p_{T} [GeV]");
-  MSPlot["hadTop_Ht_1b"] = new MultiSamplePlot(datasets, "hadTop_Ht_1b", 100, 0, 1000, "H_{T} [GeV]");
+//  MSPlot["2b_Chi2Free_lepTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Free_lepTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2Free_lepTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2Free_lepTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2Free_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["2b_Chi2Free_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Free_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
   
-  MSPlot["Chi2_0b"] = new MultiSamplePlot(datasets, "Chi2_0b", 200, 0, 200, "#chi^{2} value");
-  MSPlot["WMass_0b"] = new MultiSamplePlot(datasets, "WMass_0b", 100, 0, 1000, "M_{W} [GeV]");
-  MSPlot["hadTop_Mass_0b"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b", 100, 0, 1000, "M_{t} [GeV]");
-  MSPlot["hadTop_Mass_0b_4jets"] = new MultiSamplePlot(datasets, "hadTop_Mass_0b_4jets", 100, 0, 1000, "M_{t} [GeV]");
+  MSPlot["1b_Chi2Free"] = new MultiSamplePlot(datasets, "1b_Chi2Free", 200, 0, 200, "#chi^{2} value");
+  MSPlot["1b_Chi2Free_W_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_W_mass", 40, 0, 800, "M_{W} [GeV]");
+  MSPlot["1b_Chi2Free_hadTop_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["1b_Chi2Free_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["1b_Chi2Free_hadTop_pT"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["1b_Chi2Free_hadTop_HT"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
+  
+  MSPlot["0b_Chi2Free"] = new MultiSamplePlot(datasets, "0b_Chi2Free", 200, 0, 200, "#chi^{2} value");
+  MSPlot["0b_Chi2Free_W_mass"] = new MultiSamplePlot(datasets, "0b_Chi2Free_W_mass", 40, 0, 800, "M_{W} [GeV]");
+  MSPlot["0b_Chi2Free_hadTop_mass"] = new MultiSamplePlot(datasets, "0b_Chi2Free_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["0b_Chi2Free_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "0b_Chi2Free_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["0b_Chi2Free_hadTop_pT"] = new MultiSamplePlot(datasets, "0b_Chi2Free_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["0b_Chi2Free_hadTop_HT"] = new MultiSamplePlot(datasets, "0b_Chi2Free_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
+  
+  //  All jets at the same time, fix b jets
+  MSPlot["2b_Chi2Constr"] = new MultiSamplePlot(datasets, "2b_Chi2Constr", 40, 0, 200, "#chi^{2} value");
+  MSPlot["2b_Chi2Constr_W_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_W_mass", 40, 0, 800, "M_{W} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_pT"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_HT"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
+  
+  MSPlot["2b_Chi2Constr_lepTop_mass"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_lepTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Constr_lepTop_mass_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_lepTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["2b_Chi2Constr_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Constr_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+  
+//  MSPlot["1b_Chi2Constr"] = new MultiSamplePlot(datasets, "1b_Chi2Constr", 200, 0, 200, "#chi^{2} value");
+//  MSPlot["1b_Chi2Constr_W_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Constr_W_mass", 40, 0, 800, "M_{W} [GeV]");
+//  MSPlot["1b_Chi2Constr_hadTop_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Constr_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["1b_Chi2Constr_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Constr_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+//  MSPlot["1b_Chi2Constr_hadTop_pT"] = new MultiSamplePlot(datasets, "1b_Chi2Constr_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+//  MSPlot["1b_Chi2Constr_hadTop_HT"] = new MultiSamplePlot(datasets, "1b_Chi2Constr_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
   
   
   
@@ -818,7 +940,7 @@ int main (int argc, char *argv[])
       cout << "	Loop over events  (" << ((int)((double)datasets[d]->NofEvtsToRunOver())/((double)iReducedDataSets)) << "/" << datasets[d]->NofEvtsToRunOver() << ")" << endl;
     
     for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 0; ievt < 1000; ievt++)
+    //for (unsigned int ievt = 0; ievt < 100000; ievt++)
     {
       
       if ( ievt%iReducedDataSets != 0 ) { continue;}
@@ -889,7 +1011,7 @@ int main (int argc, char *argv[])
       /// Fix negative event weights for amc@nlo
       nloSF = 1.;
       hasNegWeight = false;
-      if (! isData && dataSetName.find("ST_tW") != 0 )  // not data & not ST tW channel
+      if (! isData && dataSetName.find("tW") == std::string::npos )  // not data & not ST tW channel
       {
         if ( event->getWeight(1001) != -9999. )
         {
@@ -1089,6 +1211,15 @@ int main (int argc, char *argv[])
 //         if (selectedJets[3]->Pt() < 30) selectedJets.clear();
 //       }
       
+      vector<TRootPFJet*> selectedBJets;
+      for (int i = 0; i < selectedJets.size(); i++)
+      {
+        if ( selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium )
+          selectedBJets.push_back(selectedJets[i]);
+      }
+      if ( selectedBJets.size() == 1 ) nofEventsWith1BJet++;
+      else if ( selectedBJets.size() > 1 ) nofEventsWith2BJets++;
+      
       
       vector<TRootMCParticle*> mcParticles;
       
@@ -1103,7 +1234,6 @@ int main (int argc, char *argv[])
       hasExactly4Jets = false;
       has1bjet = false;
       has2bjets = false;
-      nb_bTaggedJets = 0;
       muonSFID = muonSFIso = muonSFTrig = 1.;
       
       
@@ -1154,18 +1284,13 @@ int main (int argc, char *argv[])
                 MSPlot["Selection"]->Fill(6, datasets[d], true, Luminosity*scaleFactor);
                 eventSelected = true;
                 
-                for (unsigned int i = 0; i < selectedJets.size(); i++)
-                {
-                  if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium) nb_bTaggedJets++;
-                }
-                		
-                if ( nb_bTaggedJets >= 1 )
+                if ( selectedBJets.size() > 0 )
                 {
                   selecTableSemiMu.Fill(d,7,scaleFactor);
                   MSPlot["Selection"]->Fill(7, datasets[d], true, Luminosity*scaleFactor);
                   has1bjet = true;
                   
-                  if ( nb_bTaggedJets >= 2 )
+                  if ( selectedBJets.size() > 1 )
                   {
                     selecTableSemiMu.Fill(d,8,scaleFactor);
                     MSPlot["Selection"]->Fill(8, datasets[d], true, Luminosity*scaleFactor);
@@ -1525,145 +1650,225 @@ int main (int argc, char *argv[])
       int label_bJet2 = -9999;
       float pT_bJet1 = -9999.;
       float pT_bJet2 = -9999.;
-      for (unsigned int i = 0; i < selectedJets.size(); i++)
+      for (unsigned int i = 0; i < selectedBJets.size(); i++)
       {
-        if ( ! has1bjet ) break;
-        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium)
+        if ( label_bJet1 != -9999 )
         {
-          if ( ! has2bjets )
+          if ( selectedJets[i]->Pt() > pT_bJet1 )
           {
+            // Save previous as second best
+            label_bJet2 = label_bJet1;
+            pT_bJet2 = pT_bJet1;
+            
+            // Keep new one
             label_bJet1 = i;
             pT_bJet1 = selectedJets[label_bJet1]->Pt();
-            break;
           }
-          else
+          else if ( selectedJets[i]->Pt() > pT_bJet2 )
           {
-            if (selectedJets[i]->Pt() > pT_bJet1)
+            label_bJet2 = i;
+            pT_bJet2 = selectedJets[label_bJet2]->Pt();
+          }
+        }
+        else
+        {
+          label_bJet1 = i;
+          pT_bJet1 = selectedJets[label_bJet1]->Pt();
+        }
+      }
+      
+      
+      
+      ////////////////
+      ///   CHI2   ///
+      ////////////////
+      
+      int labelsReco[4] = {-9999,-9999,-9999,-9999};		// 0 = leptonic b-jet, 1 = hadronic b-jet, 2,3 = light jets.
+      float recoWMass, recoTopMass, recoTopMass2;
+      
+      string listPlotInit_b_chi2[3] = {"0b_", "1b_", "2b_"};
+      string plotInit_b_chi2 = "";
+      if ( selectedBJets.size() == 0 ) { plotInit_b_chi2 = listPlotInit_b_chi2[0];}
+      else if ( selectedBJets.size() == 1 ) { plotInit_b_chi2 = listPlotInit_b_chi2[1];}
+      else { plotInit_b_chi2 = listPlotInit_b_chi2[2];}
+      
+      
+      ///---------------///
+      ///   FREE CHI2   ///
+      ///---------------///
+      
+      float WTerm_chi2Free, topTerm_chi2Free, chi2Free;
+      float smallestChi2Free = 999999.;
+      for (int ijet = 0; ijet < 4; ijet++)
+      {
+        for (int jjet = ijet+1; jjet < 4; jjet++)
+        {
+          for (int kjet = 0; kjet < 4; kjet++)
+          {
+            if ( ijet != kjet && jjet != kjet )
             {
-              // Save previous as second best
-              if(label_bJet1 >= 0)
+              recoWMass = (*selectedJets[ijet] + *selectedJets[jjet]).M();
+              recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[kjet]).M();
+              
+              WTerm_chi2Free = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
+              topTerm_chi2Free = pow( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
+              
+              chi2Free = WTerm_chi2Free + topTerm_chi2Free;
+              
+              
+              if (chi2Free < smallestChi2Free)
               {
-                label_bJet2 = label_bJet1;
-                pT_bJet2 = pT_bJet1;
+                smallestChi2Free = chi2Free;
+                //labelsReco[0] = ;
+                labelsReco[1] = kjet;
+                labelsReco[2] = ijet;
+                labelsReco[3] = jjet;
               }
-              // Keep new one
-              label_bJet1 = i;
-              pT_bJet1 = selectedJets[label_bJet1]->Pt();
             }
-            else if (selectedJets[i]->Pt() > pT_bJet2)
-            {
-              label_bJet2 = i;
-              pT_bJet2 = selectedJets[label_bJet2]->Pt();
-            }
+          }
+        }
+      }
+      
+      //Fill histos
+      if (labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+      {
+        float Wmass_chi2Free = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
+        float hadtopmass_chi2Free = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
+        float hadtoppt_chi2Free = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
+        float hadtopht_chi2Free = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
+        
+        MSPlot[(plotInit_b_chi2+"Chi2Free").c_str()]->Fill(smallestChi2Free, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit_b_chi2+"Chi2Free_W_mass").c_str()]->Fill(Wmass_chi2Free, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit_b_chi2+"Chi2Free_hadTop_mass").c_str()]->Fill(hadtopmass_chi2Free, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit_b_chi2+"Chi2Free_hadTop_pT").c_str()]->Fill(hadtoppt_chi2Free, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit_b_chi2+"Chi2Free_hadTop_HT").c_str()]->Fill(hadtopht_chi2Free, datasets[d], true, Luminosity*scaleFactor);
+        
+        if (hasExactly4Jets)
+        {
+          MSPlot[(plotInit_b_chi2+"Chi2Free_hadTop_mass_4jets").c_str()]->Fill(hadtopmass_chi2Free, datasets[d], true, Luminosity*scaleFactor);
+        }
+        
+        if ( dataSetName.find("TT") == 0 )
+        {
+          histo1D[(plotInit_b_chi2+"Chi2Free_W_mass_reco_notMatched").c_str()]->Fill(Wmass_chi2Free);
+          histo1D[(plotInit_b_chi2+"Chi2Free_top_mass_reco_notMatched").c_str()]->Fill(hadtopmass_chi2Free);
+          if (hasExactly4Jets)
+          {
+            histo1D[(plotInit_b_chi2+"Chi2Free_top_mass_reco_notMatched_4jets").c_str()]->Fill(hadtopmass_chi2Free);
           }
         }
       }
       
       
       
-      //////////////////////
-      // CHI2 FOR 2 BTAGS //				// !!! chi2WMass, sigmaChi2WMass, chi2TopMass, sigmaChi2TopMass
-      //////////////////////
+      ///----------------------///
+      ///   CONSTRAINED CHI2   ///
+      ///----------------------///
       
-      int labelsReco[4] = {-9999,-9999,-9999,-9999};		// 0 = leptonic b-jet, 1 = hadronic b-jet, 2,3 = light jets.
-      float recoWMass, recoTopMass, chi2_mass;
+      // 2 b-jets
       if ( label_bJet1 != -9999 && label_bJet2 != -9999 )
       {
-        nofEventsWith2BJets++;
-        float recoTopMass_bJet1, recoTopMass_bJet2, WTerm, topTerm_bJet1, topTerm_bJet2, chi2_bJet1, chi2_bJet2;
-        float smallestChi2 = 999999.;
+        float WTerm_chi2Constr, topTerm_chi2Constr_b1, topTerm_chi2Constr_b2, chi2Constr_b1, chi2Constr_b2;
+        float smallestChi2Constr = 999999.;
         for (int ijet = 0; ijet < 4; ijet++)
         {
           for (int jjet = ijet+1; jjet < 4; jjet++)
           {
             if ( ijet != label_bJet1 && ijet != label_bJet2 && jjet != label_bJet1 && jjet != label_bJet2 )
             {
-              recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
-              recoTopMass_bJet1 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
-              recoTopMass_bJet2 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet2]).M();
+              recoWMass = (*selectedJets[ijet] + *selectedJets[jjet]).M();
+              recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
+              recoTopMass2 = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet2]).M();
               
-              WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
-              topTerm_bJet1 = pow( (recoTopMass_bJet1 - chi2TopMass)/sigmaChi2TopMass, 2);
-              topTerm_bJet2 = pow( (recoTopMass_bJet2 - chi2TopMass)/sigmaChi2TopMass, 2);
+              WTerm_chi2Constr = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
+              topTerm_chi2Constr_b1 = pow( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
+              topTerm_chi2Constr_b2 = pow( (recoTopMass2 - chi2TopMass)/sigmaChi2TopMass, 2);
               
-              chi2_bJet1 = WTerm + topTerm_bJet1;
-              chi2_bJet2 = WTerm + topTerm_bJet2;
+              chi2Constr_b1 = WTerm_chi2Constr + topTerm_chi2Constr_b1;
+              chi2Constr_b2 = WTerm_chi2Constr + topTerm_chi2Constr_b2;
               
               
-              if (chi2_bJet1 < smallestChi2) {
-                smallestChi2 = chi2_bJet1;
+              if (chi2Constr_b1 < smallestChi2Constr) {
+                smallestChi2Constr = chi2Constr_b1;
                 labelsReco[0] = label_bJet2;
                 labelsReco[1] = label_bJet1;
                 labelsReco[2] = ijet;
                 labelsReco[3] = jjet;
-                recoTopMass = recoTopMass_bJet1;
               }
-              if (chi2_bJet2 < smallestChi2) {
-                smallestChi2 = chi2_bJet2;
+              if (chi2Constr_b2 < smallestChi2Constr) {
+                smallestChi2Constr = chi2Constr_b2;
                 labelsReco[0] = label_bJet1;
                 labelsReco[1] = label_bJet2;
                 labelsReco[2] = ijet;
                 labelsReco[3] = jjet;
-                recoTopMass = recoTopMass_bJet2;
               }
-              chi2_mass = smallestChi2;
             }
           }
         }
         
-        
- 	  	  //Fill histos
- 	  	  if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+        //Fill histos
+        if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
         {
-          //if (useMassesAndResolutions && eventselectedSemiMu) selecTableSemiMu.Fill(d,11,scaleFactor);
-          //if (useMassesAndResolutions && eventselectedSemiEl) selecTableSemiEl.Fill(d,12,scaleFactor);
+          float Wmass_chi2Constr = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
+          float hadtopmass_chi2Constr = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
+          float hadtoppt_chi2Constr = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
+          float hadtopht_chi2Constr = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
           
+          float leptopmass_chi2Constr = (*selectedMuons[0] + *selectedJets[labelsReco[0]]).M();
+          float leptopmass_wrong_hadrB_chi2Constr = (*selectedMuons[0] + *selectedJets[labelsReco[1]]).M();
           
-          MSPlot["Chi2_2b"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr").c_str()]->Fill(smallestChi2Constr, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr_W_mass").c_str()]->Fill(Wmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_mass").c_str()]->Fill(hadtopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_pT").c_str()]->Fill(hadtoppt_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_HT").c_str()]->Fill(hadtopht_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
           
-          float Wmass_2b = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
-          float hadtopmass_2b = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
-          float hadtoppt_2b = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
-          float hadtopht_2b = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
-          float leptopmass_2b = (*selectedMuons[0] + *selectedJets[labelsReco[0]]).M();
-          MSPlot["WMass_2b"]->Fill(Wmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Mass_2b"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Pt_2b"]->Fill(hadtoppt_2b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Ht_2b"]->Fill(hadtopht_2b, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot[(plotInit_b_chi2+"Chi2Constr_lepTop_mass").c_str()]->Fill(leptopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+          
           if (hasExactly4Jets)
-            MSPlot["hadTop_Mass_2b_4jets"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          
-          MSPlot["lepTop_Mass_2b"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          if (hasExactly4Jets)
-            MSPlot["lepTop_Mass_2b_4jets"]->Fill(leptopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-          if ( leptopmass_2b < 180 )
           {
-            MSPlot["hadTop_Mass_2b_mlb_cut"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
-            if (hasExactly4Jets)
-              MSPlot["hadTop_Mass_2b_4jets_mlb_cut"]->Fill(hadtopmass_2b, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_mass_4jets").c_str()]->Fill(hadtopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_4jets").c_str()]->Fill(leptopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
           }
+          
+          if ( leptopmass_chi2Constr < 180 )
+          {
+            MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_mass_mlb_cut").c_str()]->Fill(hadtopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+            if (hasExactly4Jets)
+            {
+              MSPlot[(plotInit_b_chi2+"Chi2Constr_hadTop_mass_4jets_mlb_cut").c_str()]->Fill(hadtopmass_chi2Constr, datasets[d], true, Luminosity*scaleFactor);
+            }
+          }
+          
           
           if ( dataSetName.find("TT") == 0 )
           {
-            histo1D["W_mass_reco_2b_notMatched"]->Fill(recoWMass);
-            histo1D["top_mass_reco_2b_notMatched"]->Fill(hadtopmass_2b);
-            histo1D["top_pT_reco_2b_notMatched"]->Fill(hadtoppt_2b);
-            histo1D["top_HT_reco_2b_notMatched"]->Fill(hadtopht_2b);
-            histo1D["lepTop_mass_2b_notMatched"]->Fill(leptopmass_2b);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_W_mass_reco_notMatched").c_str()]->Fill(Wmass_chi2Constr);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_top_mass_reco_notMatched").c_str()]->Fill(hadtopmass_chi2Constr);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_top_pT_reco_notMatched").c_str()]->Fill(hadtoppt_chi2Constr);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_top_HT_reco_notMatched").c_str()]->Fill(hadtopht_chi2Constr);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched").c_str()]->Fill(leptopmass_chi2Constr);
+            histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched_wrong_hadrB").c_str()]->Fill(leptopmass_wrong_hadrB_chi2Constr);
+            
             if (hasExactly4Jets)
             {
-              histo1D["top_mass_reco_2b_notMatched_4jets"]->Fill(hadtopmass_2b);
-              histo1D["lepTop_mass_2b_notMatched_4jets"]->Fill(leptopmass_2b);
+              histo1D[(plotInit_b_chi2+"Chi2Constr_top_mass_reco_notMatched_4jets").c_str()]->Fill(hadtopmass_chi2Constr);
+              histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched_4jets").c_str()]->Fill(leptopmass_chi2Constr);
+              histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched_wrong_hadrB_4jets").c_str()]->Fill(leptopmass_wrong_hadrB_chi2Constr);
             }
-          }
- 	  	  }
-// 	  	  else
-//        {
-//          //When no Chi2 combination is found:
-//          cout << "Eventnr. " << ievt << ": no Chi2 found." << endl;
-// 	  	  }
-      
-      
+            
+            if ( leptopmass_chi2Constr < 180 )
+            {
+              histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched_mlb_cut").c_str()]->Fill(leptopmass_chi2Constr);
+              if (hasExactly4Jets)
+              {
+                histo1D[(plotInit_b_chi2+"Chi2Constr_lepTop_mass_notMatched_4jets_mlb_cut").c_str()]->Fill(leptopmass_chi2Constr);
+              }
+            }
+            
+          }  // end TT
+        }        
+        
       }  // end 2 b tags
       
       
@@ -1672,127 +1877,65 @@ int main (int argc, char *argv[])
       // CHI2 FOR 1 BTAG //
       /////////////////////
       
-      else if ( label_bJet1 != -9999 && label_bJet2 == -9999 )
-      {
-        nofEventsWith1BJet++;
-        float WTerm, topTerm, chi2;
-        float smallestChi2 = 999999.;
-        for (int ijet = 0; ijet < 4; ijet++)
-        {
-          for (int jjet = ijet+1; jjet < 4; jjet++)
-          {
-            if ( ijet != label_bJet1 && jjet != label_bJet1 )
-            {
-              recoWMass = (*selectedJets[ijet] + *selectedJets[jjet]).M();
-              recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
-              
-              WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
-              topTerm = pow( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
-              
-              chi2 = WTerm + topTerm;
-              
-              
-              if (chi2 < smallestChi2) {
-                smallestChi2 = chi2;
-                //labelsReco[0] = ;
-                labelsReco[1] = label_bJet1;
-                labelsReco[2] = ijet;
-                labelsReco[3] = jjet;
-              }
-              chi2_mass = smallestChi2;
-            }
-          }
-        }
-        
-        //Fill histos
- 	      if (labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
-        {
-          MSPlot["Chi2_1b"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
-          
-          float Wmass_1b = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
-          float hadtopmass_1b = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
-          float hadtoppt_1b = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
-          float hadtopht_1b = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
-          MSPlot["WMass_1b"]->Fill(Wmass_1b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Mass_1b"]->Fill(hadtopmass_1b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Pt_1b"]->Fill(hadtoppt_1b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Ht_1b"]->Fill(hadtopht_1b, datasets[d], true, Luminosity*scaleFactor);
-          if (hasExactly4Jets)
-            MSPlot["hadTop_Mass_1b_4jets"]->Fill(hadtopmass_1b, datasets[d], true, Luminosity*scaleFactor);
-          
-          if ( dataSetName.find("TT") == 0 )
-          {
-            histo1D["W_mass_reco_1b_notMatched"]->Fill(Wmass_1b);
-            histo1D["top_mass_reco_1b_notMatched"]->Fill(hadtopmass_1b);
-            histo1D["top_pT_reco_1b_notMatched"]->Fill(hadtoppt_1b);
-            histo1D["top_HT_reco_1b_notMatched"]->Fill(hadtopht_1b);
-            if (hasExactly4Jets) histo1D["top_mass_reco_1b_notMatched_4jets"]->Fill(hadtopmass_1b);
-          }
- 	      }
-        
-      }  // end 1 b tag
-      
-      
-      
-      ///////////////////////
-      // CHI2 FOR NO BTAGS //
-      ///////////////////////
-      
-      else
-      {
-        float WTerm, topTerm, chi2;
-        float smallestChi2 = 999999.;
-        for (int ijet = 0; ijet < 4; ijet++)
-        {
-          for (int jjet = ijet+1; jjet < 4; jjet++)
-          {
-            for (int kjet = 0; kjet < 4; kjet++)
-            {
-              if ( ijet != kjet && jjet != kjet )
-              {
-                recoWMass = ( *selectedJets[ijet] + *selectedJets[jjet]).M();
-                recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[kjet]).M();
-                
-                WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
-                topTerm = pow( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
-                
-                chi2 = WTerm + topTerm;
-                
-                
-                if (chi2 < smallestChi2)
-                {
-                  smallestChi2 = chi2;
-                  //labelsReco[0] = ;
-                  labelsReco[1] = kjet;
-                  labelsReco[2] = ijet;
-                  labelsReco[3] = jjet;
-                }
-                chi2_mass = smallestChi2;
-              }
-            }
-          }
-        }
-        
-        //Fill histos
-        if (labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
-        {
-          float Wmass_0b = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
-          float hadtopmass_0b = ( *selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
-          MSPlot["Chi2_0b"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["WMass_0b"]->Fill(Wmass_0b, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["hadTop_Mass_0b"]->Fill(hadtopmass_0b, datasets[d], true, Luminosity*scaleFactor);
-          if (hasExactly4Jets)
-            MSPlot["hadTop_Mass_0b_4jets"]->Fill(hadtopmass_0b, datasets[d], true, Luminosity*scaleFactor);
-          
-          if ( dataSetName.find("TT") == 0 )
-          {
-            histo1D["W_mass_reco_0b_notMatched"]->Fill(Wmass_0b);
-            histo1D["top_mass_reco_0b_notMatched"]->Fill(hadtopmass_0b);
-            if (hasExactly4Jets) histo1D["top_mass_reco_0b_notMatched_4jets"]->Fill(hadtopmass_0b);
-          }
- 	      }
-        
-      }  // end no b tags
+//      else if ( label_bJet1 != -9999 && label_bJet2 == -9999 )
+//      {
+//        float WTerm, topTerm, chi2;
+//        float smallestChi2 = 999999.;
+//        for (int ijet = 0; ijet < 4; ijet++)
+//        {
+//          for (int jjet = ijet+1; jjet < 4; jjet++)
+//          {
+//            if ( ijet != label_bJet1 && jjet != label_bJet1 )
+//            {
+//              recoWMass = (*selectedJets[ijet] + *selectedJets[jjet]).M();
+//              recoTopMass = (*selectedJets[ijet] + *selectedJets[jjet] + *selectedJets[label_bJet1]).M();
+//              
+//              WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
+//              topTerm = pow( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
+//              
+//              chi2 = WTerm + topTerm;
+//              
+//              
+//              if (chi2 < smallestChi2) {
+//                smallestChi2 = chi2;
+//                //labelsReco[0] = ;
+//                labelsReco[1] = label_bJet1;
+//                labelsReco[2] = ijet;
+//                labelsReco[3] = jjet;
+//              }
+//              chi2_mass = smallestChi2;
+//            }
+//          }
+//        }
+//        
+//        //Fill histos
+// 	      if (labelsReco[1] != -9999 && labelsReco[2] != -9999 && labelsReco[3] != -9999)
+//        {
+//          MSPlot["Chi2_1b"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
+//          
+//          float Wmass_1b = (*selectedJets[labelsReco[2]] + *selectedJets[labelsReco[3]]).M();
+//          float hadtopmass_1b = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).M();
+//          float hadtoppt_1b = (*selectedJets[labelsReco[1]] + *selectedJets[labelsReco[2]] +  *selectedJets[labelsReco[3]]).Pt();
+//          float hadtopht_1b = selectedJets[labelsReco[1]]->Pt() + selectedJets[labelsReco[2]]->Pt() + selectedJets[labelsReco[3]]->Pt();
+//          MSPlot["WMass_1b"]->Fill(Wmass_1b, datasets[d], true, Luminosity*scaleFactor);
+//          MSPlot["hadTop_Mass_1b"]->Fill(hadtopmass_1b, datasets[d], true, Luminosity*scaleFactor);
+//          MSPlot["hadTop_Pt_1b"]->Fill(hadtoppt_1b, datasets[d], true, Luminosity*scaleFactor);
+//          MSPlot["hadTop_Ht_1b"]->Fill(hadtopht_1b, datasets[d], true, Luminosity*scaleFactor);
+//          if (hasExactly4Jets)
+//            MSPlot["hadTop_Mass_1b_4jets"]->Fill(hadtopmass_1b, datasets[d], true, Luminosity*scaleFactor);
+//            
+//            if ( dataSetName.find("TT") == 0 )
+//            {
+//              histo1D["W_mass_reco_1b_notMatched"]->Fill(Wmass_1b);
+//              histo1D["top_mass_reco_1b_notMatched"]->Fill(hadtopmass_1b);
+//              histo1D["top_pT_reco_1b_notMatched"]->Fill(hadtoppt_1b);
+//              histo1D["top_HT_reco_1b_notMatched"]->Fill(hadtopht_1b);
+//              if (hasExactly4Jets) histo1D["top_mass_reco_1b_notMatched_4jets"]->Fill(hadtopmass_1b);
+//                }
+// 	      }
+//        
+//      }  // end 1 b tag
+
       
       
       
@@ -1829,26 +1972,44 @@ int main (int argc, char *argv[])
       
       
       /// Fill MSPlots
+      string listPlotInit[3] = {"", "1b_", "2b_"};
+      string plotInit = "";
+      int numBJets = selectedBJets.size();
+      if ( numBJets > 2 ) { numBJets = 2;}
       
-      MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_relIso"]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["muon_d0"]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
-      if ( mets.size() > 0 )
+      for (unsigned int iB = 0; iB < numBJets+1; iB++)
       {
-         MSPlot["met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-         MSPlot["met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-         MSPlot["met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-      }
+        plotInit = listPlotInit[iB];
+        
+        MSPlot[(plotInit+"muon_pT").c_str()]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"muon_eta").c_str()]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"muon_phi").c_str()]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"muon_relIso").c_str()]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"muon_d0").c_str()]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"leadingJet_pT").c_str()]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"jet2_pT").c_str()]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"jet3_pT").c_str()]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"jet4_pT").c_str()]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"Ht_4leadingJets").c_str()]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+        if ( mets.size() > 0 )
+        {
+           MSPlot[(plotInit+"met_pT").c_str()]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+           MSPlot[(plotInit+"met_eta").c_str()]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+           MSPlot[(plotInit+"met_phi").c_str()]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        }
+
+        MSPlot[(plotInit+"nJets").c_str()]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"nBJets").c_str()]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
+        for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
+        {
+          MSPlot[(plotInit+"CSVv2Discr_allJets").c_str()]->Fill(selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        }
+        MSPlot[(plotInit+"CSVv2Discr_leadingJet").c_str()]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"CSVv2Discr_jet2").c_str()]->Fill(selectedJets[1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"CSVv2Discr_jet3").c_str()]->Fill(selectedJets[2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot[(plotInit+"CSVv2Discr_jet4").c_str()]->Fill(selectedJets[3]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+      }  // end plot b loop
       
-      MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
-      MSPlot["nBJets"]->Fill(nb_bTaggedJets, datasets[d], true, Luminosity*scaleFactor);
       if (has1bjet)
       {
         MSPlot["bJet1_pT"]->Fill(selectedJets[label_bJet1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
@@ -1859,27 +2020,6 @@ int main (int argc, char *argv[])
           MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
           MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
         }
-        for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
-        {
-          MSPlot["CSVv2Discr_allJets"]->Fill(selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        }
-        MSPlot["CSVv2Discr_leadingJet"]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet2"]->Fill(selectedJets[1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet3"]->Fill(selectedJets[2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["CSVv2Discr_jet4"]->Fill(selectedJets[3]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        
-        MSPlot["1b_muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_muon_relIso"]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_muon_d0"]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["1b_nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
-        if ( mets.size() > 0 ) MSPlot["1b_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         
       }  /// end 1b
       
@@ -1907,7 +2047,7 @@ int main (int argc, char *argv[])
   }
     
     //if (nlo)
-    if (! isData && dataSetName.find("ST_tW") != 0 )  // not data & not ST tW channel
+    if (! isData && dataSetName.find("tW") == std::string::npos )  // not data & not ST tW channel
     {
       cout << "Data set " << datasets[d]->Title() << " has " << nofPosWeights << " events with positive weights and " << nofNegWeights << " events with negative weights." << endl;
       cout << "         Pos - neg is " << nofPosWeights - nofNegWeights << ", pos + neg is " << nofPosWeights + nofNegWeights << endl;
