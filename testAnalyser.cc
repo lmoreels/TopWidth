@@ -2058,7 +2058,7 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
         {
           MSPlot[(plotInit_b_chi2+"Chi2W_hadTop_mass_4jets").c_str()]->Fill(hadtopmass_chi2W, datasets[d], true, Luminosity*scaleFactor);
         }
-        if ( Wmass_chi2W < chi2WMass-20 && Wmass_chi2W > chi2WMass+20 )
+        if ( Wmass_chi2W > chi2WMass-20 && Wmass_chi2W < chi2WMass+20 )
         {
           MSPlot[(plotInit_b_chi2+"Chi2W_hadTop_mass_W_cut").c_str()]->Fill(hadtopmass_chi2W, datasets[d], true, Luminosity*scaleFactor);
           if (hasExactly4Jets)
@@ -2076,7 +2076,7 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
           {
             histo1D[(plotInit_b_chi2+"Chi2W_top_mass_reco_notMatched_4jets").c_str()]->Fill(hadtopmass_chi2W);
           }
-          if ( Wmass_chi2W < chi2WMass-20 && Wmass_chi2W > chi2WMass+20 )
+          if ( Wmass_chi2W > chi2WMass-20 && Wmass_chi2W < chi2WMass+20 )
           {
             histo1D[(plotInit_b_chi2+"Chi2W_top_mass_reco_notMatched_W_cut").c_str()]->Fill(hadtopmass_chi2W);
             if (hasExactly4Jets)
