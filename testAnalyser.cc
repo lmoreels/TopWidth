@@ -410,12 +410,20 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
   
   
   /// Leptonic top quark
-  histo1D["lepTop_mass_matched_corr"] = new TH1F("lepTop_mass_matched_corr","Reconstructed leptonic top mass of correctly matched events; M_{lb} [GeV]", 80, 0, 800);
-  histo1D["lepTop_mass_matched_wrong"] = new TH1F("lepTop_mass_matched_wrong","Reconstructed leptonic top mass of wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
-  histo1D["lepTop_mass_matched_wrong_hadrB"] = new TH1F("lepTop_mass_matched_wrong_hadrB","Reconstructed leptonic top mass of wrongly matched events (using hadronic b jet); M_{lb} [GeV]", 80, 0, 800);
-  histo1D["lepTop_mass_matched_wrong_noB"] = new TH1F("lepTop_mass_matched_wrong_noB","Reconstructed leptonic top mass of wrongly matched events (b jet is mistagged); M_{lb} [GeV]", 80, 0, 800);
-  histo1D["lepTop_mass_matched_corr_4jets"] = new TH1F("lepTop_mass_matched_corr_4jets","Reconstructed leptonic top mass of correctly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
-  histo1D["lepTop_mass_matched_wrong_4jets"] = new TH1F("lepTop_mass_matched_wrong_4jets","Reconstructed leptonic top mass of wrongly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_corr"] = new TH1F("lepTop_mass_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong"] = new TH1F("lepTop_mass_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_hadrB"] = new TH1F("lepTop_mass_matched_wrong_hadrB","Reconstructed leptonic top mass using wrongly matched events (using hadronic b jet); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_noB"] = new TH1F("lepTop_mass_matched_wrong_noB","Reconstructed leptonic top mass using wrongly matched events (b jet is mistagged); M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_corr_4jets"] = new TH1F("lepTop_mass_matched_corr_4jets","Reconstructed leptonic top mass using correctly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["lepTop_mass_matched_wrong_4jets"] = new TH1F("lepTop_mass_matched_wrong_4jets","Reconstructed leptonic top mass using wrongly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  
+  /// ttbar mass
+  histo1D["ttbar_mass_matched_corr"] = new TH1F("ttbar_mass_matched_corr","Reconstructed mass of the top quark pair using correctly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong"] = new TH1F("ttbar_mass_matched_wrong","Reconstructed mass of the top quark pair using wrongly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong_hadrB"] = new TH1F("ttbar_mass_matched_wrong_hadrB","Reconstructed mass of the top quark pair using wrongly matched events (using hadronic b jet); M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong_noB"] = new TH1F("ttbar_mass_matched_wrong_noB","Reconstructed mass of the top quark pair using wrongly matched events (b jet is mistagged); M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_corr_4jets"] = new TH1F("ttbar_mass_matched_corr_4jets","Reconstructed mass of the top quark pair using correctly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong_4jets"] = new TH1F("ttbar_mass_matched_wrong_4jets","Reconstructed mass of the top quark pair using wrongly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
   
 //  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
 //  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
@@ -1671,6 +1679,27 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
             histo1D["lepTop_mass_matched_wrong_4jets"]->Fill(lepTopMass_matched_wrong_hadrB);
             if (jetMC0 || jetMC1) histo1D["lepTop_mass_matched_wrong_4jets"]->Fill(lepTopMass_matched_wrong_noB);
           }
+          
+          /// ttbar mass
+          float ttbarMass_matched_corr = topMassReco_matched + lepTopMass_matched_corr;
+          float ttbarMass_matched_wrong_hadrB = topMassReco_matched + lepTopMass_matched_wrong_hadrB;
+          float ttbarMass_matched_wrong_noB = topMassReco_matched + lepTopMass_matched_wrong_noB;
+          
+          histo1D["ttbar_mass_matched_corr"]->Fill(ttbarMass_matched_corr);
+          histo1D["ttbar_mass_matched_wrong"]->Fill(ttbarMass_matched_wrong_hadrB);
+          histo1D["ttbar_mass_matched_wrong_hadrB"]->Fill(ttbarMass_matched_wrong_hadrB);
+          if ( jetMC0 || jetMC1)
+          {
+            histo1D["ttbar_mass_matched_wrong"]->Fill(ttbarMass_matched_wrong_noB);
+            histo1D["ttbar_mass_matched_wrong_noB"]->Fill(ttbarMass_matched_wrong_noB);
+          }
+          if (hasExactly4Jets)
+          {
+            histo1D["ttbar_mass_matched_corr_4jets"]->Fill(ttbarMass_matched_corr);
+            histo1D["ttbar_mass_matched_wrong_4jets"]->Fill(ttbarMass_matched_wrong_hadrB);
+            if (jetMC0 || jetMC1) histo1D["ttbar_mass_matched_wrong_4jets"]->Fill(ttbarMass_matched_wrong_noB);
+          }
+          
         }  // end muonmatched
         
       }  // end TT && matched
