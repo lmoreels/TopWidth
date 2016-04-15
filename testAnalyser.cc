@@ -425,6 +425,19 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
   histo1D["ttbar_mass_matched_corr_4jets"] = new TH1F("ttbar_mass_matched_corr_4jets","Reconstructed mass of the top quark pair using correctly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
   histo1D["ttbar_mass_matched_wrong_4jets"] = new TH1F("ttbar_mass_matched_wrong_4jets","Reconstructed mass of the top quark pair using wrongly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
   
+  /// delta R (lep, b)
+  histo1D["dR_Lep_B"] = new TH1F("dR_Lep_B","Delta R between the lepton and the leptonic b jet; #Delta R(l,b)", 50, 0, 10);
+  
+  /// 2D plots: lepTopMass, ttbarMass, dR_Lep_B
+  histo2D["2D_matched_lepTopMass_corr_ttbarMass_corr"] = new TH2F("2D_matched_lepTopMass_corr_ttbarMass_corr", "ttbarMass vs. leptonic top mass using correctly matched events; M_{lb} [GeV]; M_{t#bar{t}} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["2D_matched_lepTopMass_wrong_ttbarMass_wrong_hadrB"] = new TH2F("2D_matched_lepTopMass_wrong_ttbarMass_wrong_hadrB", "ttbarMass vs. leptonic top mass using wrongly matched events (using hadronic b jet); M_{lb} [GeV]; M_{t#bar{t}} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  
+  histo2D["2D_matched_lepTopMass_corr_dR_Lep_B"] = new TH2F("2D_matched_lepTopMass_corr_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. leptonic top mass using correctly matched events; M_{lb} [GeV]; #Delta R(l,b)", 100, 0, 1000, 50, 0, 10);
+  histo2D["2D_matched_lepTopMass_wrong_hadrB_dR_Lep_B"] = new TH2F("2D_matched_lepTopMass_wrong_hadrB_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. leptonic top mass using wrongly matched events (using hadronic b jet); M_{lb} [GeV]; #Delta R(l,b)", 100, 0, 1000, 50, 0, 10);
+  
+  histo2D["2D_matched_ttbarMass_corr_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_corr_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using correctly matched events; M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 50, 0, 10);
+  histo2D["2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using wrongly matched events (using hadronic b jet); M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 50, 0, 10);
+  
 //  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
 //  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
   
@@ -544,6 +557,7 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
   MSPlot["1b_CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "1b_CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
   
   MSPlot["1b_min_M_lb"] = new MultiSamplePlot(datasets, "1b_min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["1b_dR_Lep_B"] = new MultiSamplePlot(datasets, "1b_dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
   
   // Plots for events with 2 b-tagged jets
   MSPlot["2b_muon_pT"] = new MultiSamplePlot(datasets, "2b_muon_pT", 22, 0, 440, "p_{T} [GeV]");
@@ -569,6 +583,7 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
   MSPlot["2b_CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
   
   MSPlot["2b_min_M_lb"] = new MultiSamplePlot(datasets, "2b_min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["2b_dR_Lep_B"] = new MultiSamplePlot(datasets, "2b_dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
   
   MSPlot["nPVs_before"] = new MultiSamplePlot(datasets, "nPVs_before", 36, -0.5, 35.5, "# PVs before reweighting");
   MSPlot["nPVs_after"] = new MultiSamplePlot(datasets, "nPVs_after", 36, -0.5, 35.5, "# PVs after reweighting");
@@ -1259,9 +1274,6 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
         if ( selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium )
           selectedBJets.push_back(selectedJets[i]);
       }
-      if ( selectedBJets.size() == 1 ) nofEventsWith1BJet++;
-      else if ( selectedBJets.size() > 1 ) nofEventsWith2BJets++;
-      
       
       vector<TRootMCParticle*> mcParticles;
       
@@ -1375,6 +1387,9 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
         cout << endl << "  Event " << ievt << " is selected" << endl;
       if (verbose > 4)
         cout << "Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
+      
+      if ( selectedBJets.size() == 1 ) nofEventsWith1BJet++;
+      else if ( selectedBJets.size() > 1 ) nofEventsWith2BJets++;
       
       
       /// Pile-up
@@ -1699,6 +1714,19 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
             histo1D["ttbar_mass_matched_wrong_4jets"]->Fill(ttbarMass_matched_wrong_hadrB);
             if (jetMC0 || jetMC1) histo1D["ttbar_mass_matched_wrong_4jets"]->Fill(ttbarMass_matched_wrong_noB);
           }
+          
+          /// dR(lep,b)
+          double dRLepB_matched = ROOT::Math::VectorUtil::DeltaR((TLorentzVector) *selectedMuons[0], (TLorentzVector) *selectedJets[MCPermutation[3]]);  // lept b
+          histo1D["dR_Lep_B"]->Fill(dRLepB_matched);
+          
+          /// 2D plots: M_lb, M_ttbar, dR(lep,b)
+          histo2D["2D_matched_lepTopMass_corr_ttbarMass_corr"]->Fill(lepTopMass_matched_corr, ttbarMass_matched_corr);
+          histo2D["2D_matched_lepTopMass_wrong_ttbarMass_wrong_hadrB"]->Fill(lepTopMass_matched_wrong_hadrB, ttbarMass_matched_wrong_hadrB);
+          histo2D["2D_matched_lepTopMass_corr_dR_Lep_B"]->Fill(lepTopMass_matched_corr, dRLepB_matched);
+          histo2D["2D_matched_lepTopMass_wrong_hadrB_dR_Lep_B"]->Fill(lepTopMass_matched_wrong_hadrB, dRLepB_matched);
+          histo2D["2D_matched_ttbarMass_corr_dR_Lep_B"]->Fill(ttbarMass_matched_corr, dRLepB_matched);
+          histo2D["2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B"]->Fill(ttbarMass_matched_wrong_hadrB, dRLepB_matched);
+          
           
         }  // end muonmatched
         
@@ -2155,12 +2183,19 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
       double HT = selectedJets[0]->Pt()+selectedJets[1]->Pt()+selectedJets[2]->Pt()+selectedJets[3]->Pt();
       double relIsoMu = ( selectedMuons[0]->chargedHadronIso(4) + max( 0.0, selectedMuons[0]->neutralHadronIso(4) + selectedMuons[0]->photonIso(4) - 0.5*selectedMuons[0]->puChargedHadronIso(4) ) ) / selectedMuons[0]->Pt();  // dR = 0.4, dBeta corrected
       
-      double min_M_lb = 9999, Mlb_temp = -1;
+      double min_M_lb = 99999, Mlb_temp = -1, labelBForMlb = -9999.;
       for (unsigned int i = 0; i < selectedBJets.size(); i++)
       {
         Mlb_temp = (*selectedMuons[0] + *selectedBJets[i]).M();
-        if ( Mlb_temp < min_M_lb ) min_M_lb = Mlb_temp;
+        if ( Mlb_temp < min_M_lb )
+        {
+          min_M_lb = Mlb_temp;
+          labelBForMlb = i;
+        }
       }
+      double dRLepB = 9999;
+      if (has1bjet)
+        dRLepB = ROOT::Math::VectorUtil::DeltaR( (TLorentzVector)*selectedBJets[labelBForMlb], (TLorentzVector)*selectedMuons[0]);
       
 //       if ( dataSetName.find("TT") == 0 )
 //       {
@@ -2216,11 +2251,13 @@ histo1D["2b_Chi2W_W_mass_reco_notMatched"] = new TH1F("2b_Chi2W_W_mass_reco_notM
       {
         MSPlot["bJet1_pT"]->Fill(selectedJets[label_bJet1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
         MSPlot["bJet1_CSVv2Discr"]->Fill(selectedJets[label_bJet1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["1b_dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
         
         if (has2bjets)
         {
           MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
           MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["2b_dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
         }
         
       }  /// end 1b
