@@ -24,32 +24,38 @@
 //used TopTreeAnalysis classes
 #include "../TopTreeProducer/interface/TRootRun.h"
 #include "../TopTreeProducer/interface/TRootEvent.h"
-#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
-#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/ElectronPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
-#include "../TopTreeAnalysisBase/Selection/interface/MuonPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
+#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
+#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
+#include "../TopTreeAnalysisBase/Tools/interface/BTagWeightTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/BTagCalibrationStandalone.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
+
+// user defined
+#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
 
 
 using namespace std;
 using namespace TopTree;
 
 
-string ConvertIntToString(int Number)
+string ConvertIntToString(int Number, bool pad)
 {
   ostringstream convert;
   convert.clear();
-  if ( Number < 10 ) { convert << std::setw(2) << std::setfill('0');}
+  if ( pad && Number < 10 ) { convert << std::setw(2) << std::setfill('0');}
   convert << Number;
   return convert.str();
 }
@@ -66,27 +72,12 @@ string MakeTimeStamp()
   int min = now->tm_min;
   //int sec = now->tm_sec;
   
-//  vector <int> date;
-//  date.push_back(now->tm_year - 100);
-//  date.push_back(now->tm_mon + 1);
-//  date.push_back(now->tm_mday);
-//  date.push_back(now->tm_hour);
-//  date.push_back(now->tm_min);
-//  
-//  string date_str = "";
-//  
-//  for (unsigned int i = 0; i < date.size(); i++)
-//  {
-//    if ( date[i] < 10 ) { ;}
-//    date_str += ConvertIntToString(date[i]);
-//  }
-  
-  string year_str = ConvertIntToString(year);
-  string month_str = ConvertIntToString(month);
-  string day_str = ConvertIntToString(day);
-  string hour_str = ConvertIntToString(hour);
-  string min_str = ConvertIntToString(min);
-  //string sec_str = ConvertIntToString(sec);
+  string year_str = ConvertIntToString(year, true);
+  string month_str = ConvertIntToString(month, true);
+  string day_str = ConvertIntToString(day, true);
+  string hour_str = ConvertIntToString(hour, true);
+  string min_str = ConvertIntToString(min, true);
+  //string sec_str = ConvertIntToString(sec, true);
   
   string date_str = year_str + month_str + day_str + "_" + hour_str + min_str;
   return date_str;
@@ -103,10 +94,10 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  string rootFileName = "testSkims_output_3files_"+dateString+".root";
+  string rootFileName = "testSkims_output_1file_"+dateString+".root";
   string selectiontableMu = "SelectionTable_testSkims_SemiMu_"+dateString+".tex";
-  string selectionTableSkimTest = "SelectionTable_testSkimStepByStep_3files_"+dateString+".tex";
-  string pathPNG = "Plots_Skims_3files_"+dateString+"/";
+  string selectionTableSkimTest = "SelectionTable_testSkimStepByStep_1file_"+dateString+".tex";
+  string pathPNG = "Plots_Skims_1file_"+dateString+"/";
   int iReducedDataSets = 1;
   
   
@@ -213,24 +204,28 @@ int main (int argc, char *argv[])
   histo1D["leadingJet_pT_00"] = new TH1F("leadingJet_pT_00","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets_00"] = new TH1F("Ht_4leadingJets_00","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   histo1D["nJets_00"] = new TH1F("nJets_00","Number of jets", 13, -0.5, 12.5);
+  histo1D["nBJets_00"] = new TH1F("nBJets_00","Number of b-tagged jets", 13, -0.5, 12.5);
   
   histo1D["muon_pT_01"] = new TH1F("muon_pT_01","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
   histo1D["muon_eta_01"] = new TH1F("muon_eta_01","Pseudorapidity of the muon; #eta", 60, -3, 3);
   histo1D["leadingJet_pT_01"] = new TH1F("leadingJet_pT_01","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
   histo1D["Ht_4leadingJets_01"] = new TH1F("Ht_4leadingJets_01","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
   histo1D["nJets_01"] = new TH1F("nJets_01","Number of jets", 13, -0.5, 12.5);
+  histo1D["nBJets_01"] = new TH1F("nBJets_01","Number of b-tagged jets", 13, -0.5, 12.5);
   
-  histo1D["muon_pT_02"] = new TH1F("muon_pT_02","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
-  histo1D["muon_eta_02"] = new TH1F("muon_eta_02","Pseudorapidity of the muon; #eta", 60, -3, 3);
-  histo1D["leadingJet_pT_02"] = new TH1F("leadingJet_pT_02","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
-  histo1D["Ht_4leadingJets_02"] = new TH1F("Ht_4leadingJets_02","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
-  histo1D["nJets_02"] = new TH1F("nJets_02","Number of jets", 13, -0.5, 12.5);
-  
-  histo1D["muon_pT_03"] = new TH1F("muon_pT_03","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
-  histo1D["muon_eta_03"] = new TH1F("muon_eta_03","Pseudorapidity of the muon; #eta", 60, -3, 3);
-  histo1D["leadingJet_pT_03"] = new TH1F("leadingJet_pT_03","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
-  histo1D["Ht_4leadingJets_03"] = new TH1F("Ht_4leadingJets_03","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
-  histo1D["nJets_03"] = new TH1F("nJets_03","Number of jets", 13, -0.5, 12.5);
+//   histo1D["muon_pT_02"] = new TH1F("muon_pT_02","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
+//   histo1D["muon_eta_02"] = new TH1F("muon_eta_02","Pseudorapidity of the muon; #eta", 60, -3, 3);
+//   histo1D["leadingJet_pT_02"] = new TH1F("leadingJet_pT_02","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
+//   histo1D["Ht_4leadingJets_02"] = new TH1F("Ht_4leadingJets_02","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
+//   histo1D["nJets_02"] = new TH1F("nJets_02","Number of jets", 13, -0.5, 12.5);
+//   histo1D["nBJets_02"] = new TH1F("nBJets_02","Number of b-tagged jets", 13, -0.5, 12.5);
+//   
+//   histo1D["muon_pT_03"] = new TH1F("muon_pT_03","Transverse momentum of the muon; p_{T} [GeV]", 200, 0, 200);
+//   histo1D["muon_eta_03"] = new TH1F("muon_eta_03","Pseudorapidity of the muon; #eta", 60, -3, 3);
+//   histo1D["leadingJet_pT_03"] = new TH1F("leadingJet_pT_03","Transverse momentum of the leading jet; p_{T} [GeV]", 800, 0, 800);
+//   histo1D["Ht_4leadingJets_03"] = new TH1F("Ht_4leadingJets_03","Scalar sum of transverse momenta of the 4 leading jets; H_{T} [GeV]", 120, 0, 1200);
+//   histo1D["nJets_03"] = new TH1F("nJets_03","Number of jets", 13, -0.5, 12.5);
+//   histo1D["nBJets_03"] = new TH1F("nBJets_03","Number of b-tagged jets", 13, -0.5, 12.5);
   
   
   
@@ -267,13 +262,13 @@ int main (int argc, char *argv[])
   CutsSelecTableSkimTest.push_back(string("preselected"));
   CutsSelecTableSkimTest.push_back(string("1 muon"));
   CutsSelecTableSkimTest.push_back(string("4 jets"));
-  CutsSelecTableSkimTest.push_back(string("muon pT > 15 GeV"));
-  CutsSelecTableSkimTest.push_back(string("jet 1 pT > 15 GeV"));
-  CutsSelecTableSkimTest.push_back(string("jet 2 pT > 15 GeV"));
-  CutsSelecTableSkimTest.push_back(string("jet 3 pT > 15 GeV"));
-  CutsSelecTableSkimTest.push_back(string("jet 4 pT > 15 GeV"));
-  CutsSelecTableSkimTest.push_back(string("jet eta < 2.5"));
+  CutsSelecTableSkimTest.push_back(string("muon pT > 18 GeV"));
+  CutsSelecTableSkimTest.push_back(string("jet 1 pT > 18 GeV"));
+  CutsSelecTableSkimTest.push_back(string("jet 2 pT > 18 GeV"));
+  CutsSelecTableSkimTest.push_back(string("jet 3 pT > 18 GeV"));
+  CutsSelecTableSkimTest.push_back(string("jet 4 pT > 18 GeV"));
   CutsSelecTableSkimTest.push_back(string("muon eta < 2.1"));
+  CutsSelecTableSkimTest.push_back(string("jet eta < 2.4"));
   SelectionTable selecTableSkimTest(CutsSelecTableSkimTest, datasets);
   selecTableSkimTest.SetLuminosity(Luminosity);
   
@@ -281,15 +276,15 @@ int main (int argc, char *argv[])
   ///  Single Muon Selection  ///
   ///////////////////////////////
   
-  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopMUO
   
-  float muonPTSel = 20; // GeV
+  float muonPTSel = 26; // GeV
   float muonEtaSel = 2.1;
   float muonRelIsoSel = 0.15;  // Tight muon
   string muonWP = "Tight";
   
   float muonPTVeto = 10; // GeV
-  float muonEtaVeto = 2.1;
+  float muonEtaVeto = 2.5;
   float muonRelIsoVeto = 0.25;  // Loose muon
   
   
@@ -312,7 +307,8 @@ int main (int argc, char *argv[])
   ///  Jet Selection  ///
   ///////////////////////
   
-  // To do
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopJME
+  
   float jetPT = 20; // GeV
   float jetEta = 2.4;  // to allow b tagging
   
@@ -322,11 +318,11 @@ int main (int argc, char *argv[])
   ///  Working points for b tagging  ///
   //////////////////////////////////////
   
-  /// Updated 27/10/15, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+  /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
-  float CSVv2Loose =  0.605;
-  float CSVv2Medium = 0.890;
-  float CSVv2Tight = 0.970;
+  float CSVv2Loose =  0.460;
+  float CSVv2Medium = 0.800;
+  float CSVv2Tight = 0.935;
   
   
   
@@ -384,6 +380,7 @@ int main (int argc, char *argv[])
       vector < TRootElectron* > init_electrons;
       vector < TRootJet* > init_jets_corrected;
       vector < TRootJet* > init_jets;
+      vector < TRootJet* > init_fatjets;
       vector < TRootMET* > mets;
       vector < TRootGenJet* > genjets;
       
@@ -391,7 +388,7 @@ int main (int argc, char *argv[])
       
 //      if (ievt%1000 == 0)
 //        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)datasets[d]->NofEvtsToRunOver())*100  << "%)" << flush << "\r";
-      if (((int)nEvents[d])%1000 == 0)
+      if (((int)nEvents[d])%10000 == 0)
         std::cout << "Processing the " << ((int)nEvents[d]) << "th event (" << (nEvents[d]*((double)iReducedDataSets)/((double)datasets[d]->NofEvtsToRunOver()))*100  << "%)" << flush << "\r";
       
       
@@ -455,34 +452,34 @@ int main (int argc, char *argv[])
         if ( init_jets_corrected.size() >= 4 )
         {
           selecTableSkimTest.Fill(d,2,scaleFactor);
-          if ( init_muons[0]->Pt() >= 15. )
+          if ( init_muons[0]->Pt() >= 18. )
           {
             selecTableSkimTest.Fill(d,3,scaleFactor);
-            if ( init_jets_corrected[0]->Pt() >= 15. )
+            if ( init_jets_corrected[0]->Pt() >= 18. )
             {
               selecTableSkimTest.Fill(d,4,scaleFactor);
-              if ( init_jets_corrected[1]->Pt() >= 15. )
+              if ( init_jets_corrected[1]->Pt() >= 18. )
               {
                 selecTableSkimTest.Fill(d,5,scaleFactor);
-                if ( init_jets_corrected[2]->Pt() >= 15. )
+                if ( init_jets_corrected[2]->Pt() >= 18. )
                 {
                   selecTableSkimTest.Fill(d,6,scaleFactor);
-                  if ( init_jets_corrected[3]->Pt() >= 15. )
+                  if ( init_jets_corrected[3]->Pt() >= 18. )
                   {
                     selecTableSkimTest.Fill(d,7,scaleFactor);
-                    if ( fabs(init_jets_corrected[0]->Eta()) <= 2.5 && fabs(init_jets_corrected[1]->Eta()) <= 2.5 && fabs(init_jets_corrected[2]->Eta()) <= 2.5 && fabs(init_jets_corrected[3]->Eta()) <= 2.5 )
+                    if ( fabs(init_muons[0]->Eta()) < 2.1 )
                     {
                       selecTableSkimTest.Fill(d,8,scaleFactor);
-                      if ( fabs(init_muons[0]->Eta()) < 2.1 )
+                      if ( fabs(init_jets_corrected[0]->Eta()) < 2.4 && fabs(init_jets_corrected[1]->Eta()) < 2.4 && fabs(init_jets_corrected[2]->Eta()) < 2.4 && fabs(init_jets_corrected[3]->Eta()) < 2.4 )
                       {
                         selecTableSkimTest.Fill(d,9,scaleFactor);
                       }
                     }
-                  }
-                }
-              }
-            }  /// jet 1 pT > 20 GeV
-          }  /// muon pT > 15 GeV
+                  }  /// jet 4 pT > 18 GeV
+                }  /// jet 3 pT > 18 GeV
+              }  /// jet 2 pT > 18 GeV
+            }  /// jet 1 pT > 18 GeV
+          }  /// muon pT > 18 GeV
         }  /// 4 jets
       }  /// 1 muon
       
@@ -493,7 +490,7 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets);
+      Run2Selection selection(init_jets_corrected, init_fatjets, init_muons, init_electrons, mets, event->fixedGridRhoFastjetAll());
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
@@ -511,11 +508,20 @@ int main (int argc, char *argv[])
       //if (selectedJets.size() >= 4)
       //  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
       
+      
+      vector<TRootPFJet*> selectedBJets;
+      for (int i = 0; i < selectedJets.size(); i++)
+      {
+        if ( selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium )
+          selectedBJets.push_back(selectedJets[i]);
+      }
+      
+      
       vector<TRootMCParticle*> mcParticles;
       
       if ( dataSetName.find("TT") == 0 )
       {
-        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
+        treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       
@@ -536,6 +542,13 @@ int main (int argc, char *argv[])
             selecTableSemiMu.Fill(d,4,scaleFactor);
             if (vetoElectronsSemiMu.size() == 0) {
               selecTableSemiMu.Fill(d,5,scaleFactor);
+              
+              /// First 4 jets need pT > 30 GeV
+              if (selectedJets.size() >= 4)
+              {
+                if (selectedJets[3]->Pt() < 30) selectedJets.clear();
+              }
+              
               if ( selectedJets.size() >= 4 )
               {
                 selecTableSemiMu.Fill(d,6,scaleFactor);
@@ -561,7 +574,7 @@ int main (int argc, char *argv[])
                 }  // at least 1 b-tagged jets
 
               }  // at least 4 jets
-            }  // no loose electrons
+            }  // no veto electrons
           }  // no additional loose muons (tight muon is also loose muon)
         }  // 1 good muon
       }  // good PV
@@ -593,37 +606,30 @@ int main (int argc, char *argv[])
       int label_bJet2 = -9999;
       float pT_bJet1 = -9999.;
       float pT_bJet2 = -9999.;
-      for (unsigned int i = 0; i < selectedJets.size(); i++)
+      for (unsigned int i = 0; i < selectedBJets.size(); i++)
       {
-        if ( ! has1bjet ) break;
-        if (selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium)
+        if ( label_bJet1 != -9999 )
         {
-          if ( ! has2bjets )
+          if ( selectedJets[i]->Pt() > pT_bJet1 )
           {
+            // Save previous as second best
+            label_bJet2 = label_bJet1;
+            pT_bJet2 = pT_bJet1;
+            
+            // Keep new one
             label_bJet1 = i;
             pT_bJet1 = selectedJets[label_bJet1]->Pt();
-            break;
           }
-          else
+          else if ( selectedJets[i]->Pt() > pT_bJet2 )
           {
-            if (selectedJets[i]->Pt() > pT_bJet1)
-            {
-              // Save previous as second best
-              if(label_bJet1 >= 0)
-              {
-                label_bJet2 = label_bJet1;
-                pT_bJet2 = pT_bJet1;
-              }
-              // Keep new one
-              label_bJet1 = i;
-              pT_bJet1 = selectedJets[label_bJet1]->Pt();
-            }
-            else if (selectedJets[i]->Pt() > pT_bJet2)
-            {
-              label_bJet2 = i;
-              pT_bJet2 = selectedJets[label_bJet2]->Pt();
-            }
+            label_bJet2 = i;
+            pT_bJet2 = selectedJets[label_bJet2]->Pt();
           }
+        }
+        else
+        {
+          label_bJet1 = i;
+          pT_bJet1 = selectedJets[label_bJet1]->Pt();
         }
       }
       
@@ -635,11 +641,12 @@ int main (int argc, char *argv[])
       
       double HT = selectedJets[0]->Pt()+selectedJets[1]->Pt()+selectedJets[2]->Pt()+selectedJets[3]->Pt();
       
-      histo1D[("muon_pT_"+ConvertIntToString(d)).c_str()]->Fill(selectedMuons[0]->Pt());
-      histo1D[("muon_eta_"+ConvertIntToString(d)).c_str()]->Fill(selectedMuons[0]->Eta());
-      histo1D[("leadingJet_pT_"+ConvertIntToString(d)).c_str()]->Fill(selectedJets[0]->Pt());
-      histo1D[("Ht_4leadingJets_"+ConvertIntToString(d)).c_str()]->Fill(HT);
-      histo1D[("nJets_"+ConvertIntToString(d)).c_str()]->Fill(selectedJets.size());
+      histo1D[("muon_pT_"+ConvertIntToString(d,true)).c_str()]->Fill(selectedMuons[0]->Pt());
+      histo1D[("muon_eta_"+ConvertIntToString(d,true)).c_str()]->Fill(selectedMuons[0]->Eta());
+      histo1D[("leadingJet_pT_"+ConvertIntToString(d,true)).c_str()]->Fill(selectedJets[0]->Pt());
+      histo1D[("Ht_4leadingJets_"+ConvertIntToString(d,true)).c_str()]->Fill(HT);
+      histo1D[("nJets_"+ConvertIntToString(d,true)).c_str()]->Fill(selectedJets.size());
+      histo1D[("nBJets_"+ConvertIntToString(d,true)).c_str()]->Fill(selectedBJets.size());
       
       
       
@@ -666,13 +673,13 @@ int main (int argc, char *argv[])
   ///*****************///
   
   //string pathPNG = "PlotsOneFourth/";
-  mkdir(pathPNG.c_str(),0777);
+  //mkdir(pathPNG.c_str(),0777);
   
   ///Write histograms
   fout->cd();  
   // 1D
-  TDirectory* th1dir = fout->mkdir("1D_histograms");
-  th1dir->cd();
+  //TDirectory* th1dir = fout->mkdir("1D_histograms");
+  //th1dir->cd();
   for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
   {
     TH1F *temp = it->second;

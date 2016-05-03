@@ -3,22 +3,26 @@
 <datasets>
 
 <!-- Cross sections from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/SummaryTable1G25ns . Last updated: 15/01/16 -->
-<!-- Lumi calculated at 20/01/2016, with triggerpath "HLT_IsoMu20_v*" (same for "HLT_IsoTkMu20_v*") -->
+<!-- Lumi calculated at 30/03/2016, with triggerpath "HLT_IsoMu18_v*" -->
 
-<d name="data" title="data Single Muon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="575.318052303" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Single_Muon_Run2015D_05Oct2015-v1_Prompt_v2_ReReco/03122015_121503/*.root"/>
+<d name="data" title="data Single Muon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="2245.572141981" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/Single_Muon_Run2015D_16Dec2015_GOLD/23042016_110218/*.root,/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/Single_Muon_Run2015D_16Dec2015_GOLD/22042016_224102/*.root"/>
 
-<d name="TTJets"  title="t\bar{t}+jets powheg"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="23924.5695874" xsection="831.76"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/TT_powheg_pythia8/27112015_153026/*.root"/>
+<d name="TTJets"  title="t\bar{t}+jets powheg"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="116589.596759" xsection="831.76"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/TT_powheg_pythia8/21042016_182923/*.root"/>
 
-<d name="ST_tWch_T"  title="ST t tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="27966.2921348" xsection="35.6"   PreselEff="0.0"   filenames="dcap://maite.iihe.ac.be//pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_tW_t_5f_powheg_pythia8/03122015_172225/Skimmed_TOPTREE_1.root" CombineName="Ttw__nominal"/>
+<d name="ST_tWch_T"  title="ST t tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="28089.8876404" xsection="35.6"   PreselEff="0.0"   filenames="dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/ST_tW_t_5f_powheg_pythia8/22042016_191348/Skimmed_TOPTREE_1.root" CombineName="Ttw__nominal"/>
 
-<d name="ST_tWch_Tbar"  title="ST tbar tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="28089.8876404" xsection="35.6"   PreselEff="0.0"   filenames="dcap://maite.iihe.ac.be//pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_tW_tbar_5f_powheg_pythia8/03122015_180425/Skimmed_TOPTREE_1.root"  CombineName="Ttw__nominal"/>
+<d name="ST_tWch_Tbar"  title="ST tbar tW powheg"  add="1"   color="633"  ls="0"  lw="2" normf="1"  EqLumi="28073.0337079" xsection="35.6"   PreselEff="0.0"   filenames="dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/ST_tW_tbar_5f_powheg_pythia8/22042016_202659/Skimmed_TOPTREE_1.root"  CombineName="Ttw__nominal"/>
 
-<d name="ST_tch" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="280865.865045*0.215616" xsection="70.69" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/ST_t_4f_amc@nlo_pythia8/03122015_075511/*.root"/>
+<d name="ST_tch" title="ST t amc@nlo" add="1" color="907"  ls="1"  lw="2" normf="1" EqLumi="413702.984863*0.215514" xsection="70.69" PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/ST_t_4f_amc@nlo_pythia8/23042016_110129/*.root"/>
 
 <!-- Check norm factor due to negative weights for DY sample -->
-<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="4751.00046471*0.669935" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/DY_amc@nloFXFX_pythia8/14122015_183009/*.root"  CombineName="DY__nominal"/>
+<!--<d name="DYJets"  title="DY+jets amc@nlo"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="4845.30588196*0.669802" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/DY_amc@nloFXFX_pythia8/14122015_183009/*.root"  CombineName="DY__nominal"/>-->
 
-<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="392.5331604*0.683948" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Wjets_amc@nloFXFX_pythia8/14122015_140233/*.root"  CombineName="W__nominal"/>
+<d name="DYJets"  title="DY+jets madgraph"   add="1"   color="433"  ls="1"  lw="2" normf="1"  EqLumi="1494.44466574" xsection="6025.2"   PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/DY_madgraphMLM_pythia8/22042016_190605/*.root"  CombineName="DY__nominal"/>
+
+<!--<d name="WJets"  title="WJets amc@nlo"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="392.612052979*0.683927" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_v8/Wjets_amc@nloFXFX_pythia8/14122015_140233/*.root"  CombineName="W__nominal"/>-->
+
+<d name="WJets"  title="WJets madgraph"   add="1"   color="633"  ls="1"  lw="2" normf="1"  EqLumi="766.518080768" xsection="61526.7"  PreselEff="0.0"   filenames="/pnfs/iihe/cms/store/user/lmoreels/Skimmed-TopTrees/Skims/SingleMuon_4jets_76X_v1/Wjets_madgraphMLM_pythia8/23042016_110035/*.root"  CombineName="W__nominal"/>
 
 </datasets>
 
