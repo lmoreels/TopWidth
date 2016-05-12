@@ -37,7 +37,7 @@ class TransferFunctions{
     ~TransferFunctions();
     std::string toStr(int number);
     void bookHistograms();
-    void fillJets(std::vector<TLorentzVector*> parton, std::vector<TLorentzVector*> jet);
+    void fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet);
     void fillMuon(TLorentzVector *genMu, TLorentzVector *recMu);
     void fillElectron(TLorentzVector *genEl, TLorentzVector *recEl);
     void writeHistograms();

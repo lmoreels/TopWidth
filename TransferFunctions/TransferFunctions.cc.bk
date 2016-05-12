@@ -47,13 +47,13 @@ void TransferFunctions::bookHistograms()
   
   /// Energy, pT
   histoTr2D["Eparton_vs_Enonbjet"] = new TH2F("Eparton_vs_Enonbjet","Eparton_vs_Enonbjet", 50, 0, 400, 50, 0, 400);
-  histoTr2D["Eparton_vs_Eparton-Enonbjet"] = new TH2F("Eparton_vs_Eparton-Enonbjet","Eparton_vs_Eparton-Enonbjet", 4, 0, 250, 50, -100, 100);
+  histoTr2D["Eparton_vs_Eparton-Enonbjet"] = new TH2F("Eparton_vs_Eparton-Enonbjet","Eparton_vs_Eparton-Enonbjet", 4, 0, 250, 100, -100, 100);
   histoTr2D["Eparton_vs_Ebjet"] = new TH2F("Eparton_vs_Ebjet","Eparton_vs_Ebjet", 50, 0, 400, 50, 0, 400);
-  histoTr2D["Eparton_vs_Eparton-Ebjet"] = new TH2F("Eparton_vs_Eparton-Ebjet","Eparton_vs_Eparton-Ebjet", 4, 0, 300, 50, -100, 100);
+  histoTr2D["Eparton_vs_Eparton-Ebjet"] = new TH2F("Eparton_vs_Eparton-Ebjet","Eparton_vs_Eparton-Ebjet", 4, 0, 300, 100, -100, 100);
   histoTr2D["EgenEl_vs_ErecEl"] = new TH2F("EgenEl_vs_ErecEl","EgenEl_vs_ErecEl", 50, 0, 400, 50, 0, 400);
-  histoTr2D["EgenEl_vs_EgenEl-ErecEl"] = new TH2F("EgenEl_vs_EgenEl-ErecEl","EgenEl_vs_EgenEl-ErecEl", 50, 0, 400, 50, -50, 50);
+  histoTr2D["EgenEl_vs_EgenEl-ErecEl"] = new TH2F("EgenEl_vs_EgenEl-ErecEl","EgenEl_vs_EgenEl-ErecEl", 50, 0, 400, 100, -50, 50);
   histoTr2D["InvPtgenMu_vs_InvPtrecMu"] = new TH2F("InvPtgenMu_vs_InvPtrecMu","InvPtgenMu_vs_InvPtrecMu", 50, 0, 0.05, 50, 0, 0.05);
-  histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"] = new TH2F("InvPtgenMu_vs_InvPtgenMu-InvPtrecMu","InvPtgenMu_vs_InvPtgenMu-InvPtrecMu", 5, 0.002, 0.04, 50, -0.005, 0.005);
+  histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"] = new TH2F("InvPtgenMu_vs_InvPtgenMu-InvPtrecMu","InvPtgenMu_vs_InvPtgenMu-InvPtrecMu", 5, 0.002, 0.04, 100, -0.003, 0.003);
   
   /// Theta
   histoTr2D["Thparton_vs_Thnonbjet"] = new TH2F("Thparton_vs_Thnonbjet","Thparton_vs_Thnonbjet", 60, 0, 3.15, 60, 0, 3.15);
@@ -67,13 +67,13 @@ void TransferFunctions::bookHistograms()
   
   /// Energy, pT vs theta
   histoTr2D["Eparton_vs_Thnonbjet"] = new TH2F("Eparton_vs_Thnonbjet","Eparton_vs_Thnonbjet", 50, 0, 400, 60, 0, 3.15);
-  histoTr2D["Eparton_vs_Thparton-Thnonbjet"] = new TH2F("Eparton_vs_Thparton-Thnonbjet","Eparton_vs_Thparton-Thnonbjet", 4, 0, 250, 60, -0.15, 0.15);
+  histoTr2D["Eparton_vs_Thparton-Thnonbjet"] = new TH2F("Eparton_vs_Thparton-Thnonbjet","Eparton_vs_Thparton-Thnonbjet", 4, 0, 250, 120, -0.15, 0.15);
   histoTr2D["Eparton_vs_Thbjet"] = new TH2F("Eparton_vs_Thbjet","Eparton_vs_Thbjet", 50, 0, 400, 60, 0, 3.15);
-  histoTr2D["Eparton_vs_Thparton-Thbjet"] = new TH2F("Eparton_vs_Thparton-Thbjet","Eparton_vs_Thparton-Thbjet", 4, 0, 300, 60, -0.15, 0.15);
+  histoTr2D["Eparton_vs_Thparton-Thbjet"] = new TH2F("Eparton_vs_Thparton-Thbjet","Eparton_vs_Thparton-Thbjet", 4, 0, 300, 120, -0.15, 0.15);
   histoTr2D["EgenEl_vs_ThrecEl"] = new TH2F("EgenEl_vs_ThrecEl","EgenEl_vs_ThrecEl", 50, 0, 400, 60, 0, 3.15);
-  histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"] = new TH2F("EgenEl_vs_ThgenEl-ThrecEl","EgenEl_vs_ThgenEl-ThrecEl", 5, 0, 400, 60, -0.05, 0.05);
+  histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"] = new TH2F("EgenEl_vs_ThgenEl-ThrecEl","EgenEl_vs_ThgenEl-ThrecEl", 5, 0, 400, 120, -0.05, 0.05);
   histoTr2D["InvPtgenMu_vs_ThrecMu"] = new TH2F("InvPtgenMu_vs_ThrecMu","InvPtgenMu_vs_ThrecMu", 50, 0, 0.05, 60, 0, 3.15);
-  histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"] = new TH2F("InvPtgenMu_vs_ThgenMu-ThrecMu","InvPtgenMu_vs_ThgenMu-ThrecMu", 5, 0.002, 0.04, 60, -0.05, 0.05);
+  histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"] = new TH2F("InvPtgenMu_vs_ThgenMu-ThrecMu","InvPtgenMu_vs_ThgenMu-ThrecMu", 5, 0.002, 0.04, 120, -0.002, 0.002);
   
   /// Eta
   histoTr2D["Etaparton_vs_Etanonbjet"] = new TH2F("Etaparton_vs_Etanonbjet","Etaparton_vs_Etanonbjet", 60, 0, 2.5, 60, 0, 2.5);
@@ -87,13 +87,13 @@ void TransferFunctions::bookHistograms()
   
   /// Energy, pT vs eta
   histoTr2D["Eparton_vs_Etanonbjet"] = new TH2F("Eparton_vs_Etanonbjet","Eparton_vs_Etanonbjet", 50, 0, 400, 60, 0, 2.5);
-  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"] = new TH2F("Eparton_vs_Etaparton-Etanonbjet","Eparton_vs_Etaparton-Etanonbjet", 4, 0, 250, 60, -0.15, 0.15);
+  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"] = new TH2F("Eparton_vs_Etaparton-Etanonbjet","Eparton_vs_Etaparton-Etanonbjet", 4, 0, 250, 120, -0.15, 0.15);
   histoTr2D["Eparton_vs_Etabjet"] = new TH2F("Eparton_vs_Etabjet","Eparton_vs_Etabjet", 50, 0, 400, 60, 0, 2.5);
-  histoTr2D["Eparton_vs_Etaparton-Etabjet"] = new TH2F("Eparton_vs_Etaparton-Etabjet","Eparton_vs_Etaparton-Etabjet", 4, 0, 300, 60, -0.15, 0.15);
+  histoTr2D["Eparton_vs_Etaparton-Etabjet"] = new TH2F("Eparton_vs_Etaparton-Etabjet","Eparton_vs_Etaparton-Etabjet", 4, 0, 300, 120, -0.15, 0.15);
   histoTr2D["EgenEl_vs_EtarecEl"] = new TH2F("EgenEl_vs_EtarecEl","EgenEl_vs_EtarecEl", 50, 0, 400, 60, 0, 2.5);
-  histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"] = new TH2F("EgenEl_vs_EtagenEl-EtarecEl","EgenEl_vs_EtagenEl-EtarecEl", 5, 0, 400, 60, -0.05, 0.05);
+  histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"] = new TH2F("EgenEl_vs_EtagenEl-EtarecEl","EgenEl_vs_EtagenEl-EtarecEl", 5, 0, 400, 120, -0.05, 0.05);
   histoTr2D["InvPtgenMu_vs_EtarecMu"] = new TH2F("InvPtgenMu_vs_EtarecMu","InvPtgenMu_vs_EtarecMu", 50, 0, 0.05, 60, 0, 2.5);
-  histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"] = new TH2F("InvPtgenMu_vs_EtagenMu-EtarecMu","InvPtgenMu_vs_EtagenMu-EtarecMu", 5, 0.002, 0.04, 60, -0.05, 0.05);
+  histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"] = new TH2F("InvPtgenMu_vs_EtagenMu-EtarecMu","InvPtgenMu_vs_EtagenMu-EtarecMu", 5, 0.002, 0.04, 120, -0.05, 0.05);
   
   /// Phi
   histoTr2D["Phiparton_vs_Phinonbjet"] = new TH2F("Phiparton_vs_Phinonbjet","Phiparton_vs_Phinonbjet", 120, -3.2, 3.2, 120, -3.2, 3.2);
@@ -109,87 +109,87 @@ void TransferFunctions::bookHistograms()
   histoTr2D["Eparton_vs_Phinonbjet"] = new TH2F("Eparton_vs_Phinonbjet","Eparton_vs_Phinonbjet", 50, 0, 400, 120, -3.2, 3.2);
   histoTr2D["Eparton_vs_Phiparton-Phinonbjet"] = new TH2F("Eparton_vs_Phiparton-Phinonbjet","Eparton_vs_Phiparton-Phinonbjet", 5, 0, 250, 120, -0.3, 0.3);
   histoTr2D["Eparton_vs_Phibjet"] = new TH2F("Eparton_vs_Phibjet","Eparton_vs_Phibjet", 50, 0, 400, 120, -3.2, 3.2);
-  histoTr2D["Eparton_vs_Phiparton-Phibjet"] = new TH2F("Eparton_vs_Phiparton-Phibjet","Eparton_vs_Phiparton-Phibjet", 5, 0, 300, 120, -0.3, 0.3);
+  histoTr2D["Eparton_vs_Phiparton-Phibjet"] = new TH2F("Eparton_vs_Phiparton-Phibjet","Eparton_vs_Phiparton-Phibjet", 5, 0, 300, 120, -0.2, 0.2);
   histoTr2D["EgenEl_vs_PhirecEl"] = new TH2F("EgenEl_vs_PhirecEl","EgenEl_vs_PhirecEl", 50, 0, 400, 120, -3.2, 3.2);
   histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"] = new TH2F("EgenEl_vs_PhigenEl-PhirecEl","EgenEl_vs_PhigenEl-PhirecEl", 5, 0, 400, 120, -0.05, 0.05);
   histoTr2D["InvPtgenMu_vs_PhirecMu"] = new TH2F("InvPtgenMu_vs_PhirecMu","InvPtgenMu_vs_PhirecMu", 50, 0, 0.05, 120, -3.2, 3.2);
-  histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("InvPtgenMu_vs_PhigenMu-PhirecMu","InvPtgenMu_vs_PhigenMu-PhirecMu", 5, 0.002, 0.04, 120, -0.05, 0.05);
+  histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("InvPtgenMu_vs_PhigenMu-PhirecMu","InvPtgenMu_vs_PhigenMu-PhirecMu", 5, 0.002, 0.04, 120, -0.002, 0.002);
   
   std::cout << "   - Histograms booked" << std::endl;
 }
 
-void TransferFunctions::fillJets(std::vector<TLorentzVector*> parton, std::vector<TLorentzVector*> jet)
+void TransferFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet)
 {
   /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
   
   /// Energy
-  histoTr2D["Eparton_vs_Enonbjet"]->Fill(parton[0]->E(),jet[0]->E());
-  histoTr2D["Eparton_vs_Eparton-Enonbjet"]->Fill(parton[0]->E(),parton[0]->E()-jet[0]->E());
-  histoTr2D["Eparton_vs_Enonbjet"]->Fill(parton[1]->E(),jet[1]->E());
-  histoTr2D["Eparton_vs_Eparton-Enonbjet"]->Fill(parton[1]->E(),parton[1]->E()-jet[1]->E());
-  histoTr2D["Eparton_vs_Ebjet"]->Fill(parton[2]->E(),jet[2]->E());
-  histoTr2D["Eparton_vs_Eparton-Ebjet"]->Fill(parton[2]->E(),parton[2]->E()-jet[2]->E());
-  histoTr2D["Eparton_vs_Ebjet"]->Fill(parton[3]->E(),jet[3]->E());
-  histoTr2D["Eparton_vs_Eparton-Ebjet"]->Fill(parton[3]->E(),parton[3]->E()-jet[3]->E());
+  histoTr2D["Eparton_vs_Enonbjet"]->Fill(parton[0].E(),jet[0].E());
+  histoTr2D["Eparton_vs_Eparton-Enonbjet"]->Fill(parton[0].E(),parton[0].E()-jet[0].E());
+  histoTr2D["Eparton_vs_Enonbjet"]->Fill(parton[1].E(),jet[1].E());
+  histoTr2D["Eparton_vs_Eparton-Enonbjet"]->Fill(parton[1].E(),parton[1].E()-jet[1].E());
+  histoTr2D["Eparton_vs_Ebjet"]->Fill(parton[2].E(),jet[2].E());
+  histoTr2D["Eparton_vs_Eparton-Ebjet"]->Fill(parton[2].E(),parton[2].E()-jet[2].E());
+  histoTr2D["Eparton_vs_Ebjet"]->Fill(parton[3].E(),jet[3].E());
+  histoTr2D["Eparton_vs_Eparton-Ebjet"]->Fill(parton[3].E(),parton[3].E()-jet[3].E());
   
   /// Theta
-  histoTr2D["Thparton_vs_Thnonbjet"]->Fill(parton[0]->Theta(),jet[0]->Theta());
-  histoTr2D["Thparton_vs_Thparton-Thnonbjet"]->Fill(parton[0]->Theta(),parton[0]->Theta()-jet[0]->Theta());
-  histoTr2D["Thparton_vs_Thnonbjet"]->Fill(parton[1]->Theta(),jet[1]->Theta());
-  histoTr2D["Thparton_vs_Thparton-Thnonbjet"]->Fill(parton[1]->Theta(),parton[1]->Theta()-jet[1]->Theta());
-  histoTr2D["Thparton_vs_Thbjet"]->Fill(parton[2]->Theta(),jet[2]->Theta());
-  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Fill(parton[2]->Theta(),parton[2]->Theta()-jet[2]->Theta());
-  histoTr2D["Thparton_vs_Thbjet"]->Fill(parton[3]->Theta(),jet[3]->Theta());
-  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Fill(parton[3]->Theta(),parton[3]->Theta()-jet[3]->Theta());
-  histoTr2D["Eparton_vs_Thnonbjet"]->Fill(parton[0]->E(),jet[0]->Theta());
-  histoTr2D["Eparton_vs_Thparton-Thnonbjet"]->Fill(parton[0]->E(),parton[0]->Theta()-jet[0]->Theta());
-  histoTr2D["Eparton_vs_Thnonbjet"]->Fill(parton[1]->E(),jet[1]->Theta());
-  histoTr2D["Eparton_vs_Thparton-Thnonbjet"]->Fill(parton[1]->E(),parton[1]->Theta()-jet[1]->Theta());
-  histoTr2D["Eparton_vs_Thbjet"]->Fill(parton[2]->E(),jet[2]->Theta());
-  histoTr2D["Eparton_vs_Thparton-Thbjet"]->Fill(parton[2]->E(),parton[2]->Theta()-jet[2]->Theta());
-  histoTr2D["Eparton_vs_Thbjet"]->Fill(parton[3]->E(),jet[3]->Theta());
-  histoTr2D["Eparton_vs_Thparton-Thbjet"]->Fill(parton[3]->E(),parton[3]->Theta()-jet[3]->Theta());
-  
+  histoTr2D["Thparton_vs_Thnonbjet"]->Fill(parton[0].Theta(),jet[0].Theta());
+  histoTr2D["Thparton_vs_Thparton-Thnonbjet"]->Fill(parton[0].Theta(),parton[0].Theta()-jet[0].Theta());
+  histoTr2D["Thparton_vs_Thnonbjet"]->Fill(parton[1].Theta(),jet[1].Theta());
+  histoTr2D["Thparton_vs_Thparton-Thnonbjet"]->Fill(parton[1].Theta(),parton[1].Theta()-jet[1].Theta());
+  histoTr2D["Thparton_vs_Thbjet"]->Fill(parton[2].Theta(),jet[2].Theta());
+  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Fill(parton[2].Theta(),parton[2].Theta()-jet[2].Theta());
+  histoTr2D["Thparton_vs_Thbjet"]->Fill(parton[3].Theta(),jet[3].Theta());
+  histoTr2D["Thparton_vs_Thparton-Thbjet"]->Fill(parton[3].Theta(),parton[3].Theta()-jet[3].Theta());
+  histoTr2D["Eparton_vs_Thnonbjet"]->Fill(parton[0].E(),jet[0].Theta());
+  histoTr2D["Eparton_vs_Thparton-Thnonbjet"]->Fill(parton[0].E(),parton[0].Theta()-jet[0].Theta());
+  histoTr2D["Eparton_vs_Thnonbjet"]->Fill(parton[1].E(),jet[1].Theta());
+  histoTr2D["Eparton_vs_Thparton-Thnonbjet"]->Fill(parton[1].E(),parton[1].Theta()-jet[1].Theta());
+  histoTr2D["Eparton_vs_Thbjet"]->Fill(parton[2].E(),jet[2].Theta());
+  histoTr2D["Eparton_vs_Thparton-Thbjet"]->Fill(parton[2].E(),parton[2].Theta()-jet[2].Theta());
+  histoTr2D["Eparton_vs_Thbjet"]->Fill(parton[3].E(),jet[3].Theta());
+  histoTr2D["Eparton_vs_Thparton-Thbjet"]->Fill(parton[3].E(),parton[3].Theta()-jet[3].Theta());
+
   /// Eta
-  histoTr2D["Etaparton_vs_Etanonbjet"]->Fill(parton[0]->Eta(),jet[0]->Eta());
-  histoTr2D["Etaparton_vs_Etaparton-Etanonbjet"]->Fill(parton[0]->Eta(),parton[0]->Eta()-jet[0]->Eta());
-  histoTr2D["Etaparton_vs_Etanonbjet"]->Fill(parton[1]->Eta(),jet[1]->Eta());
-  histoTr2D["Etaparton_vs_Etaparton-Etanonbjet"]->Fill(parton[1]->Eta(),parton[1]->Eta()-jet[1]->Eta());
-  histoTr2D["Etaparton_vs_Etabjet"]->Fill(parton[2]->Eta(),jet[2]->Eta());
-  histoTr2D["Etaparton_vs_Etaparton-Etabjet"]->Fill(parton[2]->Eta(),parton[2]->Eta()-jet[2]->Eta());
-  histoTr2D["Etaparton_vs_Etabjet"]->Fill(parton[3]->Eta(),jet[3]->Eta());
-  histoTr2D["Etaparton_vs_Etaparton-Etabjet"]->Fill(parton[3]->Eta(),parton[3]->Eta()-jet[3]->Eta());
-  histoTr2D["Eparton_vs_Etanonbjet"]->Fill(parton[0]->E(),jet[0]->Eta());
-  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"]->Fill(parton[0]->E(),parton[0]->Eta()-jet[0]->Eta());
-  histoTr2D["Eparton_vs_Etanonbjet"]->Fill(parton[1]->E(),jet[1]->Eta());
-  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"]->Fill(parton[1]->E(),parton[1]->Eta()-jet[1]->Eta());
-  histoTr2D["Eparton_vs_Etabjet"]->Fill(parton[2]->E(),jet[2]->Eta());
-  histoTr2D["Eparton_vs_Etaparton-Etabjet"]->Fill(parton[2]->E(),parton[2]->Eta()-jet[2]->Eta());
-  histoTr2D["Eparton_vs_Etabjet"]->Fill(parton[3]->E(),jet[3]->Eta());
-  histoTr2D["Eparton_vs_Etaparton-Etabjet"]->Fill(parton[3]->E(),parton[3]->Eta()-jet[3]->Eta());
-  
+  histoTr2D["Etaparton_vs_Etanonbjet"]->Fill(parton[0].Eta(),jet[0].Eta());
+  histoTr2D["Etaparton_vs_Etaparton-Etanonbjet"]->Fill(parton[0].Eta(),parton[0].Eta()-jet[0].Eta());
+  histoTr2D["Etaparton_vs_Etanonbjet"]->Fill(parton[1].Eta(),jet[1].Eta());
+  histoTr2D["Etaparton_vs_Etaparton-Etanonbjet"]->Fill(parton[1].Eta(),parton[1].Eta()-jet[1].Eta());
+  histoTr2D["Etaparton_vs_Etabjet"]->Fill(parton[2].Eta(),jet[2].Eta());
+  histoTr2D["Etaparton_vs_Etaparton-Etabjet"]->Fill(parton[2].Eta(),parton[2].Eta()-jet[2].Eta());
+  histoTr2D["Etaparton_vs_Etabjet"]->Fill(parton[3].Eta(),jet[3].Eta());
+  histoTr2D["Etaparton_vs_Etaparton-Etabjet"]->Fill(parton[3].Eta(),parton[3].Eta()-jet[3].Eta());
+  histoTr2D["Eparton_vs_Etanonbjet"]->Fill(parton[0].E(),jet[0].Eta());
+  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"]->Fill(parton[0].E(),parton[0].Eta()-jet[0].Eta());
+  histoTr2D["Eparton_vs_Etanonbjet"]->Fill(parton[1].E(),jet[1].Eta());
+  histoTr2D["Eparton_vs_Etaparton-Etanonbjet"]->Fill(parton[1].E(),parton[1].Eta()-jet[1].Eta());
+  histoTr2D["Eparton_vs_Etabjet"]->Fill(parton[2].E(),jet[2].Eta());
+  histoTr2D["Eparton_vs_Etaparton-Etabjet"]->Fill(parton[2].E(),parton[2].Eta()-jet[2].Eta());
+  histoTr2D["Eparton_vs_Etabjet"]->Fill(parton[3].E(),jet[3].Eta());
+  histoTr2D["Eparton_vs_Etaparton-Etabjet"]->Fill(parton[3].E(),parton[3].Eta()-jet[3].Eta());
+
   /// Phi
-  histoTr2D["Phiparton_vs_Phinonbjet"]->Fill(parton[0]->Phi(),jet[0]->Phi());
-  histoTr2D["Phiparton_vs_Phinonbjet"]->Fill(parton[1]->Phi(),jet[1]->Phi());
-  histoTr2D["Eparton_vs_Phinonbjet"]->Fill(parton[0]->E(),jet[0]->Phi());
-  histoTr2D["Eparton_vs_Phinonbjet"]->Fill(parton[1]->E(),jet[1]->Phi());
-  float DeltaPhi_nonbjet1 = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*parton[0],(TLorentzVector)*jet[0]);
-  histoTr2D["Phiparton_vs_Phiparton-Phinonbjet"]->Fill(parton[0]->Phi(),DeltaPhi_nonbjet1);
-  histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]->Fill(parton[0]->E(),DeltaPhi_nonbjet1);
-  float DeltaPhi_nonbjet2 = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*parton[1],(TLorentzVector)*jet[1]);
-  histoTr2D["Phiparton_vs_Phiparton-Phinonbjet"]->Fill(parton[1]->Phi(),DeltaPhi_nonbjet2);
-  histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]->Fill(parton[1]->E(),DeltaPhi_nonbjet2);
-  
-  histoTr2D["Phiparton_vs_Phibjet"]->Fill(parton[2]->Phi(),jet[2]->Phi());
-  histoTr2D["Phiparton_vs_Phibjet"]->Fill(parton[3]->Phi(),jet[3]->Phi());
-  histoTr2D["Eparton_vs_Phibjet"]->Fill(parton[2]->E(),jet[2]->Phi());
-  histoTr2D["Eparton_vs_Phibjet"]->Fill(parton[3]->E(),jet[3]->Phi());
-  float DeltaPhi_bjet1 = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*parton[2],(TLorentzVector)*jet[3]);
-  histoTr2D["Phiparton_vs_Phiparton-Phibjet"]->Fill(parton[2]->Phi(),DeltaPhi_bjet1);
-  histoTr2D["Eparton_vs_Phiparton-Phibjet"]->Fill(parton[2]->E(),DeltaPhi_bjet1);
-  float DeltaPhi_bjet2 = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*parton[3],(TLorentzVector)*jet[3]);
-  histoTr2D["Phiparton_vs_Phiparton-Phibjet"]->Fill(parton[3]->Phi(),DeltaPhi_bjet2);
-  histoTr2D["Eparton_vs_Phiparton-Phibjet"]->Fill(parton[3]->E(),DeltaPhi_bjet2);
+  histoTr2D["Phiparton_vs_Phinonbjet"]->Fill(parton[0].Phi(),jet[0].Phi());
+  histoTr2D["Phiparton_vs_Phinonbjet"]->Fill(parton[1].Phi(),jet[1].Phi());
+  histoTr2D["Eparton_vs_Phinonbjet"]->Fill(parton[0].E(),jet[0].Phi());
+  histoTr2D["Eparton_vs_Phinonbjet"]->Fill(parton[1].E(),jet[1].Phi());
+  float DeltaPhi_nonbjet1 = ROOT::Math::VectorUtil::DeltaPhi(parton[0],jet[0]);
+  histoTr2D["Phiparton_vs_Phiparton-Phinonbjet"]->Fill(parton[0].Phi(),DeltaPhi_nonbjet1);
+  histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]->Fill(parton[0].E(),DeltaPhi_nonbjet1);
+  float DeltaPhi_nonbjet2 = ROOT::Math::VectorUtil::DeltaPhi(parton[1],jet[1]);
+  histoTr2D["Phiparton_vs_Phiparton-Phinonbjet"]->Fill(parton[1].Phi(),DeltaPhi_nonbjet2);
+  histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]->Fill(parton[1].E(),DeltaPhi_nonbjet2);
+
+  histoTr2D["Phiparton_vs_Phibjet"]->Fill(parton[2].Phi(),jet[2].Phi());
+  histoTr2D["Phiparton_vs_Phibjet"]->Fill(parton[3].Phi(),jet[3].Phi());
+  histoTr2D["Eparton_vs_Phibjet"]->Fill(parton[2].E(),jet[2].Phi());
+  histoTr2D["Eparton_vs_Phibjet"]->Fill(parton[3].E(),jet[3].Phi());
+  float DeltaPhi_bjet1 = ROOT::Math::VectorUtil::DeltaPhi(parton[2],jet[3]);
+  histoTr2D["Phiparton_vs_Phiparton-Phibjet"]->Fill(parton[2].Phi(),DeltaPhi_bjet1);
+  histoTr2D["Eparton_vs_Phiparton-Phibjet"]->Fill(parton[2].E(),DeltaPhi_bjet1);
+  float DeltaPhi_bjet2 = ROOT::Math::VectorUtil::DeltaPhi(parton[3],jet[3]);
+  histoTr2D["Phiparton_vs_Phiparton-Phibjet"]->Fill(parton[3].Phi(),DeltaPhi_bjet2);
+  histoTr2D["Eparton_vs_Phiparton-Phibjet"]->Fill(parton[3].E(),DeltaPhi_bjet2);
   
 }
 
@@ -406,39 +406,39 @@ void TransferFunctions::makeFit()
       //  Set initial values
       if ( f == 0 || f == 4 )  // energy (non-)b jet
       {
-        myfit->SetParameter(0, -8); //central value of first, broad gaussian
-        myfit->SetParameter(1, 18); //sigma value of first, broad gaussian
-        myfit->SetParameter(2, 63); //constant value of first, broad gaussian
-        myfit->SetParameter(3, 0); //central value of second, narrow gaussian
+        myfit->SetParameter(0, -5.0); //central value of first, broad gaussian
+        myfit->SetParameter(1, 40.0); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 63.0); //constant value of first, broad gaussian
+        myfit->SetParameter(3, -0.0001); //central value of second, narrow gaussian
         myfit->SetParameter(4, 8.6); //sigma value of second, narrow gaussian
         myfit->SetParameter(5, 4.1); //constant value of second, narrow gaussian
       }
       else if ( f == 1 || f == 3 || f == 5 || f == 7 )  // theta & phi of jet (CHECK: also eta??)
       {
-        myfit->SetParameter(0, 0); 		 //central value of first, broad gaussian
-        myfit->SetParameter(1, 0.038); //sigma value of first, broad gaussian
-        myfit->SetParameter(2, 77); 	 //constant value of first, broad gaussian
-        myfit->SetParameter(3, 0.004); //central value of second, narrow gaussian
-        myfit->SetParameter(4, 0.011); //sigma value of second, narrow gaussian
-        myfit->SetParameter(5, 6.5);   //constant value of second, narrow gaussian
+        myfit->SetParameter(0, 0.0); 		 //central value of first, broad gaussian
+        myfit->SetParameter(1, 0.05); //sigma value of first, broad gaussian
+        myfit->SetParameter(2, 77.0); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, 0.0004); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.002); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 26.5);   //constant value of second, narrow gaussian
       }
       else if ( f == 8 )  // inv pt muon
       {
-        myfit->SetParameter(0, -0.0008); 		 //central value of first, broad gaussian
+        myfit->SetParameter(0, -0.008); 		 //central value of first, broad gaussian
         myfit->SetParameter(1, 0.001); //sigma value of first, broad gaussian
-        myfit->SetParameter(2, 24); 	 //constant value of first, broad gaussian
-        myfit->SetParameter(3, -0.0001); //central value of second, narrow gaussian
-        myfit->SetParameter(4, 0.0001); //sigma value of second, narrow gaussian
-        myfit->SetParameter(5, 4);   //constant value of second, narrow gaussian
+        myfit->SetParameter(2, 24.0); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, -0.0002); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.00005); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 19.0);   //constant value of second, narrow gaussian
       }
       else if ( f == 9 || f == 11 )  // theta & phi of muon (CHECK: also eta??)
       {
-        myfit->SetParameter(0, 0); 		 //central value of first, broad gaussian
+        myfit->SetParameter(0, 0.0); 		 //central value of first, broad gaussian
         myfit->SetParameter(1, 0.01); //sigma value of first, broad gaussian
-        myfit->SetParameter(2, 24); 	 //constant value of first, broad gaussian
-        myfit->SetParameter(3, 0); //central value of second, narrow gaussian
-        myfit->SetParameter(4, 0.001); //sigma value of second, narrow gaussian
-        myfit->SetParameter(5, 4);   //constant value of second, narrow gaussian
+        myfit->SetParameter(2, 24.0); 	 //constant value of first, broad gaussian
+        myfit->SetParameter(3, 0.0); //central value of second, narrow gaussian
+        myfit->SetParameter(4, 0.00005); //sigma value of second, narrow gaussian
+        myfit->SetParameter(5, 4.0);   //constant value of second, narrow gaussian
       }
       
       //  Fit
@@ -491,14 +491,12 @@ void TransferFunctions::makeFit()
   }  /// end loop on histos (f)
   
   
-  std::cout << "TransferFunctions::writeOutputFiles -- Parameter fitting should have been done here -- under construction" << std::endl;
-  
   //writeTable();
 }
 
 void TransferFunctions::writeTable(std::string inputFileName)
 {
-  std::cout << "TransferFunctions::writeTable -- Table with parameters will be written here..." << std::endl;
+  std::cout << "TransferFunctions::Writing table with parameters..." << std::endl;
   
   std::ofstream myTransferFunctions;
   std::string myTransferFunctions_TABLE = "TransferFunctions_TABLE.txt";
