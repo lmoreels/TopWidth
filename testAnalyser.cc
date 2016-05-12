@@ -320,10 +320,14 @@ int main (int argc, char *argv[])
       datasets[d]->SetColor(kCyan);
       //datasets[d]->SetColor(kMagenta);
     }
-    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") ==0 )
+    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") == 0 )
     { 
       datasets[d]->SetColor(kBlue-2);
-      if ( dataSetName.find("tW") == 0 ) { datasets[d]->SetTitle("ST tW");}
+      if ( dataSetName.find("tW") == 0 )
+      { 
+        datasets[d]->SetTitle("ST tW");
+        datasets[d]->SetColor(kBlue-4);
+      }
     }
     //if (dataSetName.find("NP") == 0 )
     //{
@@ -379,7 +383,7 @@ int main (int argc, char *argv[])
   histo1D["2b_Chi2Free_hadTop_mass_notMatched_mlb_cut"] = new TH1F("2b_Chi2Free_hadTop_mass_notMatched_mlb_cut","Reconstructed hadronic top mass of unmatched events with 2 b-tagged jets and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
   histo1D["2b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut"] = new TH1F("2b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut","Reconstructed hadronic top mass of unmatched events with 2 b-tagged jets out of 4 in total and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
   
-  histo2D["2b_2D_unmatched_hadTopMass_lepTopMass"] = new TH2F("2b_2D_unmatched_hadTopMass_lepTopMass", "Mass of the leptonic top mass vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["2b_2D_unmatched_hadTopMass_lepTopMass"] = new TH2F("2b_2D_unmatched_hadTopMass_lepTopMass", "Mass of the leptonic top mass vs. the mass of the hadronic top mass (unmatched); M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
 
   histo1D["2b_Chi2Free_ttbar_mass_notMatched"] = new TH1F("2b_Chi2Free_ttbar_mass_notMatched","Reconstructed ttbar mass of unmatched events with 2 b-tagged jets (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
   histo1D["2b_Chi2Free_ttbar_mass_notMatched_4jets"] = new TH1F("2b_Chi2Free_ttbar_mass_notMatched_4jets","Reconstructed ttbar mass of unmatched events with 2 b-tagged jets out of 4 in total (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
@@ -402,7 +406,7 @@ int main (int argc, char *argv[])
   histo1D["1b_Chi2Free_hadTop_mass_notMatched_mlb_cut"] = new TH1F("1b_Chi2Free_hadTop_mass_notMatched_mlb_cut","Reconstructed hadronic top mass of unmatched events with 1 b-tagged jet and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
   histo1D["1b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut"] = new TH1F("1b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut","Reconstructed hadronic top mass of unmatched events with 1 b-tagged jet out of 4 in total and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
   
-  histo2D["1b_2D_unmatched_hadTopMass_lepTopMass"] = new TH2F("1b_2D_unmatched_hadTopMass_lepTopMass", "Mass of the leptonic top mass vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["1b_2D_unmatched_hadTopMass_lepTopMass"] = new TH2F("1b_2D_unmatched_hadTopMass_lepTopMass", "Mass of the leptonic top mass vs. the mass of the hadronic top mass (unmatched); M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
   
   histo1D["1b_Chi2Free_ttbar_mass_notMatched"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
   histo1D["1b_Chi2Free_ttbar_mass_notMatched_4jets"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched_4jets","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet out of 4 in total (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
@@ -445,6 +449,8 @@ int main (int argc, char *argv[])
   histo2D["2D_matched_ttbarMass_corr_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_corr_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using correctly matched events; M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 25, 0, 5);
   histo2D["2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using wrongly matched events (using hadronic b jet); M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 25, 0, 5);
   
+  histo2D["2D_matched_hadTopMass_lepTopMass_corr"] = new TH2F("2D_matched_hadTopMass_lepTopMass", "Mass of the leptonic top mass (correctly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["2D_matched_hadTopMass_lepTopMass_wrong_hadrB"] = new TH2F("2D_matched_hadTopMass_lepTopMass", "Mass of the leptonic top mass (wrongly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
 //  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
 //  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
   
@@ -458,10 +464,10 @@ int main (int argc, char *argv[])
   /// log likelihood
   histo2D["logLikeWidthMass_gen_matched"] = new TH2F("logLikeWidthMass_gen_matched", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 295, 0.55, 30.05);
   histo2D["logLikeWidthMass_reco_matched"] = new TH2F("logLikeWidthMass_reco_matched", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
-  //histo2D["logLikeWidthMass_reco_notMatched"] = new TH2F("logLikeWidthMass_reco_notMatched", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
+  histo2D["logLikeWidthMass_reco_unmatched"] = new TH2F("logLikeWidthMass_reco_unmatched", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
   histo2D["logLikeWidthMass_gen_matched_zoom"] = new TH2F("logLikeWidthMass_gen_matched_zoom", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 295, 0.55, 30.05);
   histo2D["logLikeWidthMass_reco_matched_zoom"] = new TH2F("logLikeWidthMass_reco_matched_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
-  //histo2D["logLikeWidthMass_reco_notMatched_zoom"] = new TH2F("logLikeWidthMass_reco_notMatched_zoom", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
+  histo2D["logLikeWidthMass_reco_unmatched_zoom"] = new TH2F("logLikeWidthMass_reco_unmatched_zoom", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
@@ -809,11 +815,13 @@ int main (int argc, char *argv[])
   const int sizeListTopMass = sizeof(listTopMass)/sizeof(listTopMass[0]);
   const int sizeListTopWidth = sizeof(listTopWidth)/sizeof(listTopWidth[0]);
   
-  double gammaProp_matched, numTopPropagator_matched;
+  double gammaProp, numTopPropagator;
   double denomTopPropagator_gen_matched, topPropagator_gen_matched;
   double denomTopPropagator_reco_matched, topPropagator_reco_matched;
+  double denomTopPropagator_reco_unmatched, topPropagator_reco_unmatched;
   double likelihood_gen_matched[sizeListTopMass][sizeListTopWidth] = {{0}};
   double likelihood_reco_matched[sizeListTopMass][sizeListTopWidth] = {{0}};
+  double likelihood_reco_unmatched[sizeListTopMass][sizeListTopWidth] = {{0}};
   
   // Temporarily, until calculated from TTbar sample
   float chi2WMass = 80.385;
@@ -1660,20 +1668,20 @@ int main (int argc, char *argv[])
         {
           for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
           {
-            gammaProp_matched = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
-            numTopPropagator_matched = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp_matched ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp_matched ) );
+            gammaProp = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
+            numTopPropagator = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp ) );
             
             /// Generated mass
             denomTopPropagator_gen_matched = pow( pow(topMassGen_matched, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
             
-            topPropagator_gen_matched = numTopPropagator_matched/denomTopPropagator_gen_matched;
+            topPropagator_gen_matched = numTopPropagator/denomTopPropagator_gen_matched;
             
             likelihood_gen_matched[jMass][jWidth] += -TMath::Log10(topPropagator_gen_matched);
             
             /// Reconstructed mass
             denomTopPropagator_reco_matched = pow( pow(topMassReco_matched, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
             
-            topPropagator_reco_matched = numTopPropagator_matched/denomTopPropagator_reco_matched;
+            topPropagator_reco_matched = numTopPropagator/denomTopPropagator_reco_matched;
             
             likelihood_reco_matched[jMass][jWidth] += -TMath::Log10(topPropagator_reco_matched);
             
@@ -1764,6 +1772,8 @@ int main (int argc, char *argv[])
           histo2D["2D_matched_ttbarMass_corr_dR_Lep_B"]->Fill(ttbarMass_matched_corr, dRLepB_matched);
           histo2D["2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B"]->Fill(ttbarMass_matched_wrong_hadrB, dRLepB_matched);
           
+          histo2D["2D_matched_hadTopMass_lepTopMass_corr"]->Fill(topMassReco_matched, lepTopMass_matched_corr);
+          histo2D["2D_matched_hadTopMass_lepTopMass_wrong_hadrB"]->Fill(topMassReco_matched, lepTopMass_matched_wrong_hadrB);
           
         }  // end muonmatched
         
@@ -1866,7 +1876,6 @@ int main (int argc, char *argv[])
       else { nofChi2FreeWithNoBTaggedJets++;}
       
       
-      //Fill histos
       if (labelsRecoFree[0] != -9999 && labelsRecoFree[1] != -9999 && labelsRecoFree[2] != -9999)
       {
         float Wmass_chi2Free = (*selectedJets[labelsRecoFree[1]] + *selectedJets[labelsRecoFree[2]]).M();
@@ -1874,6 +1883,28 @@ int main (int argc, char *argv[])
         float hadtoppt_chi2Free = (*selectedJets[labelsRecoFree[0]] + *selectedJets[labelsRecoFree[1]] +  *selectedJets[labelsRecoFree[2]]).Pt();
         float hadtopht_chi2Free = selectedJets[labelsRecoFree[0]]->Pt() + selectedJets[labelsRecoFree[1]]->Pt() + selectedJets[labelsRecoFree[2]]->Pt();
         
+        /// Make likelihoods
+        if ( dataSetName.find("TT") == 0 )
+        {
+          for (unsigned int jMass = 0; jMass < sizeListTopMass; jMass++)
+          {
+            for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
+            {
+              gammaProp = sqrt( pow( listTopMass[jMass], 4 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 ) );
+              numTopPropagator = ( 2 * sqrt(2) * listTopMass[jMass] * listTopWidth[jWidth] * gammaProp ) / ( TMath::Pi() * sqrt( pow(listTopMass[jMass], 2) + gammaProp ) );
+
+              denomTopPropagator_reco_unmatched = pow( pow(hadtopmass_chi2Free, 2) - pow(listTopMass[jMass], 2), 2 ) + pow( listTopMass[jMass] * listTopWidth[jWidth], 2 );
+
+              topPropagator_reco_unmatched = numTopPropagator/denomTopPropagator_reco_unmatched;
+
+              likelihood_reco_unmatched[jMass][jWidth] += -TMath::Log10(topPropagator_reco_unmatched);
+
+            }  /// End loop jWidth
+          }  /// End loop jMass
+        }
+        
+        
+        //Fill histos
         MSPlot[(plotInit_b_chi2+"Chi2Free").c_str()]->Fill(smallestChi2Free, datasets[d], true, Luminosity*scaleFactor);
         MSPlot[(plotInit_b_chi2+"Chi2Free_W_mass").c_str()]->Fill(Wmass_chi2Free, datasets[d], true, Luminosity*scaleFactor);
         MSPlot[(plotInit_b_chi2+"Chi2Free_hadTop_mass").c_str()]->Fill(hadtopmass_chi2Free, datasets[d], true, Luminosity*scaleFactor);
@@ -2140,10 +2171,13 @@ int main (int argc, char *argv[])
       {
         for (unsigned int jWidth = 0; jWidth < sizeListTopWidth; jWidth++)
         {
-          histo2D["logLikeWidthMass_reco_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
-          histo2D["logLikeWidthMass_reco_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
           histo2D["logLikeWidthMass_gen_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen_matched[jMass][jWidth]);
           histo2D["logLikeWidthMass_gen_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_gen_matched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_reco_matched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_reco_matched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_matched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_reco_unmatched"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_unmatched[jMass][jWidth]);
+          histo2D["logLikeWidthMass_reco_unmatched_zoom"]->Fill(listTopMass[jMass], listTopWidth[jWidth], likelihood_reco_unmatched[jMass][jWidth]);
+          
         }
       }
       
