@@ -99,8 +99,8 @@ int main (int argc, char *argv[])
   clock_t start = clock();
   
   bool useOneHalfOfDataSets = false;
-  bool useOneFourthOfDataSets = false;
-  bool useOneTenthOfDataSets = true;
+  bool useOneFourthOfDataSets = true;
+  bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
   bool useTestSample = false;
   
@@ -152,8 +152,8 @@ int main (int argc, char *argv[])
   ///  Configuration
   /////////////////////
   
-  bool testTTbarOnly = true;  
-  bool calculateTransferFunctions = true;
+  bool testTTbarOnly = false;  
+  bool calculateTransferFunctions = false;
   bool makeInitPlots = false;
   bool printTriggers = false;
   bool applyTriggers = true;
@@ -363,12 +363,12 @@ int main (int argc, char *argv[])
   map<string,TH2F*> histo2D;
   
   
-  histo1D["WMass_reco_matched"] = new TH1F("WMass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 50, 0, 500);
-  histo1D["topMass_reco_matched"] = new TH1F("topMass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 50, 0, 500);
-  histo1D["topMass_gen_matched"] = new TH1F("topMass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 50, 0, 500);
-  histo1D["WMass_reco_first4matched"] = new TH1F("WMass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 50, 0, 500);
-  histo1D["topMass_reco_first4matched"] = new TH1F("topMass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 50, 0, 500);
-  histo1D["topMass_gen_first4matched"] = new TH1F("topMass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 50, 0, 500);
+  histo1D["WMass_reco_matched"] = new TH1F("WMass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 125, 0, 250);
+  histo1D["topMass_reco_matched"] = new TH1F("topMass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
+  histo1D["topMass_gen_matched"] = new TH1F("topMass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 175, 0, 350);
+  histo1D["WMass_reco_first4matched"] = new TH1F("WMass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 125, 0, 250);
+  histo1D["topMass_reco_first4matched"] = new TH1F("topMass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 175, 50, 400);
+  histo1D["topMass_gen_first4matched"] = new TH1F("topMass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 175, 0, 350);
   
   
   // Chi2 free
@@ -449,8 +449,8 @@ int main (int argc, char *argv[])
   histo2D["2D_matched_ttbarMass_corr_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_corr_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using correctly matched events; M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 25, 0, 5);
   histo2D["2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B"] = new TH2F("2D_matched_ttbarMass_wrong_hadrB_dR_Lep_B", "delta R between the lepton and the leptonic b jet vs. ttbarMass using wrongly matched events (using hadronic b jet); M_{t#bar{t}} [GeV]; #Delta R(l,b)", 100, 0, 1000, 25, 0, 5);
   
-  histo2D["2D_matched_hadTopMass_lepTopMass_corr"] = new TH2F("2D_matched_hadTopMass_lepTopMass", "Mass of the leptonic top mass (correctly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
-  histo2D["2D_matched_hadTopMass_lepTopMass_wrong_hadrB"] = new TH2F("2D_matched_hadTopMass_lepTopMass", "Mass of the leptonic top mass (wrongly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["2D_matched_hadTopMass_lepTopMass_corr"] = new TH2F("2D_matched_hadTopMass_lepTopMass_corr", "Mass of the leptonic top mass (correctly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
+  histo2D["2D_matched_hadTopMass_lepTopMass_wrong_hadrB"] = new TH2F("2D_matched_hadTopMass_lepTopMass_wrong_hadrB", "Mass of the leptonic top mass (wrongly matched) vs. the mass of the hadronic top mass; M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
 //  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
 //  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
   
@@ -965,7 +965,6 @@ int main (int argc, char *argv[])
       vector < TRootElectron* > init_electrons;
       vector < TRootJet* > init_jets_corrected;
       vector < TRootJet* > init_jets;
-      vector < TRootJet* > init_fatjets;
       vector < TRootMET* > mets;
       vector < TRootGenJet* > genjets;
       
@@ -1213,7 +1212,7 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Run2Selection selection(init_jets_corrected, init_fatjets, init_muons, init_electrons, mets, event->fixedGridRhoFastjetAll());
+      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets, event->fixedGridRhoFastjetAll());
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
