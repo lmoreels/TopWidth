@@ -56,7 +56,8 @@ using namespace TopTree;
 string ConvertIntToString(int Number, bool pad)
 {
   ostringstream convert;
-  convert.clear();
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
   if ( pad && Number < 10 ) { convert << std::setw(2) << std::setfill('0');}
   convert << Number;
   return convert.str();
@@ -98,8 +99,8 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneHalfOfDataSets = false;
-  bool useOneFourthOfDataSets = true;
+  bool useOneHalfOfDataSets = true;
+  bool useOneFourthOfDataSets = false;
   bool useOneTenthOfDataSets = false;
   bool useOneFiftiethOfDataSets = false;
   bool useTestSample = false;
@@ -454,11 +455,6 @@ int main (int argc, char *argv[])
 //  histo1D["2b_lepTop_mass_notMatched"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets; M_{lb} [GeV]", 80, 0, 800);
 //  histo1D["2b_lepTop_mass_notMatched_4jets"] = new TH1F("2b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 2 b-tagged jets out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
   
-  
-  histo2D["test_matched_pT_bjet"] = new TH2F("test_matched_pT_bjet","p_{T} of matched b jets vs. partons; p_{T} [GeV]", 80, 0, 800, 80, 0, 800);
-  histo2D["test_matched_pT_nonbjet"] = new TH2F("test_matched_pT_nonbjet","p_{T} of matched non-b jets vs. partons; p_{T} [GeV]", 80, 0, 800, 80, 0, 800);
-  histo2D["test_matched_eta_bjet"] = new TH2F("test_matched_eta_bjet","Eta of matched b jets vs. partons; Eta", 32, -3.2, 3.2, 32, -3.2, 3.2);
-  histo2D["test_matched_eta_nonbjet"] = new TH2F("test_matched_eta_nonbjet","Eta of matched non-b jets vs. partons; Eta", 32, -3.2, 3.2, 32, -3.2, 3.2);
   
   
   /// log likelihood
@@ -1231,42 +1227,39 @@ int main (int argc, char *argv[])
       if (applyJetLeptonCleaning)
       {
         if(verbose > 3) cout << "  - Applying jet/lepton cleaning... " << endl; 
-        int origSizeJets = selectedJets.size();
-        for (int origJets = 0; origJets < selectedJets.size(); origJets++)
+        
+        vector<TRootPFJet*> selectedJetsBC;
+        selectedJetsBC = selectedJets;
+        selectedJets.clear();
+
+        for (int iOrigJet = 0; iOrigJet < selectedJetsBC.size(); iOrigJet++)
         {
-          bool erased = false;
-          if ( selectedMuons.size() > 0 )
+          bool toBeErased = false;
+          for (int iMuon = 0; iMuon < selectedMuons.size(); iMuon++)
           {
-            if ( selectedJets[origJets]->DeltaR(*selectedMuons[0]) < 0.4 )
+            if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedMuons[iMuon]) < 0.4 )
             {
-              selectedJets.erase(selectedJets.begin()+origJets); erased = true;
+              toBeErased = true;
+              break;
             }
           }
-          if ( selectedMuons.size() > 1 && !erased )
+          if (toBeErased) continue;
+          for (int iElectron = 0; iElectron < selectedElectrons.size(); iElectron++)
           {
-            if(selectedJets[origJets]->DeltaR(*selectedMuons[1]) < 0.4 )
+            if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedElectrons[iElectron]) < 0.3 )
             {
-              selectedJets.erase(selectedJets.begin()+origJets); erased = true;
+              toBeErased = true;
+              break;
             }
           }
-          if ( selectedMuons.size() > 2 && !erased )
+          if (! toBeErased)
           {
-            if ( selectedJets[origJets]->DeltaR(*selectedMuons[2]) < 0.4 )
-            {
-              selectedJets.erase(selectedJets.begin()+origJets); erased = true;
-            }
-          }
-          if ( selectedMuons.size() > 3 && !erased )
-          {
-            if ( selectedJets[origJets]->DeltaR(*selectedMuons[3]) < 0.4 )
-            {
-              selectedJets.erase(selectedJets.begin()+origJets); erased = true;
-            }
+            selectedJets.push_back(selectedJetsBC[iOrigJet]);
           }
         }
         if ( verbose > 3 )
         {
-          if ( origSizeJets != selectedJets.size() ) cout << "--> original = " << origSizeJets  << " after cleaning = " << selectedJets.size() << endl;
+          if ( selectedJetsBC.size() != selectedJets.size() ) cout << "--> original = " << selectedJetsBC.size()  << " after cleaning = " << selectedJets.size() << endl;
         }
         nofEventsJetLeptonCleaned++;
         
@@ -1610,18 +1603,6 @@ int main (int argc, char *argv[])
         
         if (all4PartonsMatched && calculateTransferFunctions)
         {
-          /// Fill test plots
-          histo2D["test_matched_pT_bjet"]->Fill(mcParticlesTLV[JetPartonPair[2].second].Pt(), selectedJetsTLV[JetPartonPair[2].first].Pt());
-          histo2D["test_matched_pT_bjet"]->Fill(mcParticlesTLV[JetPartonPair[3].second].Pt(), selectedJetsTLV[JetPartonPair[3].first].Pt());
-          histo2D["test_matched_pT_nonbjet"]->Fill(mcParticlesTLV[JetPartonPair[0].second].Pt(), selectedJetsTLV[JetPartonPair[0].first].Pt());
-          histo2D["test_matched_pT_nonbjet"]->Fill(mcParticlesTLV[JetPartonPair[1].second].Pt(), selectedJetsTLV[JetPartonPair[1].first].Pt());
-          histo2D["test_matched_eta_bjet"]->Fill(mcParticlesTLV[JetPartonPair[2].second].Eta(), selectedJetsTLV[JetPartonPair[2].first].Eta());
-          histo2D["test_matched_eta_bjet"]->Fill(mcParticlesTLV[JetPartonPair[3].second].Eta(), selectedJetsTLV[JetPartonPair[3].first].Eta());
-          histo2D["test_matched_eta_nonbjet"]->Fill(mcParticlesTLV[JetPartonPair[0].second].Eta(), selectedJetsTLV[JetPartonPair[0].first].Eta());
-          histo2D["test_matched_eta_nonbjet"]->Fill(mcParticlesTLV[JetPartonPair[1].second].Eta(), selectedJetsTLV[JetPartonPair[1].first].Eta());
-          
-          
-          
           
           partonTLV.clear(); jetTLV.clear();  // vector<TLV>
           //genMuTLV.Clear(); selMuTLV.Clear(); genElTLV.Clear(); selElTLV.Clear();
