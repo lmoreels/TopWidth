@@ -42,13 +42,16 @@ class TransferFunctions{
     void fillElectron(TLorentzVector *genEl, TLorentzVector *recEl);
     void writeHistograms();
     void makeFit();
+    void makeFit(std::string inputFileName, std::string outputFileName);
     void writeTable(std::string inputFileName);
 
     
   private:
     bool muon;
     bool electron;
+    bool getHistos;
     std::map<std::string,TH2F*> histoTr2D;
+    std::map<std::string,TH2F*> fitHisto2D;
     std::string inputFileName;
     int nHistos;
     static const std::string histoNames[];
