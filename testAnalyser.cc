@@ -99,9 +99,9 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  bool useOneHalfOfDataSets = true;
+  bool useOneHalfOfDataSets = false;
   bool useOneFourthOfDataSets = false;
-  bool useOneTenthOfDataSets = false;
+  bool useOneTenthOfDataSets = true;
   bool useOneFiftiethOfDataSets = false;
   bool useTestSample = false;
   
@@ -155,7 +155,6 @@ int main (int argc, char *argv[])
   
   bool testTTbarOnly = false;  
   bool calculateTransferFunctions = false;
-  bool makeInitPlots = false;
   bool printTriggers = false;
   bool applyTriggers = true;
   bool applyLeptonSF = true;
@@ -329,6 +328,10 @@ int main (int argc, char *argv[])
         datasets[d]->SetTitle("ST tW");
         datasets[d]->SetColor(kBlue-4);
       }
+      else
+      { 
+        datasets[d]->SetTitle("ST t");
+      }
     }
     //if (dataSetName.find("NP") == 0 )
     //{
@@ -396,29 +399,6 @@ int main (int argc, char *argv[])
   histo1D["2b_Chi2Free_dR_lep_b_notMatched_mlb_cut"] = new TH1F("2b_Chi2Free_dR_Lep_b_notMatched_mlb_cut","Minimal delta R between the lepton and a b jet in events with 2 b-tagged jets and a cut on M_{lb} (free Chi2); #Delta R(l,b)", 25, 0, 5);
   histo1D["2b_Chi2Free_dR_lep_b_notMatched_4jets_mlb_cut"] = new TH1F("2b_Chi2Free_dR_Lep_b_notMatched_4jets_mlb_cut","Minimal delta R between the lepton and a b jet in events with 2 b-tagged jets out of 4 in total and a cut on M_{lb} (free Chi2); #Delta R(l,b)", 25, 0, 5);
   
-  // 1b
-  histo1D["1b_Chi2Free_W_mass_reco_notMatched"] = new TH1F("1b_Chi2Free_W_mass_reco_notMatched","Reconstructed hadronic W mass of unmatched events with 1 b-tagged jet (free Chi2); M_{W} [GeV]", 80, 0, 800);
-  histo1D["1b_Chi2Free_top_mass_reco_notMatched"] = new TH1F("1b_Chi2Free_top_mass_reco_notMatched","Reconstructed top mass of unmatched events with 1 b-tagged jet (free Chi2); M_{t} [GeV]", 80, 0, 800);
-  histo1D["1b_Chi2Free_top_mass_reco_notMatched_4jets"] = new TH1F("1b_Chi2Free_top_mass_reco_notMatched_4jets","Reconstructed top mass of unmatched events with 1 b-tagged jet out of 4 in total (free Chi2); M_{t} [GeV]", 80, 0, 800);
-  
-  histo1D["1b_Chi2Free_lepTop_mass_notMatched"] = new TH1F("1b_lepTop_mass_notMatched","Reconstructed leptonic top mass of unmatched events with 1 b-tagged jet; M_{lb} [GeV]", 80, 0, 800);
-  histo1D["1b_Chi2Free_lepTop_mass_notMatched_4jets"] = new TH1F("1b_lepTop_mass_notMatched_4jets","Reconstructed leptonic top mass of unmatched events with 1 b-tagged jet out of 4 in total; M_{lb} [GeV]", 80, 0, 800);
-
-  histo1D["1b_Chi2Free_hadTop_mass_notMatched_mlb_cut"] = new TH1F("1b_Chi2Free_hadTop_mass_notMatched_mlb_cut","Reconstructed hadronic top mass of unmatched events with 1 b-tagged jet and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
-  histo1D["1b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut"] = new TH1F("1b_Chi2Free_hadTop_mass_notMatched_4jets_mlb_cut","Reconstructed hadronic top mass of unmatched events with 1 b-tagged jet out of 4 in total and a cut on M_{lb} (free Chi2); M_{t} [GeV]", 80, 0, 800);
-  
-  histo2D["1b_2D_unmatched_hadTopMass_lepTopMass"] = new TH2F("1b_2D_unmatched_hadTopMass_lepTopMass", "Mass of the leptonic top mass vs. the mass of the hadronic top mass (unmatched); M_{t} [GeV]; M_{lb} [GeV]", 100, 0, 1000, 100, 0, 1000);
-  
-  histo1D["1b_Chi2Free_ttbar_mass_notMatched"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
-  histo1D["1b_Chi2Free_ttbar_mass_notMatched_4jets"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched_4jets","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet out of 4 in total (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
-  histo1D["1b_Chi2Free_ttbar_mass_notMatched_mlb_cut"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched_mlb_cut","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet and a cut on M_{lb} (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
-  histo1D["1b_Chi2Free_ttbar_mass_notMatched_4jets_mlb_cut"] = new TH1F("1b_Chi2Free_ttbar_mass_notMatched_4jets_mlb_cut","Reconstructed ttbar mass of unmatched events with 1 b-tagged jet out of 4 in total and a cut on M_{lb} (free Chi2); M_{t#bar{t}} [GeV]", 100, 0, 1000);
-
-  histo1D["1b_Chi2Free_dR_lep_b_notMatched"] = new TH1F("1b_Chi2Free_dR_Lep_b_notMatched","Minimal delta R between the lepton and a b jet in events with 1 b-tagged jet (free Chi2); #Delta R(l,b)", 52, 0, 5);
-  histo1D["1b_Chi2Free_dR_lep_b_notMatched_4jets"] = new TH1F("1b_Chi2Free_dR_Lep_b_notMatched_4jets","Minimal delta R between the lepton and a b jet in events with 1 b-tagged jet out of 4 in total (free Chi2); #Delta R(l,b)", 25, 0, 5);
-  histo1D["1b_Chi2Free_dR_lep_b_notMatched_mlb_cut"] = new TH1F("1b_Chi2Free_dR_Lep_b_notMatched_mlb_cut","Minimal delta R between the lepton and a b jet in events with 1 b-tagged jet and a cut on M_{lb} (free Chi2); #Delta R(l,b)", 25, 0, 5);
-  histo1D["1b_Chi2Free_dR_lep_b_notMatched_4jets_mlb_cut"] = new TH1F("1b_Chi2Free_dR_Lep_b_notMatched_4jets_mlb_cut","Minimal delta R between the lepton and a b jet in events with 1 b-tagged jet out of 4 in total and a cut on M_{lb} (free Chi2); #Delta R(l,b)", 25, 0, 5);
-  
   
   /// Leptonic top quark
   histo1D["lepTop_mass_matched_corr"] = new TH1F("lepTop_mass_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
@@ -481,31 +461,8 @@ int main (int argc, char *argv[])
   map<string,MultiSamplePlot*> MSPlot;
   
   /// Plots before event selection
-  MSPlot["init_nJets"] = new MultiSamplePlot(datasets, "init_nJets", 15, -0.5, 14.5, "# jets");
-  MSPlot["init_nMuons"] = new MultiSamplePlot(datasets, "init_nMuons", 13, -0.5, 12.5, "# muons");
-  MSPlot["init_nElectrons"] = new MultiSamplePlot(datasets, "init_nElectrons", 13, -0.5, 12.5, "# electrons");
   MSPlot["init_nPVs_before"] = new MultiSamplePlot(datasets, "init_nPVs_before", 36, -0.5, 35.5, "# PVs before reweighting");
   MSPlot["init_nPVs_after"] = new MultiSamplePlot(datasets, "init_nPVs_after", 36, -0.5, 35.5, "# PVs after reweighting");
-  
-  MSPlot["init_leadingJet_pT"] = new MultiSamplePlot(datasets, "init_leadingJet_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["init_leadingJet_eta"] = new MultiSamplePlot(datasets, "init_leadingJet_eta", 30, -3, 3, "Eta");
-  MSPlot["init_leadingJet_CSVv2Discr"] = new MultiSamplePlot(datasets, "init_leadingJet_CSVv2Discr", 80, -0.5, 1.5, "CSVv2 discriminant value");
-  MSPlot["init_leadingMuon_pT"] = new MultiSamplePlot(datasets, "init_leadingMuon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["init_leadingMuon_eta"] = new MultiSamplePlot(datasets, "init_leadingMuon_eta", 30, -3, 3, "Eta");
-  MSPlot["init_leadingMuon_phi"] = new MultiSamplePlot(datasets, "init_leadingMuon_phi", 32, -3.2, 3.2, "Phi");
-  MSPlot["init_muon_relIso"] = new MultiSamplePlot(datasets, "init_muon_relIso", 30, 0, 0.3, "relIso");
-  MSPlot["init_muon_d0"] = new MultiSamplePlot(datasets, "init_muon_d0", 50, 0, 0.03, "d_{0}");
-  MSPlot["init_leadingElectron_pT"] = new MultiSamplePlot(datasets, "init_leadingElectron_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["init_leadingElectron_eta"] = new MultiSamplePlot(datasets, "init_leadingElectron_eta", 60, -3, 3, "Eta");
-  MSPlot["init_met_pT"] = new MultiSamplePlot(datasets, "init_met_pT", 50, 0, 500, "p_{T} [GeV]");
-  MSPlot["init_met_eta"] = new MultiSamplePlot(datasets, "init_met_eta", 30, -3, 3, "Eta");
-  MSPlot["init_met_phi"] = new MultiSamplePlot(datasets, "init_met_phi", 32, -3.2, 3.2, "Phi");
-  
-  /// Only cuts on lepton (check if overshoot due to QCD)
-  MSPlot["muon_pT_noJetCut"] = new MultiSamplePlot(datasets, "muon_pT_noJetCut", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["muon_relIso_noJetCut"] = new MultiSamplePlot(datasets, "muon_relIso_noJetCut", 20, 0, 0.2, "relIso");
-  MSPlot["met_pT_noJetCut"] = new MultiSamplePlot(datasets, "met_pT_noJetCut", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["nJets_noJetCut"] = new MultiSamplePlot(datasets, "nJets_noJetCut", 13, -0.5, 12.5, "# jets");
   
   /// Event Selection
   MSPlot["Selection"] = new MultiSamplePlot(datasets, "Selection", 11, -0.5, 10.5, "Cutflow");
@@ -540,33 +497,6 @@ int main (int argc, char *argv[])
   
   MSPlot["min_M_lb"] = new MultiSamplePlot(datasets, "min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
-  
-  
-  // Plots for events with 2 b-tagged jets
-  MSPlot["2b_muon_pT"] = new MultiSamplePlot(datasets, "2b_muon_pT", 22, 0, 440, "p_{T} [GeV]");
-  MSPlot["2b_muon_eta"] = new MultiSamplePlot(datasets, "2b_muon_eta", 30, -3, 3, "Eta");
-  MSPlot["2b_muon_phi"] = new MultiSamplePlot(datasets, "2b_muon_phi", 32, -3.2, 3.2, "Phi");
-  MSPlot["2b_muon_relIso"] = new MultiSamplePlot(datasets, "2b_muon_relIso", 20, 0, 0.2, "relIso");
-  MSPlot["2b_muon_d0"] = new MultiSamplePlot(datasets, "2b_muon_d0", 50, 0, 0.03, "d_{0}");
-  MSPlot["2b_leadingJet_pT"] = new MultiSamplePlot(datasets, "2b_leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
-  MSPlot["2b_jet2_pT"] = new MultiSamplePlot(datasets, "2b_jet2_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["2b_jet3_pT"] = new MultiSamplePlot(datasets, "2b_jet3_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["2b_jet4_pT"] = new MultiSamplePlot(datasets, "2b_jet4_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["2b_Ht_4leadingJets"] = new MultiSamplePlot(datasets,"2b_Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
-  MSPlot["2b_met_pT"] = new MultiSamplePlot(datasets, "2b_met_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["2b_met_eta"] = new MultiSamplePlot(datasets, "2b_met_eta", 30, -3, 3, "Eta");
-  MSPlot["2b_met_phi"] = new MultiSamplePlot(datasets, "2b_met_phi", 32, -3.2, 3.2, "Phi");
-  
-  MSPlot["2b_nJets"] = new MultiSamplePlot(datasets, "2b_nJets", 13, -0.5, 12.5, "# jets");
-  MSPlot["2b_nBJets"] = new MultiSamplePlot(datasets, "2b_nBJets", 9, -0.5, 8.5, "# b jets");
-  MSPlot["2b_CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["2b_CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
-  MSPlot["2b_CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
-  MSPlot["2b_CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
-  MSPlot["2b_CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "2b_CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
-  
-  MSPlot["2b_min_M_lb"] = new MultiSamplePlot(datasets, "2b_min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
-  MSPlot["2b_dR_Lep_B"] = new MultiSamplePlot(datasets, "2b_dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
   
   
   /// Pile-up
@@ -604,30 +534,6 @@ int main (int argc, char *argv[])
   MSPlot["2b_Chi2Free_dR_lep_b_4jets"] = new MultiSamplePlot(datasets, "2b_Chi2Free_dR_lep_b_4jets", 25, 0, 5, "#Delta R(l,b)");
   MSPlot["2b_Chi2Free_dR_lep_b_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Free_dR_lep_b_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
   MSPlot["2b_Chi2Free_dR_lep_b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "2b_Chi2Free_dR_lep_b_4jets_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
-  
-  
-  MSPlot["1b_Chi2Free"] = new MultiSamplePlot(datasets, "1b_Chi2Free", 200, 0, 200, "#chi^{2} value");
-  MSPlot["1b_Chi2Free_W_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_W_mass", 40, 0, 800, "M_{W} [GeV]");
-  MSPlot["1b_Chi2Free_hadTop_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
-  MSPlot["1b_Chi2Free_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
-  MSPlot["1b_Chi2Free_hadTop_pT"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
-  MSPlot["1b_Chi2Free_hadTop_HT"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_HT", 40, 0, 800, "H_{T} [GeV]");
-  
-  MSPlot["1b_Chi2Free_lepTop_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_lepTop_mass", 40, 0, 800, "M_{lb} [GeV]");
-  MSPlot["1b_Chi2Free_lepTop_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Free_lepTop_mass_4jets", 40, 0, 800, "M_{lb} [GeV]");
-
-  MSPlot["1b_Chi2Free_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
-  MSPlot["1b_Chi2Free_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
-
-  MSPlot["1b_Chi2Free_ttbar_mass"] = new MultiSamplePlot(datasets, "1b_Chi2Free_ttbar_mass", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
-  MSPlot["1b_Chi2Free_ttbar_mass_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Free_ttbar_mass_4jets", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
-  MSPlot["1b_Chi2Free_ttbar_mass_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_ttbar_mass_mlb_cut", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
-  MSPlot["1b_Chi2Free_ttbar_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_ttbar_mass_4jets_mlb_cut", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
-
-  MSPlot["1b_Chi2Free_dR_lep_b"] = new MultiSamplePlot(datasets, "1b_Chi2Free_dR_lep_b", 25, 0, 5, "#Delta R(l,b)");
-  MSPlot["1b_Chi2Free_dR_lep_b_4jets"] = new MultiSamplePlot(datasets, "1b_Chi2Free_dR_lep_b_4jets", 25, 0, 5, "#Delta R(l,b)");
-  MSPlot["1b_Chi2Free_dR_lep_b_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_dR_lep_b_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
-  MSPlot["1b_Chi2Free_dR_lep_b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "1b_Chi2Free_dR_lep_b_4jets_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
   
   
   
@@ -1021,7 +927,7 @@ int main (int argc, char *argv[])
       /// Fix negative event weights for amc@nlo
       nloSF = 1.;
       hasNegWeight = false;
-      if (! isData && dataSetName.find("tW") == std::string::npos )  // not data & not ST tW channel
+      if (! isData && dataSetName.find("ST") == std::string::npos )  // not data & not ST
       {
         if ( event->getWeight(1001) != -9999. )
         {
@@ -1167,41 +1073,6 @@ int main (int argc, char *argv[])
       }
       
       
-      /// Fill control plots
-      if ( makeInitPlots && ! testTTbarOnly )
-      {
-        MSPlot["init_nJets"]->Fill(init_jets_corrected.size(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_nMuons"]->Fill(init_muons.size(), datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["init_nElectrons"]->Fill(init_electrons.size(), datasets[d], true, Luminosity*scaleFactor);
-
-        if ( init_jets_corrected.size() > 0 )
-        {
-          MSPlot["init_leadingJet_pT"]->Fill(init_jets_corrected[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_leadingJet_eta"]->Fill(init_jets_corrected[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_leadingJet_CSVv2Discr"]->Fill(init_jets_corrected[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-        }
-        if ( init_muons.size() > 0 )
-        {
-          MSPlot["init_leadingMuon_pT"]->Fill(init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_leadingMuon_eta"]->Fill(init_muons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_leadingMuon_phi"]->Fill(init_muons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_muon_relIso"]->Fill( ( init_muons[0]->chargedHadronIso(4) + max( 0.0, init_muons[0]->neutralHadronIso(4) + init_muons[0]->photonIso(4) - 0.5*init_muons[0]->puChargedHadronIso(4) ) ) / init_muons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_muon_d0"]->Fill(init_muons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
-        }
-        if ( init_electrons.size() > 0 )
-        {
-          MSPlot["init_leadingElectron_pT"]->Fill(init_electrons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["init_leadingElectron_eta"]->Fill(init_electrons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-        }
-        if ( mets.size() > 0 )
-        {
-           MSPlot["init_met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-           MSPlot["init_met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-           MSPlot["init_met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-        }
-      }  /// end ! testTTbarOnly
-      
-      
       
       /////////////////////////
       ///  EVENT SELECTION  ///
@@ -1318,31 +1189,6 @@ int main (int argc, char *argv[])
               selecTableSemiMu.Fill(d,5,scaleFactor);
               MSPlot["Selection"]->Fill(5, datasets[d], true, Luminosity*scaleFactor);
               
-              
-//               // test dR(muon,jet)
-//               bool isTooClose = false;
-//               float dRtest = 99999.;
-//               cout << "Before loop: isTooClose  " << isTooClose << "  dRtest: " << dRtest << endl;
-//               for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-//               {
-//                 dRtest = ROOT::Math::VectorUtil::DeltaR((TLorentzVector) *selectedMuons[0], (TLorentzVector) *selectedJets[iJet]);
-//                 cout << "In loop " << iJet << ": isTooClose  " << isTooClose << "  dRtest: " << dRtest << endl;
-//                 if ( dRtest < 0.2 )
-//                 {
-//                   isTooClose = true;
-//                   cout << "In if  : isTooClose  " << isTooClose << "  dRtest: " << dRtest << endl;
-//                   break;
-//                 }
-//               }
-//               cout << "After loop: isTooClose  " << isTooClose << "  dRtest: " << dRtest << endl << endl;
-              
-              
-              double testRelIso = ( selectedMuons[0]->chargedHadronIso(4) + max( 0.0, selectedMuons[0]->neutralHadronIso(4) + selectedMuons[0]->photonIso(4) - 0.5*selectedMuons[0]->puChargedHadronIso(4) ) ) / selectedMuons[0]->Pt();  // dR = 0.4, dBeta corrected
-              MSPlot["muon_pT_noJetCut"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-              MSPlot["muon_relIso_noJetCut"]->Fill(testRelIso, datasets[d], true, Luminosity*scaleFactor);
-              MSPlot["met_pT_noJetCut"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-              MSPlot["nJets_noJetCut"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
-
               /// First 4 jets need pT > 30 GeV
               if (selectedJets.size() >= 4)
               {
@@ -1364,17 +1210,20 @@ int main (int argc, char *argv[])
                   //selecTableSemiMu.Fill(d,8,scaleFactor);
                   //MSPlot["Selection"]->Fill(8, datasets[d], true, Luminosity*scaleFactor);
                   has1bjet = true;
-                  eventSelected = true;
-
+                  
+                  if ( selectedBJets.size() == 1 ) nofEventsWith1BJet++;
+                  
                   if ( selectedBJets.size() > 1 )
                   {
                     selecTableSemiMu.Fill(d,8,scaleFactor);
                     MSPlot["Selection"]->Fill(8, datasets[d], true, Luminosity*scaleFactor);
                     //selecTableSemiMu.Fill(d,9,scaleFactor);
                     //MSPlot["Selection"]->Fill(9, datasets[d], true, Luminosity*scaleFactor);
+                    nofEventsWith2BJets++;
                     has2bjets = true;
+                    eventSelected = true;
                   }  // at least 2 b-tagged jets
-
+                  
                   if (applyBTagSF && ! isData)
                   {
                     double bTagSF = bTagHistoTool_M->getMCEventWeight(selectedJets);
@@ -1397,7 +1246,7 @@ int main (int argc, char *argv[])
 //       MSPlot["Selection"]->Fill(9, datasets[d], true, Luminosity*scaleFactor);
       
       
-      /// Do some stuff with selected events
+      /// Do some stuff with selected events: 2 B JETS!!
       
       if (! eventSelected )
       {
@@ -1412,8 +1261,7 @@ int main (int argc, char *argv[])
       if (verbose > 4)
         cout << "Event Id: " << event->eventId() << "  Run Id: " << event->runId() << "  Lumi block Id: " << event->lumiBlockId() << endl;
       
-      if ( selectedBJets.size() == 1 ) nofEventsWith1BJet++;
-      else if ( selectedBJets.size() > 1 ) nofEventsWith2BJets++;
+      
       
       
       /// Pile-up
@@ -1804,10 +1652,7 @@ int main (int argc, char *argv[])
       int labelsRecoFree[3] = {-9999, -9999, -9999};		// 0 = hadronic b-jet, 1,2 = light jets.
       float recoWMass, recoTopMass, recoTopMass2;
       
-      string listPlotInit_b_chi2[2] = {"1b_", "2b_"};
-      string plotInit_b_chi2 = "";
-      if ( selectedBJets.size() == 1 ) { plotInit_b_chi2 = listPlotInit_b_chi2[0];}
-      else { plotInit_b_chi2 = listPlotInit_b_chi2[1];}
+      string plotInit_b_chi2 = "2b_";
       
       
       ///---------------///
@@ -1846,9 +1691,9 @@ int main (int argc, char *argv[])
       }
       
       int nofBs = 0;
+      if ( selectedJets[labelsRecoFree[1]]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium ) { nofBs++;}
       if ( selectedJets[labelsRecoFree[2]]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium ) { nofBs++;}
-      if ( selectedJets[labelsRecoFree[3]]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium ) { nofBs++;;}
-      if ( selectedJets[labelsRecoFree[1]]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium ) { nofBs++;;}
+      if ( selectedJets[labelsRecoFree[0]]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium ) { nofBs++;}
       
       if ( nofBs == 3 ) { nofChi2FreeWith3BTaggedJets++;}
       else if ( nofBs == 2 ) { nofChi2FreeWith2BTaggedJets++;}
@@ -2031,59 +1876,42 @@ int main (int argc, char *argv[])
       /// Fill MSPlots
       if (! testTTbarOnly)
       {
-        string listPlotInit[2] = {"", "2b_"};
-        string plotInit = "";
-        int numBJets = selectedBJets.size()-1;
-        if ( numBJets > 1 ) { numBJets = 1;}
-
-        for (unsigned int iB = 0; iB < numBJets+1; iB++)
+        MSPlot["muon_pT"]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["muon_eta"]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["muon_phi"]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["muon_relIso"]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["muon_d0"]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["leadingJet_pT"]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["jet2_pT"]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["jet3_pT"]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["jet4_pT"]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Ht_4leadingJets"]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
+        if ( mets.size() > 0 )
         {
-          plotInit = listPlotInit[iB];
+           MSPlot["met_pT"]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+           MSPlot["met_eta"]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
+           MSPlot["met_phi"]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
+        }
 
-          MSPlot[(plotInit+"muon_pT").c_str()]->Fill(selectedMuons[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"muon_eta").c_str()]->Fill(selectedMuons[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"muon_phi").c_str()]->Fill(selectedMuons[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"muon_relIso").c_str()]->Fill(relIsoMu, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"muon_d0").c_str()]->Fill(selectedMuons[0]->d0(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"leadingJet_pT").c_str()]->Fill(selectedJets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"jet2_pT").c_str()]->Fill(selectedJets[1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"jet3_pT").c_str()]->Fill(selectedJets[2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"jet4_pT").c_str()]->Fill(selectedJets[3]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"Ht_4leadingJets").c_str()]->Fill(HT, datasets[d], true, Luminosity*scaleFactor);
-          if ( mets.size() > 0 )
-          {
-             MSPlot[(plotInit+"met_pT").c_str()]->Fill(mets[0]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-             MSPlot[(plotInit+"met_eta").c_str()]->Fill(mets[0]->Eta(), datasets[d], true, Luminosity*scaleFactor);
-             MSPlot[(plotInit+"met_phi").c_str()]->Fill(mets[0]->Phi(), datasets[d], true, Luminosity*scaleFactor);
-          }
-
-          MSPlot[(plotInit+"nJets").c_str()]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"nBJets").c_str()]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
-          for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
-          {
-            MSPlot[(plotInit+"CSVv2Discr_allJets").c_str()]->Fill(selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-          }
-          MSPlot[(plotInit+"CSVv2Discr_leadingJet").c_str()]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"CSVv2Discr_jet2").c_str()]->Fill(selectedJets[1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"CSVv2Discr_jet3").c_str()]->Fill(selectedJets[2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"CSVv2Discr_jet4").c_str()]->Fill(selectedJets[3]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-
-          MSPlot[(plotInit+"min_M_lb").c_str()]->Fill(min_M_lb, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot[(plotInit+"dR_Lep_B").c_str()]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
-        }  // end plot b loop
-
-        if (has1bjet)
+        MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["nBJets"]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
+        for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
         {
-          MSPlot["bJet1_pT"]->Fill(selectedJets[label_bJet1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["bJet1_CSVv2Discr"]->Fill(selectedJets[label_bJet1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["CSVv2Discr_allJets"]->Fill(selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        }
+        MSPlot["CSVv2Discr_leadingJet"]->Fill(selectedJets[0]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet2"]->Fill(selectedJets[1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet3"]->Fill(selectedJets[2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["CSVv2Discr_jet4"]->Fill(selectedJets[3]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
 
-          if (has2bjets)
-          {
-            MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
-            MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
-          }
+        MSPlot["min_M_lb"]->Fill(min_M_lb, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
 
-        }  /// end 1b
+        MSPlot["bJet1_pT"]->Fill(selectedJets[label_bJet1]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["bJet1_CSVv2Discr"]->Fill(selectedJets[label_bJet1]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
+
+        MSPlot["bJet2_pT"]->Fill(selectedJets[label_bJet2]->Pt(), datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["bJet2_CSVv2Discr"]->Fill(selectedJets[label_bJet2]->btag_combinedInclusiveSecondaryVertexV2BJetTags(), datasets[d], true, Luminosity*scaleFactor);
 
         MSPlot["pileup_SF"]->Fill(lumiWeight, datasets[d], true, Luminosity*scaleFactor);
         
