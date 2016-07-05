@@ -440,10 +440,10 @@ int main (int argc, char *argv[])
   /// log likelihood
   histo2D["logLikeWidthMass_gen_matched"] = new TH2F("logLikeWidthMass_gen_matched", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 295, 0.55, 30.05);
   histo2D["logLikeWidthMass_reco_matched"] = new TH2F("logLikeWidthMass_reco_matched", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
-  histo2D["logLikeWidthMass_reco_unmatched"] = new TH2F("logLikeWidthMass_reco_unmatched", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 144.75, 175.75, 595, 0.55, 60.05);
+  histo2D["logLikeWidthMass_reco_unmatched"] = new TH2F("logLikeWidthMass_reco_unmatched", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 62, 154.75, 185.75, 595, 0.55, 60.05);
   histo2D["logLikeWidthMass_gen_matched_zoom"] = new TH2F("logLikeWidthMass_gen_matched_zoom", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 295, 0.55, 30.05);
   histo2D["logLikeWidthMass_reco_matched_zoom"] = new TH2F("logLikeWidthMass_reco_matched_zoom", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
-  histo2D["logLikeWidthMass_reco_unmatched_zoom"] = new TH2F("logLikeWidthMass_reco_unmatched_zoom", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 164.75, 175.75, 400, 12.05, 52.05);
+  histo2D["logLikeWidthMass_reco_unmatched_zoom"] = new TH2F("logLikeWidthMass_reco_unmatched_zoom", "-Log Likelihood of reconstructed unmatched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 22, 168.75, 179.75, 400, 12.05, 52.05);
   //histo2D["logLikeWidthMass_reco"] = new TH2F("logLikeWidthMass_reco", "-Log Likelihood of reconstructed matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   //histo2D["logLikeWidthMass_gen"] = new TH2F("logLikeWidthMass_gen", "-Log Likelihood of generated matched events VS top mass and top width; M_{t} [GeV]; #Gamma_{t} [GeV]", 10, 167.25, 172.25, 35, 0.55, 4.05);  // sample with mt = 169.5
   
@@ -621,7 +621,7 @@ int main (int argc, char *argv[])
   
   
   /// B tag
-  // documentation at http://mon.iihe.ac.be/~smoortga/TopTrees/BTagSF/BTaggingSF_inTopTrees.pdf
+  // documentation at http://mon.iihe.ac.be/%7Esmoortga/TopTrees/BTagSF/BTaggingSF_inTopTrees_v4.pdf
   cout << " - Loading b tag scale factors ...";
   if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis";}
   BTagCalibration *bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2_76X_combToMujets.csv"); 
@@ -2069,6 +2069,7 @@ int main (int argc, char *argv[])
   // 2D
   TDirectory* th2dir = fout->mkdir("2D_histograms");
   th2dir->cd();
+  gStyle->SetPalette(50,0);
   for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
   {
     TH2F *temp = it->second;
