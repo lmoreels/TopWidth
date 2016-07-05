@@ -55,9 +55,9 @@ void Trigger::bookTriggers(bool isData)
   {
     if (muon)   // Triggers for data & MC are the same
     {
-      triggerList.push_back("HLT_IsoMu18_v*");  // Not available for Run C: 254231 - 254907
-//      triggerList.push_back("HLT_IsoMu20_v*");
-//      triggerList.push_back("HLT_IsoTkMu20_v*");
+//      triggerList.push_back("HLT_IsoMu18_v*");  // Not available for Run C: 254231 - 254907
+      triggerList.push_back("HLT_IsoMu20_v*");
+      triggerList.push_back("HLT_IsoTkMu20_v*");
     }
     if (electron)
     {
