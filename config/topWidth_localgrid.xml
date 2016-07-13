@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<data>
 <datasets>
 
 <!-- Cross sections from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/SummaryTable1G25ns . Last updated: 30/06/16 -->
@@ -36,3 +37,4 @@
 
 <a type="Conditions" isMC="1" MCRound="0" Vars_ByFile="0" VarsFile="m0_100_m12_100" IntToCut="4" Verbose="2" Luminosity="999999" JES="1." nPseudoExp="0" nPseudoSession="0" runonTTrees="0" doABCD="1" doVJEstim="1" doVJEstPE="1" doTtJEstim="1" doTemplComp="0" doSystematics="0"/><!-- Luminosity in pb-1 -->
 </analysis>
+</data>

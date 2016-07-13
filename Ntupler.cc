@@ -114,8 +114,66 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  pathOutput = "Ntupler_"+dateString+"/";
+  string pathOutput = "Ntupler_"+dateString+"/";
+  mkdir(pathOutput.c_str(),0777);
   
+  string xmlFileName ="config/topWidth.xml";
+  int maxMCParticles = -1;
+  
+  
+  ///////////////////////////
+  ///  Process arguments  ///
+  ///////////////////////////
+  
+  string dName, dTitle, channel;
+  int color, ls, lw, jobNum = 0, startEvent = 0, endEvent = 200, JES, JER, fillBtagHisto;
+  float normf, eqLumi, xSect, preselEff;
+  string fileName;
+  vector<string> vecfileNames;
+  int ndatasets;
+  
+  bool localgridSubmission = false;
+  if ( argc > 2 ) localgridSubmission = true;
+  if ( argc == 2 && ((string)argv[1]).find(".xml") == 0 )
+  {
+    cout << "One argument added for xml file, no localgrid submission" << endl;
+    xmlFileName = (string)argv[1];
+  }
+  else if ( argc > 2 && argc < 17 )
+  {
+    cerr << "Too few input arguments from script. Check again." << endl;
+    return 1;
+  }
+  
+  if (localgridSubmission)
+  {
+    //xmlFileName = "topWidth_localgrid.xml";
+    dName         = argv[1];
+    dTitle        = argv[2];
+    color         = strtol(argv[4], NULL, 10);
+    ls            = strtol(argv[5], NULL, 10);
+    lw            = strtol(argv[6], NULL, 10);
+    normf         = strtod(argv[7], NULL);
+    eqLumi        = strtod(argv[8], NULL);
+    xSect         = strtod(argv[9], NULL);
+    preselEff     = strtod(argv[10], NULL);
+    fileName      = argv[11];
+    // if there only two arguments after the fileName, the jobNum will be set to 0 by default as an integer is expected and it will get a string (lastfile of the list) 
+    JES           = strtol(argv[argc-7], NULL,10);
+    JER           = strtol(argv[argc-6], NULL,10);
+    fillBtagHisto = strtol(argv[argc-5], NULL,10);
+    channel       = argv[argc-4];
+    jobNum        = strtol(argv[argc-3], NULL, 10);
+    startEvent    = strtol(argv[argc-2], NULL, 10);
+    endEvent      = strtol(argv[argc-1], NULL, 10);
+    
+    // all the files are stored from arg 11 to argc-4
+    vector<string> vecfileNames;
+    for(int args = 11; args < argc-4; args++) 
+    {
+      vecfileNames.push_back(argv[args]);
+    }
+  }
   
   
   /////////////////////
@@ -136,6 +194,20 @@ int main (int argc, char *argv[])
   bool applyBTagSF = true;
   bool applyJetLeptonCleaning = true;
   
+  if (localgridSubmission)
+  {
+    if ( JES == 0 ) { applyJEC = true; applyJESup = false; applyJESdown = false;}
+    else if ( JES == 1 ) { applyJEC = false; applyJESup = true; applyJESdown = false;}
+    else if ( JES == -1 ) { applyJEC = false; applyJESup = false; applyJESdown = true;}
+    
+    if ( JER == 0 ) { applyJER = true; applyJERup = false; applyJERdown = false;}
+    else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
+    else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
+    
+    if ( fillBtagHisto == 0 ) { applyBTagSF = true; calculateBTagSF = false;}
+    else if ( fillBtagHisto == 1 ) { applyBTagSF = false; calculateBTagSF = true;}
+  }
+  
   if (  (applyPUup    && (             applyPUdown || applyJERup || applyJERdown || applyJESup || applyJESdown))
      || (applyPUdown  && (applyPUup ||                applyJERup || applyJERdown || applyJESup || applyJESdown))
      || (applyJERup   && (applyPUup || applyPUdown ||               applyJERdown || applyJESup || applyJESdown))
@@ -155,7 +227,6 @@ int main (int argc, char *argv[])
   }
   
   cout << "* The following scale factors are applied:  *" << endl;
-  if (applyTriggers) cout << "*   - Triggers                              *" << endl;
   if (applyLeptonSF) cout << "*   - Lepton scale factors                  *" << endl;
   if (applyPU)       cout << "*   - Pile up                               *" << endl;
   if (applyJER)
@@ -174,31 +245,10 @@ int main (int argc, char *argv[])
   if (applyJetLeptonCleaning) cout << "*   - Jet/lepton Cleaning                   *" << endl;
   cout << "*********************************************" << endl;
   
+  if (localgridSubmission) cout << "Using localgrid submission" << endl;
   
-  
-  bool hasNegWeight = false;
-  bool eventSelected = false;
-  bool hasExactly4Jets = false;
-  bool has1bjet = false;
-  bool has2bjets = false;
-  int nofSelectedEvents = 0;
-  int nofMatchedEvents = 0;
-  int nofEventsWith1BJet = 0;
-  int nofEventsWith2BJets = 0;
-  int nofNegWeights = 0;
-  int nofPosWeights = 0;
-  int nofEventsHLTv2 = 0;
-  int nofEventsHLTv3 = 0;
-  int nofEventsJetLeptonCleaned = 0;
   
   /// xml file
-  string xmlFileName ="config/topWidth_skimmed.xml";
-  
-  if (argc > 1)
-  {
-    xmlFileName = (string)argv[1];
-  }
-  
   const char *xmlfile = xmlFileName.c_str();
   
   cout << " - Using config file " << xmlfile << endl;
@@ -254,21 +304,25 @@ int main (int argc, char *argv[])
   vector < Dataset* > datasets;
   
   cout << " - Loading datasets ..." << endl;
-  treeLoader.LoadDatasets(datasets, xmlfile); cout << "Number of datasets: " << datasets.size() << endl;
-  for (unsigned int i=0;i<datasets.size();i++) new ((*tcdatasets)[i]) Dataset(*datasets[i]);
-  
-//   const string dName, dTitle;
-//   const int color, ls, lw;
-//   const float normf, EqLumi, xSect;
-//   vector<string> vecfileNames;
-//   Dataset* theDataset = new Dataset(dName, dTitle, true, color, ls, lw, normf, xSect, vecfileNames);
-//   theDataset->SetEquivalentLuminosity(EqLumi);
-//   datasets.push_back(theDataset);
+  if (localgridSubmission)
+  {
+    Dataset* theDataset = new Dataset(dName, dTitle, true, color, ls, lw, normf, xSect, vecfileNames);
+    theDataset->SetEquivalentLuminosity(eqLumi);
+    datasets.push_back(theDataset);
+    //ndatasets = datasets.size() - 1;
+    ndatasets = datasets.size();
+  }
+  else
+  {
+    treeLoader.LoadDatasets(datasets, xmlfile); cout << "Number of datasets: " << datasets.size() << endl;
+    for (unsigned int i=0;i<datasets.size();i++) new ((*tcdatasets)[i]) Dataset(*datasets[i]);
+    ndatasets = datasets.size();
+  }
   
   float Luminosity = oldLuminosity;
   
   
-  for (unsigned int d = 0; d < datasets.size (); d++)
+  for (unsigned int d = 0; d < ndatasets; d++)
   {
     string dataSetName = datasets[d]->Name();
     if ( (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0) && Luminosity > datasets[d]->EquivalentLumi() ) { Luminosity = datasets[d]->EquivalentLumi();}
@@ -283,7 +337,7 @@ int main (int argc, char *argv[])
   
   //nof selected events
   //double NEvtsData = 0;
-  Double_t *nEvents = new Double_t[datasets.size()];
+  Double_t *nEvents = new Double_t[ndatasets];
   Double_t nloweight = 0;
   
   
@@ -395,20 +449,11 @@ int main (int argc, char *argv[])
   ////////////////////////////////////
   
   if (verbose > 0)
-    cout << " - Loop over datasets ... " << datasets.size() << " datasets !" << endl;
+    cout << " - Loop over datasets ... " << ndatasets << " datasets !" << endl;
   
-  for (unsigned int d = 0; d < datasets.size(); d++)
+  for (unsigned int d = 0; d < ndatasets; d++)
+  //for (unsigned int d = 1; d < 2; d++)
   {
-    nofSelectedEvents = 0;
-    nofEventsWith1BJet = 0;
-    nofEventsWith2BJets = 0;
-    nofEventsJetLeptonCleaned = 0;
-    nofNegWeights = 0;
-    nofPosWeights = 0;
-    float sumWeights = 0.;
-    double nloSF = 1.;
-    int iFile = -1;
-    string previousFilename = "";
     bool nlo = false;
     bool isData = false;
     
@@ -416,7 +461,7 @@ int main (int argc, char *argv[])
     
     if (verbose > 1)
     {
-      cout << "   Dataset " << d << ": " << datasets[d]->Name() << "/ title : " << datasets[d]->Title() << endl;
+      cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
       cout << "      -> Equivalent luminosity of dataset " << datasets[d]->EquivalentLumi() << endl;
       cout << "      -> This sample contains, " << datasets[d]->NofEvtsToRunOver() << " events." << endl;
     }
@@ -438,7 +483,7 @@ int main (int argc, char *argv[])
     }
     
     /// book triggers
-    if (applyTriggers) { trigger->bookTriggers(isData);}
+    trigger->bookTriggers(isData);
     
     
     
@@ -479,7 +524,7 @@ int main (int argc, char *argv[])
     ////////////////////////////
     
     string rootFileName = "Ntuples_output_"+dataSetName+".root";
-    rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToStr(JobNum,0)+".root";
+    rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+".root";
     
     cout << " - Recreate output file ..." << endl;
     TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
@@ -507,6 +552,7 @@ int main (int argc, char *argv[])
     Bool_t isTrigged;
     Bool_t isSelected;
     Bool_t hasExactly4Jets;
+    Bool_t hasJetLeptonCleaning;
 //    Bool_t passedMETFilter;
     Bool_t cutFlow[10];
     
@@ -616,6 +662,7 @@ int main (int argc, char *argv[])
     basicEvent->Branch("rho",&rho,"rho/D");
     basicEvent->Branch("isTrigged",&isTrigged,"isTrigged/O");
     basicEvent->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
+    basicEvent->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
     basicEvent->Branch("appliedJER",&appliedJER,"appliedJER/I");
     basicEvent->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
@@ -640,6 +687,7 @@ int main (int argc, char *argv[])
 //    globalTree->Branch("npu",&npu,"npu/I");
 //    globalTree->Branch("rho",&rho,"rho/D");
 //    globalTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
+//    globalTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
 //    globalTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
 //    globalTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
@@ -652,30 +700,11 @@ int main (int argc, char *argv[])
     myTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
     myTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
     myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
+    myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
 //    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
     myTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     myTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
-    
-    
-    /// SFs
-//    globalTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
-//    globalTree->Branch("puSF",&puSF,"puSF/D");
-//    globalTree->Branch("btagSF",&btagSF,"btagSF/D");
-//    globalTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
-//    globalTree->Branch("MuonIsoSF",&MuonIsoSF, "MuonIsoSF[nMuons]/D");
-//    globalTree->Branch("MuonTrigSFv2",&MuonTrigSFv2,"MuonTrigSFv2[nMuons]/D");
-//    globalTree->Branch("MuonTrigSFv3",&MuonTrigSFv3,"MuonTrigSFv3[nMuons]/D");
-//    globalTree->Branch("ElectronSF",&ElectronSF,"ElectronSF[nElectrons]/D");
-    
-    myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
-    myTree->Branch("puSF",&puSF,"puSF/D");
-    myTree->Branch("btagSF",&btagSF,"btagSF/D");
-    myTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
-    myTree->Branch("MuonIsoSF",&MuonIsoSF, "MuonIsoSF[nMuons]/D");
-    myTree->Branch("MuonTrigSFv2",&MuonTrigSFv2,"MuonTrigSFv2[nMuons]/D");
-    myTree->Branch("MuonTrigSFv3",&MuonTrigSFv3,"MuonTrigSFv3[nMuons]/D");
-//    myTree->Branch("ElectronSF",&ElectronSF,"ElectronSF[nElectrons]/D");
     
     
 //    globalTree->Branch("nLeptons",&nLeptons, "nLeptons/I");
@@ -815,6 +844,51 @@ int main (int argc, char *argv[])
     }
     
     
+    /// SFs
+//    globalTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
+//    globalTree->Branch("puSF",&puSF,"puSF/D");
+//    globalTree->Branch("btagSF",&btagSF,"btagSF/D");
+//    globalTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
+//    globalTree->Branch("muonIsoSF",&muonIsoSF, "muonIsoSF[nMuons]/D");
+//    globalTree->Branch("muonTrigSFv2",&muonTrigSFv2,"muonTrigSFv2[nMuons]/D");
+//    globalTree->Branch("muonTrigSFv3",&muonTrigSFv3,"muonTrigSFv3[nMuons]/D");
+//    globalTree->Branch("electronSF",&electronSF,"electronSF[nElectrons]/D");
+    
+    myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
+    myTree->Branch("puSF",&puSF,"puSF/D");
+    myTree->Branch("btagSF",&btagSF,"btagSF/D");
+    myTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
+    myTree->Branch("muonIsoSF",&muonIsoSF, "muonIsoSF[nMuons]/D");
+    myTree->Branch("muonTrigSFv2",&muonTrigSFv2,"muonTrigSFv2[nMuons]/D");
+    myTree->Branch("muonTrigSFv3",&muonTrigSFv3,"muonTrigSFv3[nMuons]/D");
+//    myTree->Branch("electronSF",&electronSF,"electronSF[nElectrons]/D");
+    
+    
+    
+    ////////////////////////////
+    ///  Determine range of events to run over
+    ////////////////////////////
+    
+    
+    unsigned int ending = datasets[d]->NofEvtsToRunOver();
+    double end_d = ending;
+    if ( localgridSubmission && endEvent < ending )
+      end_d = endEvent;
+    // end_d = 2000;  // for testing
+    
+    if ( end_d < startEvent )
+    {
+	    cout << "Starting event larger than number of events. Exiting..." << endl;
+	    exit(1);
+    }
+    if ( verbose > 1 )
+    {
+      cout << "Number of events in total dataset = " << ending << endl;
+      cout << "Will run over " << (end_d - startEvent) << " events..." << endl;
+      cout << "Starting event = = = = " << startEvent  << endl;
+    }
+    
+    
     
     ////////////////////////////////////
     ///  Loop on events
@@ -844,6 +918,7 @@ int main (int argc, char *argv[])
     
     vector < TRootPFJet* > selectedJets;
     vector < TRootPFJet* > selectedBJets;
+    vector < TRootPFJet* > selectedJetsBC;
     vector < TRootMuon* > selectedMuons;
     vector < TRootMuon* > vetoMuons;
     vector < TRootElectron* > selectedElectrons;
@@ -853,10 +928,13 @@ int main (int argc, char *argv[])
     if (verbose > 1)
       cout << "	Loop over events " << endl;
     
-    for (unsigned int ievt = 0; ievt < datasets[d]->NofEvtsToRunOver(); ievt++)
-    //for (unsigned int ievt = 0; ievt < 201; ievt++)
+    for (unsigned int ievt = startEvent; ievt < end_d; ievt++)
+    //for (unsigned int ievt = 0; ievt < 10000000; ievt++)
     {
       nEvents++;
+      
+      if (ievt%100000 == 0)
+        cout << "Processing event " << ievt << "..." << endl;
       
       /// Clear objects
       vertex.clear();
@@ -870,6 +948,7 @@ int main (int argc, char *argv[])
       
       selectedJets.clear();
       selectedBJets.clear();
+      selectedJetsBC.clear();
       selectedMuons.clear();
       vetoMuons.clear();
       selectedElectrons.clear();
@@ -879,17 +958,22 @@ int main (int argc, char *argv[])
       isTrigged = false;
       isSelected = false;
       hasExactly4Jets = false;
+      hasJetLeptonCleaning = false;
       //passedMETFilter = false;
-      cutFlow[] = {0};
+      for (Int_t i = 0; i < 10; i++)
+        cutFlow[i] = 0;
       appliedJER = 0;
       appliedJES = 0;
       puSF = 1.;
       btagSF = 1.;
-      muonIdSF[] = {1.};
-      muonIsoSF[] = {1.};
-      muonTrigSFv2[] = {1.};
-      muonTrigSFv3[] = {1.};
-      //electronSF[] = {1.};
+      for (Int_t i = 0; i < 10; i++)
+      {
+        muonIdSF[i] = 1.;
+        muonIsoSF[i] = 1.;
+        muonTrigSFv2[i] = 1.;
+        muonTrigSFv3[i] = 1.;
+        //electronSF[i] = 1.;
+      }
       nloWeight = 1.; // for amc@nlo samples
       
       nLeptons = -1;
@@ -897,47 +981,53 @@ int main (int argc, char *argv[])
       nMuons = -1;
       nJets = -1;
       
-//      electron_charge[] = {0};
-//      electron_pt[] = {0.};
-//      electron_phi[] = {0.};
-//      electron_eta[] = {0.};
-//      electron_eta_superCluster[] = {0.};
-//      electron_E[] = {0.};
-//      electron_M[] = {0.};
-//      electron_d0[] = {-1.};
-//      electron_chargedHadronIso[] = {-1.};
-//      electron_neutralHadronIso[] = {-1.};
-//      electron_photonIso[] = {-1.};
-//      electron_pfIso[] = {-1.};
-//      electron_sigmaIEtaIEta[] = {-1.};
-//      electron_deltaEtaIn[] = {-1.};
-//      electron_deltaPhiIn[] = {-1.};
-//      electron_hadronicOverEm[] = {-1.};
-//      electron_missingHits[] = {-1};
-//      electron_passConversion[] = {0};
-//      electron_isEBEEGap[] = {0};
-
-      muon_charge[] = {0};
-      muon_pt[] = {0.};
-      muon_phi[] = {0.};
-      muon_eta[] = {0.};
-      muon_E[] = {0.};
-      muon_M[] = {0.};
-      muon_d0[] = {-1.};
-      muon_chargedHadronIso[] = {-1.};
-      muon_neutralHadronIso[] = {-1.};
-      muon_photonIso[] = {-1.};
-      muon_puChargedHadronIso = {-1.};
-      muon_relIso[] = {-1.};
-      muon_pfIso[] = {-1.};
+      for (Int_t i = 0; i < 10; i++)
+      {
+//        electron_charge[i] = 0;
+//        electron_pt[i] = 0.;
+//        electron_phi[i] = 0.;
+//        electron_eta[i] = 0.;
+//        electron_eta_superCluster[i] = 0.;
+//        electron_E[i] = 0.;
+//        electron_M[i] = 0.;
+//        electron_d0[i] = -1.;
+//        electron_chargedHadronIso[i] = -1.;
+//        electron_neutralHadronIso[i] = -1.;
+//        electron_photonIso[i] = -1.;
+//        electron_pfIso[i] = -1.;
+//        electron_sigmaIEtaIEta[i] = -1.;
+//        electron_deltaEtaIn[i] = -1.;
+//        electron_deltaPhiIn[i] = -1.;
+//        electron_hadronicOverEm[i] = -1.;
+//        electron_missingHits[i] = -1;
+//        electron_passConversion[i] = 0;
+//        electron_isEBEEGap[i] = 0;
+        
+        muon_charge[i] = 0;
+        muon_pt[i] = 0.;
+        muon_phi[i] = 0.;
+        muon_eta[i] = 0.;
+        muon_E[i] = 0.;
+        muon_M[i] = 0.;
+        muon_d0[i] = -1.;
+        muon_chargedHadronIso[i] = -1.;
+        muon_neutralHadronIso[i] = -1.;
+        muon_photonIso[i] = -1.;
+        muon_puChargedHadronIso[i] = -1.;
+        muon_relIso[i] = -1.;
+        muon_pfIso[i] = -1.;
+      }
       
-      jet_charge[] = {0};
-      jet_pt[] = {0.};
-      jet_phi[] = {0.};
-      jet_eta[] = {0.};
-      jet_E[] = {0.};
-      jet_M[] = {0.};
-      jet_bdiscr[] = {-1.};
+      for (Int_t i = 0; i < 20; i++)
+      {
+        jet_charge[i] = 0;
+        jet_pt[i] = 0.;
+        jet_phi[i] = 0.;
+        jet_eta[i] = 0.;
+        jet_E[i] = 0.;
+        jet_M[i] = 0.;
+        jet_bdiscr[i] = -1.;
+      }
       
       met_pt = 0;
       met_phi = 0;
@@ -947,16 +1037,19 @@ int main (int argc, char *argv[])
       
       /// mcparticles
       nMCParticles = -1;
-      mc_status[] = {-1};
-      mc_pdgId[] = {0};
-      mc_mother[] = {0};
-      mc_granny[] = {0};
-      mc_pt[] = {0.};
-      mc_phi[] = {0.};
-      mc_eta[] = {0.};
-      mc_E[] = {0.};
-      mc_M[] = {0.};
-      
+      for (Int_t i = 0; i < 200; i++)
+      {
+        mc_status[i] = -1;
+        mc_pdgId[i] = 0;
+        mc_mother[i] = 0;
+        mc_granny[i] = 0;
+        mc_pt[i] = 0.;
+        mc_phi[i] = 0.;
+        mc_eta[i] = 0.;
+        mc_E[i] = 0.;
+        mc_M[i] = 0.;
+      }
+            
       
       
       ////////////////////
@@ -967,7 +1060,6 @@ int main (int argc, char *argv[])
       init_jets_corrected = init_jets;
       
       datasets[d]->eventTree()->LoadTree(ievt);
-      string currentFilename = datasets[d]->eventTree()->GetFile()->GetName();
       run_num = event->runId();
       evt_num = event->eventId();
       lumi_num = event->lumiBlockId();
@@ -1056,7 +1148,7 @@ int main (int argc, char *argv[])
         //jetTools->correctJetJESUnc(init_jets_corrected, "plus", 1);
       }
       
-      
+            
       
       /////////////////
       ///  Trigger  ///
@@ -1080,14 +1172,13 @@ int main (int argc, char *argv[])
       selectedMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, muonWP, "Spring15");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
       selectedElectrons = selection.GetSelectedElectrons(electronPTSel, electronEtaSel, electronWP, "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Spring15");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
-      vetoElectronsSemiMu = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
-      
+      vetoElectrons = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring15_25ns", true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       
       if (applyJetLeptonCleaning)
       {
         if(verbose > 3) cout << "  - Applying jet/lepton cleaning... " << endl; 
         
-        vector<TRootPFJet*> selectedJetsBC;
+        selectedJetsBC.clear();
         selectedJetsBC = selectedJets;
         selectedJets.clear();
         
@@ -1099,6 +1190,7 @@ int main (int argc, char *argv[])
             if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedMuons[iMuon]) < 0.4 )
             {
               toBeErased = true;
+              hasJetLeptonCleaning = true;
               break;
             }
           }
@@ -1108,6 +1200,7 @@ int main (int argc, char *argv[])
             if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedElectrons[iElectron]) < 0.3 )
             {
               toBeErased = true;
+              hasJetLeptonCleaning = true;
               break;
             }
           }
@@ -1120,8 +1213,7 @@ int main (int argc, char *argv[])
         {
           if ( selectedJetsBC.size() != selectedJets.size() ) cout << "--> original = " << selectedJetsBC.size()  << " after cleaning = " << selectedJets.size() << endl;
         }
-        nofEventsJetLeptonCleaned++;
-        
+                
       }  // end jet cleaning
       
       
@@ -1130,7 +1222,6 @@ int main (int argc, char *argv[])
         if ( selectedJets[i]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium )
           selectedBJets.push_back(selectedJets[i]);
       }
-      
       
       
       /// Fill variables for tree
@@ -1161,7 +1252,7 @@ int main (int argc, char *argv[])
         muon_d0[iMuon] = selectedMuons[iMuon]->d0();
         muon_chargedHadronIso[iMuon] = selectedMuons[iMuon]->chargedHadronIso(4);
         muon_neutralHadronIso[iMuon] = selectedMuons[iMuon]->neutralHadronIso(4);
-        muon_photonIso[iMuon] = selectedMuons[iMuon]->->photonIso(4);
+        muon_photonIso[iMuon] = selectedMuons[iMuon]->photonIso(4);
         muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
         muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
         muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
@@ -1199,7 +1290,8 @@ int main (int argc, char *argv[])
       if (! isData)
       {
         nMCParticles = mcParticles.size();
-        for (Int_t iMC = 0; iMC < nMCParticles; iMC)
+        if (nMCParticles > maxMCParticles) maxMCParticles = nMCParticles;
+        for (Int_t iMC = 0; iMC < nMCParticles; iMC++)
         {
           mc_status[iMC] = mcParticles[iMC]->status();
           mc_pdgId[iMC] = mcParticles[iMC]->type();
@@ -1249,7 +1341,7 @@ int main (int argc, char *argv[])
             if (vetoMuons.size() == 1)
             {
               cutFlow[4] = 1;
-              if (vetoElectronsSemiMu.size() == 0)
+              if (vetoElectrons.size() == 0)
               {
                 cutFlow[5] = 1;
                 
@@ -1281,7 +1373,8 @@ int main (int argc, char *argv[])
         }  // good PV
       }  // trigged
       
-      eventTree->Fill;
+      
+      basicEvent->Fill();
       
       if (! isSelected)
       {
@@ -1306,12 +1399,14 @@ int main (int argc, char *argv[])
       
       
     }  // end loop events
+    cout << "Max MCParticles: " << maxMCParticles << endl << endl;
     
+    cout << "Fill trees..." << endl;
     statTree->Fill();
     
     /// Write to file
     fout->cd();
-    eventTree->Write();
+    basicEvent->Write();
     myTree->Write();
     statTree->Write();
     fout->Close();
