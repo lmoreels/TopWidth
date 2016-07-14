@@ -19,6 +19,7 @@
 #include "TH2.h"
 #include "TLorentzVector.h"
 #include "TPaveText.h"
+#include "TFile.h"
 #include "TTree.h"
 #include <TMatrixDSym.h>
 #include <TMatrixDSymEigen.h>
@@ -114,7 +115,7 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  string pathOutput = "Ntupler_"+dateString+"/";
+  string pathOutput = "NtuplerOutput/";
   mkdir(pathOutput.c_str(),0777);
   
   string xmlFileName ="config/topWidth.xml";
@@ -168,12 +169,20 @@ int main (int argc, char *argv[])
     endEvent      = strtol(argv[argc-1], NULL, 10);
     
     // all the files are stored from arg 11 to argc-4
-    vector<string> vecfileNames;
-    for(int args = 11; args < argc-4; args++) 
+    vecfileNames.clear();
+    for(int args = 11; args < argc-7; args++) 
     {
       vecfileNames.push_back(argv[args]);
     }
+    
+    // Update output path according to channel
+    mkdir((pathOutput+channel).c_str(),0777);
+    pathOutput += channel+"/";
   }
+  // Give timestamp to output path
+  mkdir((pathOutput+dateString).c_str(),0777);
+  pathOutput += dateString+"/";
+  
   
   
   /////////////////////
@@ -245,7 +254,32 @@ int main (int argc, char *argv[])
   if (applyJetLeptonCleaning) cout << "*   - Jet/lepton Cleaning                   *" << endl;
   cout << "*********************************************" << endl;
   
-  if (localgridSubmission) cout << "Using localgrid submission" << endl;
+  if (localgridSubmission)
+  {
+    cout << "Using localgrid submission" << endl;
+    cout << "---Dataset accepted from command line---" << endl;
+    cout << "Dataset Name: " << dName << endl;
+    cout << "Dataset Title: " << dTitle << endl;
+    cout << "Dataset color: " << color << endl;
+    cout << "Dataset ls: " << ls << endl;
+    cout << "Dataset lw: " << lw << endl;
+    cout << "Dataset normf: " << normf << endl;
+    cout << "Dataset EqLumi: " << eqLumi << endl;
+    cout << "Dataset xSect: " << xSect << endl;
+    cout << "Dataset File Name: " << vecfileNames[0] << endl;
+    if ( vecfileNames.size() > 1 )
+    {
+      for (unsigned int i = 1; i < vecfileNames.size(); i++)
+      {
+        cout << "                   " << vecfileNames[i] << endl;
+      }
+    }
+    cout << "Channel is " << channel << endl;
+    cout << "Beginning Event: " << startEvent << endl;
+    cout << "Ending Event: " << endEvent << endl;
+    cout << "JobNum: " << jobNum << endl;
+    cout << "----------------------------------------" << endl << endl;
+  }
   
   
   /// xml file
@@ -302,11 +336,12 @@ int main (int argc, char *argv[])
   
   TTreeLoader treeLoader; 
   vector < Dataset* > datasets;
+  Dataset* theDataset;
   
   cout << " - Loading datasets ..." << endl;
   if (localgridSubmission)
   {
-    Dataset* theDataset = new Dataset(dName, dTitle, true, color, ls, lw, normf, xSect, vecfileNames);
+    theDataset = new Dataset(dName, dTitle, true, color, ls, lw, normf, xSect, vecfileNames);
     theDataset->SetEquivalentLuminosity(eqLumi);
     datasets.push_back(theDataset);
     //ndatasets = datasets.size() - 1;
@@ -337,8 +372,8 @@ int main (int argc, char *argv[])
   
   //nof selected events
   //double NEvtsData = 0;
-  Double_t *nEvents = new Double_t[ndatasets];
-  Double_t nloweight = 0;
+  //Double_t *nEvents = new Double_t[ndatasets];
+  //Double_t nloweight = 0;
   
   
   
@@ -523,8 +558,7 @@ int main (int argc, char *argv[])
     ///  Create output file  ///
     ////////////////////////////
     
-    string rootFileName = "Ntuples_output_"+dataSetName+".root";
-    rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+".root";
+    string rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+".root";
     
     cout << " - Recreate output file ..." << endl;
     TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
@@ -543,7 +577,7 @@ int main (int argc, char *argv[])
     
     // event related variables
     Int_t run_num;
-    Int_t evt_num;
+    Long64_t evt_num;
     Int_t lumi_num;
     Int_t nvtx;
     Int_t npu;
@@ -559,14 +593,16 @@ int main (int argc, char *argv[])
     Int_t appliedJER;
     Int_t appliedJES;
     
-    Int_t nEvents;
-    Int_t nEventsSel;
+    Long64_t nEvents;
+    Long64_t nEventsSel;
     Int_t nofPosWeights;
     Int_t nofNegWeights;
     Double_t sumW;
     
-    Int_t nofEventsHLTv2;
-    Int_t nofEventsHLTv3;
+    Long64_t nofEventsHLTv2;
+    Long64_t nofEventsHLTv3;
+    Long64_t nofSelEventsHLTv2;
+    Long64_t nofSelEventsHLTv3;
     
     Double_t puSF;
     Double_t btagSF;
@@ -655,7 +691,7 @@ int main (int argc, char *argv[])
     /////////////////////////
     
     basicEvent->Branch("run_num",&run_num,"run_num/I");
-    basicEvent->Branch("evt_num",&evt_num,"evt_num/I");
+    basicEvent->Branch("evt_num",&evt_num,"evt_num/L");
     basicEvent->Branch("lumi_num",&lumi_num,"lumi_num/I");
     basicEvent->Branch("nvtx",&nvtx,"nvtx/I");
     basicEvent->Branch("npu",&npu,"npu/I");
@@ -666,12 +702,14 @@ int main (int argc, char *argv[])
     basicEvent->Branch("appliedJER",&appliedJER,"appliedJER/I");
     basicEvent->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
-    statTree->Branch("nEvents" , &nEvents, "nEvents/I");
-    statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/I");
+    statTree->Branch("nEvents" , &nEvents, "nEvents/L");
+    statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
     if (isData)
     {
-      statTree->Branch("nofEventsHLTv2",&nofEventsHLTv2,"nofEventsHLTv2/I");
-      statTree->Branch("nofEventsHLTv3",&nofEventsHLTv3,"nofEventsHLTv3/I");
+      statTree->Branch("nofEventsHLTv2",&nofEventsHLTv2,"nofEventsHLTv2/L");
+      statTree->Branch("nofEventsHLTv3",&nofEventsHLTv3,"nofEventsHLTv3/L");
+      statTree->Branch("nofSelEventsHLTv2",&nofSelEventsHLTv2,"nofSelEventsHLTv2/L");
+      statTree->Branch("nofSelEventsHLTv3",&nofSelEventsHLTv3,"nofSelEventsHLTv3/L");
     }
     if (nlo)
     {
@@ -681,7 +719,7 @@ int main (int argc, char *argv[])
     }
     
 //    globalTree->Branch("run_num",&run_num,"run_num/I");
-//    globalTree->Branch("evt_num",&evt_num,"evt_num/I");
+//    globalTree->Branch("evt_num",&evt_num,"evt_num/L");
 //    globalTree->Branch("lumi_num",&lumi_num,"lumi_num/I");
 //    globalTree->Branch("nvtx",&nvtx,"nvtx/I");
 //    globalTree->Branch("npu",&npu,"npu/I");
@@ -692,7 +730,7 @@ int main (int argc, char *argv[])
 //    globalTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
     myTree->Branch("run_num",&run_num,"run_num/I");
-    myTree->Branch("evt_num",&evt_num,"evt_num/I");
+    myTree->Branch("evt_num",&evt_num,"evt_num/L");
     myTree->Branch("lumi_num",&lumi_num,"lumi_num/I");
     myTree->Branch("nvtx",&nvtx,"nvtx/I");
     myTree->Branch("npu",&npu,"npu/I");
@@ -874,7 +912,7 @@ int main (int argc, char *argv[])
     double end_d = ending;
     if ( localgridSubmission && endEvent < ending )
       end_d = endEvent;
-    // end_d = 2000;  // for testing
+    //end_d = 2000;  // for testing
     
     if ( end_d < startEvent )
     {
@@ -901,6 +939,8 @@ int main (int argc, char *argv[])
     sumW = 0.;
     nofEventsHLTv2 = 0;
     nofEventsHLTv3 = 0;
+    nofSelEventsHLTv2 = 0;
+    nofSelEventsHLTv3 = 0;
     
     /// Get run information
     datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
@@ -1382,6 +1422,19 @@ int main (int argc, char *argv[])
       }
       
       nEventsSel++;
+      
+      if (isData)
+      {
+        if ( run_num >= 256630 && run_num <= 257819 )
+        {
+          nofSelEventsHLTv2++;
+        }
+        else
+        {
+          nofSelEventsHLTv3++;
+        }
+      }
+      
       myTree->Fill();
       
       /// B-tagging

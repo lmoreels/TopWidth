@@ -125,7 +125,7 @@ for chan in channels:
 #                    print files_str
 
                     # create a file for this job
-                    filename="SubmitScripts/"+date+"/"+chan+"/submit_"+str(d.attrib['name'])+"_"+str(N_job*FilesPerJob+1)+"to"+str(N_job*FilesPerJob+len(listOfFiles))+".sh"
+                    filename="SubmitScripts/"+date+"/"+chan+"/output/submit_"+str(d.attrib['name'])+"_"+str(N_job*FilesPerJob+1)+"to"+str(N_job*FilesPerJob+len(listOfFiles))+".sh"
                     # copy a skeleton file that set up the code environment, the wall time and the queue
                     shutil.copyfile("submitSkeleton.sh", filename)
                     # append to the file the actual command

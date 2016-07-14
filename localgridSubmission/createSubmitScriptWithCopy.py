@@ -84,7 +84,7 @@ for chan in channels:
             topTrees = glob.glob(d.attrib['filenames'])
 
             # setting the number of file per job depending whether it is data sample or not
-            # this ca be tweaked
+            # this can be tweaked
             if "data" in str(d.attrib['name']):
                 FilePerJob=20
             else:
@@ -123,7 +123,7 @@ for chan in channels:
                     
 
                     # create a file for this job
-                    filename="SubmitScripts/"+date+"/"+chan+"/submit_"+str(d.attrib['name'])+"_"+str(N_job*FilePerJob+1)+"to"+str(N_job*FilePerJob+len(listOfFiles))+".sh"
+                    filename="SubmitScripts/"+date+"/"+chan+"/output/submit_"+str(d.attrib['name'])+"_"+str(N_job*FilePerJob+1)+"to"+str(N_job*FilePerJob+len(listOfFiles))+".sh"
                     # copy a skeleton file that set up the code environment, the wall time and the queue
                     shutil.copyfile("submitSkeleton.sh", filename)
                     # append to the file the actual command
