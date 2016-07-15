@@ -115,7 +115,7 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
-  string pathOutput = "NtuplerOutput/";
+  string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
   string xmlFileName ="config/topWidth.xml";
@@ -604,6 +604,13 @@ int main (int argc, char *argv[])
     Long64_t nofSelEventsHLTv2;
     Long64_t nofSelEventsHLTv3;
     
+    Bool_t newEvent;
+    Bool_t newEventSel;
+    Bool_t hasHLTv2;
+    Bool_t hasHLTv3;
+    Bool_t hasPosWeight;
+    Bool_t hasNegWeight;
+    
     Double_t puSF;
     Double_t btagSF;
     Double_t muonIdSF[10];
@@ -702,20 +709,27 @@ int main (int argc, char *argv[])
     basicEvent->Branch("appliedJER",&appliedJER,"appliedJER/I");
     basicEvent->Branch("appliedJES", &appliedJES, "appliedJES/I");
     
+    
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
+    statTree->Branch("eventCounter" , &newEvent, "newEvent/O");
+    statTree->Branch("selEventCounter" , &newEventSel, "newEventSel/O");
     if (isData)
     {
       statTree->Branch("nofEventsHLTv2",&nofEventsHLTv2,"nofEventsHLTv2/L");
       statTree->Branch("nofEventsHLTv3",&nofEventsHLTv3,"nofEventsHLTv3/L");
       statTree->Branch("nofSelEventsHLTv2",&nofSelEventsHLTv2,"nofSelEventsHLTv2/L");
       statTree->Branch("nofSelEventsHLTv3",&nofSelEventsHLTv3,"nofSelEventsHLTv3/L");
+      statTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
+      statTree->Branch("hasHLTv3",&hasHLTv3,"hasHLTv3/O");
     }
     if (nlo)
     {
       statTree->Branch("nofPosWeights",&nofPosWeights,"nofPosWeights/I");
       statTree->Branch("nofNegWeights",&nofNegWeights,"nofNegWeights/I");
       statTree->Branch("sumW", &sumW, "sumW/D");
+      statTree->Branch("hasPosWeight",&hasPosWeight,"hasPosWeight/O");
+      statTree->Branch("hasNegWeight",&hasNegWeight,"hasNegWeight/O");
     }
     
 //    globalTree->Branch("run_num",&run_num,"run_num/I");
@@ -972,6 +986,7 @@ int main (int argc, char *argv[])
     //for (unsigned int ievt = 0; ievt < 10000000; ievt++)
     {
       nEvents++;
+      newEvent = true;
       
       if (ievt%100000 == 0)
         cout << "Processing event " << ievt << "..." << endl;
@@ -1015,6 +1030,13 @@ int main (int argc, char *argv[])
         //electronSF[i] = 1.;
       }
       nloWeight = 1.; // for amc@nlo samples
+      
+      newEventSel = false;
+      hasHLTv2 = false;
+      hasHLTv3 = false;
+      hasPosWeight = false;
+      hasNegWeight = false;
+    
       
       nLeptons = -1;
       nElectrons = -1;
@@ -1117,10 +1139,12 @@ int main (int argc, char *argv[])
         else if ( run_num >= 256630 && run_num <= 257819 )
         {
           nofEventsHLTv2++;
+          hasHLTv2 = true;
         }
         else
         {
           nofEventsHLTv3++;
+          hasHLTv3 = true;
         }
       }
 
@@ -1147,10 +1171,12 @@ int main (int argc, char *argv[])
           if ( nloWeight >= 0. ) 
           {
             nofPosWeights++;
+            hasPosWeight = true;
           }
           else
           {
             nofNegWeights++;
+            hasNegWeight = true;
           }
         }
         if ( event->getWeight(1) != -9999. )
@@ -1161,10 +1187,12 @@ int main (int argc, char *argv[])
           if ( nloWeight >= 0. )
           {
             nofPosWeights++;
+            hasPosWeight = true;
           }
           else
           {
             nofNegWeights++;
+            hasNegWeight = true;
           }
         }
         
