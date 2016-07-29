@@ -16,7 +16,7 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "160714"
+date = "160727"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
@@ -94,6 +94,8 @@ for chan in channels:
         for zombie in listOfZombies:
             print >> outfile, zombie
     
+    
+    # Further merging of data if there are multiple data collections
     mergeData=False
     
     if (mergeData):

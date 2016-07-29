@@ -199,8 +199,8 @@ int main (int argc, char *argv[])
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
-  bool calculateBTagSF = false;
-  bool applyBTagSF = true;
+  bool calculateBTagSF = true;
+  bool applyBTagSF = false;
   bool applyJetLeptonCleaning = true;
   
   if (localgridSubmission)
@@ -213,8 +213,8 @@ int main (int argc, char *argv[])
     else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
     else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
     
-    if ( fillBtagHisto == 0 ) { applyBTagSF = true; calculateBTagSF = false;}
-    else if ( fillBtagHisto == 1 ) { applyBTagSF = false; calculateBTagSF = true;}
+    //if ( fillBtagHisto == 0 ) { applyBTagSF = true; calculateBTagSF = false;}
+    //else if ( fillBtagHisto == 1 ) { applyBTagSF = false; calculateBTagSF = true;}
   }
   
   if (  (applyPUup    && (             applyPUdown || applyJERup || applyJERdown || applyJESup || applyJESdown))
@@ -426,7 +426,7 @@ int main (int argc, char *argv[])
   if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis";}
   BTagCalibration *bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2_76X_combToMujets.csv"); 
   BTagCalibrationReader *bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets","central");
-  BTagWeightTools *bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"PlotsForBTagSFs.root",30., 999., 2.4);
+  BTagWeightTools *bTagHistoTool_M;
   
   
   /// Pile-up
@@ -522,6 +522,22 @@ int main (int argc, char *argv[])
     
     
     
+    /////////////////
+    ///  BTag SF  ///
+    /////////////////
+    
+    if (applyBTagSF)
+    {
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"PlotsForBTagSFs.root",false, 20., 999., 2.4);
+    }
+    else if (calculateBTagSF)
+    {
+      mkdir(("BTagHistos/"+dateString).c_str(),0777);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_central.root", false, 20., 999., 2.4);
+    }
+    
+    
+    
     ///////////////////////////////////////////
     ///  Initialise Jet Energy Corrections  ///
     ///////////////////////////////////////////
@@ -592,6 +608,7 @@ int main (int argc, char *argv[])
     
     Int_t appliedJER;
     Int_t appliedJES;
+    Int_t appliedPU;
     
     Long64_t nEvents;
     Long64_t nEventsSel;
@@ -708,6 +725,7 @@ int main (int argc, char *argv[])
     basicEvent->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
     basicEvent->Branch("appliedJER",&appliedJER,"appliedJER/I");
     basicEvent->Branch("appliedJES", &appliedJES, "appliedJES/I");
+    basicEvent->Branch("appliedPU", &appliedPU, "appliedPU/I");
     
     
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
@@ -742,6 +760,7 @@ int main (int argc, char *argv[])
 //    globalTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
 //    globalTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
 //    globalTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
+//    globalTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
     
     myTree->Branch("run_num",&run_num,"run_num/I");
     myTree->Branch("evt_num",&evt_num,"evt_num/L");
@@ -756,6 +775,7 @@ int main (int argc, char *argv[])
 //    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
     myTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     myTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
+    myTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
     
     
     
@@ -978,6 +998,17 @@ int main (int argc, char *argv[])
     vector < TRootElectron* > selectedElectrons;
     vector < TRootElectron* > vetoElectrons;
     
+    /// Systematics
+    if (applyJEC) { appliedJES = 0;}
+    else if (applyJESup) { appliedJES = 1;}
+    else if (applyJESdown) { appliedJES = -1;}
+    if (applyJER) { appliedJER = 0;}
+    else if (applyJERup) { appliedJER = 1;}
+    else if (applyJERdown) { appliedJER = -1;}
+    if (applyPU) { appliedPU = 0;}
+    else if (applyPUup) { appliedPU = 1;}
+    else if (applyPUdown) { appliedPU = -1;}
+    
     
     if (verbose > 1)
       cout << "	Loop over events " << endl;
@@ -1017,8 +1048,6 @@ int main (int argc, char *argv[])
       //passedMETFilter = false;
       for (Int_t i = 0; i < 10; i++)
         cutFlow[i] = 0;
-      appliedJER = 0;
-      appliedJES = 0;
       puSF = 1.;
       btagSF = 1.;
       for (Int_t i = 0; i < 10; i++)
