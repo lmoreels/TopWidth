@@ -14,7 +14,7 @@ then
 
 else
     cd output
-    for f in ../submit*.sh
+    for f in ./submit*.sh
     do
 	qsub $f
     done

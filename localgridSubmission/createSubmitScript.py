@@ -82,8 +82,12 @@ for chan in channels:
             # this can be tweaked
             if "data" in str(d.attrib['name']):
                 FilesPerJob=20
+            elif "TT" in str(d.attrib['name']):
+                FilePerJob=3
+            elif "ST" in str(d.attrib['name']):
+                FilePerJob=5
             else:
-                FilesPerJob=5
+                FilePerJob=10
 
             # create a test job for each dataset
             # create a file for this job                                                                                                                                        
