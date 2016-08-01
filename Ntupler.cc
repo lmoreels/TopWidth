@@ -199,8 +199,8 @@ int main (int argc, char *argv[])
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
-  bool calculateBTagSF = true;
-  bool applyBTagSF = false;
+  bool calculateBTagSF = false;
+  bool applyBTagSF = true;
   bool applyJetLeptonCleaning = true;
   
   if (localgridSubmission)
@@ -526,14 +526,17 @@ int main (int argc, char *argv[])
     ///  BTag SF  ///
     /////////////////
     
-    if (applyBTagSF)
+    if (applyBTagSF && ! isData)
     {
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"PlotsForBTagSFs.root",false, 20., 999., 2.4);
+      /// Use seperate per data set?? (We have these...)
+      //  string pathBTagHistos = BTagHistos/160729/merged/";
+      //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_mujets_central.root", false, 20., 600., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs.root", false, 20., 600., 2.4);
     }
-    else if (calculateBTagSF)
+    else if (calculateBTagSF && ! isData)
     {
       mkdir(("BTagHistos/"+dateString).c_str(),0777);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_central.root", false, 20., 999., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M,"BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_central.root", false, 20., 600., 2.4);
     }
     
     
@@ -576,12 +579,11 @@ int main (int argc, char *argv[])
     
     string rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+".root";
     
-    cout << " - Recreate output file ..." << endl;
+    cout << " - Recreate output file ..." << rootFileName << endl;
     TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
     fout->cd();
     
     TTree* myTree = new TTree("tree","tree");
-    TTree* basicEvent = new TTree("event","event");
     TTree* statTree = new TTree("stats","stats");
 //    TTree* globalTree = new TTree("globaltree","globaltree");  // no selection applied
     
@@ -714,24 +716,12 @@ int main (int argc, char *argv[])
     ///  Define branches  ///
     /////////////////////////
     
-    basicEvent->Branch("run_num",&run_num,"run_num/I");
-    basicEvent->Branch("evt_num",&evt_num,"evt_num/L");
-    basicEvent->Branch("lumi_num",&lumi_num,"lumi_num/I");
-    basicEvent->Branch("nvtx",&nvtx,"nvtx/I");
-    basicEvent->Branch("npu",&npu,"npu/I");
-    basicEvent->Branch("rho",&rho,"rho/D");
-    basicEvent->Branch("isTrigged",&isTrigged,"isTrigged/O");
-    basicEvent->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
-    basicEvent->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
-    basicEvent->Branch("appliedJER",&appliedJER,"appliedJER/I");
-    basicEvent->Branch("appliedJES", &appliedJES, "appliedJES/I");
-    basicEvent->Branch("appliedPU", &appliedPU, "appliedPU/I");
-    
     
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
     statTree->Branch("eventCounter" , &newEvent, "newEvent/O");
     statTree->Branch("selEventCounter" , &newEventSel, "newEventSel/O");
+    statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
     if (isData)
     {
       statTree->Branch("nofEventsHLTv2",&nofEventsHLTv2,"nofEventsHLTv2/L");
@@ -769,14 +759,17 @@ int main (int argc, char *argv[])
     myTree->Branch("npu",&npu,"npu/I");
     myTree->Branch("rho",&rho,"rho/D");
     myTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
-    myTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
     myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
     myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
 //    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
     myTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     myTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     myTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
-    
+    if (isData)
+    {
+      statTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
+      statTree->Branch("hasHLTv3",&hasHLTv3,"hasHLTv3/O");
+    }
     
     
 //    globalTree->Branch("nLeptons",&nLeptons, "nLeptons/I");
@@ -975,6 +968,8 @@ int main (int argc, char *argv[])
     nofEventsHLTv3 = 0;
     nofSelEventsHLTv2 = 0;
     nofSelEventsHLTv3 = 0;
+    for (Int_t i = 0; i < 10; i++)
+      cutFlow[i] = 0;
     
     /// Get run information
     datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
@@ -1046,8 +1041,6 @@ int main (int argc, char *argv[])
       hasExactly4Jets = false;
       hasJetLeptonCleaning = false;
       //passedMETFilter = false;
-      for (Int_t i = 0; i < 10; i++)
-        cutFlow[i] = 0;
       puSF = 1.;
       btagSF = 1.;
       for (Int_t i = 0; i < 10; i++)
@@ -1100,13 +1093,13 @@ int main (int argc, char *argv[])
         muon_eta[i] = 0.;
         muon_E[i] = 0.;
         muon_M[i] = 0.;
-        muon_d0[i] = -1.;
-        muon_chargedHadronIso[i] = -1.;
-        muon_neutralHadronIso[i] = -1.;
-        muon_photonIso[i] = -1.;
-        muon_puChargedHadronIso[i] = -1.;
-        muon_relIso[i] = -1.;
-        muon_pfIso[i] = -1.;
+        muon_d0[i] = 999.;
+        muon_chargedHadronIso[i] = 999.;
+        muon_neutralHadronIso[i] = 999.;
+        muon_photonIso[i] = 999.;
+        muon_puChargedHadronIso[i] = 999.;
+        muon_relIso[i] = 999.;
+        muon_pfIso[i] = 999.;
       }
       
       for (Int_t i = 0; i < 20; i++)
@@ -1120,11 +1113,11 @@ int main (int argc, char *argv[])
         jet_bdiscr[i] = -1.;
       }
       
-      met_pt = 0;
-      met_phi = 0;
-      met_eta = 0;
-      met_Et = 0;
-      met_E = 0;
+      met_pt = 0.;
+      met_phi = 0.;
+      met_eta = 0.;
+      met_Et = 0.;
+      met_E = 0.;
       
       /// mcparticles
       nMCParticles = -1;
@@ -1425,22 +1418,22 @@ int main (int argc, char *argv[])
       
       
       ////// Selection
-      cutFlow[0] = 1;
+      cutFlow[0]++;
       if (isTrigged)
       {
-        cutFlow[1] = 1;
+        cutFlow[1]++;
         if (isGoodPV)
         {
-          cutFlow[2] = 1;
+          cutFlow[2]++;
           if (selectedMuons.size() == 1)
           {
-            cutFlow[3] = 1;
+            cutFlow[3]++;
             if (vetoMuons.size() == 1)
             {
-              cutFlow[4] = 1;
+              cutFlow[4]++;
               if (vetoElectrons.size() == 0)
               {
-                cutFlow[5] = 1;
+                cutFlow[5]++;
                 
                 /// First 4 jets need pT > 30 GeV
                 if (selectedJets.size() >= 4)
@@ -1450,15 +1443,15 @@ int main (int argc, char *argv[])
                 
                 if ( selectedJets.size() >= 4 )
                 {
-                  cutFlow[6] = 1;
+                  cutFlow[6]++;
                   if ( selectedJets.size() == 4 ) hasExactly4Jets = true;
                   
                   if ( selectedBJets.size() > 0 )
                   {
-                    cutFlow[7] = 1;
+                    cutFlow[7]++;
                     if ( selectedBJets.size() > 1 )
                     {
-                      cutFlow[8] = 1;
+                      cutFlow[8]++;
                       isSelected = true;
                     }  // at least 2 b-tagged jets
                   }  // at least 1 b-tagged jet
@@ -1470,8 +1463,6 @@ int main (int argc, char *argv[])
         }  // good PV
       }  // trigged
       
-      
-      basicEvent->Fill();
       
       if (! isSelected)
       {
@@ -1492,7 +1483,11 @@ int main (int argc, char *argv[])
         }
       }
       
-      myTree->Fill();
+      if (!calculateBTagSF)
+      {
+        myTree->Fill();
+      }
+      
       
       /// B-tagging
       if (calculateBTagSF && ! isData)
@@ -1516,7 +1511,6 @@ int main (int argc, char *argv[])
     
     /// Write to file
     fout->cd();
-    basicEvent->Write();
     myTree->Write();
     statTree->Write();
     fout->Close();

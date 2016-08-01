@@ -47,14 +47,14 @@ map<string,TH2F*> histo2D;
 map<string,MultiSamplePlot*> MSPlot;
 
 map<string,TFile*> tFileMap;
-map<string,TFile*> globalTFileMap;
+//map<string,TFile*> globalTFileMap;
 
 map<string,TTree*> tTree;
 map<string,TTree*> tStatsTree;
 
-map<string,TNtuple*> ntuple;
-map<string,TNtuple*> ntree;
-map<string,TNtuple*> otree;
+//map<string,TNtuple*> ntuple;
+//map<string,TNtuple*> ntree;
+//map<string,TNtuple*> otree;
 
 
 /// Function prototypes
