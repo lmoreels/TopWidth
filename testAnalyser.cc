@@ -1334,7 +1334,7 @@ int main (int argc, char *argv[])
           {
             muPlusFromTop = true;
             genmuon = i;
-	    		}
+          }
           
           if ( abs(mcParticles[i]->type()) < 6 || abs(mcParticles[i]->type()) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
           {
@@ -1435,7 +1435,7 @@ int main (int argc, char *argv[])
           nofMatchedEvents++;
           if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 && leptonicBJet_.first < 4)
             all4JetsMatched_MCdef_ = true;
-	  		}
+        }
         else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
         
         if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4)
@@ -1467,7 +1467,7 @@ int main (int argc, char *argv[])
           
           tf->fillJets(partonTLV, jetTLV);
           
-          if (muonmatched) tf->fillMuon((TLorentzVector*) mcParticles[genmuon], (TLorentzVector*) selectedMuons[0]);
+          if (muonmatched) tf->fillMuon((TLorentzVector) *mcParticles[genmuon], (TLorentzVector) *selectedMuons[0]);
           //if (electronmatched) tf->fillElectron(...)
           
         }  // end tf

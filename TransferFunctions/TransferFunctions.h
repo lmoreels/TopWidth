@@ -38,8 +38,8 @@ class TransferFunctions{
     std::string toStr(int number);
     void bookHistograms();
     void fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet);
-    void fillMuon(TLorentzVector *genMu, TLorentzVector *recMu);
-    void fillElectron(TLorentzVector *genEl, TLorentzVector *recEl);
+    void fillMuon(TLorentzVector genMu, TLorentzVector recMu);
+    void fillElectron(TLorentzVector genEl, TLorentzVector recEl);
     void writeHistograms();
     void makeFit();
     void makeFit(std::string inputFileName, std::string outputFileName);

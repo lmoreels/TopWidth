@@ -115,7 +115,7 @@ void TransferFunctions::bookHistograms()
   histoTr2D["InvPtgenMu_vs_PhirecMu"] = new TH2F("InvPtgenMu_vs_PhirecMu","InvPtgenMu_vs_PhirecMu", 50, 0, 0.05, 120, -3.2, 3.2);
   histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("InvPtgenMu_vs_PhigenMu-PhirecMu","InvPtgenMu_vs_PhigenMu-PhirecMu", 5, 0.002, 0.04, 100, -0.002, 0.002);
   
-  std::cout << "   - Histograms booked" << std::endl;
+  std::cout << "                                  - Histograms booked" << std::endl;
 }
 
 void TransferFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet)
@@ -193,57 +193,57 @@ void TransferFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vecto
   
 }
 
-void TransferFunctions::fillMuon(TLorentzVector* genMu, TLorentzVector* recMu)
+void TransferFunctions::fillMuon(TLorentzVector genMu, TLorentzVector recMu)
 {
   
   muon = true;
   
-  float InvPtgenMu = 1./genMu->Pt();
-  float InvPtrecMu = 1./recMu->Pt();
+  float InvPtgenMu = 1./genMu.Pt();
+  float InvPtrecMu = 1./recMu.Pt();
   histoTr2D["InvPtgenMu_vs_InvPtrecMu"]->Fill(InvPtgenMu,InvPtrecMu);
   histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"]->Fill(InvPtgenMu,InvPtgenMu-InvPtrecMu);
   
-  histoTr2D["ThgenMu_vs_ThrecMu"]->Fill(genMu->Theta(),recMu->Theta());
-  histoTr2D["ThgenMu_vs_ThgenMu-ThrecMu"]->Fill(genMu->Theta(),genMu->Theta()-recMu->Theta());
-  histoTr2D["InvPtgenMu_vs_ThrecMu"]->Fill(1./genMu->Pt(),recMu->Theta());
-  histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"]->Fill(1./genMu->Pt(),genMu->Theta()-recMu->Theta());
+  histoTr2D["ThgenMu_vs_ThrecMu"]->Fill(genMu.Theta(),recMu.Theta());
+  histoTr2D["ThgenMu_vs_ThgenMu-ThrecMu"]->Fill(genMu.Theta(),genMu.Theta()-recMu.Theta());
+  histoTr2D["InvPtgenMu_vs_ThrecMu"]->Fill(1./genMu.Pt(),recMu.Theta());
+  histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"]->Fill(1./genMu.Pt(),genMu.Theta()-recMu.Theta());
   
-  histoTr2D["EtagenMu_vs_EtarecMu"]->Fill(genMu->Eta(),recMu->Eta());
-  histoTr2D["EtagenMu_vs_EtagenMu-EtarecMu"]->Fill(genMu->Eta(),genMu->Eta()-recMu->Eta());
-  histoTr2D["InvPtgenMu_vs_EtarecMu"]->Fill(1./genMu->Pt(),recMu->Eta());
-  histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"]->Fill(1./genMu->Pt(),genMu->Eta()-recMu->Eta());
+  histoTr2D["EtagenMu_vs_EtarecMu"]->Fill(genMu.Eta(),recMu.Eta());
+  histoTr2D["EtagenMu_vs_EtagenMu-EtarecMu"]->Fill(genMu.Eta(),genMu.Eta()-recMu.Eta());
+  histoTr2D["InvPtgenMu_vs_EtarecMu"]->Fill(1./genMu.Pt(),recMu.Eta());
+  histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"]->Fill(1./genMu.Pt(),genMu.Eta()-recMu.Eta());
   
-  histoTr2D["PhigenMu_vs_PhirecMu"]->Fill(genMu->Phi(),recMu->Phi());
-  histoTr2D["InvPtgenMu_vs_PhirecMu"]->Fill(1./genMu->Pt(),recMu->Phi());
-  float DeltaPhi = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*genMu,(TLorentzVector)*recMu);
-  histoTr2D["PhigenMu_vs_PhigenMu-PhirecMu"]->Fill(genMu->Phi(),DeltaPhi);
-  histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]->Fill(1./genMu->Pt(),DeltaPhi);
+  histoTr2D["PhigenMu_vs_PhirecMu"]->Fill(genMu.Phi(),recMu.Phi());
+  histoTr2D["InvPtgenMu_vs_PhirecMu"]->Fill(1./genMu.Pt(),recMu.Phi());
+  float DeltaPhi = ROOT::Math::VectorUtil::DeltaPhi(genMu,recMu);
+  histoTr2D["PhigenMu_vs_PhigenMu-PhirecMu"]->Fill(genMu.Phi(),DeltaPhi);
+  histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]->Fill(1./genMu.Pt(),DeltaPhi);
   
 }
 
-void TransferFunctions::fillElectron(TLorentzVector* genEl, TLorentzVector* recEl)
+void TransferFunctions::fillElectron(TLorentzVector genEl, TLorentzVector recEl)
 {
   
   electron = true;
   
-  histoTr2D["EgenEl_vs_ErecEl"]->Fill(genEl->E(),recEl->E());
-  histoTr2D["EgenEl_vs_EgenEl-ErecEl"]->Fill(genEl->E(),genEl->E()-recEl->E());
+  histoTr2D["EgenEl_vs_ErecEl"]->Fill(genEl.E(),recEl.E());
+  histoTr2D["EgenEl_vs_EgenEl-ErecEl"]->Fill(genEl.E(),genEl.E()-recEl.E());
   
-  histoTr2D["ThgenEl_vs_ThrecEl"]->Fill(genEl->Theta(),recEl->Theta());
-  histoTr2D["ThgenEl_vs_ThgenEl-ThrecEl"]->Fill(genEl->Theta(),genEl->Theta()-recEl->Theta());
-  histoTr2D["EgenEl_vs_ThrecEl"]->Fill(genEl->E(),recEl->Theta());
-  histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"]->Fill(genEl->E(),genEl->Theta()-recEl->Theta());
+  histoTr2D["ThgenEl_vs_ThrecEl"]->Fill(genEl.Theta(),recEl.Theta());
+  histoTr2D["ThgenEl_vs_ThgenEl-ThrecEl"]->Fill(genEl.Theta(),genEl.Theta()-recEl.Theta());
+  histoTr2D["EgenEl_vs_ThrecEl"]->Fill(genEl.E(),recEl.Theta());
+  histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"]->Fill(genEl.E(),genEl.Theta()-recEl.Theta());
   
-  histoTr2D["EtagenEl_vs_EtarecEl"]->Fill(genEl->Eta(),recEl->Eta());
-  histoTr2D["EtagenEl_vs_EtagenEl-EtarecEl"]->Fill(genEl->Eta(),genEl->Eta()-recEl->Eta());
-  histoTr2D["EgenEl_vs_EtarecEl"]->Fill(genEl->E(),recEl->Eta());
-  histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"]->Fill(genEl->E(),genEl->Eta()-recEl->Eta());
+  histoTr2D["EtagenEl_vs_EtarecEl"]->Fill(genEl.Eta(),recEl.Eta());
+  histoTr2D["EtagenEl_vs_EtagenEl-EtarecEl"]->Fill(genEl.Eta(),genEl.Eta()-recEl.Eta());
+  histoTr2D["EgenEl_vs_EtarecEl"]->Fill(genEl.E(),recEl.Eta());
+  histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"]->Fill(genEl.E(),genEl.Eta()-recEl.Eta());
   
-  histoTr2D["PhigenEl_vs_PhirecEl"]->Fill(genEl->Phi(),recEl->Phi());
-  histoTr2D["EgenEl_vs_PhirecEl"]->Fill(genEl->E(),recEl->Phi());
-  float DeltaPhi = ROOT::Math::VectorUtil::DeltaPhi((TLorentzVector)*genEl,(TLorentzVector)*recEl);
-  histoTr2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Fill(genEl->Phi(),DeltaPhi);
-  histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"]->Fill(genEl->E(),DeltaPhi);
+  histoTr2D["PhigenEl_vs_PhirecEl"]->Fill(genEl.Phi(),recEl.Phi());
+  histoTr2D["EgenEl_vs_PhirecEl"]->Fill(genEl.E(),recEl.Phi());
+  float DeltaPhi = ROOT::Math::VectorUtil::DeltaPhi(genEl,recEl);
+  histoTr2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Fill(genEl.Phi(),DeltaPhi);
+  histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"]->Fill(genEl.E(),DeltaPhi);
   
 }
 
@@ -340,7 +340,7 @@ void TransferFunctions::makeFit()
     if (electron) std::cout << "TransferFunctions::WriteOutputFiles -- WARNING: Electron fitting not yet implemented" << std::endl;
     if ( f == 2 || f == 6 || f == 10 || f == 14 ) continue;  // eta later
     
-    std::cout << "  - Current histogram:  " << histoNames[f] << std::endl;
+    std::cout << "  ***Current histogram:  " << histoNames[f] << "***" << std::endl;
     
     TH2F* histo=histoTr2D[(histoNames[f]).c_str()];
     if (getHistos)
