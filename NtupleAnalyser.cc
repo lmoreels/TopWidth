@@ -14,10 +14,12 @@
 // used TopTreeAnalysis classes
 #include "TopTreeProducer/interface/TRootRun.h"
 #include "TopTreeProducer/interface/TRootEvent.h"
-#include "TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
-#include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
+#include "TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
+#include "TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
+#include "TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
+#include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
 //#include "../macros/Style.C"
 
 // user defined
@@ -28,6 +30,7 @@ using namespace std;
 using namespace TopTree;
 
 
+bool calculateTransferFunctions = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -41,27 +44,42 @@ int verbose = 2;
 string pathNtuples = "";
 bool isData = false;
 
+int nofMatchedEvents = 0;
+
+///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+float CSVv2Loose =  0.460;
+float CSVv2Medium = 0.800;
+float CSVv2Tight = 0.935;
+
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
 map<string,MultiSamplePlot*> MSPlot;
 
 map<string,TFile*> tFileMap;
-//map<string,TFile*> globalTFileMap;
 
 map<string,TTree*> tTree;
 map<string,TTree*> tStatsTree;
 
 //map<string,TNtuple*> ntuple;
-//map<string,TNtuple*> ntree;
-//map<string,TNtuple*> otree;
 
 
 /// Function prototypes
+struct HighestPt
+{
+    bool operator()( TLorentzVector j1, TLorentzVector j2 ) const
+    {
+        return j1.Pt() > j2.Pt() ;
+    }
+};
+
 string ConvertIntToString(int nb, bool pad);
 string MakeTimeStamp();
 void InitTree(TTree* tree, bool isData);
 void ClearLeaves();
+void ClearTLVs();
+void ClearMatching();
+void ClearObjects();
 void GetHLTFraction(double* fractions);
 //void DatasetPlotter(int nBins, float plotLow, float plotHigh, string sVarofinterest, string xmlNom, string TreePath, string pathPNG);
 //void MSPCreator (string pathPNG);
@@ -189,6 +207,37 @@ TBranch        *b_muonIsoSF;   //!
 TBranch        *b_muonTrigSFv2;   //!
 TBranch        *b_muonTrigSFv3;   //!
 
+double scaleFactor, normFactor;
+vector<unsigned int> bJetId;
+
+/// Define TLVs
+TLorentzVector muon, jet, mcpart;
+vector<TLorentzVector> selectedLepton;
+vector<TLorentzVector> selectedJets;
+vector<TLorentzVector> selectedBJets;
+vector<TLorentzVector> mcParticles;
+vector<TLorentzVector> partons;
+vector<TLorentzVector> partonsMatched;
+vector<TLorentzVector> jetsMatched;
+
+/// Matching
+int pdgID_top = 6; //top quark
+
+bool all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
+bool all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
+bool hadronictopJetsMatched_MCdef_ = false;
+pair<unsigned int, unsigned int> leptonicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
+pair<unsigned int, unsigned int> hadronicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
+pair<unsigned int, unsigned int> hadronicWJet1_ = pair<unsigned int,unsigned int>(9999,9999);
+pair<unsigned int, unsigned int> hadronicWJet2_ = pair<unsigned int,unsigned int>(9999,9999);
+pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
+vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
+int topQuark = -9999, antiTopQuark = -9999;
+int genmuon = -9999;
+bool muonmatched = false;
+bool muPlusFromTop = false, muMinusFromTop = false;
+vector<unsigned int> partonId;
+
 
 int main(int argc, char* argv[])
 {
@@ -241,14 +290,22 @@ int main(int argc, char* argv[])
   
   
   
+  ///////////////////////////////////////
+  ///  Initialise Transfer Functions  ///
+  ///////////////////////////////////////
+  
+  TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
+  
+  
+  
   ////////////////////////////////////
   ///  Open files and get Ntuples  ///
   ////////////////////////////////////
   
   string dataSetName, filepath, slumi;
+  double timePerDataSet[datasets.size()] = {0};
   
   int nEntries;
-  double scaleFactor, normFactor;
   double fracHLT[2] = {-1};
   GetHLTFraction(fracHLT);
   if ( fracHLT[0] == -1 || fracHLT[1] == -1 )
@@ -256,12 +313,13 @@ int main(int argc, char* argv[])
     cout << "Something went wrong with the fraction calculation for trigger SFs!" << endl;
     exit(1);
   }
+  cout << "The muon trigger scale factors will be scaled by " << fracHLT[0] << " for HLTv2 and " << fracHLT[1] << " for HLTv3." << endl;
   
   
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
-    isData = false;
+    clock_t startDataSet = clock();
     
     dataSetName = datasets[d]->Name();
     if (verbose > 1)
@@ -269,6 +327,7 @@ int main(int argc, char* argv[])
       cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
     }
     
+    isData = false;
     if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
     {
       isData = true;
@@ -284,7 +343,7 @@ int main(int argc, char* argv[])
     //tStatsTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tStatsTreeName.c_str());
     
     nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
-    cout << "                 nEntries: " << nEntries << endl;
+    cout << "                     nEntries: " << nEntries << endl;
     
     
     // Set branch addresses and branch pointers
@@ -296,20 +355,11 @@ int main(int argc, char* argv[])
     ///  Loop on events
     ////////////////////////////////////
     
-    /// Define TLVs
-    vector<TLorentzVector*> selectedLepton;
-    vector<TLorentzVector*> selectedJets;
-    vector<TLorentzVector*> mcParticles;
     
-    
-    for (int ievt = 0; ievt < nEntries; ievt++)
+    //for (int ievt = 0; ievt < nEntries; ievt++)
+    for (int ievt = 0; ievt < 10; ievt++)
     {
-      selectedLepton.clear();
-      selectedJets.clear();
-      mcParticles.clear();
-      ClearLeaves();
-      scaleFactor = 1.;
-      normFactor = 1.;
+      ClearObjects();
       
       
       if (ievt%1000 == 0)
@@ -318,7 +368,7 @@ int main(int argc, char* argv[])
       /// Load event
       tTree[(dataSetName).c_str()]->GetEntry(ievt);
       
-      // Scale factors
+      /// Scale factors
       if (! isData)
       {
         if (applyLeptonSF) { scaleFactor *= muonIdSF[0] * muonIsoSF[0] * (fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0]);}
@@ -327,22 +377,272 @@ int main(int argc, char* argv[])
         //if (applyNloSF) { scaleFactor *= nloWeight;}  // additional SF due to number of events with neg weight!!
       }
       
+      /// Fill objects
+      muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
+      selectedLepton.push_back(muon);
+      
+      for (int iJet = 0; iJet < nJets; iJet++)
+      {
+        jet.Clear();
+        jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
+        selectedJets.push_back(jet);
+      }
+      
+      for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+      {
+        if ( jet_bdiscr[iJet] > CSVv2Medium )
+        {
+          selectedBJets.push_back(selectedJets[iJet]);
+          bJetId.push_back(iJet);
+        }
+      }
+      //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
+      
+      
+      
+      
+      /////////////////////////////
+      ///  JET PARTON MATCHING  ///
+      /////////////////////////////
+      
+      if ( dataSetName.find("TT") == 0 )
+      {
+        for (int iMC = 0; iMC < nMCParticles; iMC++)
+        {
+          mcpart.Clear();
+          mcpart.SetPtEtaPhiE(mc_pt[iMC], mc_eta[iMC], mc_phi[iMC], mc_E[iMC]);
+          mcParticles.push_back(mcpart);
+        }
+        
+        
+        for (unsigned int i = 0; i < mcParticles.size(); i++)
+        {
+          if (verbose > 4)
+            cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
+          
+          
+          if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;  /// Final state particle or particle from hardest process
+          
+          
+          if ( mc_pdgId[i] == pdgID_top )
+            topQuark = i;
+          else if( mc_pdgId[i] == -pdgID_top )
+            antiTopQuark = i;
+          
+          if ( mc_status[i] == 23 && mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
+          {
+            muMinusFromTop = true;
+            genmuon = i;
+          }
+          if ( mc_status[i] == 23 && mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
+          {
+            muPlusFromTop = true;
+            genmuon = i;
+          }
+          
+          if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
+          {
+            partons.push_back(mcParticles[i]);
+            partonId.push_back(i);
+          }
+          
+        }  // end loop mcParticles
+
+        if (verbose > 3)
+        {
+          cout << "Size mcParticles:   " << mcParticles.size() << endl;
+          cout << "Size partons:       " << partons.size() << endl;
+          cout << "Size selectedJets:  " << selectedJets.size() << endl;
+        }
+        
+        JetPartonMatching matching = JetPartonMatching(partons, selectedJets, 2, true, true, 0.3);  // partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
+        
+        if (matching.getNumberOfAvailableCombinations() != 1)
+          cerr << "matching.getNumberOfAvailableCombinations() = " << matching.getNumberOfAvailableCombinations() << " .  This should be equal to 1 !!!" << endl;
+        
+        
+        /// Fill match in JetPartonPair; // vector< pair<unsigned int, unsigned int> > 
+                                         // First one is jet number, second one is mcParticle number
+        
+        for (unsigned int i = 0; i < partons.size(); i++)
+        {
+          int matchedJetNumber = matching.getMatchForParton(i, 0);
+          if (matchedJetNumber > -1)
+            JetPartonPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
+        }
+        
+        if (verbose > 2)
+          cout << "Matching done" << endl;
+        
+        
+        for (unsigned int i = 0; i < JetPartonPair.size(); i++)
+        {
+          unsigned int j = JetPartonPair[i].second;
+          
+          if ( fabs(mc_pdgId[partonId[j]]) < 6 )  //light/b quarks, 6 should stay hardcoded
+          {
+            if ( ( muPlusFromTop && mc_mother[partonId[j]] == -24 && mc_granny[partonId[j]] == -pdgID_top )
+                || ( muMinusFromTop && mc_mother[partonId[j]] == 24 && mc_granny[partonId[j]] == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
+            {
+              if (verbose > 3)
+                cout << "Light jet: " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+              
+              if (hadronicWJet1_.first == 9999)
+              {
+                hadronicWJet1_ = JetPartonPair[i];
+                MCPermutation[0] = JetPartonPair[i];
+              }
+              else if (hadronicWJet2_.first == 9999)
+              {
+                hadronicWJet2_ = JetPartonPair[i];
+                MCPermutation[1] = JetPartonPair[i];
+              }
+              else
+              {
+                cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
+                cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
+                cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
+                cerr << " -- ievt: " << ievt << endl;
+                exit(1);
+              }
+            }
+          }
+          if ( fabs(mc_pdgId[partonId[j]]) == 5 )
+          {
+            if ( ( muPlusFromTop && mc_mother[partonId[j]] == -pdgID_top )
+                || ( muMinusFromTop && mc_mother[partonId[j]] == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
+            {
+              if (verbose > 3)
+                cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+              
+              hadronicBJet_ = JetPartonPair[i];
+              MCPermutation[2] = JetPartonPair[i];
+            }
+            else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
+              || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
+            {
+              if (verbose > 3)
+                cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+              
+              leptonicBJet_ = JetPartonPair[i];
+              MCPermutation[3] = JetPartonPair[i];
+            }
+          }
+        }  /// End loop over Jet Parton Pairs
+        
+        
+        if ( hadronicWJet1_.first != 9999 && hadronicWJet2_.first != 9999 && hadronicBJet_.first != 9999 && leptonicBJet_.first != 9999 )
+        {
+          all4PartonsMatched = true;
+          nofMatchedEvents++;
+          if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 && leptonicBJet_.first < 4)
+            all4JetsMatched_MCdef_ = true;
+        }
+        else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
+        
+        if ( hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 )
+          hadronictopJetsMatched_MCdef_ = true;
+        if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
+          muonmatched = true;
+        
+        
+        
+        ///////////////////
+        ///  Transfer functions
+        ///////////////////
+        
+        if (all4PartonsMatched && calculateTransferFunctions)
+        {
+          
+          for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+          {
+            /// MCPermutation[i].first  = jet number
+            /// MCPermutation[i].second = parton number
+            /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+            
+            partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
+            jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
+          }
+          
+          tf->fillJets(partonsMatched, jetsMatched);
+          
+          if (muonmatched) tf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
+          //if (electronmatched) tf->fillElectron(...)
+          
+        }  // end tf
+        
+        
+      }  // end if TT
       
       
       
     }  // end loop events
     
     
-    
+    if ( dataSetName.find("TT") == 0 )
+    {
+      cout << "Number of matched events: " << nofMatchedEvents << endl;
+      
+      /// Transfer functions
+      if (calculateTransferFunctions)
+      {
+        string tfFileName = "PlotsForTransferFunctions.root";
+        TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
+        foutTF->cd();
+
+        tf->writeHistograms();
+
+        foutTF->Close();
+
+        tf->writeTable(tfFileName);
+
+        delete foutTF;
+      }
+    }  // end TT
     
     
     tFileMap[dataSetName.c_str()]->Close();
     
+    timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
+    
   }  // end loop datasets
   
   
+  cout << "Processing time per dataset: " << endl;
+  for (unsigned int d = 0; d < datasets.size(); d++)
+  {
+    cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
+  }
   
   
+  ///// Write plots
+  
+  //////////////////
+  
+  
+  double time = ((double)clock() - start) / CLOCKS_PER_SEC;
+  cout << "It took us " << time << " s to run the program" << endl;
+  if ( time >= 60 )
+  {
+    int mins = time/60;
+    float secs = time - mins*60;
+    
+    if (mins >= 60 )
+    {
+      int hours = mins/60;
+      mins = mins - hours*60;
+      cout << "(This corresponds to " << hours << " hours, " << mins << " min and " << secs << " s)" << endl;
+    }
+    else
+      cout << "(This corresponds to " << mins << " min and " << secs << " s)" << endl;
+  }
+    
+  cout << "********************************************" << endl;
+  cout << "           End of the program !!            " << endl;
+  cout << "********************************************" << endl;
+  cout << " - Goodbye" << endl;
+  
+  return 0;
   
 }  // end main
 
@@ -522,7 +822,57 @@ void ClearLeaves()
   muonTrigSFv2[1] = 1.;
   muonTrigSFv3[1] = 1.;
   
+  scaleFactor = 1.;
+  normFactor = 1.;
+  bJetId.clear();
+}
+
+void ClearTLVs()
+{
+  muon.Clear();
+  jet.Clear();
+  mcpart.Clear();
+  selectedLepton.clear();
+  selectedJets.clear();
+  selectedBJets.clear();
+  mcParticles.clear();
+  partons.clear();
+  partonsMatched.clear();
+  jetsMatched.clear();
+}
+
+void ClearMatching()
+{
+  partons.clear();
+  partonsMatched.clear();
+  jetsMatched.clear();
   
+  all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
+  all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
+  hadronictopJetsMatched_MCdef_ = false;
+  leptonicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
+  hadronicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
+  hadronicWJet1_ = pair<unsigned int,unsigned int>(9999,9999);
+  hadronicWJet2_ = pair<unsigned int,unsigned int>(9999,9999);
+  for (int i = 0; i < 4; i++)
+  {
+    MCPermutation[i] = pair<unsigned int,unsigned int>(9999,9999);
+  }
+  JetPartonPair.clear();
+  topQuark = -9999;
+  antiTopQuark = -9999;
+  genmuon = -9999;
+  muonmatched = false;
+  muPlusFromTop = false;
+  muMinusFromTop = false;
+  partonId.clear();
+}
+
+void ClearObjects()
+{
+  ClearLeaves();
+  ClearTLVs();
+  ClearMatching();
 }
 
 void GetHLTFraction(double* fractions)
