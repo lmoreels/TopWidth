@@ -719,9 +719,12 @@ int main (int argc, char *argv[])
     
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
-    statTree->Branch("eventCounter" , &newEvent, "newEvent/O");
+    statTree->Branch("eventCounter" , &newEvent, "newEvent/O");  // when merging Ntuple files, nEvents will not add up but fill histo with several values of nEvents
     statTree->Branch("selEventCounter" , &newEventSel, "newEventSel/O");
     statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
+    statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
+    statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
+    statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
     if (isData)
     {
       statTree->Branch("nofEventsHLTv2",&nofEventsHLTv2,"nofEventsHLTv2/L");
@@ -762,9 +765,6 @@ int main (int argc, char *argv[])
     myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
     myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
 //    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
-    myTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
-    myTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
-    myTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
     if (isData)
     {
       statTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
@@ -1470,6 +1470,7 @@ int main (int argc, char *argv[])
       }
       
       nEventsSel++;
+      newEventSel = true;
       
       if (isData)
       {
