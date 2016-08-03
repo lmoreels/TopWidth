@@ -30,7 +30,7 @@ using namespace std;
 using namespace TopTree;
 
 
-bool calculateTransferFunctions = true;
+bool calculateTransferFunctions = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -45,11 +45,18 @@ string pathNtuples = "";
 bool isData = false;
 
 int nofMatchedEvents = 0;
+float Luminosity = 9999.;
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
 float CSVv2Loose =  0.460;
 float CSVv2Medium = 0.800;
 float CSVv2Tight = 0.935;
+
+// Temporarily, until calculated from TTbar sample
+float chi2WMass = 80.385;
+float sigmaChi2WMass = 15;
+float chi2TopMass = 172.5;
+float sigmaChi2TopMass = 40;
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -62,6 +69,8 @@ map<string,TTree*> tTree;
 map<string,TTree*> tStatsTree;
 
 //map<string,TNtuple*> ntuple;
+
+vector < Dataset* > datasets;
 
 
 /// Function prototypes
@@ -76,6 +85,7 @@ struct HighestPt
 string ConvertIntToString(int nb, bool pad);
 string MakeTimeStamp();
 void InitTree(TTree* tree, bool isData);
+void InitMSPlots();
 void ClearLeaves();
 void ClearTLVs();
 void ClearMatching();
@@ -207,8 +217,9 @@ TBranch        *b_muonIsoSF;   //!
 TBranch        *b_muonTrigSFv2;   //!
 TBranch        *b_muonTrigSFv3;   //!
 
-double scaleFactor, normFactor;
+float scaleFactor, normFactor;
 vector<unsigned int> bJetId;
+double recoWMass, recoTopMass, recoTopPt;
 
 /// Define TLVs
 TLorentzVector muon, jet, mcpart;
@@ -257,8 +268,8 @@ int main(int argc, char* argv[])
   else if ( argv[1] == "el" || argv[1] == "El" || argv[1] == "EL" || argv[1] == "e" ) channel = "el";
   //else if ( argv[1] == "all" || argv[1] == "All" || argv[1] == "ALL" ) channel = "all";
   
-  string pathOutput = "test/";
-  //string pathOutput = "OutputPlots/";
+  //string pathOutput = "test/";
+  string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
   // Add channel to output path
   pathOutput += channel+"/";
@@ -269,6 +280,7 @@ int main(int argc, char* argv[])
   
   
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
+  cout << "Using Ntuples from " << ntupleDate << endl;
   
   
   /// xml file
@@ -284,17 +296,55 @@ int main(int argc, char* argv[])
   ///  Load Datasets
   /////////////////////
   
+  datasets.clear();
   TTreeLoader treeLoader; 
-  vector < Dataset* > datasets;
   treeLoader.LoadDatasets(datasets, xmlfile);
   
+  for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
+  {
+    string dataSetName = datasets[d]->Name();
+    if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
+      Luminosity = datasets[d]->EquivalentLumi();
+    
+    if ( dataSetName.find("QCD") == 0 )
+      datasets[d]->SetColor(kYellow);
+    if ( dataSetName.find("TT") == 0 )
+    {
+      datasets[d]->SetTitle("t#bar{t}");
+      datasets[d]->SetColor(kRed+1);
+    }
+    //if ( dataSetName.find("TTbarJets_Other") == 0 ) datasets[d]->SetColor(kRed-7);
+    if ( dataSetName.find("WJets") == 0 )
+    {
+      datasets[d]->SetTitle("W#rightarrowl#nu");
+      datasets[d]->SetColor(kGreen-3);
+    }
+    if ( dataSetName.find("ZJets") == 0 || dataSetName.find("DY") == 0 )
+    {
+      datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
+      datasets[d]->SetColor(kCyan);
+      //datasets[d]->SetColor(kMagenta);
+    }
+    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") == 0 )
+    {
+      datasets[d]->SetColor(kBlue-2);
+      if ( dataSetName.find("tW") == 0 )
+        datasets[d]->SetTitle("ST tW");
+      else
+        datasets[d]->SetTitle("ST t");
+    }
+  }
   
   
-  ///////////////////////////////////////
-  ///  Initialise Transfer Functions  ///
-  ///////////////////////////////////////
+  
+  ////////////////////////
+  ///  Initialise ...  ///
+  ////////////////////////
   
   TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
+  
+  
+  InitMSPlots();
   
   
   
@@ -302,7 +352,7 @@ int main(int argc, char* argv[])
   ///  Open files and get Ntuples  ///
   ////////////////////////////////////
   
-  string dataSetName, filepath, slumi;
+  string dataSetName, slumi;
   double timePerDataSet[datasets.size()] = {0};
   
   int nEntries;
@@ -356,8 +406,8 @@ int main(int argc, char* argv[])
     ////////////////////////////////////
     
     
-    //for (int ievt = 0; ievt < nEntries; ievt++)
-    for (int ievt = 0; ievt < 10; ievt++)
+    for (int ievt = 0; ievt < nEntries; ievt++)
+    //for (int ievt = 0; ievt < 1000; ievt++)
     {
       ClearObjects();
       
@@ -375,6 +425,7 @@ int main(int argc, char* argv[])
         if (applyPU) { scaleFactor *= puSF;}
         if (applyBTagSF) { scaleFactor *= btagSF;}
         //if (applyNloSF) { scaleFactor *= nloWeight;}  // additional SF due to number of events with neg weight!!
+        //cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << muonIdSF[0] << "  muonIso: " << setw(6) << muonIsoSF[0] << "  muonTrig: " << setw(6) << fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0] << endl;
       }
       
       /// Fill objects
@@ -576,8 +627,92 @@ int main(int argc, char* argv[])
       
       
       
+      ///////////////
+      ///  CHI 2  ///
+      ///////////////
+      
+      int labelsReco[3] = {-9999, -9999, -9999};		// 0,1 = light jets, 2 = hadronic b-jet.
+      float recoWMass, recoTopMass, WTerm, topTerm, chi2;
+      float smallestChi2 = 9999.;
+      
+      for (int ijet = 0; ijet < 4; ijet++)
+      {
+        for (int jjet = ijet+1; jjet < 4; jjet++)
+        {
+          for (int kjet = 0; kjet < 4; kjet++)
+          {
+            if ( ijet != kjet && jjet != kjet )
+            {
+              recoWMass = (selectedJets[ijet] + selectedJets[jjet]).M();
+              recoTopMass = (selectedJets[ijet] + selectedJets[jjet] + selectedJets[kjet]).M();
+              
+              WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
+              topTerm = pow ( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
+              
+              chi2 = WTerm + topTerm;
+              
+              if ( chi2 < smallestChi2)
+              {
+                smallestChi2 = chi2;
+                labelsReco[0] = ijet;
+                labelsReco[1] = jjet;
+                labelsReco[2] = kjet;
+              }
+            }
+          }
+        }
+      }
+      
+      if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999)
+      {
+        recoWMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
+        recoTopMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
+        recoTopPt = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
+      }
+      
+      
+      /// Make plots
+      float Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
+      
+      MSPlot["muon_pT"]->Fill(selectedLepton[0].Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_eta"]->Fill(selectedLepton[0].Eta(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_phi"]->Fill(selectedLepton[0].Phi(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_relIso"]->Fill(muon_relIso[0], datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["muon_d0"]->Fill(muon_d0[0], datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["leadingJet_pT"]->Fill(selectedJets[0].Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet2_pT"]->Fill(selectedJets[1].Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet3_pT"]->Fill(selectedJets[2].Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["jet4_pT"]->Fill(selectedJets[3].Pt(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["Ht_4leadingJets"]->Fill(Ht, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["met_pT"]->Fill(met_pt, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["met_eta"]->Fill(met_eta, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["met_phi"]->Fill(met_phi, datasets[d], true, Luminosity*scaleFactor);
+      
+      MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["nBJets"]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
+      
+      MSPlot["CSVv2Discr_leadingJet"]->Fill(jet_bdiscr[0], datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["CSVv2Discr_jet2"]->Fill(jet_bdiscr[1], datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["CSVv2Discr_jet3"]->Fill(jet_bdiscr[2], datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["CSVv2Discr_jet4"]->Fill(jet_bdiscr[3], datasets[d], true, Luminosity*scaleFactor);
+      
+      int labelB = -1;
+      float highestBDiscr = -999.;
+      for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+      {
+        MSPlot["CSVv2Discr_allJets"]->Fill(jet_bdiscr[iJet], datasets[d], true, Luminosity*scaleFactor);
+        if ( jet_bdiscr[iJet] > highestBDiscr )
+        {
+          highestBDiscr = jet_bdiscr[iJet];
+          labelB = iJet;
+        }
+      }
+      MSPlot["CSVv2Discr_highest"]->Fill(highestBDiscr, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["CSVv2Discr_jetNb"]->Fill(labelB, datasets[d], true, Luminosity*scaleFactor);
+      
     }  // end loop events
     
+    cout << endl;
     
     if ( dataSetName.find("TT") == 0 )
     {
@@ -615,9 +750,35 @@ int main(int argc, char* argv[])
   }
   
   
-  ///// Write plots
   
-  //////////////////
+  
+  ///*****************///
+  ///   Write plots   ///
+  ///*****************///
+  
+  string rootFileName = "NtuplePlots_nominal.root";
+  mkdir((pathOutput+"MSPlot/").c_str(),0777);
+  
+  cout << " - Recreate output file ..." << endl;
+  TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
+  cout << "   Output file is " << pathOutput+rootFileName << endl;
+  
+  ///Write histograms
+  fout->cd();
+  
+  for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+  {
+    //cout << "MSPlot: " << it->first << endl;
+    MultiSamplePlot *temp = it->second;
+    string name = it->first;
+    temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+    temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+  }
+  
+  fout->Close();
+  
+  delete fout;
+  
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
@@ -754,6 +915,37 @@ void InitTree(TTree* tree, bool isData)
    
 }
 
+void InitMSPlots()
+{
+  MSPlot["muon_pT"] = new MultiSamplePlot(datasets, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_eta"] = new MultiSamplePlot(datasets, "muon_eta", 30, -3, 3, "Eta");
+  MSPlot["muon_phi"] = new MultiSamplePlot(datasets, "muon_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["muon_relIso"] = new MultiSamplePlot(datasets, "muon_relIso", 20, 0, 0.2, "relIso");
+  MSPlot["muon_d0"] = new MultiSamplePlot(datasets, "muon_d0", 50, 0, 0.03, "d_{0}");
+  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasets, "leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
+  MSPlot["jet2_pT"] = new MultiSamplePlot(datasets, "jet2_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet3_pT"] = new MultiSamplePlot(datasets, "jet3_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet4_pT"] = new MultiSamplePlot(datasets, "jet4_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasets,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
+  MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 30, -3, 3, "Eta");
+  MSPlot["met_phi"] = new MultiSamplePlot(datasets, "met_phi", 32, -3.2, 3.2, "Phi");
+
+  MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
+  MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 9, -0.5, 8.5, "# b jets");
+  MSPlot["CSVv2Discr_allJets"] = new MultiSamplePlot(datasets, "CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasets, "CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+  MSPlot["CSVv2Discr_jet2"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+  MSPlot["CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+  MSPlot["CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+  MSPlot["CSVv2Discr_highest"] = new MultiSamplePlot(datasets, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasets, "CSVv2Discr_jetNb", 48, 0.0, 1.2, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
+  
+//   MSPlot["min_M_lb"] = new MultiSamplePlot(datasets, "min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
+//   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
+  
+}
+
 void ClearLeaves()
 {
   run_num = -1;
@@ -825,6 +1017,9 @@ void ClearLeaves()
   scaleFactor = 1.;
   normFactor = 1.;
   bJetId.clear();
+  recoWMass = -1.;
+  recoTopMass = -1.;
+  recoTopPt = -1.;
 }
 
 void ClearTLVs()
