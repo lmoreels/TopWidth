@@ -6,7 +6,10 @@
 *.xml.bk
 *Class.C
 *Class.h
+NtupleContent/*
+NtupleOutput/*
 Ntupler_an_Isis.cc
+OutputPlots/*
 Plots*/*
 TransferFunctions/*.txt
 TransferFunctions_TABLE.txt
@@ -19,6 +22,7 @@ negWeights/
 negWeightsCalculator
 nohup*.txt
 output*/
+test*/*
 NtupleAnalyser
 Ntupler
 testAnalyser

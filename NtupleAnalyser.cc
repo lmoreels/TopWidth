@@ -10,6 +10,7 @@
 #include "TRandom3.h"
 #include "TNtuple.h"
 #include <TFile.h>
+#include <TLeaf.h>
 
 // used TopTreeAnalysis classes
 #include "TopTreeProducer/interface/TRootRun.h"
@@ -30,7 +31,8 @@ using namespace std;
 using namespace TopTree;
 
 
-bool calculateTransferFunctions = false;
+bool test = false;
+bool calculateTransferFunctions = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -38,7 +40,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-string ntupleDate = "160729";
+string ntupleDate = "160803";
 int verbose = 2;
 
 string pathNtuples = "";
@@ -46,6 +48,8 @@ bool isData = false;
 
 int nofMatchedEvents = 0;
 float Luminosity = 9999.;
+
+
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
 float CSVv2Loose =  0.460;
@@ -84,12 +88,15 @@ struct HighestPt
 
 string ConvertIntToString(int nb, bool pad);
 string MakeTimeStamp();
+void GetMetaData(TTree* tree, bool isData);
 void InitTree(TTree* tree, bool isData);
 void InitMSPlots();
+void ClearMetaData();
 void ClearLeaves();
 void ClearTLVs();
 void ClearMatching();
 void ClearObjects();
+long GetNEvents(TTree* fChain, string var, bool isData);
 void GetHLTFraction(double* fractions);
 //void DatasetPlotter(int nBins, float plotLow, float plotHigh, string sVarofinterest, string xmlNom, string TreePath, string pathPNG);
 //void MSPCreator (string pathPNG);
@@ -105,12 +112,8 @@ Int_t           nvtx;
 Int_t           npu;
 Double_t        rho;
 Bool_t          isTrigged;
-Bool_t          cutFlow[10];
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
-Int_t           appliedJER;
-Int_t           appliedJES;
-Int_t           appliedPU;
 Int_t           nLeptons;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
@@ -157,6 +160,17 @@ Double_t        muonIsoSF[1];   //[nMuons]
 Double_t        muonTrigSFv2[1];   //[nMuons]
 Double_t        muonTrigSFv3[1];   //[nMuons]
 
+Long64_t        nEvents;
+Long64_t        nEventsSel;
+Bool_t          cutFlow[10];
+Int_t           appliedJER;
+Int_t           appliedJES;
+Int_t           appliedPU;
+Long64_t        nofEventsHLTv2;
+Long64_t        nofEventsHLTv3;
+Long64_t        nofSelEventsHLTv2;
+Long64_t        nofSelEventsHLTv3;
+
 // List of branches
 TBranch        *b_run_num;   //!
 TBranch        *b_evt_num;   //!
@@ -165,12 +179,8 @@ TBranch        *b_nvtx;   //!
 TBranch        *b_npu;   //!
 TBranch        *b_rho;   //!
 TBranch        *b_isTrigged;   //!
-TBranch        *b_cutFlow;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
-TBranch        *b_appliedJER;   //!
-TBranch        *b_appliedJES;   //!
-TBranch        *b_appliedPU;   //!
 TBranch        *b_nLeptons;   //!
 TBranch        *b_nMuons;   //!
 TBranch        *b_muon_charge;   //!
@@ -217,7 +227,18 @@ TBranch        *b_muonIsoSF;   //!
 TBranch        *b_muonTrigSFv2;   //!
 TBranch        *b_muonTrigSFv3;   //!
 
-float scaleFactor, normFactor;
+TBranch        *b_nEvents;   //!
+TBranch        *b_nEventsSel;   //!
+TBranch        *b_cutFlow;   //!
+TBranch        *b_appliedJER;   //!
+TBranch        *b_appliedJES;   //!
+TBranch        *b_appliedPU;   //!
+TBranch        *b_nofEventsHLTv2;   //!
+TBranch        *b_nofEventsHLTv3;   //!
+TBranch        *b_nofSelEventsHLTv2;   //!
+TBranch        *b_nofSelEventsHLTv3;   //
+
+float scaleFactor;
 vector<unsigned int> bJetId;
 double recoWMass, recoTopMass, recoTopPt;
 
@@ -248,6 +269,11 @@ int genmuon = -9999;
 bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
+
+
+/// Meta
+string strSyst = "";
+vector<int> vJER, vJES, vPU;
 
 
 int main(int argc, char* argv[])
@@ -322,16 +348,20 @@ int main(int argc, char* argv[])
     if ( dataSetName.find("ZJets") == 0 || dataSetName.find("DY") == 0 )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
-      datasets[d]->SetColor(kCyan);
+      datasets[d]->SetColor(kAzure-2);
       //datasets[d]->SetColor(kMagenta);
     }
     if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") == 0 )
     {
+      datasets[d]->SetTitle("ST");
       datasets[d]->SetColor(kBlue-2);
-      if ( dataSetName.find("tW") == 0 )
-        datasets[d]->SetTitle("ST tW");
-      else
-        datasets[d]->SetTitle("ST t");
+      //if ( dataSetName.find("tW") == 0 )
+      //{
+      //  datasets[d]->SetTitle("ST tW");
+      //  datasets[d]->SetColor(kBlue-4);
+      //}
+      //else
+      //  datasets[d]->SetTitle("ST t");
     }
   }
   
@@ -343,8 +373,9 @@ int main(int argc, char* argv[])
   
   TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
   
-  
   InitMSPlots();
+  
+  vJER.clear(); vJES.clear(); vPU.clear();
   
   
   
@@ -366,10 +397,13 @@ int main(int argc, char* argv[])
   cout << "The muon trigger scale factors will be scaled by " << fracHLT[0] << " for HLTv2 and " << fracHLT[1] << " for HLTv3." << endl;
   
   
+  
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
     clock_t startDataSet = clock();
+    
+    ClearMetaData();
     
     dataSetName = datasets[d]->Name();
     if (verbose > 1)
@@ -388,12 +422,22 @@ int main(int argc, char* argv[])
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
     
     string tTreeName = "tree";
-    //string tStatsTreeName = "stats";
-    tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
-    //tStatsTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tStatsTreeName.c_str());
+    string tStatsTreeName = "stats";
     
+    /// Get meta data
+    tStatsTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tStatsTreeName.c_str());
+    GetMetaData(tStatsTree[dataSetName.c_str()], isData);
+    
+    tStatsTree[(dataSetName).c_str()]->GetEntry(0);
+    vJER.push_back(appliedJER);
+    vJES.push_back(appliedJES);
+    vPU.push_back(appliedPU);
+    
+    
+    /// Get data
+    tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
     nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
-    cout << "                     nEntries: " << nEntries << endl;
+    cout << "                nEntries: " << nEntries << endl;
     
     
     // Set branch addresses and branch pointers
@@ -405,9 +449,9 @@ int main(int argc, char* argv[])
     ///  Loop on events
     ////////////////////////////////////
     
-    
-    for (int ievt = 0; ievt < nEntries; ievt++)
-    //for (int ievt = 0; ievt < 1000; ievt++)
+    int endEvent = nEntries;
+    if (test) endEvent = 1001;
+    for (int ievt = 0; ievt < endEvent; ievt++)
     {
       ClearObjects();
       
@@ -750,13 +794,57 @@ int main(int argc, char* argv[])
   }
   
   
+  //////////////////////////////////////////
+  ///  Check Shape Changing Systematics  ///
+  //////////////////////////////////////////
+  
+  int sumJER = 0, sumJES = 0, sumPU = 0;
+  for (unsigned int d = 0; d < datasets.size(); d++)
+  {
+    sumJER += vJER[d];
+    sumJES += vJES[d];
+    sumPU += vPU[d];
+  }
+  
+  if ( sumJER == 0 && sumJES == 0 && sumPU == 0 )
+  {
+    strSyst = "nominal";
+  }
+  else if ( abs(sumJER) == datasets.size() && sumJES == 0 && sumPU == 0 )
+  {
+    if ( sumJER > 0 ) { strSyst = "JERup";}
+    else if ( sumJER < 0 ) { strSyst = "JERdown";}
+  }
+  else if ( sumJER == 0 && abs(sumJES) == datasets.size() && sumPU == 0 )
+  {
+    if ( sumJES > 0 ) { strSyst = "JESup";}
+    else if ( sumJES < 0 ) { strSyst = "JESdown";}
+  }
+  else if ( sumJER == 0 && sumJES == 0 && abs(sumPU) == datasets.size() )
+  {
+    if ( sumPU > 0 ) { strSyst = "PUup";}
+    else if ( sumPU < 0 ) { strSyst = "PUdown";}
+  }
+  else
+  {
+    cerr << "Shape changing systematics not consistent accross datasets or multiple applied at once" << endl;
+    cerr << "Exiting...." << endl;
+    exit(1);
+  }
+  
+  
+  if (test)
+  {
+    cout << "Exiting because of test..." << endl;
+    exit(1);
+  }
   
   
   ///*****************///
   ///   Write plots   ///
   ///*****************///
   
-  string rootFileName = "NtuplePlots_nominal.root";
+  string rootFileName = "NtuplePlots_"+strSyst+".root";
   mkdir((pathOutput+"MSPlot/").c_str(),0777);
   
   cout << " - Recreate output file ..." << endl;
@@ -845,74 +933,91 @@ string MakeTimeStamp()
 }
 
 
+void GetMetaData(TTree* tree, bool isData)
+{
+  // Set branch addresses and branch pointers
+  if (!tree) return;
+  tree->SetMakeClass(1);
+  
+  tree->SetBranchAddress("nEvents", &nEvents, &b_nEvents);
+  tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
+  tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
+  tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
+  tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
+  tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
+  if (isData)
+  {
+   tree->SetBranchAddress("nofEventsHLTv2", &nofEventsHLTv2, &b_nofEventsHLTv2);
+   tree->SetBranchAddress("nofEventsHLTv3", &nofEventsHLTv3, &b_nofEventsHLTv3);
+   tree->SetBranchAddress("nofSelEventsHLTv2", &nofSelEventsHLTv2, &b_nofSelEventsHLTv2);
+   tree->SetBranchAddress("nofSelEventsHLTv3", &nofSelEventsHLTv3, &b_nofSelEventsHLTv3);
+  }
+}
+
 void InitTree(TTree* tree, bool isData)
 {
   // Set branch addresses and branch pointers
-   if (!tree) return;
-   tree->SetMakeClass(1);
-
-   tree->SetBranchAddress("run_num", &run_num, &b_run_num);
-   tree->SetBranchAddress("evt_num", &evt_num, &b_evt_num);
-   tree->SetBranchAddress("lumi_num", &lumi_num, &b_lumi_num);
-   tree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
-   tree->SetBranchAddress("npu", &npu, &b_npu);
-   tree->SetBranchAddress("rho", &rho, &b_rho);
-   tree->SetBranchAddress("isTrigged", &isTrigged, &b_isTrigged);
-   tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
-   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
-   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
-   tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
-   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
-   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
-   tree->SetBranchAddress("nLeptons", &nLeptons, &b_nLeptons);
-   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
-   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
-   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
-   tree->SetBranchAddress("muon_phi", muon_phi, &b_muon_phi);
-   tree->SetBranchAddress("muon_eta", muon_eta, &b_muon_eta);
-   tree->SetBranchAddress("muon_E", muon_E, &b_muon_E);
-   tree->SetBranchAddress("muon_M", muon_M, &b_muon_M);
-   tree->SetBranchAddress("muon_d0", muon_d0, &b_muon_d0);
-   tree->SetBranchAddress("muon_chargedHadronIso", muon_chargedHadronIso, &b_muon_chargedHadronIso);
-   tree->SetBranchAddress("muon_neutralHadronIso", muon_neutralHadronIso, &b_muon_neutralHadronIso);
-   tree->SetBranchAddress("muon_photonIso", muon_photonIso, &b_muon_photonIso);
-   tree->SetBranchAddress("muon_puChargedHadronIso", muon_puChargedHadronIso, &b_muon_puChargedHadronIso);
-   tree->SetBranchAddress("muon_relIso", muon_relIso, &b_muon_relIso);
-   tree->SetBranchAddress("muon_pfIso", muon_pfIso, &b_muon_pfIso);
-   tree->SetBranchAddress("nJets", &nJets, &b_nJets);
-   tree->SetBranchAddress("jet_charge", jet_charge, &b_jet_charge);
-   tree->SetBranchAddress("jet_pt", jet_pt, &b_jet_pt);
-   tree->SetBranchAddress("jet_phi", jet_phi, &b_jet_phi);
-   tree->SetBranchAddress("jet_eta", jet_eta, &b_jet_eta);
-   tree->SetBranchAddress("jet_E", jet_E, &b_jet_E);
-   tree->SetBranchAddress("jet_M", jet_M, &b_jet_M);
-   tree->SetBranchAddress("jet_bdiscr", jet_bdiscr, &b_jet_bdiscr);
-   tree->SetBranchAddress("met_pt", &met_pt, &b_met_pt);
-   tree->SetBranchAddress("met_phi", &met_phi, &b_met_phi);
-   tree->SetBranchAddress("met_eta", &met_eta, &b_met_eta);
-   tree->SetBranchAddress("met_Et", &met_Et, &b_met_Et);
-   tree->SetBranchAddress("met_E", &met_E, &b_met_E);
-   if (! isData)
-   {
-     tree->SetBranchAddress("nMCParticles", &nMCParticles, &b_nMCParticles);
-     tree->SetBranchAddress("mc_status", mc_status, &b_mc_status);
-     tree->SetBranchAddress("mc_pdgId", mc_pdgId, &b_mc_pdgId);
-     tree->SetBranchAddress("mc_mother", mc_mother, &b_mc_mother);
-     tree->SetBranchAddress("mc_granny", mc_granny, &b_mc_granny);
-     tree->SetBranchAddress("mc_pt", mc_pt, &b_mc_pt);
-     tree->SetBranchAddress("mc_phi", mc_phi, &b_mc_phi);
-     tree->SetBranchAddress("mc_eta", mc_eta, &b_mc_eta);
-     tree->SetBranchAddress("mc_E", mc_E, &b_mc_E);
-     tree->SetBranchAddress("mc_M", mc_M, &b_mc_M);
-     tree->SetBranchAddress("nloWeight", &nloWeight, &b_nloWeight);
-     tree->SetBranchAddress("puSF", &puSF, &b_puSF);
-     tree->SetBranchAddress("btagSF", &btagSF, &b_btagSF);
-     tree->SetBranchAddress("muonIdSF", muonIdSF, &b_muonIdSF);
-     tree->SetBranchAddress("muonIsoSF", muonIsoSF, &b_muonIsoSF);
-     tree->SetBranchAddress("muonTrigSFv2", muonTrigSFv2, &b_muonTrigSFv2);
-     tree->SetBranchAddress("muonTrigSFv3", muonTrigSFv3, &b_muonTrigSFv3);
-   }
-   
+  if (!tree) return;
+  tree->SetMakeClass(1);
+  
+  tree->SetBranchAddress("run_num", &run_num, &b_run_num);
+  tree->SetBranchAddress("evt_num", &evt_num, &b_evt_num);
+  tree->SetBranchAddress("lumi_num", &lumi_num, &b_lumi_num);
+  tree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
+  tree->SetBranchAddress("npu", &npu, &b_npu);
+  tree->SetBranchAddress("rho", &rho, &b_rho);
+  tree->SetBranchAddress("isTrigged", &isTrigged, &b_isTrigged);
+  tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
+  tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
+  tree->SetBranchAddress("nLeptons", &nLeptons, &b_nLeptons);
+  tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
+  tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
+  tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
+  tree->SetBranchAddress("muon_phi", muon_phi, &b_muon_phi);
+  tree->SetBranchAddress("muon_eta", muon_eta, &b_muon_eta);
+  tree->SetBranchAddress("muon_E", muon_E, &b_muon_E);
+  tree->SetBranchAddress("muon_M", muon_M, &b_muon_M);
+  tree->SetBranchAddress("muon_d0", muon_d0, &b_muon_d0);
+  tree->SetBranchAddress("muon_chargedHadronIso", muon_chargedHadronIso, &b_muon_chargedHadronIso);
+  tree->SetBranchAddress("muon_neutralHadronIso", muon_neutralHadronIso, &b_muon_neutralHadronIso);
+  tree->SetBranchAddress("muon_photonIso", muon_photonIso, &b_muon_photonIso);
+  tree->SetBranchAddress("muon_puChargedHadronIso", muon_puChargedHadronIso, &b_muon_puChargedHadronIso);
+  tree->SetBranchAddress("muon_relIso", muon_relIso, &b_muon_relIso);
+  tree->SetBranchAddress("muon_pfIso", muon_pfIso, &b_muon_pfIso);
+  tree->SetBranchAddress("nJets", &nJets, &b_nJets);
+  tree->SetBranchAddress("jet_charge", jet_charge, &b_jet_charge);
+  tree->SetBranchAddress("jet_pt", jet_pt, &b_jet_pt);
+  tree->SetBranchAddress("jet_phi", jet_phi, &b_jet_phi);
+  tree->SetBranchAddress("jet_eta", jet_eta, &b_jet_eta);
+  tree->SetBranchAddress("jet_E", jet_E, &b_jet_E);
+  tree->SetBranchAddress("jet_M", jet_M, &b_jet_M);
+  tree->SetBranchAddress("jet_bdiscr", jet_bdiscr, &b_jet_bdiscr);
+  tree->SetBranchAddress("met_pt", &met_pt, &b_met_pt);
+  tree->SetBranchAddress("met_phi", &met_phi, &b_met_phi);
+  tree->SetBranchAddress("met_eta", &met_eta, &b_met_eta);
+  tree->SetBranchAddress("met_Et", &met_Et, &b_met_Et);
+  tree->SetBranchAddress("met_E", &met_E, &b_met_E);
+  if (! isData)
+  {
+    tree->SetBranchAddress("nMCParticles", &nMCParticles, &b_nMCParticles);
+    tree->SetBranchAddress("mc_status", mc_status, &b_mc_status);
+    tree->SetBranchAddress("mc_pdgId", mc_pdgId, &b_mc_pdgId);
+    tree->SetBranchAddress("mc_mother", mc_mother, &b_mc_mother);
+    tree->SetBranchAddress("mc_granny", mc_granny, &b_mc_granny);
+    tree->SetBranchAddress("mc_pt", mc_pt, &b_mc_pt);
+    tree->SetBranchAddress("mc_phi", mc_phi, &b_mc_phi);
+    tree->SetBranchAddress("mc_eta", mc_eta, &b_mc_eta);
+    tree->SetBranchAddress("mc_E", mc_E, &b_mc_E);
+    tree->SetBranchAddress("mc_M", mc_M, &b_mc_M);
+    tree->SetBranchAddress("nloWeight", &nloWeight, &b_nloWeight);
+    tree->SetBranchAddress("puSF", &puSF, &b_puSF);
+    tree->SetBranchAddress("btagSF", &btagSF, &b_btagSF);
+    tree->SetBranchAddress("muonIdSF", muonIdSF, &b_muonIdSF);
+    tree->SetBranchAddress("muonIsoSF", muonIsoSF, &b_muonIsoSF);
+    tree->SetBranchAddress("muonTrigSFv2", muonTrigSFv2, &b_muonTrigSFv2);
+    tree->SetBranchAddress("muonTrigSFv3", muonTrigSFv3, &b_muonTrigSFv3);
+  }
+  
 }
 
 void InitMSPlots()
@@ -939,11 +1044,33 @@ void InitMSPlots()
   MSPlot["CSVv2Discr_jet3"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
   MSPlot["CSVv2Discr_jet4"] = new MultiSamplePlot(datasets, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
   MSPlot["CSVv2Discr_highest"] = new MultiSamplePlot(datasets, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasets, "CSVv2Discr_jetNb", 48, 0.0, 1.2, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasets, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
   
 //   MSPlot["min_M_lb"] = new MultiSamplePlot(datasets, "min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
 //   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
   
+}
+
+void ClearMetaData()
+{
+  nEvents = 0;
+  nEventsSel = 0;
+  for (int i = 0; i < 10; i++)
+  {
+    cutFlow[i] = 0;
+  }
+  appliedJER = 999;
+  appliedJES = 999;
+  appliedPU = 999;
+  if (isData)
+  {
+    nofEventsHLTv2 = 0;
+    nofEventsHLTv3 = 0;
+    nofSelEventsHLTv2 = 0;
+    nofSelEventsHLTv3 = 0;
+  }
+  
+  strSyst = "";
 }
 
 void ClearLeaves()
@@ -1015,7 +1142,6 @@ void ClearLeaves()
   muonTrigSFv3[1] = 1.;
   
   scaleFactor = 1.;
-  normFactor = 1.;
   bJetId.clear();
   recoWMass = -1.;
   recoTopMass = -1.;
@@ -1070,29 +1196,34 @@ void ClearObjects()
   ClearMatching();
 }
 
+long GetNEvents(TTree* fChain, string var, bool isData)
+{
+  GetMetaData(fChain, isData);
+  int varNew = 0;
+  for (unsigned int iEntry = 0; iEntry < fChain->GetEntries(); iEntry++)
+  {
+    fChain->GetEntry(iEntry);
+    varNew += (fChain->FindLeaf(var.c_str()))->GetValueLong64();
+  }
+  
+  return varNew;
+}
+
 void GetHLTFraction(double* fractions)
 {
   TFile* fileHLT = new TFile((pathNtuples+"Ntuples_data.root").c_str(),"READ");
   TTree* fChain = (TTree*) fileHLT->Get("stats");
   
-  Long64_t        nofEventsHLTv2;
-  Long64_t        nofEventsHLTv3;
-  TBranch        *b_nofEventsHLTv2;   //!
-  TBranch        *b_nofEventsHLTv3;   //!
+  //fChain->SetBranchAddress("nofEventsHLTv2", &nofEventsHLTv2, &b_nofEventsHLTv2);
+  //fChain->SetBranchAddress("nofEventsHLTv3", &nofEventsHLTv3, &b_nofEventsHLTv3);
   
-  fChain->SetBranchAddress("nofEventsHLTv2", &nofEventsHLTv2, &b_nofEventsHLTv2);
-  fChain->SetBranchAddress("nofEventsHLTv3", &nofEventsHLTv3, &b_nofEventsHLTv3);
+  long nv2 = GetNEvents(fChain, "nofEventsHLTv2", 1);
+  long nv3 = GetNEvents(fChain, "nofEventsHLTv3", 1);
   
-//  Long64_t        nofSelEventsHLTv2;
-//  Long64_t        nofSelEventsHLTv3;
-//  TBranch        *b_nofSelEventsHLTv2;   //!
-//  TBranch        *b_nofSelEventsHLTv3;   //!
-//  fChain->SetBranchAddress("nofSelEventsHLTv2", &nofSelEventsHLTv2, &b_nofSelEventsHLTv2);
-//  fChain->SetBranchAddress("nofSelEventsHLTv3", &nofSelEventsHLTv3, &b_nofSelEventsHLTv3);
-  
-  fractions[0] = ((double)nofEventsHLTv2) / ((double)nofEventsHLTv2 + (double)nofEventsHLTv3);
-  fractions[1] = ((double)nofEventsHLTv3) / ((double)nofEventsHLTv2 + (double)nofEventsHLTv3);
+  fractions[0] = ((double)nv2) / ((double)nv2 + (double)nv3);
+  fractions[1] = ((double)nv3) / ((double)nv2 + (double)nv3);
   
   fileHLT->Close();
+  ClearMetaData();
 }
 
