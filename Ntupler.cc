@@ -623,8 +623,6 @@ int main (int argc, char *argv[])
     Long64_t nofSelEventsHLTv2;
     Long64_t nofSelEventsHLTv3;
     
-    Bool_t newEvent;
-    Bool_t newEventSel;
     Bool_t hasHLTv2;
     Bool_t hasHLTv3;
     Bool_t hasPosWeight;
@@ -719,8 +717,6 @@ int main (int argc, char *argv[])
     
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
-    statTree->Branch("eventCounter" , &newEvent, "newEvent/O");  // when merging Ntuple files, nEvents will not add up but fill histo with several values of nEvents
-    statTree->Branch("selEventCounter" , &newEventSel, "newEventSel/O");
     statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
     statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
@@ -731,8 +727,6 @@ int main (int argc, char *argv[])
       statTree->Branch("nofEventsHLTv3",&nofEventsHLTv3,"nofEventsHLTv3/L");
       statTree->Branch("nofSelEventsHLTv2",&nofSelEventsHLTv2,"nofSelEventsHLTv2/L");
       statTree->Branch("nofSelEventsHLTv3",&nofSelEventsHLTv3,"nofSelEventsHLTv3/L");
-      statTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
-      statTree->Branch("hasHLTv3",&hasHLTv3,"hasHLTv3/O");
     }
     if (nlo)
     {
@@ -767,8 +761,8 @@ int main (int argc, char *argv[])
 //    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
     if (isData)
     {
-      statTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
-      statTree->Branch("hasHLTv3",&hasHLTv3,"hasHLTv3/O");
+      myTree->Branch("hasHLTv2",&hasHLTv2,"hasHLTv2/O");
+      myTree->Branch("hasHLTv3",&hasHLTv3,"hasHLTv3/O");
     }
     
     
@@ -919,14 +913,17 @@ int main (int argc, char *argv[])
 //    globalTree->Branch("muonTrigSFv3",&muonTrigSFv3,"muonTrigSFv3[nMuons]/D");
 //    globalTree->Branch("electronSF",&electronSF,"electronSF[nElectrons]/D");
     
-    myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
-    myTree->Branch("puSF",&puSF,"puSF/D");
-    myTree->Branch("btagSF",&btagSF,"btagSF/D");
-    myTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
-    myTree->Branch("muonIsoSF",&muonIsoSF, "muonIsoSF[nMuons]/D");
-    myTree->Branch("muonTrigSFv2",&muonTrigSFv2,"muonTrigSFv2[nMuons]/D");
-    myTree->Branch("muonTrigSFv3",&muonTrigSFv3,"muonTrigSFv3[nMuons]/D");
-//    myTree->Branch("electronSF",&electronSF,"electronSF[nElectrons]/D");
+    if (! isData)
+    {
+      myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
+      myTree->Branch("puSF",&puSF,"puSF/D");
+      myTree->Branch("btagSF",&btagSF,"btagSF/D");
+      myTree->Branch("muonIdSF",&muonIdSF,"muonIdSF[nMuons]/D");
+      myTree->Branch("muonIsoSF",&muonIsoSF, "muonIsoSF[nMuons]/D");
+      myTree->Branch("muonTrigSFv2",&muonTrigSFv2,"muonTrigSFv2[nMuons]/D");
+      myTree->Branch("muonTrigSFv3",&muonTrigSFv3,"muonTrigSFv3[nMuons]/D");
+//      myTree->Branch("electronSF",&electronSF,"electronSF[nElectrons]/D");
+    }
     
     
     
@@ -1012,7 +1009,6 @@ int main (int argc, char *argv[])
     //for (unsigned int ievt = 0; ievt < 10000000; ievt++)
     {
       nEvents++;
-      newEvent = true;
       
       if (ievt%100000 == 0)
         cout << "Processing event " << ievt << "..." << endl;
@@ -1053,7 +1049,6 @@ int main (int argc, char *argv[])
       }
       nloWeight = 1.; // for amc@nlo samples
       
-      newEventSel = false;
       hasHLTv2 = false;
       hasHLTv3 = false;
       hasPosWeight = false;
@@ -1470,7 +1465,6 @@ int main (int argc, char *argv[])
       }
       
       nEventsSel++;
-      newEventSel = true;
       
       if (isData)
       {
