@@ -22,42 +22,22 @@
 #include <TH2.h>
 #include <TLorentzVector.h>
 
-//used TopTreeAnalysis classes
-#include "../TopTreeProducer/interface/TRootRun.h"
-#include "../TopTreeProducer/interface/TRootEvent.h"
-#include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
-#include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
-#include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
-#include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
-#include "../TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
-#include "../TopTreeAnalysisBase/Tools/interface/BTagWeightTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/BTagCalibrationStandalone.h"
-#include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
-#include "../TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "../TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
-#include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 
 // user defined
-#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
 
 
 using namespace std;
-using namespace reweight;
-using namespace TopTree;
+// using namespace reweight;
+// using namespace TopTree;
 
 
-string ConvertIntToString(int Number, bool pad)
+string ConvertIntToString(int Number, int pad)
 {
   ostringstream convert;
-  convert.clear();
-  if ( pad && Number < 10 ) { convert << std::setw(2) << std::setfill('0');}
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
+  if ( pad > 1 ) { convert << std::setw(pad) << std::setfill('0');}
   convert << Number;
   return convert.str();
 }
@@ -72,16 +52,16 @@ string MakeTimeStamp()
   int day = now->tm_mday;
   int hour = now->tm_hour;
   int min = now->tm_min;
-  int sec = now->tm_sec;
+  //int sec = now->tm_sec;
   
-  string year_str = ConvertIntToString(year, true);
-  string month_str = ConvertIntToString(month, true);
-  string day_str = ConvertIntToString(day, true);
-  string hour_str = ConvertIntToString(hour, true);
-  string min_str = ConvertIntToString(min, true);
-  string sec_str = ConvertIntToString(sec, true);
+  string year_str = ConvertIntToString(year, 2);
+  string month_str = ConvertIntToString(month, 2);
+  string day_str = ConvertIntToString(day, 2);
+  string hour_str = ConvertIntToString(hour, 2);
+  string min_str = ConvertIntToString(min, 2);
+  //string sec_str = ConvertIntToString(sec, 2);
   
-  string date_str = year_str + month_str + day_str + "_" + hour_str + min_str + sec_str;
+  string date_str = year_str + month_str + day_str + "_" + hour_str + min_str;
   return date_str;
 }
 
@@ -102,9 +82,9 @@ int main (int argc, char *argv[])
   
   TransferFunctions* tf = new TransferFunctions(false);
   
-  string inputFileName = "PlotsForTransferFunctions_oneHalf.root";
+  string inputFileName = "PlotsForTransferFunctions.root";
   
-  string tfFileName = "/user/lmoreels/CMSSW_7_6_3/src/TopBrussels/TopWidth/PlotsForTransferFunctions_test.root";
+  string tfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForTransferFunctions_test.root";
   //TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
   //foutTF->cd();
   //TDirectory* rootDir = foutTF->mkdir(dateString.c_str());

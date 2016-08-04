@@ -345,23 +345,7 @@ void TransferFunctions::makeFit()
     TH2F* histo=histoTr2D[(histoNames[f]).c_str()];
     if (getHistos)
       histo=fitHisto2D[(histoNames[f]).c_str()];
-       
-//    if (f == 0) histo=histoTr2D["Eparton_vs_Eparton-Enonbjet"];     //1
-//    if (f == 1) histo=histoTr2D["Eparton_vs_Eparton-Ebjet"];        //2
-//    if (f == 2) histo=histoTr2D["Eparton_vs_Thparton-Thnonbjet"];   //4
-//    if (f == 3) histo=histoTr2D["Eparton_vs_Thparton-Thbjet"];      //5
-//    if (f == 4) histo=histoTr2D["Eparton_vs_Etaparton-Etanonbjet"];
-//    if (f == 5) histo=histoTr2D["Eparton_vs_Etaparton-Etabjet"];
-//    if (f == 6) histo=histoTr2D["Eparton_vs_Phiparton-Phinonbjet"]; //8
-//    if (f == 7) histo=histoTr2D["Eparton_vs_Phiparton-Phibjet"];    //9
-//    if (f == 8) histo=histoTr2D["InvPtgenMu_vs_InvPtgenMu-InvPtrecMu"]; //3
-//    if (f == 9) histo=histoTr2D["InvPtgenMu_vs_ThgenMu-ThrecMu"];   //7
-//    if (f == 10) histo=histoTr2D["InvPtgenMu_vs_EtagenMu-EtarecMu"];
-//    if (f == 11) histo=histoTr2D["InvPtgenMu_vs_PhigenMu-PhirecMu"]; //11
-//    if (f == 12) histo=histoTr2D["EgenEl_vs_EgenEl-ErecEl"];         //3
-//    if (f == 13) histo=histoTr2D["EgenEl_vs_ThgenEl-ThrecEl"];      //6
-//    if (f == 14) histo=histoTr2D["EgenEl_vs_EtagenEl-EtarecEl"];
-//    if (f == 15) histo=histoTr2D["EgenEl_vs_PhigenEl-PhirecEl"];    //10
+    
     
     int nBins = histo->GetXaxis()->GetNbins();
     std::cout << "nbins: " << nBins << std::endl;
@@ -418,11 +402,11 @@ void TransferFunctions::makeFit()
         //myfit->SetParameter(3, -0.0005); //central value of second, narrow gaussian
         //myfit->SetParameter(4, 6.0);     //sigma value of second, narrow gaussian
         //myfit->SetParameter(5, 4.1);     //constant value of second, narrow gaussian
-        myfit->SetParameter(0, 0.5);   //central value of first, broad gaussian
-        myfit->SetParameter(1, 20.0);  //sigma value of first, broad gaussian
+        myfit->SetParameter(0, hp->GetMean());   //central value of first, broad gaussian
+        myfit->SetParameter(1, hp->GetRMS());  //sigma value of first, broad gaussian
         myfit->SetParameter(2, 100.0); //constant value of second, narrow gaussian
-        myfit->SetParameter(3, 0.05);  //central value of second, narrow gaussian
-        myfit->SetParameter(4, 6.0);   //sigma value of second, narrow gaussian
+        myfit->SetParameter(3, hp->GetMean());  //central value of second, narrow gaussian
+        myfit->SetParameter(4, hp->GetRMS()/1.3);   //sigma value of second, narrow gaussian
       }
       else if ( f == 1 || f == 3 || f == 5 || f == 7 )  // theta & phi of jet (CHECK: also eta??)
       {
@@ -432,11 +416,11 @@ void TransferFunctions::makeFit()
         //myfit->SetParameter(3, 0.0004); //central value of second, narrow gaussian
         //myfit->SetParameter(4, 0.001);  //sigma value of second, narrow gaussian
         //myfit->SetParameter(5, 26.5);   //constant value of second, narrow gaussian
-        myfit->SetParameter(0, 0.0); 		//central value of first, broad gaussian
-        myfit->SetParameter(1, 0.05);   //sigma value of first, broad gaussian
+        myfit->SetParameter(0, hp->GetMean()); 		//central value of first, broad gaussian
+        myfit->SetParameter(1, hp->GetRMS());   //sigma value of first, broad gaussian
         myfit->SetParameter(2, 100.0);  //constant value of second, narrow gaussian
-        myfit->SetParameter(3, 0.0005); //central value of second, narrow gaussian
-        myfit->SetParameter(4, 0.01);   //sigma value of second, narrow gaussian
+        myfit->SetParameter(3, hp->GetMean()); //central value of second, narrow gaussian
+        myfit->SetParameter(4, hp->GetRMS()/1.3);   //sigma value of second, narrow gaussian
       }
       else if ( f == 8 )  // inv pt muon
       {
