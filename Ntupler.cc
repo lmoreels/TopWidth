@@ -199,8 +199,8 @@ int main (int argc, char *argv[])
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
-  bool calculateBTagSF = false;
-  bool applyBTagSF = true;
+  bool calculateBTagSF = true;
+  bool applyBTagSF = false;
   bool applyJetLeptonCleaning = true;
   
   if (localgridSubmission)
@@ -1502,12 +1502,15 @@ int main (int argc, char *argv[])
     cout << "Max MCParticles: " << maxMCParticles << endl << endl;
     
     cout << "Fill trees..." << endl;
-    statTree->Fill();
-    
-    /// Write to file
-    fout->cd();
-    myTree->Write();
-    statTree->Write();
+    if (! calculateBTagSF)
+    {
+      statTree->Fill();
+      
+      /// Write to file
+      fout->cd();
+      myTree->Write();
+      statTree->Write();
+    }
     fout->Close();
     delete fout;
     
