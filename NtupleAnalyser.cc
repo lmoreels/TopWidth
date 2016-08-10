@@ -32,7 +32,7 @@ using namespace TopTree;
 
 
 bool test = false;
-bool calculateTransferFunctions = true;
+bool calculateTransferFunctions = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -47,6 +47,9 @@ string pathNtuples = "";
 bool isData = false;
 
 int nofMatchedEvents = 0;
+int nofChi2First4 = 0;
+int nofCorrectlyMatched_chi2 = 0;
+int nofNotCorrectlyMatched_chi2 = 0;
 float Luminosity = 9999.;
 
 
@@ -91,6 +94,9 @@ string MakeTimeStamp();
 void GetMetaData(TTree* tree, bool isData);
 void InitTree(TTree* tree, bool isData);
 void InitMSPlots();
+void InitHisto1D();
+void InitHisto2D();
+void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation);
 void ClearMetaData();
 void ClearLeaves();
 void ClearTLVs();
@@ -240,7 +246,9 @@ TBranch        *b_nofSelEventsHLTv3;   //
 
 float scaleFactor;
 vector<unsigned int> bJetId;
-double recoWMass, recoTopMass, recoTopPt;
+double reco_hadWMass, reco_hadTopMass, reco_hadTopPt;
+double reco_minMlb, reco_ttbarMass, reco_dRLepB;
+double min_Mlb, dRLepB;
 
 /// Define TLVs
 TLorentzVector muon, jet, mcpart;
@@ -251,6 +259,7 @@ vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
 vector<TLorentzVector> jetsMatched;
+vector<TLorentzVector> bJetsAfterChi2;
 
 /// Matching
 int pdgID_top = 6; //top quark
@@ -258,19 +267,14 @@ int pdgID_top = 6; //top quark
 bool all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
 bool all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
 bool hadronictopJetsMatched_MCdef_ = false;
-pair<unsigned int, unsigned int> leptonicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
-pair<unsigned int, unsigned int> hadronicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
-pair<unsigned int, unsigned int> hadronicWJet1_ = pair<unsigned int,unsigned int>(9999,9999);
-pair<unsigned int, unsigned int> hadronicWJet2_ = pair<unsigned int,unsigned int>(9999,9999);
 pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
-vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
 bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
-
+  
 /// Meta
 string strSyst = "";
 vector<int> vJER, vJES, vPU;
@@ -300,6 +304,11 @@ int main(int argc, char* argv[])
   // Add channel to output path
   pathOutput += channel+"/";
   mkdir(pathOutput.c_str(),0777);
+  if (test)
+  {
+    pathOutput += "test/";
+    mkdir(pathOutput.c_str(),0777);
+  }
   // Give timestamp to output path
   pathOutput += dateString+"/";
   mkdir(pathOutput.c_str(),0777);
@@ -374,6 +383,8 @@ int main(int argc, char* argv[])
   TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
   
   InitMSPlots();
+  InitHisto1D();
+  InitHisto2D();
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
@@ -488,7 +499,7 @@ int main(int argc, char* argv[])
         if ( jet_bdiscr[iJet] > CSVv2Medium )
         {
           selectedBJets.push_back(selectedJets[iJet]);
-          bJetId.push_back(iJet);
+          bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
         }
       }
       //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
@@ -538,7 +549,7 @@ int main(int argc, char* argv[])
           if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
           {
             partons.push_back(mcParticles[i]);
-            partonId.push_back(i);
+            partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
           }
           
         }  // end loop mcParticles
@@ -550,103 +561,15 @@ int main(int argc, char* argv[])
           cout << "Size selectedJets:  " << selectedJets.size() << endl;
         }
         
-        JetPartonMatching matching = JetPartonMatching(partons, selectedJets, 2, true, true, 0.3);  // partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
         
-        if (matching.getNumberOfAvailableCombinations() != 1)
-          cerr << "matching.getNumberOfAvailableCombinations() = " << matching.getNumberOfAvailableCombinations() << " .  This should be equal to 1 !!!" << endl;
-        
-        
-        /// Fill match in JetPartonPair; // vector< pair<unsigned int, unsigned int> > 
-                                         // First one is jet number, second one is mcParticle number
-        
-        for (unsigned int i = 0; i < partons.size(); i++)
-        {
-          int matchedJetNumber = matching.getMatchForParton(i, 0);
-          if (matchedJetNumber > -1)
-            JetPartonPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
-        }
-        
-        if (verbose > 2)
-          cout << "Matching done" << endl;
-        
-        
-        for (unsigned int i = 0; i < JetPartonPair.size(); i++)
-        {
-          unsigned int j = JetPartonPair[i].second;
-          
-          if ( fabs(mc_pdgId[partonId[j]]) < 6 )  //light/b quarks, 6 should stay hardcoded
-          {
-            if ( ( muPlusFromTop && mc_mother[partonId[j]] == -24 && mc_granny[partonId[j]] == -pdgID_top )
-                || ( muMinusFromTop && mc_mother[partonId[j]] == 24 && mc_granny[partonId[j]] == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
-            {
-              if (verbose > 3)
-                cout << "Light jet: " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
-              
-              if (hadronicWJet1_.first == 9999)
-              {
-                hadronicWJet1_ = JetPartonPair[i];
-                MCPermutation[0] = JetPartonPair[i];
-              }
-              else if (hadronicWJet2_.first == 9999)
-              {
-                hadronicWJet2_ = JetPartonPair[i];
-                MCPermutation[1] = JetPartonPair[i];
-              }
-              else
-              {
-                cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
-                cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
-                cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
-                cerr << " -- ievt: " << ievt << endl;
-                exit(1);
-              }
-            }
-          }
-          if ( fabs(mc_pdgId[partonId[j]]) == 5 )
-          {
-            if ( ( muPlusFromTop && mc_mother[partonId[j]] == -pdgID_top )
-                || ( muMinusFromTop && mc_mother[partonId[j]] == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
-            {
-              if (verbose > 3)
-                cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
-              
-              hadronicBJet_ = JetPartonPair[i];
-              MCPermutation[2] = JetPartonPair[i];
-            }
-            else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
-              || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
-            {
-              if (verbose > 3)
-                cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
-              
-              leptonicBJet_ = JetPartonPair[i];
-              MCPermutation[3] = JetPartonPair[i];
-            }
-          }
-        }  /// End loop over Jet Parton Pairs
-        
-        
-        if ( hadronicWJet1_.first != 9999 && hadronicWJet2_.first != 9999 && hadronicBJet_.first != 9999 && leptonicBJet_.first != 9999 )
-        {
-          all4PartonsMatched = true;
-          nofMatchedEvents++;
-          if (hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 && leptonicBJet_.first < 4)
-            all4JetsMatched_MCdef_ = true;
-        }
-        else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
-        
-        if ( hadronicWJet1_.first < 4 && hadronicWJet2_.first < 4 && hadronicBJet_.first < 4 )
-          hadronictopJetsMatched_MCdef_ = true;
-        if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
-          muonmatched = true;
-        
+        TruthMatching(partons, selectedJets, MCPermutation);
         
         
         ///////////////////
         ///  Transfer functions
         ///////////////////
         
-        if (all4PartonsMatched && calculateTransferFunctions)
+        if (all4PartonsMatched)
         {
           
           for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
@@ -659,12 +582,67 @@ int main(int argc, char* argv[])
             jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
           }
           
-          tf->fillJets(partonsMatched, jetsMatched);
+          if (calculateTransferFunctions)
+          {
+            tf->fillJets(partonsMatched, jetsMatched);
+            
+            if (muonmatched) tf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
+            //if (electronmatched) tf->fillElectron(...)
+            
+          }  // end tf
           
-          if (muonmatched) tf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
-          //if (electronmatched) tf->fillElectron(...)
           
-        }  // end tf
+          
+          /// Plot variables for matched events
+          float matchedWMass_reco = (jetsMatched[0] + jetsMatched[1]).M();
+          float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
+          float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
+          
+          histo1D["W_mass_reco_matched"]->Fill(matchedWMass_reco);
+          histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco);
+          histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen);
+          if ( all4JetsMatched_MCdef_ )
+          {
+            histo1D["W_mass_reco_first4matched"]->Fill(matchedWMass_reco);
+            histo1D["top_mass_reco_first4matched"]->Fill(matchedTopMass_reco);
+            histo1D["top_mass_gen_first4matched"]->Fill(matchedTopMass_gen);
+          }
+          if (hasExactly4Jets)
+          {
+            histo1D["W_mass_reco_matched_4jets"]->Fill(matchedWMass_reco);
+            histo1D["top_mass_reco_matched_4jets"]->Fill(matchedTopMass_reco);
+            histo1D["top_mass_gen_matched_4jets"]->Fill(matchedTopMass_gen);
+          }
+          
+          if (muonmatched)
+          {
+            float matchedMlb_corr = (selectedLepton[0] + jetsMatched[3]).M();  // lept b
+            float matchedMlb_wrong = (selectedLepton[0] + jetsMatched[2]).M();  // hadr b
+            float matchedTtbarMass_corr = matchedTopMass_reco + matchedMlb_corr;
+            float matchedTtbarMass_wrong = matchedTopMass_reco + matchedMlb_wrong;
+            double matchedDRLepB_corr = ROOT::Math::VectorUtil::DeltaR(selectedLepton[0], jetsMatched[3]);  // lept b
+            double matchedDRLepB_wrong = ROOT::Math::VectorUtil::DeltaR(selectedLepton[0], jetsMatched[2]);  // hadr b
+            
+            histo1D["mlb_matched_corr"]->Fill(matchedMlb_corr);
+            histo1D["mlb_matched_wrong"]->Fill(matchedMlb_wrong);
+            histo1D["ttbar_mass_matched_corr"]->Fill(matchedTtbarMass_corr);
+            histo1D["ttbar_mass_matched_wrong"]->Fill(matchedTtbarMass_wrong);
+            histo1D["dR_lep_b_matched_corr"]->Fill(matchedDRLepB_corr);
+            histo1D["dR_lep_b_matched_wrong"]->Fill(matchedDRLepB_wrong);
+            
+            if (hasExactly4Jets)
+            {
+              histo1D["mlb_matched_corr_4jets"]->Fill(matchedMlb_corr);
+              histo1D["mlb_matched_wrong_4jets"]->Fill(matchedMlb_wrong);
+              histo1D["ttbar_mass_matched_corr_4jets"]->Fill(matchedTtbarMass_corr);
+              histo1D["ttbar_mass_matched_wrong_4jets"]->Fill(matchedTtbarMass_wrong);
+              histo1D["dR_lep_b_matched_corr_4jets"]->Fill(matchedDRLepB_corr);
+              histo1D["dR_lep_b_matched_wrong_4jets"]->Fill(matchedDRLepB_wrong);
+            }
+            
+          }  // end muonMatched
+          
+        }  // end all4PartonsMatched
         
         
       }  // end if TT
@@ -679,21 +657,21 @@ int main(int argc, char* argv[])
       float recoWMass, recoTopMass, WTerm, topTerm, chi2;
       float smallestChi2 = 9999.;
       
-      for (int ijet = 0; ijet < 4; ijet++)
+      for (int ijet = 0; ijet < selectedJets.size(); ijet++)
       {
-        for (int jjet = ijet+1; jjet < 4; jjet++)
+        for (int jjet = ijet+1; jjet < selectedJets.size(); jjet++)
         {
-          for (int kjet = 0; kjet < 4; kjet++)
+          for (int kjet = 0; kjet < selectedJets.size(); kjet++)
           {
             if ( ijet != kjet && jjet != kjet )
             {
               recoWMass = (selectedJets[ijet] + selectedJets[jjet]).M();
               recoTopMass = (selectedJets[ijet] + selectedJets[jjet] + selectedJets[kjet]).M();
               
-              WTerm = pow( (recoWMass - chi2WMass)/sigmaChi2WMass, 2);
-              topTerm = pow ( (recoTopMass - chi2TopMass)/sigmaChi2TopMass, 2);
+              WTerm = (recoWMass - chi2WMass)/sigmaChi2WMass;
+              topTerm = (recoTopMass - chi2TopMass)/sigmaChi2TopMass;
               
-              chi2 = WTerm + topTerm;
+              chi2 = pow(WTerm, 2) + pow(topTerm, 2);
               
               if ( chi2 < smallestChi2)
               {
@@ -707,16 +685,125 @@ int main(int argc, char* argv[])
         }
       }
       
-      if (labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999)
+      if ( labelsReco[0] < 4 && labelsReco[1] < 4 && labelsReco[2] < 4 )
       {
-        recoWMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
-        recoTopMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
-        recoTopPt = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
+        nofChi2First4++;
+      }
+      
+      if ( labelsReco[0] != -9999 && labelsReco[1] != -9999 && labelsReco[2] != -9999 )
+      {
+        reco_hadWMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
+        reco_hadTopMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
+        reco_hadTopPt = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
+        
+        
+        //Fill histos
+        MSPlot["Chi2_value"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_W_mass"]->Fill(reco_hadWMass, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_hadTop_mass"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
+        
+        if (hasExactly4Jets)
+        {
+          MSPlot["Chi2_hadTop_mass_4jets"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
+        }
+        
+        if ( dataSetName.find("TT") == 0 )
+        {
+          histo1D["Chi2_W_mass_reco"]->Fill(reco_hadWMass);
+          histo1D["Chi2_top_mass_reco"]->Fill(reco_hadTopMass);
+          if (hasExactly4Jets)
+          {
+            histo1D["Chi2_top_mass_reco_4jets"]->Fill(reco_hadTopMass);
+          }
+        }
+        
+        /// Leptonic top mass
+        for (int i = 0; i < selectedJets.size(); i++)
+        {
+          if ( i != labelsReco[0] && i != labelsReco[1] && i != labelsReco[2] 
+              && jet_bdiscr[i] > CSVv2Medium )
+            bJetsAfterChi2.push_back(selectedJets[i]);
+        }
+        
+        if ( bJetsAfterChi2.size() > 0 )
+        {
+          double reco_Mlb_temp = 99999.;
+          for (unsigned int i = 0; i < bJetsAfterChi2.size(); i++)
+          {
+            reco_Mlb_temp = (selectedLepton[0] + bJetsAfterChi2[i]).M();
+            if ( reco_Mlb_temp < reco_minMlb )
+            {
+              reco_minMlb = reco_Mlb_temp;
+              reco_dRLepB = ROOT::Math::VectorUtil::DeltaR( bJetsAfterChi2[i], selectedLepton[0]);
+            }
+          }
+          
+          reco_ttbarMass = reco_minMlb + reco_hadTopMass;
+          
+          MSPlot["Chi2_mlb"]->Fill(reco_minMlb, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_ttbar_mass"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_dR_lep_b"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
+          
+          if (hasExactly4Jets)
+          {
+            MSPlot["Chi2_mlb_4jets"]->Fill(reco_minMlb, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot["Chi2_ttbar_mass_4jets"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot["Chi2_dR_lep_b_4jets"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
+          }
+          
+          if ( reco_minMlb < 200 )
+          {
+            MSPlot["Chi2_hadTop_mass_mlb_cut"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot["Chi2_ttbar_mass_mlb_cut"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
+            MSPlot["Chi2_dR_lep_b_mlb_cut"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
+            if (hasExactly4Jets)
+            {
+              MSPlot["Chi2_hadTop_mass_4jets_mlb_cut"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
+              MSPlot["Chi2_ttbar_mass_4jets_mlb_cut"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
+              MSPlot["Chi2_dR_lep_b_4jets_mlb_cut"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
+            }
+          }
+          
+        }  // end has bjet not in chi2
+        
+      }  // end labels
+      
+      
+      ///////////////////////////////////
+      ///  CHECK MATCHED COMBINATION  ///
+      ///////////////////////////////////
+      
+      if ( dataSetName.find("TT") == 0 && all4PartonsMatched )
+      {
+        if ( labelsReco[0] == MCPermutation[0].first 
+            && ( (labelsReco[1] == MCPermutation[1].first && labelsReco[2] == MCPermutation[2].first) 
+              || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) )
+          nofCorrectlyMatched_chi2++;
+        else
+          nofNotCorrectlyMatched_chi2++;
       }
       
       
-      /// Make plots
+      
+      ////////////////////
+      ///  Make plots  ///
+      ////////////////////
+      
+      float M3 = (selectedJets[0] + selectedJets[1] + selectedJets[2]).M();
       float Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
+      
+      double Mlb_temp = -1;
+      for (unsigned int i = 0; i < selectedBJets.size(); i++)
+      {
+        Mlb_temp = (selectedLepton[0] + selectedBJets[i]).M();
+        if ( Mlb_temp < min_Mlb )
+        {
+          min_Mlb = Mlb_temp;
+          dRLepB = ROOT::Math::VectorUtil::DeltaR( selectedBJets[i], selectedLepton[0]);
+        }
+      }
+      
       
       MSPlot["muon_pT"]->Fill(selectedLepton[0].Pt(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["muon_eta"]->Fill(selectedLepton[0].Eta(), datasets[d], true, Luminosity*scaleFactor);
@@ -731,6 +818,10 @@ int main(int argc, char* argv[])
       MSPlot["met_pT"]->Fill(met_pt, datasets[d], true, Luminosity*scaleFactor);
       MSPlot["met_eta"]->Fill(met_eta, datasets[d], true, Luminosity*scaleFactor);
       MSPlot["met_phi"]->Fill(met_phi, datasets[d], true, Luminosity*scaleFactor);
+      
+      MSPlot["M3"]->Fill(M3, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["min_Mlb"]->Fill(min_Mlb, datasets[d], true, Luminosity*scaleFactor);
+      MSPlot["dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
       
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["nBJets"]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
@@ -756,11 +847,17 @@ int main(int argc, char* argv[])
       
     }  // end loop events
     
+    
     cout << endl;
+    cout << "Number of chi2 made with the 4 most energetic jets: " << nofChi2First4 << " (" << 100*((float)nofChi2First4/(float)endEvent) << "%)" << endl;
     
     if ( dataSetName.find("TT") == 0 )
     {
       cout << "Number of matched events: " << nofMatchedEvents << endl;
+      cout << "Correctly matched for chi2Free:     " << setw(8) << right << nofCorrectlyMatched_chi2 << endl;
+      cout << "Not correctly matched for chi2Free: " << setw(8) << right << nofNotCorrectlyMatched_chi2 << endl;
+      if ( nofCorrectlyMatched_chi2 != 0 || nofNotCorrectlyMatched_chi2 != 0 )
+        cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched_chi2 / (float)(nofCorrectlyMatched_chi2 + nofNotCorrectlyMatched_chi2) << "% is correctly matched." << endl;
       
       /// Transfer functions
       if (calculateTransferFunctions)
@@ -862,6 +959,33 @@ int main(int argc, char* argv[])
     temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
     temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
   }
+  
+  // 1D
+  TDirectory* th1dir = fout->mkdir("1D_histograms");
+  th1dir->cd();
+  for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
+  {
+    TH1F *temp = it->second;
+    int N = temp->GetNbinsX();
+    temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
+    temp->SetBinContent(N+1,0);
+    temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
+    temp->Write();
+    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
+    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+  }
+  
+  // 2D
+//   TDirectory* th2dir = fout->mkdir("2D_histograms");
+//   th2dir->cd();
+//   //gStyle->SetPalette(50,0);
+//   for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+//   {
+//     TH2F *temp = it->second;
+//     temp->Write();
+//     TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+//     tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
+//   }
   
   fout->Close();
   
@@ -1035,6 +1159,8 @@ void InitMSPlots()
   MSPlot["met_pT"] = new MultiSamplePlot(datasets, "met_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["met_eta"] = new MultiSamplePlot(datasets, "met_eta", 30, -3, 3, "Eta");
   MSPlot["met_phi"] = new MultiSamplePlot(datasets, "met_phi", 32, -3.2, 3.2, "Phi");
+  
+  MSPlot["M3"] = new MultiSamplePlot(datasets, "M3", 40, 60, 460, "M [GeV]");
 
   MSPlot["nJets"] = new MultiSamplePlot(datasets, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasets, "nBJets", 9, -0.5, 8.5, "# b jets");
@@ -1046,9 +1172,162 @@ void InitMSPlots()
   MSPlot["CSVv2Discr_highest"] = new MultiSamplePlot(datasets, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
   MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasets, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
   
-//   MSPlot["min_M_lb"] = new MultiSamplePlot(datasets, "min_M_lb", 40, 0, 400, "M_{lb} [GeV]");
-//   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
+  MSPlot["min_Mlb"] = new MultiSamplePlot(datasets, "min_Mlb", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
   
+  
+  /// Chi2
+  MSPlot["Chi2_value"] = new MultiSamplePlot(datasets, "Chi2_value", 200, 0, 200, "#chi^{2} value");
+  MSPlot["Chi2_W_mass"] = new MultiSamplePlot(datasets, "Chi2_W_mass", 40, 0, 800, "M_{W} [GeV]");
+  MSPlot["Chi2_hadTop_mass"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["Chi2_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["Chi2_hadTop_pT"] = new MultiSamplePlot(datasets, "Chi2_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  
+  MSPlot["Chi2_mlb"] = new MultiSamplePlot(datasets, "Chi2_mlb", 40, 0, 800, "M_{lb} [GeV]");
+  MSPlot["Chi2_mlb_4jets"] = new MultiSamplePlot(datasets, "Chi2_mlb_4jets", 40, 0, 800, "M_{lb} [GeV]");
+
+  MSPlot["Chi2_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+  MSPlot["Chi2_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
+
+  MSPlot["Chi2_ttbar_mass"] = new MultiSamplePlot(datasets, "Chi2_ttbar_mass", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
+  MSPlot["Chi2_ttbar_mass_4jets"] = new MultiSamplePlot(datasets, "Chi2_ttbar_mass_4jets", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
+  MSPlot["Chi2_ttbar_mass_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_ttbar_mass_mlb_cut", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
+  MSPlot["Chi2_ttbar_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_ttbar_mass_4jets_mlb_cut", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
+
+  MSPlot["Chi2_dR_lep_b"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b", 25, 0, 5, "#Delta R(l,b)");
+  MSPlot["Chi2_dR_lep_b_4jets"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_4jets", 25, 0, 5, "#Delta R(l,b)");
+  MSPlot["Chi2_dR_lep_b_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
+  MSPlot["Chi2_dR_lep_b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_4jets_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
+}
+
+void InitHisto1D()
+{
+  TH1::SetDefaultSumw2();
+  
+  /// Chi2
+  histo1D["Chi2_W_mass_reco"] = new TH1F("Chi2_W_mass_reco","Reconstructed hadronic W mass using a Chi2; M_{W} [GeV]", 80, 0, 800);
+  histo1D["Chi2_top_mass_reco"] = new TH1F("Chi2_top_mass_reco","Reconstructed top mass using a Chi2; M_{t} [GeV]", 80, 0, 800);
+  histo1D["Chi2_top_mass_reco_4jets"] = new TH1F("Chi2_top_mass_reco_4jets","Reconstructed top mass using a Chi2 (exactly 4 jets); M_{t} [GeV]", 80, 0, 800);
+  
+  /// Matching
+  histo1D["W_mass_reco_matched"] = new TH1F("W_mass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 125, 0, 250);
+  histo1D["top_mass_reco_matched"] = new TH1F("top_mass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
+  histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 175, 0, 350);
+  histo1D["mlb_matched_corr"]  = new TH1F("mlb_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["mlb_matched_wrong"] = new TH1F("mlb_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["ttbar_mass_matched_corr"] = new TH1F("ttbar_mass_matched_corr","Reconstructed mass of the top quark pair using correctly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong"] = new TH1F("ttbar_mass_matched_wrong","Reconstructed mass of the top quark pair using wrongly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["dR_lep_b_matched_corr"] = new TH1F("dR_lep_b_matched_corr","Delta R between the lepton and the leptonic b jet for matched events; #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_matched_wrong"] = new TH1F("dR_lep_b_matched_wrong","Delta R between the lepton and the hadronic b jet for matched events; #Delta R(l,b_{had})", 25, 0, 5);
+  
+  histo1D["W_mass_reco_matched_4jets"] = new TH1F("W_mass_reco_matched_4jets","Reconstructed hadronic W mass of matched events with exactly 4 jets; M_{W} [GeV]", 125, 0, 250);
+  histo1D["top_mass_reco_matched_4jets"] = new TH1F("top_mass_reco_matched_4jets","Reconstructed top mass of matched events with exactly 4 jets; M_{t} [GeV]", 175, 50, 400);
+  histo1D["top_mass_gen_matched_4jets"] = new TH1F("top_mass_gen_matched_4jets","Generated top mass of matched events with exactly 4 jets; M_{t} [GeV]", 175, 0, 350);
+  histo1D["mlb_matched_corr_4jets"] = new TH1F("mlb_matched_corr_4jets","Reconstructed leptonic top mass using correctly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["mlb_matched_wrong_4jets"] = new TH1F("mlb_matched_wrong_4jets","Reconstructed leptonic top mass using wrongly matched events with exactly 4 jets; M_{lb} [GeV]", 80, 0, 800);
+  histo1D["ttbar_mass_matched_corr_4jets"] = new TH1F("ttbar_mass_matched_corr_4jets","Reconstructed mass of the top quark pair using correctly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["ttbar_mass_matched_wrong_4jets"] = new TH1F("ttbar_mass_matched_wrong_4jets","Reconstructed mass of the top quark pair using wrongly matched events with exactly 4 jets; M_{t#bar{t}} [GeV]", 100, 0, 1000);
+  histo1D["dR_lep_b_matched_corr_4jets"] = new TH1F("dR_lep_b_matched_corr_4jets","Delta R between the lepton and the leptonic b jet for matched events with exactly 4 jets; #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_matched_wrong_4jets"] = new TH1F("dR_lep_b_matched_wrong_4jets","Delta R between the lepton and the hadronic b jet for matched events with exactly 4 jets; #Delta R(l,b_{had})", 25, 0, 5);
+  
+  histo1D["W_mass_reco_first4matched"] = new TH1F("W_mass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 125, 0, 250);
+  histo1D["top_mass_reco_first4matched"] = new TH1F("top_mass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 175, 50, 400);
+  histo1D["top_mass_gen_first4matched"]= new TH1F("top_mass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 175, 0, 350);
+}
+
+void InitHisto2D()
+{
+  
+}
+
+void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
+{
+  JetPartonMatching matching = JetPartonMatching(partons, selectedJets, 2, true, true, 0.3);  // partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
+  
+  if (matching.getNumberOfAvailableCombinations() != 1)
+    cerr << "matching.getNumberOfAvailableCombinations() = " << matching.getNumberOfAvailableCombinations() << " .  This should be equal to 1 !!!" << endl;
+  
+  
+  /// Fill match in JetPartonPair;
+  vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
+  JetPartonPair.clear();
+  
+  for (unsigned int i = 0; i < partons.size(); i++)
+  {
+    int matchedJetNumber = matching.getMatchForParton(i, 0);
+    if (matchedJetNumber > -1)
+      JetPartonPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
+  }
+
+  if (verbose > 2)
+    cout << "Matching done" << endl;
+  
+  
+  for (unsigned int i = 0; i < JetPartonPair.size(); i++)
+  {
+    unsigned int j = JetPartonPair[i].second;
+    
+    if ( fabs(mc_pdgId[partonId[j]]) < 6 )  //light/b quarks, 6 should stay hardcoded
+    {
+      if ( ( muPlusFromTop && mc_mother[partonId[j]] == -24 && mc_granny[partonId[j]] == -pdgID_top )
+          || ( muMinusFromTop && mc_mother[partonId[j]] == 24 && mc_granny[partonId[j]] == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
+      {
+        if (verbose > 3)
+          cout << "Light jet: " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+        
+        if (MCPermutation[0].first == 9999)
+        {
+          MCPermutation[0] = JetPartonPair[i];
+        }
+        else if (MCPermutation[1].first == 9999)
+        {
+          MCPermutation[1] = JetPartonPair[i];
+        }
+        else
+        {
+          cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
+          cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
+          cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
+//          cerr << " -- ievt: " << ievt << endl;
+          exit(1);
+        }
+      }
+    }
+    if ( fabs(mc_pdgId[partonId[j]]) == 5 )
+    {
+      if ( ( muPlusFromTop && mc_mother[partonId[j]] == -pdgID_top )
+          || ( muMinusFromTop && mc_mother[partonId[j]] == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
+      {
+        if (verbose > 3)
+          cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+        
+        MCPermutation[2] = JetPartonPair[i];
+      }
+      else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
+        || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
+      {
+        if (verbose > 3)
+          cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+        
+        MCPermutation[3] = JetPartonPair[i];
+      }
+    }
+  }  /// End loop over Jet Parton Pairs
+  
+  
+  if ( MCPermutation[0].first != 9999 && MCPermutation[1].first != 9999 && MCPermutation[2].first != 9999 && MCPermutation[3].first != 9999 )
+  {
+    all4PartonsMatched = true;
+    nofMatchedEvents++;
+    if (MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 && MCPermutation[3].first < 4)
+      all4JetsMatched_MCdef_ = true;
+  }
+  else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
+
+  if ( MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 )
+    hadronictopJetsMatched_MCdef_ = true;
+  if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
+    muonmatched = true;
 }
 
 void ClearMetaData()
@@ -1071,6 +1350,11 @@ void ClearMetaData()
   }
   
   strSyst = "";
+  
+  nofMatchedEvents = 0;
+  nofChi2First4 = 0;
+  nofCorrectlyMatched_chi2 = 0;
+  nofNotCorrectlyMatched_chi2 = 0;
 }
 
 void ClearLeaves()
@@ -1143,9 +1427,14 @@ void ClearLeaves()
   
   scaleFactor = 1.;
   bJetId.clear();
-  recoWMass = -1.;
-  recoTopMass = -1.;
-  recoTopPt = -1.;
+  reco_hadWMass = -1.;
+  reco_hadTopMass = -1.;
+  reco_hadTopPt = -1.;
+  reco_minMlb = 9999.;
+  reco_ttbarMass = -1.;
+  reco_dRLepB = -1.;
+  min_Mlb = 9999.;
+  dRLepB = -1.;
 }
 
 void ClearTLVs()
@@ -1160,6 +1449,7 @@ void ClearTLVs()
   partons.clear();
   partonsMatched.clear();
   jetsMatched.clear();
+  bJetsAfterChi2.clear();
 }
 
 void ClearMatching()
@@ -1171,15 +1461,10 @@ void ClearMatching()
   all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
   all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
   hadronictopJetsMatched_MCdef_ = false;
-  leptonicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
-  hadronicBJet_ = pair<unsigned int,unsigned int>(9999,9999);
-  hadronicWJet1_ = pair<unsigned int,unsigned int>(9999,9999);
-  hadronicWJet2_ = pair<unsigned int,unsigned int>(9999,9999);
   for (int i = 0; i < 4; i++)
   {
     MCPermutation[i] = pair<unsigned int,unsigned int>(9999,9999);
   }
-  JetPartonPair.clear();
   topQuark = -9999;
   antiTopQuark = -9999;
   genmuon = -9999;
