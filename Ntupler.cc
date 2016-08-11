@@ -511,10 +511,16 @@ int main (int argc, char *argv[])
       isData = true;
     }
     
-    if ( (datasets[d]->Title()).find("amc") == 0 )
+    if ( (datasets[d]->Title()).find("amc") == 0 || (datasets[d]->Title()).find("AMC") == 0 || (datasets[d]->Title()).find("Amc") == 0 || (datasets[d]->Title()).find("aMC") == 0 )
     {
       nlo = true;
       cout << "         This is an amc@nlo sample." << endl;
+    }
+    
+    if (calculateBTagSF && isData)
+    {
+      cout << "  Calculating btag scale factors.... Skipping data..." << endl;
+      continue;
     }
     
     /// book triggers
@@ -526,7 +532,7 @@ int main (int argc, char *argv[])
     ///  BTag SF  ///
     /////////////////
     
-    if (applyBTagSF && ! isData)
+    if (applyBTagSF)
     {
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/merged/";
@@ -1151,6 +1157,8 @@ int main (int argc, char *argv[])
         if ( run_num < 256630 )
         {
           cerr << "-- Dataset 2015C included..." << endl;
+          cerr << "   Run number is " << run_num << endl;
+          //cerr << "   File name is " << datasets[d]->eventTree()->GetFile()->GetName() << endl;
           exit(1);
         }
         else if ( run_num >= 256630 && run_num <= 257819 )
@@ -1164,7 +1172,7 @@ int main (int argc, char *argv[])
           hasHLTv3 = true;
         }
       }
-
+      
       if (! isData )
       {
         genjets = treeLoader.LoadGenJet(ievt,false);
