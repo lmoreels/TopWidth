@@ -40,7 +40,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-string ntupleDate = "160803";
+string ntupleDate = "160812";
 int verbose = 2;
 
 string pathNtuples = "";
@@ -79,6 +79,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
+ofstream txtMassMatched, txtMassChi2;
 
 /// Function prototypes
 struct HighestPt
@@ -428,6 +429,11 @@ int main(int argc, char* argv[])
       isData = true;
     }
     
+    if (dataSetName.find("TT") == 0 )
+    {
+      txtMassMatched.open(("mass_matched_TT_"+dateString+".txt").c_str());
+    }
+    txtMassChi2.open(("mass_chi2_"+dataSetName+"_"+dateString+".txt").c_str());
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
@@ -598,6 +604,8 @@ int main(int argc, char* argv[])
           float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
           float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
           
+          txtMassMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << matchedTopMass_gen << endl;
+          
           histo1D["W_mass_reco_matched"]->Fill(matchedWMass_reco);
           histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco);
           histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen);
@@ -696,6 +704,7 @@ int main(int argc, char* argv[])
         reco_hadTopMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
         reco_hadTopPt = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
         
+        txtMassChi2 << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
         
         //Fill histos
         MSPlot["Chi2_value"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
@@ -874,8 +883,12 @@ int main(int argc, char* argv[])
 
         delete foutTF;
       }
+      
+      txtMassMatched.close();
+      
     }  // end TT
     
+    txtMassChi2.close();
     
     tFileMap[dataSetName.c_str()]->Close();
     
