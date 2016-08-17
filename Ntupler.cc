@@ -199,8 +199,8 @@ int main (int argc, char *argv[])
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
-  bool calculateBTagSF = true;
-  bool applyBTagSF = false;
+  bool calculateBTagSF = false;
+  bool applyBTagSF = true;
   bool applyJetLeptonCleaning = true;
   
   if (localgridSubmission)

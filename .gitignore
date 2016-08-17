@@ -15,6 +15,7 @@ TransferFunctions/*.txt
 TransferFunctions_TABLE.txt
 Trigger/*.txt
 Trigger/Makefile
+averageMass/*
 data*txt
 eqLumi.txt
 localgridSubmission/SubmitScripts/**
@@ -23,6 +24,7 @@ negWeightsCalculator
 nohup*.txt
 output*/
 test*/*
+AverageMassCalculator
 NtupleAnalyser
 Ntupler
 testAnalyser
