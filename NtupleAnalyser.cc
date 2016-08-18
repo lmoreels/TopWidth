@@ -65,6 +65,10 @@ float sigmaChi2WMass = 15;
 float chi2TopMass = 172.5;
 float sigmaChi2TopMass = 40;
 
+// Average top mass
+// TT match, TT chi2, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, allChi2
+float aveTopMass[] = {166.922, 178.150, 203.137, 201.759, 185.668, 186.755, 189.150, 182.008, 179.775, 178.315};
+
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
@@ -169,7 +173,7 @@ Double_t        muonTrigSFv3[1];   //[nMuons]
 
 Long64_t        nEvents;
 Long64_t        nEventsSel;
-Bool_t          cutFlow[10];
+Int_t           cutFlow[10];
 Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
@@ -431,9 +435,9 @@ int main(int argc, char* argv[])
     
     if (dataSetName.find("TT") == 0 )
     {
-      txtMassMatched.open(("mass_matched_TT_"+dateString+".txt").c_str());
+      txtMassMatched.open(("averageMass/mass_matched_TT_"+dateString+".txt").c_str());
     }
-    txtMassChi2.open(("mass_chi2_"+dataSetName+"_"+dateString+".txt").c_str());
+    txtMassChi2.open(("averageMass/mass_chi2_"+dataSetName+"_"+dateString+".txt").c_str());
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
@@ -711,6 +715,10 @@ int main(int argc, char* argv[])
         MSPlot["Chi2_W_mass"]->Fill(reco_hadWMass, datasets[d], true, Luminosity*scaleFactor);
         MSPlot["Chi2_hadTop_mass"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
         MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
+        
+        MSPlot["Chi2_mTop_div_aveMTopMatch"]->Fill(reco_hadTopMass/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[1], datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[9], datasets[d], true, Luminosity*scaleFactor);
         
         if (hasExactly4Jets)
         {
@@ -1211,6 +1219,11 @@ void InitMSPlots()
   MSPlot["Chi2_dR_lep_b_4jets"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_4jets", 25, 0, 5, "#Delta R(l,b)");
   MSPlot["Chi2_dR_lep_b_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
   MSPlot["Chi2_dR_lep_b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_4jets_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
+  
+  
+  MSPlot["Chi2_mTop_div_aveMTopMatch"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from matched events)", 40, 0, 4, "M_{t}/<M_{t}>");
+  MSPlot["Chi2_mTop_div_aveMTopTTChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco TT events)", 40, 0, 4, "M_{t}/<M_{t}>");
+  MSPlot["Chi2_mTop_div_aveMTopAllChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco events from all datasets)", 40, 0, 4, "M_{t}/<M_{t}>");
 }
 
 void InitHisto1D()
@@ -1497,7 +1510,7 @@ void ClearObjects()
 long GetNEvents(TTree* fChain, string var, bool isData)
 {
   GetMetaData(fChain, isData);
-  int varNew = 0;
+  long varNew = 0;
   for (unsigned int iEntry = 0; iEntry < fChain->GetEntries(); iEntry++)
   {
     fChain->GetEntry(iEntry);
