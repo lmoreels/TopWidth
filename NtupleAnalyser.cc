@@ -761,6 +761,10 @@ int main(int argc, char* argv[])
           MSPlot["Chi2_mlb"]->Fill(reco_minMlb, datasets[d], true, Luminosity*scaleFactor);
           MSPlot["Chi2_ttbar_mass"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
           MSPlot["Chi2_dR_lep_b"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
+          if ( dataSetName.find("TT") == 0 )
+          {
+            histo1D["dR_lep_b_unmatched_chi2"]->Fill(reco_dRLepB);
+          }
           
           if (hasExactly4Jets)
           {
@@ -796,7 +800,10 @@ int main(int argc, char* argv[])
         if ( labelsReco[0] == MCPermutation[0].first 
             && ( (labelsReco[1] == MCPermutation[1].first && labelsReco[2] == MCPermutation[2].first) 
               || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) )
+        {
           nofCorrectlyMatched_chi2++;
+          histo1D["dR_lep_b_reco_and_matched_chi2"]->Fill(reco_dRLepB);
+        }
         else
           nofNotCorrectlyMatched_chi2++;
       }
@@ -839,6 +846,10 @@ int main(int argc, char* argv[])
       MSPlot["M3"]->Fill(M3, datasets[d], true, Luminosity*scaleFactor);
       MSPlot["min_Mlb"]->Fill(min_Mlb, datasets[d], true, Luminosity*scaleFactor);
       MSPlot["dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
+      if ( dataSetName.find("TT") == 0 )
+      {
+        histo1D["dR_lep_b_unmatched_all"]->Fill(dRLepB);
+      }
       
       MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
       MSPlot["nBJets"]->Fill(selectedBJets.size(), datasets[d], true, Luminosity*scaleFactor);
@@ -1194,7 +1205,7 @@ void InitMSPlots()
   MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasets, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
   
   MSPlot["min_Mlb"] = new MultiSamplePlot(datasets, "min_Mlb", 40, 0, 400, "M_{lb} [GeV]");
-  MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 50, 0, 10, "#Delta R(l,b)");
+  MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasets, "dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
   
   
   /// Chi2
@@ -1259,6 +1270,11 @@ void InitHisto1D()
   histo1D["W_mass_reco_first4matched"] = new TH1F("W_mass_reco_first4matched","Reconstructed hadronic W mass of events where 4 hardest jets are matched; M_{W} [GeV]", 125, 0, 250);
   histo1D["top_mass_reco_first4matched"] = new TH1F("top_mass_reco_first4matched","Reconstructed top mass of events where 4 hardest jets are matched; M_{t} [GeV]", 175, 50, 400);
   histo1D["top_mass_gen_first4matched"]= new TH1F("top_mass_gen_first4matched","Generated top mass of events where partons are matched to 4 hardest jets; M_{t} [GeV]", 175, 0, 350);
+  
+  /// Test dR
+  histo1D["dR_lep_b_unmatched_all"] = new TH1F("dR_lep_b_unmatched_all","Minimal delta R between the lepton and a b jet (looking at all b jets); #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_unmatched_chi2"] = new TH1F("dR_lep_b_unmatched_chi2","Minimal delta R between the lepton and a b jet (looking at b jets not in chi2); #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_reco_and_matched_chi2"]  = new TH1F("dR_lep_b_reco_and_matched_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 equals matching); #Delta R(l,b)", 25, 0, 5);
 }
 
 void InitHisto2D()
