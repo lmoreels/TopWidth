@@ -9,6 +9,7 @@
 NtupleContent/*
 NtupleOutput/*
 Ntupler_an_Isis.cc
+Output*/*
 OutputPlots/*
 Plots*/*
 TransferFunctions/*.txt
@@ -27,6 +28,7 @@ test*/*
 AverageMassCalculator
 NtupleAnalyser
 Ntupler
+VoigtFitter
 testAnalyser
 testAnalyserTTbarOnly
 testMatching

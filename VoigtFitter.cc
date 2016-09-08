@@ -4,6 +4,7 @@
 #include <cmath>
 #include <TMath.h>
 #include <iostream>
+#include <iomanip>
 #include <ostream>
 #include <fstream>
 #include <sstream>
@@ -69,8 +70,20 @@ Double_t lorentzian(Double_t *x,Double_t *par) {
 }
 
 // Sum of gaussian and lorentzian
+// par[0] = scale; par[1] = mean gaus & lorentz; par[2] = sigma gaus; par[3] = width lorentz
 Double_t fitf(Double_t *x, Double_t *par) {
-  return gaussian(x,par) + lorentzian(x,&par[3]);
+  Double_t arg_g = 0;
+  if ( par[2] != 0 ) arg_g = (x[0] - par[1])/par[2];
+  Double_t gaus = TMath::Exp(-0.5*arg_g*arg_g);
+  if ( par[2] != 0 ) gaus = gaus/(par[2]*sqrt(2*TMath::Pi()));
+  
+  Double_t arg_l = par[3]/2.;
+  Double_t arg_lx = x[0]-par[1];
+  Double_t lorentz = (1./TMath::Pi())*arg_l/(arg_lx*arg_lx + arg_l*arg_l);
+  
+  Double_t fitfunc = par[0]*gaus + (1 - par[0])*lorentz;
+  return fitfunc*par[4];
+  //return gaussian(x,par) + lorentzian(x,&par[3]);
 }
 
 
@@ -89,12 +102,15 @@ int main (int argc, char *argv[])
   
   
   /// Declare histos to be fitted
-  const string histoNames[] = {""};
+  const string histDir = "1D_histograms/";
+  const string histoNames[] = {"mTop_div_aveMTop_TT_matched_reco", "mTop_div_aveMTop_TT_matched_chi2_reco"};
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
-  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/160901_1151/NtuplePlots_nominal.root";
-  string outputFileName = "";
+  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/160908_1612/NtuplePlots_nominal.root";
+  string pathOutput = "OutputVoigt/";
+  mkdir(pathOutput.c_str(),0777);
+  string outputFileName = pathOutput+"VoigtFit.root";
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
   fin->cd();
@@ -105,32 +121,23 @@ int main (int argc, char *argv[])
   
   for (int iHisto = 0; iHisto < sizeHistos; iHisto++)
   {
-    if (! fin->GetListOfKeys()->Contains((histoNames[iHisto]).c_str()) )
-    {
-      cout << " *** Histogram " << histoNames[iHisto] << " does not exist... Proceeding to next histogram..." << endl;
-      continue;
-    }
+    //if (! fin->GetListOfKeys()->Contains(("1D_histograms/"+histoNames[iHisto]).c_str()) )  // does not work for histograms in dir
+    //{
+      //cout << " *** Histogram " << histoNames[iHisto] << " does not exist... Proceeding to next histogram..." << endl;
+      //continue;
+    //}
     cout << " *** Processing histogram " << histoNames[iHisto] << endl;
     
     /// Get histos
-    TH1F* histo = (TH1F*) fin->Get((histoNames[iHisto]).c_str());
+    TH1F* histo = (TH1F*) fin->Get((histDir+histoNames[iHisto]).c_str());
     histo->Write();
     
     /// Declare fit function
     int nBins = histo->GetXaxis()->GetNbins();
-    const int nPar = 6;
-    TH1D **hlist = new TH1D*[nPar];
-    string parnames[nPar] = {"a1","a2","a3","a4","a5","a6"};
-    string name = "";
-    string title = "";
+    const int nPar = 5;
+    string parnames[nPar] = {"a1","a2","a3","a4","a5"};
+    //string parnames[nPar] = {"a1","a2","a3","a4","a5","a6"};
     
-    for (int iPar = 0; iPar < nPar; iPar++)
-    {
-      name = std::string(histo->GetName())+ "_" + parnames[iPar];
-      title = std::string(histo->GetName())+ ": Fitted value of " + parnames[iPar] ;
-      hlist[iPar] = new TH1D(name.c_str(), title.c_str(), nBins, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
-      hlist[iPar]->GetXaxis()->SetTitle(histo->GetXaxis()->GetTitle());
-    }
     
     // Normalise histogram
     Double_t scale = 1./histo->Integral();
@@ -138,21 +145,25 @@ int main (int argc, char *argv[])
     
     
     /// Declare fit function
-    TF1 *myfit = new TF1("fit", fitf, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), nPar);  // root name, fit function, range, nPar
+    TF1 *myfit = new TF1("fit", fitf, 0.6, 1.5, nPar);  // root name, fit function, range, nPar
     
     
-    //  Give names to the parameters: 0->a1: gaus constant; 1->a2: gaus mean; 2->a3: gaus sigma; 3->a4: ltz constant; 4->a5: ltz gamma (FWHM); 5->a6: ltz displacement
-    myfit->SetParNames("a1","a2","a3","a4","a5","a6");
+    //  Give names to the parameters: // 0->a1 = scale; 1->a2 = mean gaus & lorentz; 2->a3 = sigma gaus; 3->a4 = width lorentz
+    myfit->SetParNames("ps","#mu","#sigma","#gamma","norm");
     
-    myfit->SetParameters(0.5, histo->GetMean(), 0.58*histo->GetRMS(), 0.5, 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
-    myfit->SetParLimits(2,0,1.e+6);
-    myfit->SetParLimits(4,0,1.e+6);
+    myfit->SetParameters(0.5, 1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+    myfit->SetParLimits(0,0.,1.);
+    myfit->SetParLimits(1,0.95,1.05);
+    myfit->SetParLimits(2,0.001,1.e+3);
+    myfit->SetParLimits(3,0.001,1.e+3);
     
     
     ///  Fit
     std::string func_title = std::string(histo->GetName())+"_Fitted";
     myfit->SetName(func_title.c_str());
     histo->Fit(myfit);
+    gStyle->SetOptFit(0111);
+    histo->SetStats(1);
     histo->Write();
     myfit->Write();
     
@@ -164,7 +175,7 @@ int main (int argc, char *argv[])
   
   
   
-  
+  fout->Write();
   
   
   fin->Close();
@@ -200,3 +211,4 @@ int main (int argc, char *argv[])
   return 0;
   
 }
+ 

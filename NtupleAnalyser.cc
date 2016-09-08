@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
@@ -62,7 +63,7 @@ float CSVv2Tight = 0.935;
 // Temporarily, until calculated from TTbar sample
 float chi2WMass = 80.385;
 float sigmaChi2WMass = 15;
-float chi2TopMass = 172.5;
+float chi2TopMass = 180.0; //172.5; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 // Average top mass
@@ -613,6 +614,9 @@ int main(int argc, char* argv[])
           histo1D["W_mass_reco_matched"]->Fill(matchedWMass_reco);
           histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco);
           histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen);
+          
+          histo1D["mTop_div_aveMTop_TT_matched_reco"]->Fill(matchedTopMass_reco/aveTopMass[0]);
+          
           if ( all4JetsMatched_MCdef_ )
           {
             histo1D["W_mass_reco_first4matched"]->Fill(matchedWMass_reco);
@@ -720,6 +724,8 @@ int main(int argc, char* argv[])
         MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[1], datasets[d], true, Luminosity*scaleFactor);
         MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[9], datasets[d], true, Luminosity*scaleFactor);
         
+        histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[0]);
+        
         if (hasExactly4Jets)
         {
           MSPlot["Chi2_hadTop_mass_4jets"]->Fill(reco_hadTopMass, datasets[d], true, Luminosity*scaleFactor);
@@ -803,6 +809,7 @@ int main(int argc, char* argv[])
         {
           nofCorrectlyMatched_chi2++;
           histo1D["dR_lep_b_reco_and_matched_chi2"]->Fill(reco_dRLepB);
+          histo1D["mTop_div_aveMTop_TT_matched_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
         }
         else
           nofNotCorrectlyMatched_chi2++;
@@ -1232,9 +1239,9 @@ void InitMSPlots()
   MSPlot["Chi2_dR_lep_b_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_dR_lep_b_4jets_mlb_cut", 25, 0, 5, "#Delta R(l,b)");
   
   
-  MSPlot["Chi2_mTop_div_aveMTopMatch"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from matched events)", 40, 0, 4, "M_{t}/<M_{t}>");
-  MSPlot["Chi2_mTop_div_aveMTopTTChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco TT events)", 40, 0, 4, "M_{t}/<M_{t}>");
-  MSPlot["Chi2_mTop_div_aveMTopAllChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco events from all datasets)", 40, 0, 4, "M_{t}/<M_{t}>");
+  MSPlot["Chi2_mTop_div_aveMTopMatch"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from matched events)", 50, 0, 2, "M_{t}/<M_{t}>");
+  MSPlot["Chi2_mTop_div_aveMTopTTChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco TT events)", 50, 0, 2, "M_{t}/<M_{t}>");
+  MSPlot["Chi2_mTop_div_aveMTopAllChi2"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from chi2 of reco events from all datasets)", 50, 0, 2, "M_{t}/<M_{t}>");
 }
 
 void InitHisto1D()
@@ -1275,6 +1282,18 @@ void InitHisto1D()
   histo1D["dR_lep_b_unmatched_all"] = new TH1F("dR_lep_b_unmatched_all","Minimal delta R between the lepton and a b jet (looking at all b jets); #Delta R(l,b)", 25, 0, 5);
   histo1D["dR_lep_b_unmatched_chi2"] = new TH1F("dR_lep_b_unmatched_chi2","Minimal delta R between the lepton and a b jet (looking at b jets not in chi2); #Delta R(l,b)", 25, 0, 5);
   histo1D["dR_lep_b_reco_and_matched_chi2"]  = new TH1F("dR_lep_b_reco_and_matched_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 equals matching); #Delta R(l,b)", 25, 0, 5);
+  
+  /// m_t/<m_t>
+  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT_matched_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_ST_tW_antitop"] = new TH1F("mTop_div_aveMTop_ST_tW_antitop","Top mass divided by average top mass for ST tW antitop sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_ST_t_top"] = new TH1F("mTop_div_aveMTop_ST_t_top","Top mass divided by average top mass for ST t top sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_ST_t_antitop"] = new TH1F("mTop_div_aveMTop_ST_t_antitop","Top mass divided by average top mass for ST t antitop sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_DYJets"] = new TH1F("mTop_div_aveMTop_DYJets","Top mass divided by average top mass for DY+Jets sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_WJets"] = new TH1F("mTop_div_aveMTop_WJets","Top mass divided by average top mass for W+Jets sample; M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_data"] = new TH1F("mTop_div_aveMTop_data","Top mass divided by average top mass for data sample; M_{t}/<M_{t}>", 50, 0, 2);
 }
 
 void InitHisto2D()
