@@ -193,9 +193,9 @@ int main (int argc, char *argv[])
   bool applyPU = true;
   bool applyPUup = false;
   bool applyPUdown = false;
-  bool applyJER = true;
+  bool applyJER = false;
   bool applyJERup = false;
-  bool applyJERdown = false;
+  bool applyJERdown = true;
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
@@ -209,9 +209,9 @@ int main (int argc, char *argv[])
     else if ( JES == 1 ) { applyJEC = false; applyJESup = true; applyJESdown = false;}
     else if ( JES == -1 ) { applyJEC = false; applyJESup = false; applyJESdown = true;}
     
-    if ( JER == 0 ) { applyJER = true; applyJERup = false; applyJERdown = false;}
-    else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
-    else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
+    //if ( JER == 0 ) { applyJER = true; applyJERup = false; applyJERdown = false;}
+    //else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
+    //else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
     
     //if ( fillBtagHisto == 0 ) { applyBTagSF = true; calculateBTagSF = false;}
     //else if ( fillBtagHisto == 1 ) { applyBTagSF = false; calculateBTagSF = true;}

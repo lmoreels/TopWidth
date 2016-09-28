@@ -103,14 +103,16 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  const string histoNames[] = {"mTop_div_aveMTop_TT_matched_reco", "mTop_div_aveMTop_TT_matched_chi2_reco"};
+  const string histoNames[] = {"mTop_div_aveMTop_TT_matched_reco", "mTop_div_aveMTop_TT_corr_match_chi2_reco"};
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
-  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/160908_1612/NtuplePlots_nominal.root";
+  //string systInput = "160928_1258/NtuplePlots_nominal.root";  //nominal
+  string systInput = "160928_1152/NtuplePlots_JERup.root ";  //JER
+  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+systInput;
   string pathOutput = "OutputVoigt/";
   mkdir(pathOutput.c_str(),0777);
-  string outputFileName = pathOutput+"VoigtFit.root";
+  string outputFileName = pathOutput+"VoigtFit_nominal.root";
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
   fin->cd();
@@ -145,7 +147,7 @@ int main (int argc, char *argv[])
     
     
     /// Declare fit function
-    TF1 *myfit = new TF1("fit", fitf, 0.6, 1.5, nPar);  // root name, fit function, range, nPar
+    TF1 *myfit = new TF1("fit", fitf, 0.5, 2., nPar);  // root name, fit function, range, nPar
     
     
     //  Give names to the parameters: // 0->a1 = scale; 1->a2 = mean gaus & lorentz; 2->a3 = sigma gaus; 3->a4 = width lorentz

@@ -6,9 +6,9 @@
 
 export SCRAM_ARCH=slc6_amd64_gcc493
 
-cmsrel CMSSW_7_6_3
+cmsrel CMSSW_7_6_5
 
-cd CMSSW_7_6_3/src
+cd CMSSW_7_6_5/src
 
 cmsenv
 
@@ -54,6 +54,12 @@ cd TopBrussels/TopWidth
 ## Compile and make executables of all macros
 
 source compile.sh
+
+
+## Compile one macro
+
+source compile.sh testAnalyser.cc
+
 
 ## Run
 

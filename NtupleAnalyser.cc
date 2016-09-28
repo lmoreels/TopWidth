@@ -33,6 +33,7 @@ using namespace TopTree;
 
 
 bool test = false;
+bool testHistos = false;
 bool calculateTransferFunctions = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -41,7 +42,8 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-string ntupleDate = "160812";
+string ntupleDate = "160812"; // nominal
+//string ntupleDate = "160916"; // JERup
 int verbose = 2;
 
 string pathNtuples = "";
@@ -310,7 +312,7 @@ int main(int argc, char* argv[])
   // Add channel to output path
   pathOutput += channel+"/";
   mkdir(pathOutput.c_str(),0777);
-  if (test)
+  if (test || testHistos)
   {
     pathOutput += "test/";
     mkdir(pathOutput.c_str(),0777);
@@ -472,7 +474,7 @@ int main(int argc, char* argv[])
     ////////////////////////////////////
     
     int endEvent = nEntries;
-    if (test) endEvent = 1001;
+    if (test || testHistos) endEvent = 1001;
     for (int ievt = 0; ievt < endEvent; ievt++)
     {
       ClearObjects();
@@ -574,6 +576,16 @@ int main(int argc, char* argv[])
         
         
         TruthMatching(partons, selectedJets, MCPermutation);
+        
+        if (all4PartonsMatched && test)
+        {
+          for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+          {
+            //cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Status: " << setw(2) << mc_status[partonId[MCPermutation[iMatch].second]] << "  pdgId: " << setw(3) << mc_pdgId[partonId[MCPermutation[iMatch].second]] << "  Mother: " << setw(4) << mc_mother[partonId[MCPermutation[iMatch].second]] << "  Granny: " << setw(4) << mc_granny[partonId[MCPermutation[iMatch].second]] << endl;
+            cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Pt: " << setw(7) << left << mc_pt[partonId[MCPermutation[iMatch].second]] << "  Eta: " << mc_eta[partonId[MCPermutation[iMatch].second]] << "  Phi: " << mc_phi[partonId[MCPermutation[iMatch].second]] << endl;
+            cout << "Event  " << right << setw(4) << ievt << ";  Matched jet    " << iMatch << "  Pt: " << setw(7) << left << jet_pt[MCPermutation[iMatch].first] << "  Eta: " << jet_eta[MCPermutation[iMatch].first] << "  Phi: " << jet_phi[MCPermutation[iMatch].first] << endl;
+          }
+        }
         
         
         ///////////////////
@@ -805,16 +817,32 @@ int main(int argc, char* argv[])
       {
         if ( labelsReco[0] == MCPermutation[0].first 
             && ( (labelsReco[1] == MCPermutation[1].first && labelsReco[2] == MCPermutation[2].first) 
-              || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) )
+              || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) ) // correct jets, correct permutation
         {
           nofCorrectlyMatched_chi2++;
-          histo1D["dR_lep_b_reco_and_matched_chi2"]->Fill(reco_dRLepB);
-          histo1D["mTop_div_aveMTop_TT_matched_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
+          histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
         }
         else
+        {
           nofNotCorrectlyMatched_chi2++;
+          histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
+          histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          
+          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) ) // correct jets, wrong permutation
+          {
+            histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          }
+          else // wrong jets
+          {
+            histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          }
+        }
       }
-      
+      else if (! isData && dataSetName.find("TT") != 0)
+      {
+        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[0]);
+      }
       
       
       ////////////////////
@@ -913,6 +941,7 @@ int main(int argc, char* argv[])
       txtMassMatched.close();
       
     }  // end TT
+    
     
     txtMassChi2.close();
     
@@ -1281,11 +1310,16 @@ void InitHisto1D()
   /// Test dR
   histo1D["dR_lep_b_unmatched_all"] = new TH1F("dR_lep_b_unmatched_all","Minimal delta R between the lepton and a b jet (looking at all b jets); #Delta R(l,b)", 25, 0, 5);
   histo1D["dR_lep_b_unmatched_chi2"] = new TH1F("dR_lep_b_unmatched_chi2","Minimal delta R between the lepton and a b jet (looking at b jets not in chi2); #Delta R(l,b)", 25, 0, 5);
-  histo1D["dR_lep_b_reco_and_matched_chi2"]  = new TH1F("dR_lep_b_reco_and_matched_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 equals matching); #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_reco_and_corr_match_chi2"]  = new TH1F("dR_lep_b_reco_and_corr_match_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 equals matching); #Delta R(l,b)", 25, 0, 5);
+  histo1D["dR_lep_b_reco_and_wrong_match_chi2"]  = new TH1F("dR_lep_b_reco_and_wrong_match_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 differs from matching); #Delta R(l,b)", 25, 0, 5);
   
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 50, 0, 2);
-  histo1D["mTop_div_aveMTop_TT_matched_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 170, 0.5, 2.2);
+  histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and correct match); M_{t}/<M_{t}>", 170, 0.5, 2.2);
+  histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: correct jets, wrong permutation); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_jets_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: wrong jets); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_antitop"] = new TH1F("mTop_div_aveMTop_ST_tW_antitop","Top mass divided by average top mass for ST tW antitop sample; M_{t}/<M_{t}>", 50, 0, 2);
@@ -1298,7 +1332,7 @@ void InitHisto1D()
 
 void InitHisto2D()
 {
-  
+  TH2::SetDefaultSumw2();
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
