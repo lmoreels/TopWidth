@@ -62,6 +62,27 @@ cd TopBrussels/TopWidth
 ~~~
 
 
+## Get the TopTreeProducer version that was used to make your TopTrees
+
+Versions of 'TopTreeProducer' are 'tagged' when TopTrees are made, generally indicated with a '_vX' at the end of the branch name. If you do not use the corresponding tag, you can get nasty error messages/seg faults when running over the TopTrees.
+
+~~~
+cd ../../TopBrussels/TopTreeProducer/
+
+git checkout -b CMSSW_76X_v4
+
+make
+
+cd ../..
+~~~
+
+Note that you need to return to the non-tagged version to make changes. Since this branch already exists, you just need to do the following in the 'TopTreeProducer' directory.
+
+~~~
+git checkout CMSSW_76X
+~~~
+
+
 ## Compile and make executables of all macros
 
 ~~~
