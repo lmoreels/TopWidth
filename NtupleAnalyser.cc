@@ -35,6 +35,7 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool calculateTransferFunctions = false;
+bool calculateAverageMass = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -65,12 +66,12 @@ float CSVv2Tight = 0.935;
 // Temporarily, until calculated from TTbar sample
 float chi2WMass = 80.385;
 float sigmaChi2WMass = 15;
-float chi2TopMass = 180.0; //172.5; //from mtop mass plot: 167.0
+float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 // Average top mass
 // TT match, TT chi2, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, allChi2
-float aveTopMass[] = {166.922, 178.150, 203.137, 201.759, 185.668, 186.755, 189.150, 182.008, 179.775, 178.315};
+float aveTopMass[] = {166.922, 170.433, 178.150, 203.137, 201.759, 185.668, 186.755, 189.150, 182.008, 179.775, 178.315};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -86,7 +87,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
-ofstream txtMassMatched, txtMassChi2;
+ofstream txtMassMatched, txtMassChi2Matched, txtMassChi2;
 
 /// Function prototypes
 struct HighestPt
@@ -436,12 +437,16 @@ int main(int argc, char* argv[])
       isData = true;
     }
     
-    if (dataSetName.find("TT") == 0 )
+    if (calculateAverageMass)
     {
-      txtMassMatched.open(("averageMass/mass_matched_TT_"+dateString+".txt").c_str());
+      if (dataSetName.find("TT") == 0 )
+      {
+        txtMassMatched.open(("averageMass/mass_matched_TT_"+dateString+".txt").c_str());
+        txtMassChi2Matched.open(("averageMass/mass_chi2_matched_TT_"+dateString+".txt").c_str());
+      }
+      txtMassChi2.open(("averageMass/mass_chi2_"+dataSetName+"_"+dateString+".txt").c_str());
     }
-    txtMassChi2.open(("averageMass/mass_chi2_"+dataSetName+"_"+dateString+".txt").c_str());
-    
+
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
     
@@ -621,7 +626,7 @@ int main(int argc, char* argv[])
           float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
           float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
           
-          txtMassMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << matchedTopMass_gen << endl;
+          if (calculateAverageMass) txtMassMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << matchedTopMass_gen << endl;
           
           histo1D["W_mass_reco_matched"]->Fill(matchedWMass_reco);
           histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco);
@@ -657,6 +662,11 @@ int main(int argc, char* argv[])
             histo1D["ttbar_mass_matched_wrong"]->Fill(matchedTtbarMass_wrong);
             histo1D["dR_lep_b_matched_corr"]->Fill(matchedDRLepB_corr);
             histo1D["dR_lep_b_matched_wrong"]->Fill(matchedDRLepB_wrong);
+            
+            histo2D["mlb_corr_mlb_wrong_matched"]->Fill(matchedMlb_corr, matchedMlb_wrong);
+            histo2D["dR_lep_b_corr_dR_lep_b_wrong_matched"]->Fill(matchedDRLepB_corr, matchedDRLepB_wrong);
+            histo2D["mlb_dR_lep_b_corr_matched"]->Fill(matchedMlb_corr, matchedDRLepB_corr);
+            histo2D["mlb_dR_lep_b_wrong_matched"]->Fill(matchedMlb_wrong, matchedDRLepB_wrong);
             
             if (hasExactly4Jets)
             {
@@ -724,7 +734,7 @@ int main(int argc, char* argv[])
         reco_hadTopMass = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
         reco_hadTopPt = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
         
-        txtMassChi2 << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+        if (calculateAverageMass) txtMassChi2 << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
         
         //Fill histos
         MSPlot["Chi2_value"]->Fill(smallestChi2, datasets[d], true, Luminosity*scaleFactor);
@@ -733,10 +743,10 @@ int main(int argc, char* argv[])
         MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
         
         MSPlot["Chi2_mTop_div_aveMTopMatch"]->Fill(reco_hadTopMass/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[1], datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[9], datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[2], datasets[d], true, Luminosity*scaleFactor);
+        MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[10], datasets[d], true, Luminosity*scaleFactor);
         
-        histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[0]);
+        histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[10]);
         
         if (hasExactly4Jets)
         {
@@ -820,28 +830,29 @@ int main(int argc, char* argv[])
               || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) ) // correct jets, correct permutation
         {
           nofCorrectlyMatched_chi2++;
+          if (calculateAverageMass) txtMassChi2Matched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
           histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
-          histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
         }
         else
         {
           nofNotCorrectlyMatched_chi2++;
           histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
-          histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+          histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
           
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) ) // correct jets, wrong permutation
           {
-            histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+            histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
           }
           else // wrong jets
           {
-            histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[0]);
+            histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
           }
         }
       }
       else if (! isData && dataSetName.find("TT") != 0)
       {
-        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[0]);
+        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[10]);
       }
       
       
@@ -938,12 +949,16 @@ int main(int argc, char* argv[])
         delete foutTF;
       }
       
-      txtMassMatched.close();
+      if (calculateAverageMass)
+      {
+        txtMassMatched.close();
+        txtMassChi2Matched.close();
+      }
       
     }  // end TT
     
     
-    txtMassChi2.close();
+    if (calculateAverageMass) txtMassChi2.close();
     
     tFileMap[dataSetName.c_str()]->Close();
     
@@ -1031,6 +1046,7 @@ int main(int argc, char* argv[])
   // 1D
   TDirectory* th1dir = fout->mkdir("1D_histograms");
   th1dir->cd();
+  gStyle->SetOptStat(1111);
   for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
   {
     TH1F *temp = it->second;
@@ -1044,16 +1060,16 @@ int main(int argc, char* argv[])
   }
   
   // 2D
-//   TDirectory* th2dir = fout->mkdir("2D_histograms");
-//   th2dir->cd();
-//   //gStyle->SetPalette(50,0);
-//   for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-//   {
-//     TH2F *temp = it->second;
-//     temp->Write();
-//     TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
-//     tempCanvas->SaveAs( (pathPNG+it->first+".png").c_str() );
-//   }
+  TDirectory* th2dir = fout->mkdir("2D_histograms");
+  th2dir->cd();
+  gStyle->SetPalette(55);
+  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+  {
+    TH2F *temp = it->second;
+    temp->Write();
+    TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+  }
   
   fout->Close();
   
@@ -1333,6 +1349,11 @@ void InitHisto1D()
 void InitHisto2D()
 {
   TH2::SetDefaultSumw2();
+  
+  histo2D["mlb_corr_mlb_wrong_matched"] = new TH2F("mlb_corr_mlb_wrong_matched","Wrongly constructed M_{lb} vs. correctly constructed M_{lb}; M_{lb_{lep}}; M_{lb_{had}}", 80, 0, 800, 80, 0, 800);
+  histo2D["dR_lep_b_corr_dR_lep_b_wrong_matched"] = new TH2F("dR_lep_b_corr_dR_lep_b_wrong_matched","Wrongly constructed dR(l,b) vs. correctly constructed dR(l,b); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
+  histo2D["mlb_dR_lep_b_corr_matched"] = new TH2F("mlb_dR_lep_b_corr_matched","dR(l,b) vs. M_{lb}; M_{lb_{lep}}; #Delta R(l,b_{lep})", 80, 0, 800, 25, 0, 5);
+  histo2D["mlb_dR_lep_b_wrong_matched"] = new TH2F("mlb_dR_lep_b_wrong_matched","dR(l,b) vs. M_{lb}, both wrongly matched; M_{lb_{had}}; #Delta R(l,b_{had})", 80, 0, 800, 25, 0, 5);
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet

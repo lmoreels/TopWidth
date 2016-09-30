@@ -10,10 +10,10 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "160817_1323";
+string inputDate = "160928_1611";
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_matched_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[1]+"_"+inputDate, "mass_chi2_"+dataSetNames[2]+"_"+inputDate, "mass_chi2_"+dataSetNames[3]+"_"+inputDate, "mass_chi2_"+dataSetNames[4]+"_"+inputDate, "mass_chi2_"+dataSetNames[5]+"_"+inputDate, "mass_chi2_"+dataSetNames[6]+"_"+inputDate, "mass_chi2_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_matched_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_matched_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[1]+"_"+inputDate, "mass_chi2_"+dataSetNames[2]+"_"+inputDate, "mass_chi2_"+dataSetNames[3]+"_"+inputDate, "mass_chi2_"+dataSetNames[4]+"_"+inputDate, "mass_chi2_"+dataSetNames[5]+"_"+inputDate, "mass_chi2_"+dataSetNames[6]+"_"+inputDate, "mass_chi2_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -77,7 +77,7 @@ int main()
       sumW += massW;
       sumTop += massTop;
       
-      if ( iFile > 0 ) // chi2
+      if ( iFile > 1 ) // chi2
       {
         nEntriesChi2++;
         sumWChi2 += massW;
@@ -93,17 +93,21 @@ int main()
     
     
     /// Store mean in file
-    if ( iFile > 1 )
+    if ( iFile > 2 )
     {
-      thisDataSet = dataSetNames[iFile-1];
+      thisDataSet = dataSetNames[iFile-2];
     }
     else if ( iFile == 0 )
     {
-      thisDataSet = dataSetNames[0]+" match";
+      thisDataSet = dataSetNames[0]+"_match";
     }
     else if ( iFile == 1 )
     {
-      thisDataSet = dataSetNames[0]+" chi2";
+      thisDataSet = dataSetNames[0]+"_chi2_match";
+    }
+    else if ( iFile == 2 )
+    {
+      thisDataSet = dataSetNames[0]+"_chi2";
     }
     
     WriteToFile(fileOut, thisDataSet, meanW, meanTop);
@@ -156,7 +160,7 @@ void ClearVars(bool isNewDataset)
 
 void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, double meanTop)
 {
-  fout << left << setw(13) << thisDataSet;
+  fout << left << setw(16) << thisDataSet;
   cout.setf(ios::fixed,ios::floatfield);  // Add zero to obtain the asked number of digits
   //cout.precision(3);  // setprecision(3) --> set maximum number of meaningful digits to 3. When 'fixed' or 'scientific', only count after decimal point.
   fout << "   " << fixed << showpoint << setprecision(3) << meanW;  // showpoint --> also when decimal part is zero
