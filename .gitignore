@@ -28,6 +28,7 @@ test*/*
 AverageMassCalculator
 NtupleAnalyser
 Ntupler
+ReweightTopWidth
 VoigtFitter
 testAnalyser
 testAnalyserTTbarOnly

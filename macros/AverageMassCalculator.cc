@@ -40,7 +40,7 @@ int main()
   string outputFileName = pathInput+"averageMass_"+inputDate+".txt";
   fileOut.open(outputFileName.c_str());
   cout << "Creating output file " << outputFileName << "..." << endl;
-  fileOut << "# Dataset       meanW    meanTop" << endl;
+  fileOut << "# Dataset          meanW    meanTop" << endl;
   
   nEntriesChi2 = 0;
   sumWChi2 = 0.;

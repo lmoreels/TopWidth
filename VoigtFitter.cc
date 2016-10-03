@@ -107,8 +107,8 @@ int main (int argc, char *argv[])
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
-  string systInput = "160928_1544/NtuplePlots_nominal.root";  //nominal
-  //string systInput = "160928_1611/NtuplePlots_JERup.root ";  //JER
+  string systInput = "160929_1357/NtuplePlots_nominal.root";  //nominal
+  //string systInput = "160929_1156/NtuplePlots_JERup.root ";  //JER
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+systInput;
   string pathOutput = "OutputVoigt/";
   mkdir(pathOutput.c_str(),0777);
