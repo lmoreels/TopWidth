@@ -581,16 +581,16 @@ int main(int argc, char* argv[])
   }
   
   // 2D
-  TDirectory* th2dir = fout->mkdir("2D_histograms");
-  th2dir->cd();
-  gStyle->SetPalette(55);
-  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-  {
-    TH2F *temp = it->second;
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
-    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
-  }
+//   TDirectory* th2dir = fout->mkdir("2D_histograms");
+//   th2dir->cd();
+//   gStyle->SetPalette(55);
+//   for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+//   {
+//     TH2F *temp = it->second;
+//     temp->Write();
+//     TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+//     tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+//   }
   
   fout->Close();
   
@@ -747,13 +747,13 @@ void InitHisto1D()
 {
   TH1::SetDefaultSumw2();
   
-  histo1D["top_mass_reco_matched_orig"] = new TH1F("top_mass_reco_matched_orig","Reconstructed top mass of matched events (no scaling); M_{t} [GeV]", 200, 0, 400);
-  histo1D["top_mass_reco_matched_s2"] = new TH1F("top_mass_reco_matched_s2","Reconstructed top mass of matched events (scaled by factor 2); M_{t} [GeV]", 200, 0, 400);
-  histo1D["top_mass_reco_matched_s0p5"] = new TH1F("top_mass_reco_matched_s0p5","Reconstructed top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 200, 0, 400);
+  histo1D["top_mass_reco_matched_orig"] = new TH1F("top_mass_reco_matched_orig","Reconstructed top mass of matched events (no scaling); M_{t} [GeV]", 400, 0, 400);
+  histo1D["top_mass_reco_matched_s2"] = new TH1F("top_mass_reco_matched_s2","Reconstructed top mass of matched events (scaled by factor 2); M_{t} [GeV]", 400, 0, 400);
+  histo1D["top_mass_reco_matched_s0p5"] = new TH1F("top_mass_reco_matched_s0p5","Reconstructed top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 400, 0, 400);
   
-  histo1D["top_mass_gen_matched_orig"] = new TH1F("top_mass_gen_matched_orig","Generated top mass of matched events (no scaling); M_{t} [GeV]", 200, 0, 400);
-  histo1D["top_mass_gen_matched_s2"] = new TH1F("top_mass_gen_matched_s2","Generated top mass of matched events (scaled by factor 2); M_{t} [GeV]", 200, 0, 400);
-  histo1D["top_mass_gen_matched_s0p5"] = new TH1F("top_mass_gen_matched_s0p5","Generated top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 200, 0, 400);
+  histo1D["top_mass_gen_matched_orig"] = new TH1F("top_mass_gen_matched_orig","Generated top mass of matched events (no scaling); M_{t} [GeV]", 800, 0, 400);
+  histo1D["top_mass_gen_matched_s2"] = new TH1F("top_mass_gen_matched_s2","Generated top mass of matched events (scaled by factor 2); M_{t} [GeV]", 800, 0, 400);
+  histo1D["top_mass_gen_matched_s0p5"] = new TH1F("top_mass_gen_matched_s0p5","Generated top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 800, 0, 400);
 }
 
 void InitHisto2D()
