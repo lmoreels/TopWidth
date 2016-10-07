@@ -16,11 +16,9 @@
 // used TopTreeAnalysis classes
 #include "TopTreeProducer/interface/TRootRun.h"
 #include "TopTreeProducer/interface/TRootEvent.h"
-#include "TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
-#include "TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
-#include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
+#include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"  // needed for ROOT::Math::VectorUtil::DeltaR()
 //#include "../macros/Style.C"
 
 
@@ -165,10 +163,7 @@ Int_t           cutFlow[10];
 Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
-Long64_t        nofEventsHLTv2;
-Long64_t        nofEventsHLTv3;
-Long64_t        nofSelEventsHLTv2;
-Long64_t        nofSelEventsHLTv3;
+
 
 // List of branches
 TBranch        *b_run_num;   //!
@@ -232,10 +227,7 @@ TBranch        *b_cutFlow;   //!
 TBranch        *b_appliedJER;   //!
 TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
-TBranch        *b_nofEventsHLTv2;   //!
-TBranch        *b_nofEventsHLTv3;   //!
-TBranch        *b_nofSelEventsHLTv2;   //!
-TBranch        *b_nofSelEventsHLTv3;   //
+
 
 float scaleFactor;
 vector<unsigned int> bJetId;
@@ -263,16 +255,28 @@ bool hadronictopJetsMatched_MCdef_ = false;
 pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
+int genneutrino = -9999;
 bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
+int bjjDecay[] = {-9999, -9999, -9999}, blvDecay[] = {-9999, -9999, -9999};
 vector<unsigned int> partonId;
 
 
 /// Scale width
 Double_t eventSF_gen = 1.;
 Double_t eventSF_reco = 1.;
-double scaling[] = {2., 0.5};
-string scalingString[] = {"s2", "s0p5"};
+Double_t evWeight_top = 1.;
+Double_t evWeight_antitop = 1.;
+Double_t evWeight_bjj = 1.;
+Double_t evWeight_blv = 1.;
+Double_t m_top = -1.;
+Double_t m_antitop = -1.;
+Double_t m_bjj = -1.;
+Double_t m_blv = -1.;
+Double_t m_hadr = -1;
+Double_t m_lept = -1;
+Double_t scaling[] = {1., 2., 0.5};
+string scalingString[] = {"orig", "s2", "s0p5"};
 int nScalings = sizeof(scaling)/sizeof(scaling[0]);
 
 
@@ -353,157 +357,293 @@ int main(int argc, char* argv[])
   cout << "                nEntries: " << nEntries << endl;
   
   
-  /// Loop over different top width scalings
-  for (int s = 0; s < nScalings; s++)
+  
+  ////////////////////////////////////
+  ///  Loop on events
+  ////////////////////////////////////
+  
+  int endEvent = nEntries;
+  if (test) endEvent = 100;
+  for (int ievt = 0; ievt < endEvent; ievt++)
   {
-    cout << "Scale " << s << ": " << scaling[s] << " times top width" << endl;
-    
-    /// Make new Ntuples files
-    string ntupleFileName = "Ntuples_TT_"+scalingString[s]+".root";
-    tFileMap[scalingString[s].c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"RECREATE"); //create TFile for each scaling factor
+    ClearObjects();
     
     
-    /// Clone meta data
-    tStatsTree[scalingString[s].c_str()] = origStatsTree->CloneTree();
-    //tStatsTree[scalingString[s].c_str()]->Print();
-    tStatsTree[scalingString[s].c_str()]->Write();
+    if (ievt%1000 == 0)
+      std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
+    
+    /// Load event
+    origTree->GetEntry(ievt);
     
     
-    /// Clone data branches
-    tTree[scalingString[s].c_str()] = origTree->CloneTree(0);  // Do not copy data yet; fill everything with tTree[dataSetName.c_str()]->Fill();
+    /// Fill objects
+    muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
+    selectedLepton.push_back(muon);
     
-    
-    /// Make new branch for top width weights
-    tTree[scalingString[s].c_str()]->Branch("eventSF_gen",&eventSF_gen,"eventSF_gen/D");
-    tTree[scalingString[s].c_str()]->Branch("eventSF_reco",&eventSF_reco,"eventSF_reco/D");
-    
-    
-    
-    ////////////////////////////////////
-    ///  Loop on events
-    ////////////////////////////////////
-    
-    int endEvent = nEntries;
-    if (test) endEvent = 1001;
-    for (int ievt = 0; ievt < endEvent; ievt++)
+    for (int iJet = 0; iJet < nJets; iJet++)
     {
-      ClearObjects();
-      
-      
-      if (ievt%1000 == 0)
-        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
-      
-      /// Load event
-      origTree->GetEntry(ievt);
-      
-      
-      /// Fill objects
-      muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
-      selectedLepton.push_back(muon);
-      
-      for (int iJet = 0; iJet < nJets; iJet++)
+      jet.Clear();
+      jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
+      selectedJets.push_back(jet);
+    }
+    
+    for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+    {
+      if ( jet_bdiscr[iJet] > CSVv2Medium )
       {
-        jet.Clear();
-        jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-        selectedJets.push_back(jet);
+        selectedBJets.push_back(selectedJets[iJet]);
+        bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
+      }
+    }
+    //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
+    
+    
+    
+    /////////////////////////////
+    ///  JET PARTON MATCHING  ///
+    /////////////////////////////
+
+    for (int iMC = 0; iMC < nMCParticles; iMC++)
+    {
+      mcpart.Clear();
+      mcpart.SetPtEtaPhiE(mc_pt[iMC], mc_eta[iMC], mc_phi[iMC], mc_E[iMC]);
+      mcParticles.push_back(mcpart);
+    }
+    
+    
+    for (unsigned int i = 0; i < mcParticles.size(); i++)
+    {
+      if (verbose > 4)
+        cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
+      
+
+      if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;  /// Final state particle or particle from hardest process
+      
+      if ( verbose > 3 )
+        cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << "  Mass: " << mc_M[i] << endl;
+      
+      
+      if ( mc_pdgId[i] == pdgID_top && mc_granny[i] == 2212 )
+        topQuark = i;
+      else if( mc_pdgId[i] == -pdgID_top && mc_granny[i] == 2212 )
+        antiTopQuark = i;
+      
+      if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )    // mu-, W-, tbar
+      {
+        muMinusFromTop = true;
+        if ( mc_status[i] == 23 ) genmuon = i;
+        else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
+      }
+      if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )    // mu+, W+, t
+      {
+        muPlusFromTop = true;
+        if ( mc_status[i] == 23 ) genmuon = i;
+        else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
       }
       
-      for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+      if ( mc_pdgId[i] == -14 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )    // vbar, W-, tbar
       {
-        if ( jet_bdiscr[iJet] > CSVv2Medium )
-        {
-          selectedBJets.push_back(selectedJets[iJet]);
-          bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
-        }
+        if ( mc_status[i] == 23 ) genneutrino = i;
+        else if ( mc_status[i] != 23 && genneutrino == -9999 ) genneutrino = i;
       }
-      //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
+      
+      if ( mc_pdgId[i] == 14 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )    // v, W+, t
+      {
+        if ( mc_status[i] == 23 ) genneutrino = i;
+        else if ( mc_status[i] != 23 && genneutrino == -9999 ) genneutrino = i;
+      }
+      
+      
+      if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
+      {
+        partons.push_back(mcParticles[i]);
+        partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
+      }
+      
+    }  // end loop mcParticles
+    
+    if (verbose > 3)
+    {
+      cout << "Size mcParticles:   " << mcParticles.size() << endl;
+      cout << "Size partons:       " << partons.size() << endl;
+      cout << "Size selectedJets:  " << selectedJets.size() << endl;
+    }
+    
+    if ( muMinusFromTop && muPlusFromTop )
+    {
+      if (test) cout << "Both tops decay leptonically... Something went wrong... Event " << ievt << endl;
+      continue;
+    }
+    
+    
+    TruthMatching(partons, selectedJets, MCPermutation);
+    
+    if (all4PartonsMatched && test && verbose > 3 )
+    {
+      for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+      {
+        //cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Status: " << setw(2) << mc_status[partonId[MCPermutation[iMatch].second]] << "  pdgId: " << setw(3) << mc_pdgId[partonId[MCPermutation[iMatch].second]] << "  Mother: " << setw(4) << mc_mother[partonId[MCPermutation[iMatch].second]] << "  Granny: " << setw(4) << mc_granny[partonId[MCPermutation[iMatch].second]] << endl;
+        cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Pt: " << setw(7) << left << mc_pt[partonId[MCPermutation[iMatch].second]] << "  Eta: " << mc_eta[partonId[MCPermutation[iMatch].second]] << "  Phi: " << mc_phi[partonId[MCPermutation[iMatch].second]] << endl;
+        cout << "Event  " << right << setw(4) << ievt << ";  Matched jet    " << iMatch << "  Pt: " << setw(7) << left << jet_pt[MCPermutation[iMatch].first] << "  Eta: " << jet_eta[MCPermutation[iMatch].first] << "  Phi: " << jet_phi[MCPermutation[iMatch].first] << endl;
+      }
+    }
+    
+    
+    if (all4PartonsMatched)
+    {
+      for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+      {
+        /// MCPermutation[i].first  = jet number
+        /// MCPermutation[i].second = parton number
+        /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+
+        partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
+        jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
+      }
+    }
+    
+    
+    
+    ///////////////////
+    ///  Calculate event weight
+    ///////////////////
+    
+    
+    /// Calculate masses before matching
+    for (unsigned int i = 0; i < partons.size(); i++)  /// partons[j] = mcParticles[partonId[j]]
+    {
+      if ( muMinusFromTop )
+      {
+        // hadronic decay  --> top
+        if ( mc_pdgId[partonId[i]] == 5 && mc_mother[partonId[i]] == pdgID_top ) bjjDecay[0] = partonId[i];
+        else if ( abs(mc_pdgId[partonId[i]]) < 5 && mc_mother[partonId[i]] == 24 && mc_granny[partonId[i]] == pdgID_top )
+        {
+          //cout << "In hadronic loop: " << setw(3) << right << partonId[i] << "  pdgId: " << setw(3) << mc_pdgId[partonId[i]] << "  Mother: " << setw(4) << mc_mother[partonId[i]] << "  Granny: " << setw(4) << mc_granny[partonId[i]] << endl;
+          
+          if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
+          else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+        }
+        
+        if ( mc_pdgId[partonId[i]] == -5 && mc_mother[partonId[i]] == -pdgID_top ) blvDecay[0] = partonId[i];  // leptonic b
+      }
+      else if ( muPlusFromTop )
+      {
+        // hadronic decay  --> antitop
+        if ( mc_pdgId[partonId[i]] == -5 && mc_mother[partonId[i]] == -pdgID_top ) bjjDecay[0] = partonId[i];
+        else if ( abs(mc_pdgId[partonId[i]]) < 5 && mc_mother[partonId[i]] == -24 && mc_granny[partonId[i]] == -pdgID_top )
+        {
+          //cout << "In hadronic loop: " << setw(3) << right << partonId[i] << "  pdgId: " << setw(3) << mc_pdgId[partonId[i]] << "  Mother: " << setw(4) << mc_mother[partonId[i]] << "  Granny: " << setw(4) << mc_granny[partonId[i]] << endl;
+          
+          if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
+          else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+        }
+        
+        if ( mc_pdgId[partonId[i]] == 5 && mc_mother[partonId[i]] == pdgID_top ) blvDecay[0] = partonId[i];  // leptonic b
+      }
+    }  // end loop partons
+    blvDecay[1] = genmuon;
+    blvDecay[2] = genneutrino;
+    
+    if ( test && verbose > 3 )
+    {
+      cout << "bjj " << bjjDecay[0] << "  " << bjjDecay[1] << "  " << bjjDecay[2] << endl;
+      cout << "blv " << blvDecay[0] << "  " << blvDecay[1] << "  " << blvDecay[2] << endl;
+    }
+    
+    if ( bjjDecay[0] == -9999 || bjjDecay[1] == -9999 || bjjDecay[2] == -9999 || blvDecay[0] == -9999 || blvDecay[1] == -9999 || blvDecay[2] == -9999)
+    {
+      if (test) cout << "Not all ttbar components found... Skipping event " << ievt << "..." << endl;
+      continue;
+    }
+    
+    if ( test && verbose > 3 )
+    {
+      cout << "Hadronic b: " << setw(3) << right << bjjDecay[0] << "  pdgId: " << setw(3) << mc_pdgId[bjjDecay[0]] << "  Mother: " << setw(4) << mc_mother[bjjDecay[0]] << "  Granny: " << setw(4) << mc_granny[bjjDecay[0]] << endl;
+      cout << "Light jet1: " << setw(3) << right << bjjDecay[1] << "  pdgId: " << setw(3) << mc_pdgId[bjjDecay[1]] << "  Mother: " << setw(4) << mc_mother[bjjDecay[1]] << "  Granny: " << setw(4) << mc_granny[bjjDecay[1]] << endl;
+      cout << "Light jet2: " << setw(3) << right << bjjDecay[2] << "  pdgId: " << setw(3) << mc_pdgId[bjjDecay[2]] << "  Mother: " << setw(4) << mc_mother[bjjDecay[2]] << "  Granny: " << setw(4) << mc_granny[bjjDecay[2]] << endl;
+      cout << "Leptonic b: " << setw(3) << right << blvDecay[0] << "  pdgId: " << setw(3) << mc_pdgId[blvDecay[0]] << "  Mother: " << setw(4) << mc_mother[blvDecay[0]] << "  Granny: " << setw(4) << mc_granny[blvDecay[0]] << endl;
+      cout << "Muon:       " << setw(3) << right << blvDecay[1] << "  pdgId: " << setw(3) << mc_pdgId[blvDecay[1]] << "  Mother: " << setw(4) << mc_mother[blvDecay[1]] << "  Granny: " << setw(4) << mc_granny[blvDecay[1]] << endl;
+      cout << "Neutrino:   " << setw(3) << right << blvDecay[2] << "  pdgId: " << setw(3) << mc_pdgId[blvDecay[2]] << "  Mother: " << setw(4) << mc_mother[blvDecay[2]] << "  Granny: " << setw(4) << mc_granny[blvDecay[2]] << endl;
+    }
+      
+    m_top = (mcParticles[topQuark]).M();
+    m_antitop = (mcParticles[antiTopQuark]).M();
+    m_bjj = (mcParticles[bjjDecay[0]] + mcParticles[bjjDecay[1]] + mcParticles[bjjDecay[2]]).M();
+    m_blv = (mcParticles[blvDecay[0]] + mcParticles[blvDecay[1]] + mcParticles[blvDecay[2]]).M();
+    
+    //cout << "m_top: " << m_top << ";  m_antitop: " << m_antitop << endl;
+    
+    
+    /// Loop over different top width scalings
+    for (int s = 0; s < nScalings; s++)
+    {
+      //cout << "Scale " << s << ": " << scaling[s] << " times top width" << endl;
+      
+      /// Calculate event weights when not nominal
+      if ( s > 0 )
+      {
+        evWeight_top = eventWeightCalculator(m_top, scaling[s]);
+        evWeight_antitop = eventWeightCalculator(m_antitop, scaling[s]);
+        evWeight_bjj = eventWeightCalculator(m_bjj, scaling[s]);
+        evWeight_blv = eventWeightCalculator(m_blv, scaling[s]);
+      }
+
+      /// Fill plots before matching
+      m_hadr = -1.;
+      m_lept = -1.;
+      if ( muMinusFromTop && ! muPlusFromTop )
+      {
+        m_hadr = m_top;
+        m_lept = m_antitop;
+        histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()]->Fill(m_top, evWeight_top);
+        histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_antitop, evWeight_antitop);
+      }
+      else if (! muMinusFromTop && muPlusFromTop )
+      {
+        m_hadr = m_antitop;
+        m_lept = m_top;
+        histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()]->Fill(m_antitop, evWeight_antitop);
+        histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_top, evWeight_top);
+      }
+      histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
+      histo1D[("blv_mass_gen_"+scalingString[s]).c_str()]->Fill(m_blv, evWeight_blv);
+      
+      if ( s == 0 )
+      {
+        histo2D["top_mass_hadr_lept_gen_orig"]->Fill(m_hadr, m_lept);
+        histo2D["top_mass_hadr_bjj_gen_orig"]->Fill(m_hadr, m_bjj);
+        histo2D["top_mass_lept_blv_gen_orig"]->Fill(m_lept, m_blv);
+        histo2D["top_mass_bjj_blv_gen_orig"]->Fill(m_bjj, m_blv);
+      }
+      
+      
+      /// Outliers???
+      if ( s == 0 && ( m_hadr > 10 && m_hadr < 110 ) && ( m_bjj > 163 && m_bjj < 178 ) )
+      {
+        cout << endl;
+        cout << "Event " << ievt << ": Hadronic top mass much smaller than reconstructed mass from quarks!" << endl;
+        cout << "Top quark :    " << "  Status: " << setw(2) << mc_status[topQuark] << "  pdgId: " << setw(3) << mc_pdgId[topQuark] << "  Mother: " << setw(4) << mc_mother[topQuark] << "  Granny: " << setw(4) << mc_granny[topQuark] << "  Pt: " << setw(7) << left << mc_pt[topQuark] << "  Eta: " << mc_eta[topQuark] << "  Mass: " << mc_M[topQuark] << endl;
+        cout << "Antitop quark :" << "  Status: " << setw(2) << mc_status[antiTopQuark] << "  pdgId: " << setw(3) << mc_pdgId[antiTopQuark] << "  Mother: " << setw(4) << mc_mother[antiTopQuark] << "  Granny: " << setw(4) << mc_granny[antiTopQuark] << "  Pt: " << setw(7) << left << mc_pt[antiTopQuark] << "  Eta: " << mc_eta[antiTopQuark] << "  Mass: " << mc_M[antiTopQuark] << endl;
+        if (muMinusFromTop) cout << "Top decays hadronically, antitop decays leptonically" << endl;
+        else if (muPlusFromTop) cout << "Top decays leptonically, antitop decays hadronically" << endl;
+        cout << endl;
+      }
+      
+      if ( s == 0 && ( m_lept > 10 && m_lept < 110 ) && ( m_blv > 163 && m_blv < 178 ) )
+      {
+        cout << endl;
+        cout << "Event " << ievt << ": Leptonic top mass much smaller than reconstructed mass from b quark, lepton & neutrino!" << endl;
+        cout << "Top quark :    " << "  Status: " << setw(2) << mc_status[topQuark] << "  pdgId: " << setw(3) << mc_pdgId[topQuark] << "  Mother: " << setw(4) << mc_mother[topQuark] << "  Granny: " << setw(4) << mc_granny[topQuark] << "  Pt: " << setw(7) << left << mc_pt[topQuark] << "  Eta: " << mc_eta[topQuark] << "  Mass: " << mc_M[topQuark] << endl;
+        cout << "Antitop quark :" << "  Status: " << setw(2) << mc_status[antiTopQuark] << "  pdgId: " << setw(3) << mc_pdgId[antiTopQuark] << "  Mother: " << setw(4) << mc_mother[antiTopQuark] << "  Granny: " << setw(4) << mc_granny[antiTopQuark] << "  Pt: " << setw(7) << left << mc_pt[antiTopQuark] << "  Eta: " << mc_eta[antiTopQuark] << "  Mass: " << mc_M[antiTopQuark] << endl;
+        if (muMinusFromTop) cout << "Top decays hadronically, antitop decays leptonically" << endl;
+        else if (muPlusFromTop) cout << "Top decays leptonically, antitop decays hadronically" << endl;
+        cout << endl;
+      }
       
       
       
-      /////////////////////////////
-      ///  JET PARTON MATCHING  ///
-      /////////////////////////////
-      
-      for (int iMC = 0; iMC < nMCParticles; iMC++)
-      {
-        mcpart.Clear();
-        mcpart.SetPtEtaPhiE(mc_pt[iMC], mc_eta[iMC], mc_phi[iMC], mc_E[iMC]);
-        mcParticles.push_back(mcpart);
-      }
-
-
-      for (unsigned int i = 0; i < mcParticles.size(); i++)
-      {
-        if (verbose > 4)
-          cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
-
-
-        if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;  /// Final state particle or particle from hardest process
-
-
-        if ( mc_pdgId[i] == pdgID_top )
-          topQuark = i;
-        else if( mc_pdgId[i] == -pdgID_top )
-          antiTopQuark = i;
-
-        if ( mc_status[i] == 23 && mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
-        {
-          muMinusFromTop = true;
-          genmuon = i;
-        }
-        if ( mc_status[i] == 23 && mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
-        {
-          muPlusFromTop = true;
-          genmuon = i;
-        }
-
-        if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
-        {
-          partons.push_back(mcParticles[i]);
-          partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
-        }
-
-      }  // end loop mcParticles
-
-      if (verbose > 3)
-      {
-        cout << "Size mcParticles:   " << mcParticles.size() << endl;
-        cout << "Size partons:       " << partons.size() << endl;
-        cout << "Size selectedJets:  " << selectedJets.size() << endl;
-      }
-
-
-      TruthMatching(partons, selectedJets, MCPermutation);
-
-      if (all4PartonsMatched && test)
-      {
-        for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
-        {
-          //cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Status: " << setw(2) << mc_status[partonId[MCPermutation[iMatch].second]] << "  pdgId: " << setw(3) << mc_pdgId[partonId[MCPermutation[iMatch].second]] << "  Mother: " << setw(4) << mc_mother[partonId[MCPermutation[iMatch].second]] << "  Granny: " << setw(4) << mc_granny[partonId[MCPermutation[iMatch].second]] << endl;
-          cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Pt: " << setw(7) << left << mc_pt[partonId[MCPermutation[iMatch].second]] << "  Eta: " << mc_eta[partonId[MCPermutation[iMatch].second]] << "  Phi: " << mc_phi[partonId[MCPermutation[iMatch].second]] << endl;
-          cout << "Event  " << right << setw(4) << ievt << ";  Matched jet    " << iMatch << "  Pt: " << setw(7) << left << jet_pt[MCPermutation[iMatch].first] << "  Eta: " << jet_eta[MCPermutation[iMatch].first] << "  Phi: " << jet_phi[MCPermutation[iMatch].first] << endl;
-        }
-      }
-
-
-      ///////////////////
-      ///  Calculate event weight
-      ///////////////////
-
       if (all4PartonsMatched)
       {
-
-        for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
-        {
-          /// MCPermutation[i].first  = jet number
-          /// MCPermutation[i].second = parton number
-          /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
-
-          partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
-          jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
-        }
-
-
         /// Plot variables for matched events
         float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
         float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
@@ -521,23 +661,18 @@ int main(int argc, char* argv[])
         
         
       }  // end all4PartonsMatched
-      
-      
-      tTree[scalingString[s].c_str()]->Fill();
-      
-      
-      
-    }  // end loop events
     
     
-    cout << endl;
-    cout << "Number of matched events: " << nofMatchedEvents << endl;
+    }  // end loop scalings
     
     
-    tTree[scalingString[s].c_str()]->Write();
-    tFileMap[scalingString[s].c_str()]->Close();
     
-  }  // end loop scalings
+  }  // end loop events
+  
+  
+  cout << endl;
+  cout << "Number of matched events: " << nofMatchedEvents << endl;
+  
   
   origNtuple->Close();
   
@@ -565,8 +700,8 @@ int main(int argc, char* argv[])
   
   
   // 1D
-  TDirectory* th1dir = fout->mkdir("1D_histograms");
-  th1dir->cd();
+  //TDirectory* th1dir = fout->mkdir("1D_histograms");
+  //th1dir->cd();
   gStyle->SetOptStat(1111);
   for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
   {
@@ -581,16 +716,16 @@ int main(int argc, char* argv[])
   }
   
   // 2D
-//   TDirectory* th2dir = fout->mkdir("2D_histograms");
-//   th2dir->cd();
-//   gStyle->SetPalette(55);
-//   for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-//   {
-//     TH2F *temp = it->second;
-//     temp->Write();
-//     TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
-//     tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
-//   }
+  TDirectory* th2dir = fout->mkdir("2D_histograms");
+  th2dir->cd();
+  gStyle->SetPalette(55);
+  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+  {
+    TH2F *temp = it->second;
+    temp->Write();
+    TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+  }
   
   fout->Close();
   
@@ -747,18 +882,41 @@ void InitHisto1D()
 {
   TH1::SetDefaultSumw2();
   
+  histo1D["top_mass_hadr_gen_orig"] = new TH1F("top_mass_hadr_gen_orig","Mass of generated top quark with hadronic decay (no scaling); M_{t_{hadr}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_hadr_gen_s2"] = new TH1F("top_mass_hadr_gen_s2","Mass of generated top quark with hadronic decay (scaled by factor 2); M_{t_{hadr}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_hadr_gen_s0p5"] = new TH1F("top_mass_hadr_gen_s0p5","Mass of generated top quark with hadronic decay (scaled by factor 0.5); M_{t_{hadr}} [GeV]", 1000, 50, 300);
+  
+  histo1D["top_mass_lept_gen_orig"] = new TH1F("top_mass_lept_gen_orig","Mass of generated top quark with leptonic decay (no scaling); M_{t_{lept}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_lept_gen_s2"] = new TH1F("top_mass_lept_gen_s2","Mass of generated top quark with leptonic decay (scaled by factor 2); M_{t_{lept}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_lept_gen_s0p5"] = new TH1F("top_mass_lept_gen_s0p5","Mass of generated top quark with leptonic decay (scaled by factor 0.5); M_{t_{lept}} [GeV]", 1000, 50, 300);
+  
+  histo1D["bjj_mass_gen_orig"] = new TH1F("bjj_mass_gen_orig","Mass of generated bjj quarks (no scaling); M_{bjj} [GeV]", 1000, 50, 300);
+  histo1D["bjj_mass_gen_s2"] = new TH1F("bjj_mass_gen_s2","Mass of generated bjj quarks (scaled by factor 2); M_{bjj} [GeV]", 1000, 50, 300);
+  histo1D["bjj_mass_gen_s0p5"] = new TH1F("bjj_mass_gen_s0p5","Mass of generated bjj quarks (scaled by factor 0.5); M_{bjj} [GeV]", 1000, 50, 300);
+  
+  histo1D["blv_mass_gen_orig"] = new TH1F("blv_mass_gen_orig","Mass of generated b, lepton and neutrino (no scaling); M_{blv} [GeV]", 1000, 50, 300);
+  histo1D["blv_mass_gen_s2"] = new TH1F("blv_mass_gen_s2","Mass of generated b, lepton and neutrino (scaled by factor 2); M_{blv} [GeV]", 1000, 50, 300);
+  histo1D["blv_mass_gen_s0p5"] = new TH1F("blv_mass_gen_s0p5","Mass of generated b, lepton and neutrino (scaled by factor 0.5); M_{blv} [GeV]", 1000, 50, 300);
+  
+  
+  /// Matching
   histo1D["top_mass_reco_matched_orig"] = new TH1F("top_mass_reco_matched_orig","Reconstructed top mass of matched events (no scaling); M_{t} [GeV]", 400, 0, 400);
   histo1D["top_mass_reco_matched_s2"] = new TH1F("top_mass_reco_matched_s2","Reconstructed top mass of matched events (scaled by factor 2); M_{t} [GeV]", 400, 0, 400);
   histo1D["top_mass_reco_matched_s0p5"] = new TH1F("top_mass_reco_matched_s0p5","Reconstructed top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 400, 0, 400);
   
-  histo1D["top_mass_gen_matched_orig"] = new TH1F("top_mass_gen_matched_orig","Generated top mass of matched events (no scaling); M_{t} [GeV]", 800, 0, 400);
-  histo1D["top_mass_gen_matched_s2"] = new TH1F("top_mass_gen_matched_s2","Generated top mass of matched events (scaled by factor 2); M_{t} [GeV]", 800, 0, 400);
-  histo1D["top_mass_gen_matched_s0p5"] = new TH1F("top_mass_gen_matched_s0p5","Generated top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 800, 0, 400);
+  histo1D["top_mass_gen_matched_orig"] = new TH1F("top_mass_gen_matched_orig","Generated top mass of matched events (no scaling); M_{t} [GeV]", 800, 50, 300);
+  histo1D["top_mass_gen_matched_s2"] = new TH1F("top_mass_gen_matched_s2","Generated top mass of matched events (scaled by factor 2); M_{t} [GeV]", 800, 50, 300);
+  histo1D["top_mass_gen_matched_s0p5"] = new TH1F("top_mass_gen_matched_s0p5","Generated top mass of matched events (scaled by factor 0.5); M_{t} [GeV]", 800, 50, 300);
 }
 
 void InitHisto2D()
 {
-  //TH2::SetDefaultSumw2();
+  TH2::SetDefaultSumw2();
+  
+  histo2D["top_mass_hadr_lept_gen_orig"] = new TH2F("top_mass_hadr_lept_gen_orig","Mass of generated top quark with leptonic decay vs. hadronic decay (no scaling); M_{t_{hadr}} [GeV]; M_{t_{lept}} [GeV]", 1000, 50, 300, 1000, 50, 300);
+  histo2D["top_mass_hadr_bjj_gen_orig"] = new TH2F("top_mass_hadr_bjj_gen_orig","Generated mass of bjj quarks vs. hadronically decaying top quark mass (no scaling); M_{t_{hadr}} [GeV]; M_{bjj} [GeV]", 1000, 50, 300, 1000, 50, 300);
+  histo2D["top_mass_lept_blv_gen_orig"] = new TH2F("top_mass_lept_blv_gen_orig","Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass (no scaling); M_{t_{lept}} [GeV]; M_{blv} [GeV]", 1000, 50, 300, 1000, 50, 300);
+  histo2D["top_mass_bjj_blv_gen_orig"] = new TH2F("top_mass_bjj_blv_gen_orig","Mass of generated b, lepton and neutrino vs. mass of bjj quarks (no scaling); M_{bjj} [GeV]; M_{blv} [GeV]", 1000, 50, 300, 1000, 50, 300);
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
@@ -934,6 +1092,16 @@ void ClearLeaves()
   scaleFactor = 1.;
   eventSF_gen = 1.;
   eventSF_reco = 1.;
+  evWeight_top = 1.;
+  evWeight_antitop = 1.;
+  evWeight_bjj = 1.;
+  evWeight_blv = 1.;
+  m_top = -1.;
+  m_antitop = -1.;
+  m_bjj = -1.;
+  m_blv = -1.;
+  m_hadr = -1;
+  m_lept = -1;
   bJetId.clear();
   reco_hadWMass = -1.;
   reco_hadTopMass = -1.;
@@ -976,9 +1144,15 @@ void ClearMatching()
   topQuark = -9999;
   antiTopQuark = -9999;
   genmuon = -9999;
+  genneutrino = -9999;
   muonmatched = false;
   muPlusFromTop = false;
   muMinusFromTop = false;
+  for (int i = 0; i < 3; i++)
+  {
+    bjjDecay[i] = -9999;
+    blvDecay[i] = -9999;
+  }
   partonId.clear();
 }
 
