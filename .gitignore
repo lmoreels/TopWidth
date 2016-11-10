@@ -29,6 +29,7 @@ AverageMassCalculator
 NtupleAnalyser
 Ntupler
 ReweightTopWidth
+TopReconstruction
 VoigtFitter
 testAnalyser
 testAnalyserTTbarOnly

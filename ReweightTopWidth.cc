@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
   clock_t start = clock();
   
   string channel;
-  if ( argc == 1) channel = "mu";
+  if ( argc == 1 ) channel = "mu";
   else if ( argv[1] == "mu" || argv[1] == "Mu" || argv[1] == "MU" || argv[1] == "m" ) channel = "mu";
   else if ( argv[1] == "el" || argv[1] == "El" || argv[1] == "EL" || argv[1] == "e" ) channel = "el";
   //else if ( argv[1] == "all" || argv[1] == "All" || argv[1] == "ALL" ) channel = "all";
@@ -478,7 +478,7 @@ int main(int argc, char* argv[])
     
     TruthMatching(partons, selectedJets, MCPermutation);
     
-    if (all4PartonsMatched && test && verbose > 3 )
+    if ( all4PartonsMatched && test && verbose > 3 )
     {
       for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
       {
@@ -886,12 +886,12 @@ void InitHisto1D()
   TH1::SetDefaultSumw2();
   
   histo1D["top_mass_hadr_gen_orig"] = new TH1F("top_mass_hadr_gen_orig","Mass of generated top quark with hadronic decay (no scaling); M_{t_{hadr}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_hadr_gen_s2"] = new TH1F("top_mass_hadr_gen_s2","Mass of generated top quark with hadronic decay (scaled by factor 2); M_{t_{hadr}} [GeV]", 1000, 50, 300);
-  histo1D["top_mass_hadr_gen_s0p5"] = new TH1F("top_mass_hadr_gen_s0p5","Mass of generated top quark with hadronic decay (scaled by factor 0.5); M_{t_{hadr}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_hadr_gen_s2"] = new TH1F("top_mass_hadr_gen_s2","Mass of generated top quark with hadronic decay (scaled by factor 2); M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_s0p5"] = new TH1F("top_mass_hadr_gen_s0p5","Mass of generated top quark with hadronic decay (scaled by factor 0.5); M_{t_{hadr}} [GeV]", 2000, 120, 220);
   
   histo1D["top_mass_lept_gen_orig"] = new TH1F("top_mass_lept_gen_orig","Mass of generated top quark with leptonic decay (no scaling); M_{t_{lept}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_lept_gen_s2"] = new TH1F("top_mass_lept_gen_s2","Mass of generated top quark with leptonic decay (scaled by factor 2); M_{t_{lept}} [GeV]", 1000, 50, 300);
-  histo1D["top_mass_lept_gen_s0p5"] = new TH1F("top_mass_lept_gen_s0p5","Mass of generated top quark with leptonic decay (scaled by factor 0.5); M_{t_{lept}} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_lept_gen_s2"] = new TH1F("top_mass_lept_gen_s2","Mass of generated top quark with leptonic decay (scaled by factor 2); M_{t_{lept}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_lept_gen_s0p5"] = new TH1F("top_mass_lept_gen_s0p5","Mass of generated top quark with leptonic decay (scaled by factor 0.5); M_{t_{lept}} [GeV]", 2000, 120, 220);
   
   histo1D["bjj_mass_gen_orig"] = new TH1F("bjj_mass_gen_orig","Mass of generated bjj quarks (no scaling); M_{bjj} [GeV]", 1000, 50, 300);
   histo1D["bjj_mass_gen_s2"] = new TH1F("bjj_mass_gen_s2","Mass of generated bjj quarks (scaled by factor 2); M_{bjj} [GeV]", 1000, 50, 300);
@@ -922,11 +922,11 @@ void InitHisto2D()
   histo2D["top_mass_bjj_blv_gen_orig"] = new TH2F("top_mass_bjj_blv_gen_orig","Mass of generated b, lepton and neutrino vs. mass of bjj quarks (no scaling); M_{bjj} [GeV]; M_{blv} [GeV]", 1000, 50, 300, 1000, 50, 300);
   
   // Weights
-  histo2D["top_mass_hadr_gen_vs_weight_s2"] = new TH2F("top_mass_hadr_gen_vs_weight_s2","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 2000, 0, 20);
-  histo2D["top_mass_hadr_gen_vs_weight_s0p5"] = new TH2F("top_mass_hadr_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 2000, 0, 20);
+  histo2D["top_mass_hadr_gen_vs_weight_s2"] = new TH2F("top_mass_hadr_gen_vs_weight_s2","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
+  histo2D["top_mass_hadr_gen_vs_weight_s0p5"] = new TH2F("top_mass_hadr_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
   
-  histo2D["top_mass_lept_gen_vs_weight_s2"] = new TH2F("top_mass_lept_gen_vs_weight_s2","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 2000, 0, 20);
-  histo2D["top_mass_lept_gen_vs_weight_s0p5"] = new TH2F("top_mass_lept_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 2000, 0, 20);
+  histo2D["top_mass_lept_gen_vs_weight_s2"] = new TH2F("top_mass_lept_gen_vs_weight_s2","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
+  histo2D["top_mass_lept_gen_vs_weight_s0p5"] = new TH2F("top_mass_lept_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
