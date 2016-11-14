@@ -1,4 +1,5 @@
 #include <stdio.h>
+//#include "TSystem.h"
 #include "TStyle.h"
 #include <ctime>
 #include <cmath>
@@ -86,6 +87,22 @@ Double_t fitf(Double_t *x, Double_t *par) {
   //return gaussian(x,par) + lorentzian(x,&par[3]);
 }
 
+// Crystal Ball
+Double_t crysBall(Double_t *x, Double_t *par) {
+  // params: alpha, n, sigma, mu
+  Double_t alpha = fabs(par[0]);
+  Double_t A = pow( par[1]/alpha , par[1]) * exp(-alpha*alpha/2.);
+  Double_t B = par[1]/alpha - alpha;
+  Double_t C = par[1]/alpha * 1/(par[1]-1) * exp(-alpha*alpha/2.);
+  Double_t D = sqrt(TMath::Pi()/2.) * (1 + erf(alpha/sqrt(2)));
+  Double_t N = 1/(par[2]*(C+D));
+  
+  Double_t ref = (x[0] - par[3])/par[2];  // (x-mean)/sigma
+  Double_t fitfunc = N;
+  if ( ref > -alpha) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
+  return fitfunc*par[4];
+}
 
 
 int main (int argc, char *argv[])
@@ -100,6 +117,7 @@ int main (int argc, char *argv[])
   
   clock_t start = clock();
   
+  //gSystem->Load("libMathCore.so");
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
