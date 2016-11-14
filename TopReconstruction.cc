@@ -800,11 +800,7 @@ int main(int argc, char* argv[])
             || (labelsRecoChi2W[1] == MCPermutation[2].first && labelsRecoChi2W[2] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2W[0]++;
-        if ( selectedJets.size() == 4 )
-        {
-          nofCorrectlyMatched_chi2W[1]++;
-          nofCorrectlyMatched_comb++;
-        }
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2W[1]++;
         if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2W[2]++;
         if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2W[3]++;
         if ( selectedJets.size() > 6 )  nofCorrectlyMatched_chi2W[4]++;
@@ -812,11 +808,7 @@ int main(int argc, char* argv[])
       else
       {
         nofNotCorrectlyMatched_chi2W[0]++;
-        if ( selectedJets.size() == 4 )
-        {
-          nofNotCorrectlyMatched_chi2W[1]++;
-          nofNotCorrectlyMatched_comb++;
-        }
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2W[1]++;
         if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2W[2]++;
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2W[3]++;
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2W[4]++;
@@ -827,7 +819,6 @@ int main(int argc, char* argv[])
             || (labelsRecoChi2W1B[1] == MCPermutation[2].first && labelsRecoChi2W1B[2] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2W1B[0]++;
-        if ( selectedJets.size() > 4 )  nofCorrectlyMatched_comb++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2W1B[1]++;
         if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2W1B[2]++;
         if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2W1B[3]++;
@@ -836,7 +827,6 @@ int main(int argc, char* argv[])
       else
       {
         nofNotCorrectlyMatched_chi2W1B[0]++;
-        if ( selectedJets.size() > 4 )  nofNotCorrectlyMatched_comb++;
         if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2W1B[1]++;
         if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2W1B[2]++;
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2W1B[3]++;
@@ -1122,9 +1112,9 @@ int main(int argc, char* argv[])
   
   
   cout << endl;
-  cout << "              All jets      4jets         5jets         6jets         6+ jets" << endl;
+  cout << "                 All jets      4jets         5jets         6jets         6+ jets" << endl;
   cout << setw(6) << right << fixed << showpoint << setprecision(3);
-//  cout << "test          33.333%       33.333%       33.333%       33.333%       33.333%" << endl;
+//  cout << "test             33.333%       33.333%       33.333%       33.333%       33.333%" << endl;
   cout << "deltaRAll        " << percentage_deltaRAll[0] << "%       "  << percentage_deltaRAll[1] << "%       "  << percentage_deltaRAll[2] << "%       "  << percentage_deltaRAll[3] << "%       "  << percentage_deltaRAll[4] << "%       "  << endl;
   cout << "deltaR1B         " << percentage_deltaR1B[0] << "%       "  << percentage_deltaR1B[1] << "%       "  << percentage_deltaR1B[2] << "%       "  << percentage_deltaR1B[3] << "%       "  << percentage_deltaR1B[4] << "%       "  << endl;
   cout << "chi2All          " << percentage_chi2All[0] << "%       "  << percentage_chi2All[1] << "%       "  << percentage_chi2All[2] << "%       "  << percentage_chi2All[3] << "%       "  << percentage_chi2All[4] << "%       "  << endl;
