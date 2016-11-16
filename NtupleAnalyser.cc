@@ -1360,11 +1360,11 @@ void InitHisto1D()
   histo1D["dR_lep_b_reco_and_wrong_match_chi2"]  = new TH1F("dR_lep_b_reco_and_wrong_match_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 differs from matching); #Delta R(l,b)", 25, 0, 5);
   
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 170, 0.5, 2.2);
-  histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and correct match); M_{t}/<M_{t}>", 170, 0.5, 2.2);
-  histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match); M_{t}/<M_{t}>", 50, 0, 2);
-  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: correct jets, wrong permutation); M_{t}/<M_{t}>", 50, 0, 2);
-  histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_jets_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: wrong jets); M_{t}/<M_{t}>", 50, 0, 2);
+  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and correct match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: correct jets, wrong permutation); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_jets_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: wrong jets); M_{t}/<M_{t}>", 200, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);
