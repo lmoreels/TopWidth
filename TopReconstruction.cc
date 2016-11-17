@@ -44,6 +44,10 @@ int nofCorrectlyMatched_deltaRAll[nofCats] = {0, 0, 0, 0, 0};  // 0: All, 1: == 
 int nofNotCorrectlyMatched_deltaRAll[nofCats] = {0, 0, 0, 0, 0};
 int nofCorrectlyMatched_deltaR1B[nofCats] = {0, 0, 0, 0, 0};
 int nofNotCorrectlyMatched_deltaR1B[nofCats] = {0, 0, 0, 0, 0};
+int nofCorrectlyMatched_deltaRJets[nofCats] = {0, 0, 0, 0, 0};
+int nofNotCorrectlyMatched_deltaRJets[nofCats] = {0, 0, 0, 0, 0};
+int nofCorrectlyMatched_deltaRJets1B[nofCats] = {0, 0, 0, 0, 0};
+int nofNotCorrectlyMatched_deltaRJets1B[nofCats] = {0, 0, 0, 0, 0};
 int nofCorrectlyMatched_chi2All[nofCats] = {0, 0, 0, 0, 0};
 int nofNotCorrectlyMatched_chi2All[nofCats] = {0, 0, 0, 0, 0};
 int nofCorrectlyMatched_chi2W[nofCats] = {0, 0, 0, 0, 0};
@@ -54,6 +58,10 @@ int nofCorrectlyMatched_chi2WDeltaRW[nofCats] = {0, 0, 0, 0, 0};
 int nofNotCorrectlyMatched_chi2WDeltaRW[nofCats] = {0, 0, 0, 0, 0};
 int nofCorrectlyMatched_chi2WDeltaRW1B[nofCats] = {0, 0, 0, 0, 0};
 int nofNotCorrectlyMatched_chi2WDeltaRW1B[nofCats] = {0, 0, 0, 0, 0};
+int nofCorrectlyMatched_chi2WDeltaRJets[nofCats] = {0, 0, 0, 0, 0};
+int nofNotCorrectlyMatched_chi2WDeltaRJets[nofCats] = {0, 0, 0, 0, 0};
+int nofCorrectlyMatched_chi2WDeltaRJets1B[nofCats] = {0, 0, 0, 0, 0};
+int nofNotCorrectlyMatched_chi2WDeltaRJets1B[nofCats] = {0, 0, 0, 0, 0};
 
 int nofCorrectlyMatched_comb = 0;
 int nofNotCorrectlyMatched_comb = 0;
@@ -506,14 +514,18 @@ int main(int argc, char* argv[])
     // Labels: 0,1 = light jets, 2 = hadronic b-jet
     int labelsRecoDeltaRAll[3] = {-9999, -9999, -9999};
     int labelsRecoDeltaR1B[3] = {-9999, -9999, -9999};
+    int labelsRecoDeltaRJets[3] = {-9999, -9999, -9999};
+    int labelsRecoDeltaRJets1B[3] = {-9999, -9999, -9999};
     int labelsRecoChi2All[3] = {-9999, -9999, -9999};
     int labelsRecoChi2W[3] = {-9999, -9999, -9999};
     int labelsRecoChi2W1B[3] = {-9999, -9999, -9999};
     int labelsRecoChi2WDeltaRW[3] = {-9999, -9999, -9999};
     int labelsRecoChi2WDeltaRW1B[3] = {-9999, -9999, -9999};
+    int labelsRecoChi2WDeltaRJets[3] = {-9999, -9999, -9999};
+    int labelsRecoChi2WDeltaRJets1B[3] = {-9999, -9999, -9999};
     
-    double deltaRAll, deltaR1B, deltaR;
-    double minDeltaRAll = 9999., minDeltaR1B = 9999., minDeltaR = 9999.;
+    double deltaRAll, deltaR1B, deltaRJets, deltaRJets1B, deltaR;
+    double minDeltaRAll = 9999., minDeltaR1B = 9999., minDeltaRJets = 9999., minDeltaRJets1B = 9999., minDeltaR = 9999.;
     
     
     ///------DELTA R ALL JETS------///
@@ -559,6 +571,55 @@ int main(int argc, char* argv[])
             labelsRecoDeltaR1B[0] = ijet;
             labelsRecoDeltaR1B[1] = jjet;
             labelsRecoDeltaR1B[2] = kjet;
+          }
+        }
+      }
+    }
+    
+    
+    ///------DELTA R ALL JETS------///
+    ///  Compare dR between jets  ///
+    
+    for (int ijet = 0; ijet < selectedJets.size(); ijet++)
+    {
+      for (int jjet = ijet+1; jjet < selectedJets.size(); jjet++)
+      {
+        for (int kjet = jjet+1; kjet < selectedJets.size(); kjet++)
+        {
+          deltaRJets = sqrt( pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[jjet]), 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[kjet]), 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[jjet], selectedJets[kjet]), 2) );
+          
+          if (deltaRJets < minDeltaRJets)
+          {
+            minDeltaRJets = deltaRJets;
+            labelsRecoDeltaRJets[0] = ijet;
+            labelsRecoDeltaRJets[1] = jjet;
+            labelsRecoDeltaRJets[2] = kjet;
+          }
+        }
+      }
+    }
+    
+    
+    
+    ///------DELTA R 1 B JET------///
+    ///  Compare dR between jets  ///
+    
+    for (int ijet = 0; ijet < selectedJets.size(); ijet++)
+    {
+      for (int jjet = ijet+1; jjet < selectedJets.size(); jjet++)
+      {
+        for (int kjet = jjet+1; kjet < selectedJets.size(); kjet++)
+        {
+          if ( jet_bdiscr[ijet] < CSVv2Medium && jet_bdiscr[jjet] < CSVv2Medium && jet_bdiscr[kjet] < CSVv2Medium ) continue;  // no b jet
+          
+          deltaRJets1B = sqrt( pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[jjet]), 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[kjet]), 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[jjet], selectedJets[kjet]), 2) );
+          
+          if (deltaRJets1B < minDeltaRJets1B)
+          {
+            minDeltaRJets1B = deltaRJets1B;
+            labelsRecoDeltaRJets1B[0] = ijet;
+            labelsRecoDeltaRJets1B[1] = jjet;
+            labelsRecoDeltaRJets1B[2] = kjet;
           }
         }
       }
@@ -730,6 +791,43 @@ int main(int argc, char* argv[])
       }
     }
     
+    ///------CHI2 W BOSON DELTA R JETS-------///
+    labelsRecoChi2WDeltaRJets[0] = labelsRecoChi2W[0];
+    labelsRecoChi2WDeltaRJets[1] = labelsRecoChi2W[1];
+    
+    minDeltaR = 9999.;
+    for (int kjet = 0; kjet < selectedJets.size(); kjet++)
+    {
+      if ( kjet == labelsRecoChi2WDeltaRJets[0] || kjet == labelsRecoChi2WDeltaRJets[1] ) continue;
+      
+      deltaR = sqrt( pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[labelsRecoChi2WDeltaRJets[0]], selectedJets[kjet]) , 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[labelsRecoChi2WDeltaRJets[1]], selectedJets[kjet]) , 2) );
+
+      if (deltaR < minDeltaR)
+      {
+        minDeltaR = deltaR;
+        labelsRecoChi2WDeltaRJets[2] = kjet;
+      }
+    }
+    
+    
+    ///------CHI2 W BOSON DELTA R JETS 1 B-------///
+    labelsRecoChi2WDeltaRJets1B[0] = labelsRecoChi2W[0];
+    labelsRecoChi2WDeltaRJets1B[1] = labelsRecoChi2W[1];
+    
+    minDeltaR = 9999.;
+    for (int kjet = 0; kjet < selectedBJets.size(); kjet++)
+    {
+      if ( bJetId[kjet] == labelsRecoChi2WDeltaRJets1B[0] || bJetId[kjet] == labelsRecoChi2WDeltaRJets1B[1] ) continue;
+      
+      deltaR = sqrt( pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[labelsRecoChi2WDeltaRJets1B[0]], selectedJets[bJetId[kjet]]) , 2) + pow( ROOT::Math::VectorUtil::DeltaR(selectedJets[labelsRecoChi2WDeltaRJets1B[1]], selectedJets[bJetId[kjet]]) , 2) );
+
+      if (deltaR < minDeltaR)
+      {
+        minDeltaR = deltaR;
+        labelsRecoChi2WDeltaRJets1B[2] = bJetId[kjet];
+      }
+    }
+    
     
     
     ///////////////////////////////////
@@ -774,6 +872,44 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_deltaR1B[2]++;
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_deltaR1B[3]++;
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaR1B[4]++;
+      }
+      
+      if ( labelsRecoDeltaRJets[0] == MCPermutation[0].first 
+          && ( (labelsRecoDeltaRJets[1] == MCPermutation[1].first && labelsRecoDeltaRJets[2] == MCPermutation[2].first) 
+            || (labelsRecoDeltaRJets[1] == MCPermutation[2].first && labelsRecoDeltaRJets[2] == MCPermutation[1].first) ) )
+      {
+        nofCorrectlyMatched_deltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaRJets[1]++;
+        if ( selectedJets.size() == 5 ) nofCorrectlyMatched_deltaRJets[2]++;
+        if ( selectedJets.size() == 6 ) nofCorrectlyMatched_deltaRJets[3]++;
+        if ( selectedJets.size() > 6 )  nofCorrectlyMatched_deltaRJets[4]++;
+      }
+      else
+      {
+        nofNotCorrectlyMatched_deltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_deltaRJets[1]++;
+        if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_deltaRJets[2]++;
+        if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_deltaRJets[3]++;
+        if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaRJets[4]++;
+      }
+      
+      if ( labelsRecoDeltaRJets1B[0] == MCPermutation[0].first 
+          && ( (labelsRecoDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoDeltaRJets1B[2] == MCPermutation[2].first) 
+            || (labelsRecoDeltaRJets1B[1] == MCPermutation[2].first && labelsRecoDeltaRJets1B[2] == MCPermutation[1].first) ) )
+      {
+        nofCorrectlyMatched_deltaRJets1B[0]++;
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaRJets1B[1]++;
+        if ( selectedJets.size() == 5 ) nofCorrectlyMatched_deltaRJets1B[2]++;
+        if ( selectedJets.size() == 6 ) nofCorrectlyMatched_deltaRJets1B[3]++;
+        if ( selectedJets.size() > 6 )  nofCorrectlyMatched_deltaRJets1B[4]++;
+      }
+      else
+      {
+        nofNotCorrectlyMatched_deltaRJets1B[0]++;
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_deltaRJets1B[1]++;
+        if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_deltaRJets1B[2]++;
+        if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_deltaRJets1B[3]++;
+        if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaRJets1B[4]++;
       }
       
       if ( labelsRecoChi2All[0] == MCPermutation[0].first 
@@ -880,6 +1016,44 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2WDeltaRW1B[3]++;
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRW1B[4]++;
       }
+      
+      if ( labelsRecoChi2WDeltaRJets[0] == MCPermutation[0].first 
+          && ( (labelsRecoChi2WDeltaRJets[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets[2] == MCPermutation[2].first) 
+            || (labelsRecoChi2WDeltaRJets[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRJets[2] == MCPermutation[1].first) ) )
+      {
+        nofCorrectlyMatched_chi2WDeltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2WDeltaRJets[1]++;
+        if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2WDeltaRJets[2]++;
+        if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2WDeltaRJets[3]++;
+        if ( selectedJets.size() > 6 )  nofCorrectlyMatched_chi2WDeltaRJets[4]++;
+      }
+      else
+      {
+        nofNotCorrectlyMatched_chi2WDeltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2WDeltaRJets[1]++;
+        if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2WDeltaRJets[2]++;
+        if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2WDeltaRJets[3]++;
+        if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRJets[4]++;
+      }
+      
+      if ( labelsRecoChi2WDeltaRJets1B[0] == MCPermutation[0].first 
+          && ( (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets1B[2] == MCPermutation[2].first) 
+            || (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRJets1B[2] == MCPermutation[1].first) ) )
+      {
+        nofCorrectlyMatched_chi2WDeltaRJets1B[0]++;
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2WDeltaRJets1B[1]++;
+        if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2WDeltaRJets1B[2]++;
+        if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2WDeltaRJets1B[3]++;
+        if ( selectedJets.size() > 6 )  nofCorrectlyMatched_chi2WDeltaRJets1B[4]++;
+      }
+      else
+      {
+        nofNotCorrectlyMatched_chi2WDeltaRJets1B[0]++;
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2WDeltaRJets1B[1]++;
+        if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2WDeltaRJets1B[2]++;
+        if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2WDeltaRJets1B[3]++;
+        if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRJets1B[4]++;
+      }
     }  // end all4PartonsMatched
 
 
@@ -890,7 +1064,7 @@ int main(int argc, char* argv[])
   cout << "Number of matched events: " << nofMatchedEvents << endl << endl;
   
   
-  float percentage_deltaRAll[nofCats] = {0.}, percentage_deltaR1B[nofCats] = {0.}, percentage_chi2All[nofCats] = {0.}, percentage_chi2W[nofCats] = {0.}, percentage_chi2W1B[nofCats] = {0.}, percentage_chi2WDeltaRW[nofCats] = {0.}, percentage_chi2WDeltaRW1B[nofCats] = {0.};
+  float percentage_deltaRAll[nofCats] = {0.}, percentage_deltaR1B[nofCats] = {0.}, percentage_deltaRJets[nofCats] = {0.}, percentage_deltaRJets1B[nofCats] = {0.}, percentage_chi2All[nofCats] = {0.}, percentage_chi2W[nofCats] = {0.}, percentage_chi2W1B[nofCats] = {0.}, percentage_chi2WDeltaRW[nofCats] = {0.}, percentage_chi2WDeltaRW1B[nofCats] = {0.}, percentage_chi2WDeltaRJets[nofCats] = {0.}, percentage_chi2WDeltaRJets1B[nofCats] = {0.};
   for (int iCat = 0; iCat < nofCats; iCat++)
   {
     if ( nofCorrectlyMatched_deltaRAll[iCat] != 0 || nofNotCorrectlyMatched_deltaRAll[iCat] != 0 )
@@ -901,6 +1075,16 @@ int main(int argc, char* argv[])
     if ( nofCorrectlyMatched_deltaR1B[iCat] != 0 || nofNotCorrectlyMatched_deltaR1B[iCat] != 0 )
     {
       percentage_deltaR1B[iCat] = 100*(float)nofCorrectlyMatched_deltaR1B[iCat] / (float)(nofCorrectlyMatched_deltaR1B[iCat] + nofNotCorrectlyMatched_deltaR1B[iCat]);
+    }
+    
+    if ( nofCorrectlyMatched_deltaRJets[iCat] != 0 || nofNotCorrectlyMatched_deltaRJets[iCat] != 0 )
+    {
+      percentage_deltaRJets[iCat] = 100*(float)nofCorrectlyMatched_deltaRJets[iCat] / (float)(nofCorrectlyMatched_deltaRJets[iCat] + nofNotCorrectlyMatched_deltaRJets[iCat]);
+    }
+    
+    if ( nofCorrectlyMatched_deltaRJets1B[iCat] != 0 || nofNotCorrectlyMatched_deltaRJets1B[iCat] != 0 )
+    {
+      percentage_deltaRJets1B[iCat] = 100*(float)nofCorrectlyMatched_deltaRJets1B[iCat] / (float)(nofCorrectlyMatched_deltaRJets1B[iCat] + nofNotCorrectlyMatched_deltaRJets1B[iCat]);
     }
     
     if ( nofCorrectlyMatched_chi2All[iCat] != 0 || nofNotCorrectlyMatched_chi2All[iCat] != 0 )
@@ -926,6 +1110,16 @@ int main(int argc, char* argv[])
     if ( nofCorrectlyMatched_chi2WDeltaRW1B[iCat] != 0 || nofNotCorrectlyMatched_chi2WDeltaRW1B[iCat] != 0 )
     {
       percentage_chi2WDeltaRW1B[iCat] = 100*(float)nofCorrectlyMatched_chi2WDeltaRW1B[iCat] / (float)(nofCorrectlyMatched_chi2WDeltaRW1B[iCat] + nofNotCorrectlyMatched_chi2WDeltaRW1B[iCat]);
+    }
+    
+    if ( nofCorrectlyMatched_chi2WDeltaRJets[iCat] != 0 || nofNotCorrectlyMatched_chi2WDeltaRJets[iCat] != 0 )
+    {
+      percentage_chi2WDeltaRJets[iCat] = 100*(float)nofCorrectlyMatched_chi2WDeltaRJets[iCat] / (float)(nofCorrectlyMatched_chi2WDeltaRJets[iCat] + nofNotCorrectlyMatched_chi2WDeltaRJets[iCat]);
+    }
+    
+    if ( nofCorrectlyMatched_chi2WDeltaRJets1B[iCat] != 0 || nofNotCorrectlyMatched_chi2WDeltaRJets1B[iCat] != 0 )
+    {
+      percentage_chi2WDeltaRJets1B[iCat] = 100*(float)nofCorrectlyMatched_chi2WDeltaRJets1B[iCat] / (float)(nofCorrectlyMatched_chi2WDeltaRJets1B[iCat] + nofNotCorrectlyMatched_chi2WDeltaRJets1B[iCat]);
     }
   }  // end for nofCats
   
@@ -971,6 +1165,18 @@ int main(int argc, char* argv[])
   cout << "Not correctly matched for chi2WDeltaRW1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRW1B[0] << endl;
   if ( percentage_chi2WDeltaRW1B[0] != 0. )
     cout << "   ===> This means that " << percentage_chi2WDeltaRW1B[0] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS----------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets[0] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets[0] << endl;
+  if ( percentage_chi2WDeltaRJets[0] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets[0] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS 1B-------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets1B:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets1B[0] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets1B[0] << endl;
+  if ( percentage_chi2WDeltaRJets1B[0] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets1B[0] << "% is correctly matched." << endl << endl;
   
   cout << "---------EVENTS WITH EXACTLY 4 JETS---------" << endl;
   cout << "///------DELTA R ALL JETS------///" << endl;
@@ -1014,6 +1220,18 @@ int main(int argc, char* argv[])
   cout << "Not correctly matched for chi2WDeltaRW1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRW1B[1] << endl;
   if ( percentage_chi2WDeltaRW1B[1] != 0. )
     cout << "   ===> This means that " << percentage_chi2WDeltaRW1B[1] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS----------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets[1] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets[1] << endl;
+  if ( percentage_chi2WDeltaRJets[1] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets[1] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS 1B-------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets1B:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets1B[1] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets1B[1] << endl;
+  if ( percentage_chi2WDeltaRJets1B[1] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets1B[1] << "% is correctly matched." << endl << endl;
   
   cout << "---------EVENTS WITH EXACTLY 5 JETS---------" << endl;
   cout << "///------DELTA R ALL JETS------///" << endl;
@@ -1057,6 +1275,18 @@ int main(int argc, char* argv[])
   cout << "Not correctly matched for chi2WDeltaRW1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRW1B[2] << endl;
   if ( percentage_chi2WDeltaRW1B[2] != 0. )
     cout << "   ===> This means that " << percentage_chi2WDeltaRW1B[2] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS----------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets[2] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets[2] << endl;
+  if ( percentage_chi2WDeltaRJets[2] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets[2] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS 1B-------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets1B:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets1B[2] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets1B[2] << endl;
+  if ( percentage_chi2WDeltaRJets1B[2] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets1B[2] << "% is correctly matched." << endl << endl;
   
   cout << "---------EVENTS WITH EXACTLY 6 JETS---------" << endl;
   cout << "///------DELTA R ALL JETS------///" << endl;
@@ -1100,6 +1330,18 @@ int main(int argc, char* argv[])
   cout << "Not correctly matched for chi2WDeltaRW1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRW1B[3] << endl;
   if ( percentage_chi2WDeltaRW1B[3] != 0. )
     cout << "   ===> This means that " << percentage_chi2WDeltaRW1B[3] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS----------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets[3] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets[3] << endl;
+  if ( percentage_chi2WDeltaRJets[3] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets[3] << "% is correctly matched." << endl << endl;
+  cout << "///------CHI2 W BOSON DELTA R JETS 1B-------///" << endl;
+  cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
+  cout << "Correctly matched for chi2WDeltaRJets1B:     " << setw(8) << right << nofCorrectlyMatched_chi2WDeltaRJets1B[3] << endl;
+  cout << "Not correctly matched for chi2WDeltaRJets1B: " << setw(8) << right << nofNotCorrectlyMatched_chi2WDeltaRJets1B[3] << endl;
+  if ( percentage_chi2WDeltaRJets1B[3] != 0. )
+    cout << "   ===> This means that " << percentage_chi2WDeltaRJets1B[3] << "% is correctly matched." << endl << endl;
   
   
   cout << "---------(Attempt at) Best Combination---------" << endl;
@@ -1112,16 +1354,20 @@ int main(int argc, char* argv[])
   
   
   cout << endl;
-  cout << "                 All jets      4jets         5jets         6jets         6+ jets" << endl;
+  cout << "                   All jets      4jets         5jets         6jets         6+ jets" << endl;
   cout << setw(6) << right << fixed << showpoint << setprecision(3);
-//  cout << "test             33.333%       33.333%       33.333%       33.333%       33.333%" << endl;
-  cout << "deltaRAll        " << percentage_deltaRAll[0] << "%       "  << percentage_deltaRAll[1] << "%       "  << percentage_deltaRAll[2] << "%       "  << percentage_deltaRAll[3] << "%       "  << percentage_deltaRAll[4] << "%       "  << endl;
-  cout << "deltaR1B         " << percentage_deltaR1B[0] << "%       "  << percentage_deltaR1B[1] << "%       "  << percentage_deltaR1B[2] << "%       "  << percentage_deltaR1B[3] << "%       "  << percentage_deltaR1B[4] << "%       "  << endl;
-  cout << "chi2All          " << percentage_chi2All[0] << "%       "  << percentage_chi2All[1] << "%       "  << percentage_chi2All[2] << "%       "  << percentage_chi2All[3] << "%       "  << percentage_chi2All[4] << "%       "  << endl;
-  cout << "chi2W            " << percentage_chi2W[0] << "%       "  << percentage_chi2W[1] << "%       "  << percentage_chi2W[2] << "%       "  << percentage_chi2W[3] << "%       "  << percentage_chi2W[4] << "%       "  << endl;
-  cout << "chi2W1B          " << percentage_chi2W1B[0] << "%       "  << percentage_chi2W1B[1] << "%       "  << percentage_chi2W1B[2] << "%       "  << percentage_chi2W1B[3] << "%       "  << percentage_chi2W1B[4] << "%       "  << endl;
-  cout << "chi2WDeltaRW     " << percentage_chi2WDeltaRW[0] << "%       "  << percentage_chi2WDeltaRW[1] << "%       "  << percentage_chi2WDeltaRW[2] << "%       "  << percentage_chi2WDeltaRW[3] << "%       "  << percentage_chi2WDeltaRW[4] << "%       "  << endl;
-  cout << "chi2WDeltaRW1B   " << percentage_chi2WDeltaRW1B[0] << "%       "  << percentage_chi2WDeltaRW1B[1] << "%       "  << percentage_chi2WDeltaRW1B[2] << "%       "  << percentage_chi2WDeltaRW1B[3] << "%       "  << percentage_chi2WDeltaRW1B[4] << "%       "  << endl;
+//  cout << "test               33.333%       33.333%       33.333%       33.333%       33.333%" << endl;
+  cout << "deltaRAll          " << percentage_deltaRAll[0] << "%       "  << percentage_deltaRAll[1] << "%       "  << percentage_deltaRAll[2] << "%       "  << percentage_deltaRAll[3] << "%       "  << percentage_deltaRAll[4] << "%       "  << endl;
+  cout << "deltaR1B           " << percentage_deltaR1B[0] << "%       "  << percentage_deltaR1B[1] << "%       "  << percentage_deltaR1B[2] << "%       "  << percentage_deltaR1B[3] << "%       "  << percentage_deltaR1B[4] << "%       "  << endl;
+  cout << "deltaRJets         " << percentage_deltaRJets[0] << "%       "  << percentage_deltaRJets[1] << "%       "  << percentage_deltaRJets[2] << "%       "  << percentage_deltaRJets[3] << "%       "  << percentage_deltaRJets[4] << "%       "  << endl;
+  cout << "deltaRJets1B       " << percentage_deltaRJets1B[0] << "%       "  << percentage_deltaRJets1B[1] << "%       "  << percentage_deltaRJets1B[2] << "%       "  << percentage_deltaRJets1B[3] << "%       "  << percentage_deltaRJets1B[4] << "%       "  << endl;
+  cout << "chi2All            " << percentage_chi2All[0] << "%       "  << percentage_chi2All[1] << "%       "  << percentage_chi2All[2] << "%       "  << percentage_chi2All[3] << "%       "  << percentage_chi2All[4] << "%       "  << endl;
+  cout << "chi2W              " << percentage_chi2W[0] << "%       "  << percentage_chi2W[1] << "%       "  << percentage_chi2W[2] << "%       "  << percentage_chi2W[3] << "%       "  << percentage_chi2W[4] << "%       "  << endl;
+  cout << "chi2W1B            " << percentage_chi2W1B[0] << "%       "  << percentage_chi2W1B[1] << "%       "  << percentage_chi2W1B[2] << "%       "  << percentage_chi2W1B[3] << "%       "  << percentage_chi2W1B[4] << "%       "  << endl;
+  cout << "chi2WDeltaRW       " << percentage_chi2WDeltaRW[0] << "%       "  << percentage_chi2WDeltaRW[1] << "%       "  << percentage_chi2WDeltaRW[2] << "%       "  << percentage_chi2WDeltaRW[3] << "%       "  << percentage_chi2WDeltaRW[4] << "%       "  << endl;
+  cout << "chi2WDeltaRW1B     " << percentage_chi2WDeltaRW1B[0] << "%       "  << percentage_chi2WDeltaRW1B[1] << "%       "  << percentage_chi2WDeltaRW1B[2] << "%       "  << percentage_chi2WDeltaRW1B[3] << "%       "  << percentage_chi2WDeltaRW1B[4] << "%       "  << endl;
+  cout << "chi2WDeltaRJets    " << percentage_chi2WDeltaRJets[0] << "%       "  << percentage_chi2WDeltaRJets[1] << "%       "  << percentage_chi2WDeltaRJets[2] << "%       "  << percentage_chi2WDeltaRJets[3] << "%       "  << percentage_chi2WDeltaRJets[4] << "%       "  << endl;
+  cout << "chi2WDeltaRJets1B  " << percentage_chi2WDeltaRJets1B[0] << "%       "  << percentage_chi2WDeltaRJets1B[1] << "%       "  << percentage_chi2WDeltaRJets1B[2] << "%       "  << percentage_chi2WDeltaRJets1B[3] << "%       "  << percentage_chi2WDeltaRJets1B[4] << "%       "  << endl;
   cout << endl;
   
   
@@ -1458,6 +1704,10 @@ void ClearMetaData()
     nofNotCorrectlyMatched_deltaRAll[i] = 0;
     nofCorrectlyMatched_deltaR1B[i] = 0;
     nofNotCorrectlyMatched_deltaR1B[i] = 0;
+    nofCorrectlyMatched_deltaRJets[i] = 0;
+    nofNotCorrectlyMatched_deltaRJets[i] = 0;
+    nofCorrectlyMatched_deltaRJets1B[i] = 0;
+    nofNotCorrectlyMatched_deltaRJets1B[i] = 0;
     nofCorrectlyMatched_chi2All[i] = 0;
     nofNotCorrectlyMatched_chi2All[i] = 0;
     nofCorrectlyMatched_chi2W[i] = 0;
@@ -1468,6 +1718,10 @@ void ClearMetaData()
     nofNotCorrectlyMatched_chi2WDeltaRW[i] = 0; 
     nofCorrectlyMatched_chi2WDeltaRW1B[i] = 0;
     nofNotCorrectlyMatched_chi2WDeltaRW1B[i] = 0;
+    nofCorrectlyMatched_chi2WDeltaRJets[i] = 0;
+    nofNotCorrectlyMatched_chi2WDeltaRJets[i] = 0;
+    nofCorrectlyMatched_chi2WDeltaRJets1B[i] = 0;
+    nofNotCorrectlyMatched_chi2WDeltaRJets1B[i] = 0;
   }
   nofCorrectlyMatched_comb = 0;
   nofNotCorrectlyMatched_comb = 0;
