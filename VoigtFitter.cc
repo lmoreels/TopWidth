@@ -21,6 +21,20 @@
 using namespace std;
 
 
+string systStr = "nominal";
+
+string whichDate(string syst)
+{
+  if ( syst.find("nominal") == 0 ) return "161117_1137/NtuplePlots_nominal.root";
+  //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
+  //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
+  else
+  {
+    cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
+    return "161117_1137/NtuplePlots_nominal.root";
+  }
+}
+
 string ConvertIntToString(int Number, int pad)
 {
   ostringstream convert;
@@ -72,7 +86,7 @@ Double_t lorentzian(Double_t *x,Double_t *par) {
 
 // Sum of gaussian and lorentzian
 // par[0] = scale; par[1] = mean gaus & lorentz; par[2] = sigma gaus; par[3] = width lorentz
-Double_t fitf(Double_t *x, Double_t *par) {
+Double_t voigt(Double_t *x, Double_t *par) {
   Double_t arg_g = 0;
   if ( par[2] != 0 ) arg_g = (x[0] - par[1])/par[2];
   Double_t gaus = TMath::Exp(-0.5*arg_g*arg_g);
@@ -99,8 +113,8 @@ Double_t crysBall(Double_t *x, Double_t *par) {
   
   Double_t ref = (x[0] - par[3])/par[2];  // (x-mean)/sigma
   Double_t fitfunc = N;
-  if ( ref > -alpha) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -alpha) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
+  if ( ref > -par[0] ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -par[0] ) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
   return fitfunc*par[4];
 }
 
@@ -112,7 +126,7 @@ int main (int argc, char *argv[])
   cout << "***         Beginning of program          ***" << endl;
   cout << "*********************************************" << endl;
   cout << "*********************************************" << endl;
-  cout << "* Current time: " << dateString << "               *" << endl;
+  cout << "* Current time: " << dateString << "                 *" << endl;
   cout << "*********************************************" << endl;
   
   clock_t start = clock();
@@ -121,17 +135,15 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  const string histoNames[] = {"mTop_div_aveMTop_TT_matched_reco", "mTop_div_aveMTop_TT_corr_match_chi2_reco"};
+  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_reco", 1}, {"mTop_div_aveMTop_TT_corr_match_chi2_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_chi2_reco", 2}, {"mTop_div_aveMTop_TT_wrong_match_chi2_reco", 0}, {"mTop_div_aveMTop_TT_wrong_jets_chi2_reco", 0} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
-  string systInput = "160929_1357/NtuplePlots_nominal.root";  //nominal
-  //string systInput = "160929_1156/NtuplePlots_JERup.root ";  //JER
-  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+systInput;
+  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr);
   string pathOutput = "OutputVoigt/";
   mkdir(pathOutput.c_str(),0777);
-  string outputFileName = pathOutput+"VoigtFit_nominal.root";
-  //string outputFileName = pathOutput+"VoigtFit_JERup.root";
+  string outputFileName = pathOutput+"VoigtFit_"+systStr+".root";
+  
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
   fin->cd();
@@ -147,18 +159,11 @@ int main (int argc, char *argv[])
       //cout << " *** Histogram " << histoNames[iHisto] << " does not exist... Proceeding to next histogram..." << endl;
       //continue;
     //}
-    cout << " *** Processing histogram " << histoNames[iHisto] << endl;
+    cout << " *** Processing histogram " << histoNames[iHisto].first << endl;
     
     /// Get histos
-    TH1F* histo = (TH1F*) fin->Get((histDir+histoNames[iHisto]).c_str());
+    TH1F* histo = (TH1F*) fin->Get((histDir+histoNames[iHisto].first).c_str());
     histo->Write();
-    
-    /// Declare fit function
-    int nBins = histo->GetXaxis()->GetNbins();
-    const int nPar = 5;
-    string parnames[nPar] = {"a1","a2","a3","a4","a5"};
-    //string parnames[nPar] = {"a1","a2","a3","a4","a5","a6"};
-    
     
     // Normalise histogram
     Double_t scale = 1./histo->Integral();
@@ -166,17 +171,52 @@ int main (int argc, char *argv[])
     
     
     /// Declare fit function
-    TF1 *myfit = new TF1("fit", fitf, 0.5, 2., nPar);  // root name, fit function, range, nPar
+    int nBins = histo->GetXaxis()->GetNbins();
+    const int nPar = 5;
+    string parnames[nPar] = {"a1","a2","a3","a4","a5"};
+    //string parnames[nPar] = {"a1","a2","a3","a4","a5","a6"};
     
+    TF1 *myfit;
     
-    //  Give names to the parameters: // 0->a1 = scale; 1->a2 = mean gaus & lorentz; 2->a3 = sigma gaus; 3->a4 = width lorentz
-    myfit->SetParNames("ps","#mu","#sigma","#gamma","norm");
-    
-    myfit->SetParameters(0.5, 1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
-    myfit->SetParLimits(0,0.,1.);
-    myfit->SetParLimits(1,0.95,1.05);
-    myfit->SetParLimits(2,0.001,1.e+3);
-    myfit->SetParLimits(3,0.001,1.e+3);
+    if ( histoNames[iHisto].second == 1 )
+    {
+      myfit = new TF1("fit", voigt, 0.5, 2., nPar);  // root name, fit function, range, nPar
+
+
+      //  Give names to the parameters: // 0->a1 = scale; 1->a2 = mean gaus & lorentz; 2->a3 = sigma gaus; 3->a4 = width lorentz
+      myfit->SetParNames("ps","#mu","#sigma","#gamma","norm");
+
+      myfit->SetParameters(0.5, 1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+      myfit->SetParLimits(0,0.,1.);
+      myfit->SetParLimits(1,0.95,1.05);
+      myfit->SetParLimits(2,0.001,1.e+3);
+      myfit->SetParLimits(3,0.001,1.e+3);
+    }
+    else if ( histoNames[iHisto].second == 2 )
+    {
+      myfit = new TF1("fit", crysBall, 0.5, 2., nPar);  // root name, fit function, range, nPar
+      
+      myfit->SetParNames("alpha","n","#sigma","#mu","norm");
+      
+      if ( histoNames[iHisto].second == 2 ) myfit->SetParameters(0.26, 2.2, 0.2, 1., 1.);  // wrong permutations
+      else myfit->SetParameters(0.83, 9., 0.1, 1., 1.);                                    // wrong match
+      
+      myfit->SetParLimits(2,0.00001,1.e+3);
+      myfit->SetParLimits(3,0.85,1.15);
+    }
+    else
+    {
+      myfit = new TF1("fit", crysBall, 0.5, 2., nPar);  // root name, fit function, range, nPar
+      
+      myfit->SetParNames("alpha","n","#sigma","#mu","norm");
+      
+      if ( histoNames[iHisto].second == 2 ) myfit->SetParameters(0.26, 2.2, 0.2, 1., 1.);  // wrong permutations
+      else myfit->SetParameters(0.83, 6.3, 0.1, 0.95, 1.);                                  // wrong match
+      
+      myfit->SetParLimits(5, 0.0098, 0.01);
+      myfit->SetParLimits(2,0.00001,1.e+3);
+      myfit->SetParLimits(3, 0.75, 1.15);
+    }
     
     
     ///  Fit
