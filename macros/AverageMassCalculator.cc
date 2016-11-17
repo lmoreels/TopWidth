@@ -10,10 +10,10 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "160928_1611";
+string inputDate = "161117_1058";
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_matched_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_matched_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[0]+"_"+inputDate, "mass_chi2_"+dataSetNames[1]+"_"+inputDate, "mass_chi2_"+dataSetNames[2]+"_"+inputDate, "mass_chi2_"+dataSetNames[3]+"_"+inputDate, "mass_chi2_"+dataSetNames[4]+"_"+inputDate, "mass_chi2_"+dataSetNames[5]+"_"+inputDate, "mass_chi2_"+dataSetNames[6]+"_"+inputDate, "mass_chi2_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongJets_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -26,9 +26,9 @@ void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, dou
 
 /// Define vars
 char dataLine[1024];
-int nEntries, nEntriesChi2, eventId;
+int nEntries, nEntriesAllMC, eventId;
 double massW, massTop;
-double sumW, sumTop, sumWChi2, sumTopChi2;
+double sumW, sumTop, sumWAllMC, sumTopAllMC;
 double meanW, meanTop;
 
 ifstream fileIn;
@@ -40,11 +40,11 @@ int main()
   string outputFileName = pathInput+"averageMass_"+inputDate+".txt";
   fileOut.open(outputFileName.c_str());
   cout << "Creating output file " << outputFileName << "..." << endl;
-  fileOut << "# Dataset          meanW    meanTop" << endl;
+  fileOut << "# Dataset            meanW    meanTop" << endl;
   
-  nEntriesChi2 = 0;
-  sumWChi2 = 0.;
-  sumTopChi2 = 0.;
+  nEntriesAllMC = 0;
+  sumWAllMC = 0.;
+  sumTopAllMC = 0.;
   
   for (int iFile = 0; iFile < nInputs; iFile++)
   {
@@ -77,11 +77,11 @@ int main()
       sumW += massW;
       sumTop += massTop;
       
-      if ( iFile > 1 ) // chi2
+      if ( iFile > 4 && iFile < nInputs-1) // reco
       {
-        nEntriesChi2++;
-        sumWChi2 += massW;
-        sumTopChi2 += massTop;
+        nEntriesAllMC++;
+        sumWAllMC += massW;
+        sumTopAllMC += massTop;
       }
       
     }  // end while
@@ -93,21 +93,33 @@ int main()
     
     
     /// Store mean in file
-    if ( iFile > 2 )
+    if ( iFile > 5 )
     {
-      thisDataSet = dataSetNames[iFile-2];
+      thisDataSet = dataSetNames[iFile-5];
     }
     else if ( iFile == 0 )
     {
-      thisDataSet = dataSetNames[0]+"_match";
+      thisDataSet = dataSetNames[0]+"_gen_match";
     }
     else if ( iFile == 1 )
     {
-      thisDataSet = dataSetNames[0]+"_chi2_match";
+      thisDataSet = dataSetNames[0]+"_reco_match";
     }
     else if ( iFile == 2 )
     {
-      thisDataSet = dataSetNames[0]+"_chi2";
+      thisDataSet = dataSetNames[0]+"_reco_noMatch";
+    }
+    else if ( iFile == 3 )
+    {
+      thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
+    }
+    else if ( iFile == 4 )
+    {
+      thisDataSet = dataSetNames[0]+"_reco_wrongJets";
+    }
+    else if ( iFile == 5 )
+    {
+      thisDataSet = dataSetNames[0]+"_reco";
     }
     
     WriteToFile(fileOut, thisDataSet, meanW, meanTop);
@@ -118,12 +130,12 @@ int main()
     
   }  // end loop files
   
-  /// Calculate mean all chi2
+  /// Calculate mean reco all MC
   ClearVars(true);
-  meanW = sumWChi2/((double)nEntriesChi2);
-  meanTop = sumTopChi2/((double)nEntriesChi2);
+  meanW = sumWAllMC/((double)nEntriesAllMC);
+  meanTop = sumTopAllMC/((double)nEntriesAllMC);
   
-  WriteToFile(fileOut, "All Chi2", meanW, meanTop);
+  WriteToFile(fileOut, "Reco All MC", meanW, meanTop);
   
   
   /// Close output file
@@ -160,7 +172,7 @@ void ClearVars(bool isNewDataset)
 
 void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, double meanTop)
 {
-  fout << left << setw(16) << thisDataSet;
+  fout << left << setw(18) << thisDataSet;
   cout.setf(ios::fixed,ios::floatfield);  // Add zero to obtain the asked number of digits
   //cout.precision(3);  // setprecision(3) --> set maximum number of meaningful digits to 3. When 'fixed' or 'scientific', only count after decimal point.
   fout << "   " << fixed << showpoint << setprecision(3) << meanW;  // showpoint --> also when decimal part is zero
