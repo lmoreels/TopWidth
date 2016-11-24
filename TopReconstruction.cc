@@ -79,8 +79,8 @@ float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 // Average top mass
-// TT match, TT chi2, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, allChi2
-float aveTopMass[] = {166.922, 170.433, 178.150, 203.137, 201.759, 185.668, 186.755, 189.150, 182.008, 179.775, 178.315};
+// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongJets, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+float aveTopMass[] = {166.931, 169.290, 183.759, 162.863, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -836,9 +836,9 @@ int main(int argc, char* argv[])
 
     if (all4PartonsMatched)
     {
-      if ( labelsRecoDeltaRAll[0] == MCPermutation[0].first 
-          && ( (labelsRecoDeltaRAll[1] == MCPermutation[1].first && labelsRecoDeltaRAll[2] == MCPermutation[2].first) 
-            || (labelsRecoDeltaRAll[1] == MCPermutation[2].first && labelsRecoDeltaRAll[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoDeltaRAll[2] == MCPermutation[2].first 
+          && ( (labelsRecoDeltaRAll[1] == MCPermutation[1].first && labelsRecoDeltaRAll[0] == MCPermutation[0].first) 
+            || (labelsRecoDeltaRAll[1] == MCPermutation[0].first && labelsRecoDeltaRAll[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_deltaRAll[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaRAll[1]++;
@@ -855,9 +855,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaRAll[4]++;
       }
       
-      if ( labelsRecoDeltaR1B[0] == MCPermutation[0].first 
-          && ( (labelsRecoDeltaR1B[1] == MCPermutation[1].first && labelsRecoDeltaR1B[2] == MCPermutation[2].first) 
-            || (labelsRecoDeltaR1B[1] == MCPermutation[2].first && labelsRecoDeltaR1B[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoDeltaR1B[2] == MCPermutation[2].first 
+          && ( (labelsRecoDeltaR1B[1] == MCPermutation[1].first && labelsRecoDeltaR1B[0] == MCPermutation[0].first) 
+            || (labelsRecoDeltaR1B[1] == MCPermutation[0].first && labelsRecoDeltaR1B[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_deltaR1B[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaR1B[1]++;
@@ -874,9 +874,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaR1B[4]++;
       }
       
-      if ( labelsRecoDeltaRJets[0] == MCPermutation[0].first 
-          && ( (labelsRecoDeltaRJets[1] == MCPermutation[1].first && labelsRecoDeltaRJets[2] == MCPermutation[2].first) 
-            || (labelsRecoDeltaRJets[1] == MCPermutation[2].first && labelsRecoDeltaRJets[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoDeltaRJets[2] == MCPermutation[2].first 
+          && ( (labelsRecoDeltaRJets[1] == MCPermutation[1].first && labelsRecoDeltaRJets[0] == MCPermutation[0].first) 
+            || (labelsRecoDeltaRJets[1] == MCPermutation[0].first && labelsRecoDeltaRJets[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_deltaRJets[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaRJets[1]++;
@@ -893,9 +893,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaRJets[4]++;
       }
       
-      if ( labelsRecoDeltaRJets1B[0] == MCPermutation[0].first 
-          && ( (labelsRecoDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoDeltaRJets1B[2] == MCPermutation[2].first) 
-            || (labelsRecoDeltaRJets1B[1] == MCPermutation[2].first && labelsRecoDeltaRJets1B[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoDeltaRJets1B[2] == MCPermutation[2].first 
+          && ( (labelsRecoDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoDeltaRJets1B[0] == MCPermutation[0].first) 
+            || (labelsRecoDeltaRJets1B[1] == MCPermutation[0].first && labelsRecoDeltaRJets1B[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_deltaRJets1B[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_deltaRJets1B[1]++;
@@ -912,9 +912,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_deltaRJets1B[4]++;
       }
       
-      if ( labelsRecoChi2All[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2All[1] == MCPermutation[1].first && labelsRecoChi2All[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2All[1] == MCPermutation[2].first && labelsRecoChi2All[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2All[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2All[1] == MCPermutation[1].first && labelsRecoChi2All[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2All[1] == MCPermutation[0].first && labelsRecoChi2All[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2All[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2All[1]++;
@@ -931,9 +931,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2All[4]++;
       }
       
-      if ( labelsRecoChi2W[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2W[1] == MCPermutation[1].first && labelsRecoChi2W[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2W[1] == MCPermutation[2].first && labelsRecoChi2W[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2W[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2W[1] == MCPermutation[1].first && labelsRecoChi2W[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2W[1] == MCPermutation[0].first && labelsRecoChi2W[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2W[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2W[1]++;
@@ -950,9 +950,9 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2W[4]++;
       }
       
-      if ( labelsRecoChi2W1B[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2W1B[1] == MCPermutation[1].first && labelsRecoChi2W1B[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2W1B[1] == MCPermutation[2].first && labelsRecoChi2W1B[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2W1B[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2W1B[1] == MCPermutation[1].first && labelsRecoChi2W1B[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2W1B[1] == MCPermutation[0].first && labelsRecoChi2W1B[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2W1B[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2W1B[1]++;
@@ -969,16 +969,12 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2W1B[4]++;
       }
       
-      if ( labelsRecoChi2WDeltaRW[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2WDeltaRW[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRW[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2WDeltaRW[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRW[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2WDeltaRW[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2WDeltaRW[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRW[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2WDeltaRW[1] == MCPermutation[0].first && labelsRecoChi2WDeltaRW[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2WDeltaRW[0]++;
-        if ( selectedJets.size() == 4 )
-        {
-          nofCorrectlyMatched_chi2WDeltaRW[1]++;
-          nofCorrectlyMatched_comb++;
-        }
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2WDeltaRW[1]++;
         if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2WDeltaRW[2]++;
         if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2WDeltaRW[3]++;
         if ( selectedJets.size() > 6 )  nofCorrectlyMatched_chi2WDeltaRW[4]++;
@@ -986,19 +982,15 @@ int main(int argc, char* argv[])
       else
       {
         nofNotCorrectlyMatched_chi2WDeltaRW[0]++;
-        if ( selectedJets.size() == 4 )
-        {
-          nofNotCorrectlyMatched_chi2WDeltaRW[1]++;
-          nofNotCorrectlyMatched_comb++;
-        }
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2WDeltaRW[1]++;
         if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2WDeltaRW[2]++;
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2WDeltaRW[3]++;
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRW[4]++;
       }
       
-      if ( labelsRecoChi2WDeltaRW1B[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2WDeltaRW1B[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRW1B[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2WDeltaRW1B[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRW1B[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2WDeltaRW1B[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2WDeltaRW1B[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRW1B[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2WDeltaRW1B[1] == MCPermutation[0].first && labelsRecoChi2WDeltaRW1B[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2WDeltaRW1B[0]++;
         if ( selectedJets.size() > 4 )  nofCorrectlyMatched_comb++;
@@ -1017,11 +1009,12 @@ int main(int argc, char* argv[])
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRW1B[4]++;
       }
       
-      if ( labelsRecoChi2WDeltaRJets[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2WDeltaRJets[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2WDeltaRJets[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRJets[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2WDeltaRJets[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2WDeltaRJets[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2WDeltaRJets[1] == MCPermutation[0].first && labelsRecoChi2WDeltaRJets[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2WDeltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofCorrectlyMatched_comb++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2WDeltaRJets[1]++;
         if ( selectedJets.size() == 5 ) nofCorrectlyMatched_chi2WDeltaRJets[2]++;
         if ( selectedJets.size() == 6 ) nofCorrectlyMatched_chi2WDeltaRJets[3]++;
@@ -1030,15 +1023,16 @@ int main(int argc, char* argv[])
       else
       {
         nofNotCorrectlyMatched_chi2WDeltaRJets[0]++;
+        if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_comb++;
         if ( selectedJets.size() == 4 ) nofNotCorrectlyMatched_chi2WDeltaRJets[1]++;
         if ( selectedJets.size() == 5 ) nofNotCorrectlyMatched_chi2WDeltaRJets[2]++;
         if ( selectedJets.size() == 6 ) nofNotCorrectlyMatched_chi2WDeltaRJets[3]++;
         if ( selectedJets.size() > 6 )  nofNotCorrectlyMatched_chi2WDeltaRJets[4]++;
       }
       
-      if ( labelsRecoChi2WDeltaRJets1B[0] == MCPermutation[0].first 
-          && ( (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets1B[2] == MCPermutation[2].first) 
-            || (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[2].first && labelsRecoChi2WDeltaRJets1B[2] == MCPermutation[1].first) ) )
+      if ( labelsRecoChi2WDeltaRJets1B[2] == MCPermutation[2].first 
+          && ( (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[1].first && labelsRecoChi2WDeltaRJets1B[0] == MCPermutation[0].first) 
+            || (labelsRecoChi2WDeltaRJets1B[1] == MCPermutation[0].first && labelsRecoChi2WDeltaRJets1B[0] == MCPermutation[1].first) ) )
       {
         nofCorrectlyMatched_chi2WDeltaRJets1B[0]++;
         if ( selectedJets.size() == 4 ) nofCorrectlyMatched_chi2WDeltaRJets1B[1]++;
@@ -1345,7 +1339,7 @@ int main(int argc, char* argv[])
   
   
   cout << "---------(Attempt at) Best Combination---------" << endl;
-  cout << "Use Chi2W when exactly 4 jets && Chi2W1B when more than 4 jets" << endl;
+  cout << "Use Chi2DeltaRJets when exactly 4 jets && Chi2DeltaRW1B when more than 4 jets" << endl;
   cout << "Used W mass:   " << chi2WMass << "; sigma: " << sigmaChi2WMass << endl;
   cout << "Correctly matched:     " << setw(8) << right << nofCorrectlyMatched_comb << endl;
   cout << "Not correctly matched: " << setw(8) << right << nofNotCorrectlyMatched_comb << endl;

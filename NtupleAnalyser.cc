@@ -43,6 +43,9 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
+bool applyWidthSF = false;
+float scaleWidth = 2.;
+
 string systStr = "nominal";
 string whichDate(string syst)
 {
@@ -74,6 +77,10 @@ float CSVv2Loose =  0.460;
 float CSVv2Medium = 0.800;
 float CSVv2Tight = 0.935;
 
+/// Top width
+double genTopWidth = 1.33; // from fit
+double genTopMass = 172.5; // from fit
+
 // Temporarily, until calculated from TTbar sample
 float chi2WMass = 80.385;
 float sigmaChi2WMass = 10;
@@ -82,7 +89,7 @@ float sigmaChi2TopMass = 40;
 
 // Average top mass
 // TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongJets, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
-float aveTopMass[] = {166.931, 168.811, 183.648, 165.554, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+float aveTopMass[] = {166.931, 169.290, 183.759, 162.863, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -124,6 +131,8 @@ void ClearMatching();
 void ClearObjects();
 long GetNEvents(TTree* fChain, string var, bool isData);
 void GetHLTFraction(double* fractions);
+double BreitWigner(double topPT, double scale);
+double eventWeightCalculator(double topPT, double scale);
 //void DatasetPlotter(int nBins, float plotLow, float plotHigh, string sVarofinterest, string xmlNom, string TreePath, string pathPNG);
 //void MSPCreator (string pathPNG);
 //void TH2FPlotter (int nBinsX,float lowX, float highX, string sVarofinterestX );
@@ -264,11 +273,12 @@ TBranch        *b_nofEventsHLTv3;   //!
 TBranch        *b_nofSelEventsHLTv2;   //!
 TBranch        *b_nofSelEventsHLTv3;   //
 
-float scaleFactor;
+double scaleFactor, widthSF;
 vector<unsigned int> bJetId;
 double reco_hadWMass, reco_hadTopMass, reco_hadTopPt;
 double reco_minMlb, reco_ttbarMass, reco_dRLepB;
 double min_Mlb, dRLepB;
+double massForWidth;
 
 /// Define TLVs
 TLorentzVector muon, jet, mcpart;
@@ -340,6 +350,7 @@ int main(int argc, char* argv[])
   
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
+  if ( applyWidthSF && scaleWidth != 1 ) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   
   
   /// xml file
@@ -718,6 +729,20 @@ int main(int argc, char* argv[])
         
         }  // end doMatching
         
+        
+        /////////////////////////////////////////
+        ///  Scale factor ttbar sample width  ///
+        /////////////////////////////////////////
+        
+        if (applyWidthSF)
+        {
+          if ( muon_charge > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
+          else if ( muon_charge < 0 ) massForWidth = (mcParticles[topQuark]).M();
+          
+          widthSF = eventWeightCalculator(massForWidth, scaleWidth);
+          
+        }  // end applyWidthSF
+        
       }  // end if TT
       
       
@@ -871,9 +896,9 @@ int main(int argc, char* argv[])
       
       if ( dataSetName.find("TT") == 0 && all4PartonsMatched )
       {
-        if ( labelsReco[0] == MCPermutation[0].first 
-            && ( (labelsReco[1] == MCPermutation[1].first && labelsReco[2] == MCPermutation[2].first) 
-              || (labelsReco[1] == MCPermutation[2].first && labelsReco[2] == MCPermutation[1].first) ) ) // correct jets, correct permutation
+        if ( ( (labelsReco[0] == MCPermutation[0].first && labelsReco[1] == MCPermutation[1].first) 
+            || (labelsReco[0] == MCPermutation[1].first && labelsReco[1] == MCPermutation[0].first) )
+            && labelsReco[2] == MCPermutation[2].first ) // correct jets, correct permutation
         {
           nofCorrectlyMatched_chi2++;
           if (calculateAverageMass) txtMassRecoMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
@@ -1609,6 +1634,7 @@ void ClearLeaves()
   muonTrigSFv3[1] = 1.;
   
   scaleFactor = 1.;
+  widthSF = 1.;
   bJetId.clear();
   reco_hadWMass = -1.;
   reco_hadTopMass = -1.;
@@ -1618,6 +1644,7 @@ void ClearLeaves()
   reco_dRLepB = -1.;
   min_Mlb = 9999.;
   dRLepB = -1.;
+  massForWidth = 0.01;
 }
 
 void ClearTLVs()
@@ -1695,5 +1722,21 @@ void GetHLTFraction(double* fractions)
   
   fileHLT->Close();
   ClearMetaData();
+}
+
+double BreitWigner(double topMass, double scale)
+{
+  double BWmass = genTopMass;
+  double BWgamma = scale*genTopWidth;
+  double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
+  double numerator = 2*sqrt(2)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
+  double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(BWmass*BWgamma, 2);
+  
+  return numerator/denominator;
+}
+
+double eventWeightCalculator(double topMass, double scale)
+{
+  return BreitWigner(topMass, scale)/BreitWigner(topMass, 1);
 }
 
