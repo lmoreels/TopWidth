@@ -108,6 +108,7 @@ Double_t voigt(Double_t *x, Double_t *par) {
 // Crystal Ball
 Double_t crysBall(Double_t *x, Double_t *par) {
   // params: alpha, n, sigma, mu
+  if ( par[2] < 0. ) return 0.;
   Double_t alpha = fabs(par[0]);
   Double_t A = pow( par[1]/alpha , par[1]) * exp(-alpha*alpha/2.);
   Double_t B = par[1]/alpha - alpha;
@@ -116,12 +117,33 @@ Double_t crysBall(Double_t *x, Double_t *par) {
   Double_t N = 1/(par[2]*(C+D));
   
   Double_t ref = (x[0] - par[3])/par[2];  // (x-mean)/sigma
+  if ( par[0] < 0 ) ref = -ref;
   Double_t fitfunc = N;
-  if ( ref > -par[0] ) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -par[0] ) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
+  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
   return fitfunc*par[4];
 }
 
+//double crystalball_function(double x, double alpha, double n, double sigma, double mean) {
+//  // evaluate the crystal ball function
+//  if (sigma < 0.)     return 0.;
+//  double z = (x - mean)/sigma; 
+//  if (alpha < 0) z = -z; 
+//  double abs_alpha = std::abs(alpha);
+//  // double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
+//  // double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+//  // double N = 1./(sigma*(C+D));
+//  if (z  > - abs_alpha)
+//    return std::exp(- 0.5 * z * z);
+//  else {
+//    //double A = std::pow(n/abs_alpha,n) * std::exp(-0.5*abs_alpha*abs_alpha);
+//    double nDivAlpha = n/abs_alpha;
+//    double AA =  std::exp(-0.5*abs_alpha*abs_alpha);
+//    double B = nDivAlpha -abs_alpha;
+//    double arg = nDivAlpha/(B-z);
+//    return AA * std::pow(arg,n);
+//  }
+//}
 
 int main (int argc, char *argv[])
 {
