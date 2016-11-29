@@ -88,7 +88,7 @@ float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 // Average top mass
-// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongJets, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
 float aveTopMass[] = {166.931, 169.290, 183.759, 162.863, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
 
 // Normal Plots (TH1F* and TH2F*)
@@ -105,7 +105,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
-ofstream txtMassGenMatched, txtMassRecoMatched, txtMassRecoNotMatched, txtMassRecoWrongPerm, txtMassRecoWrongJets, txtMassReco;
+ofstream txtMassGenMatched, txtMassRecoMatched, txtMassRecoNotMatched, txtMassRecoWrongPerm, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -474,7 +474,6 @@ int main(int argc, char* argv[])
         txtMassRecoMatched.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
         txtMassRecoNotMatched.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
         txtMassRecoWrongPerm.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
-        txtMassRecoWrongJets.open(("averageMass/mass_reco_wrongJets_TT_"+dateString+".txt").c_str());
       }
       txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
     }
@@ -667,7 +666,7 @@ int main(int argc, char* argv[])
             float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
             float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
             
-            if (calculateAverageMass) txtMassGenMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << matchedTopMass_gen << endl;
+            if (calculateAverageMass) txtMassGenMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << endl;
             
             if (! test && ! calculateAverageMass)
             {
@@ -675,7 +674,7 @@ int main(int argc, char* argv[])
               histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco);
               histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen);
               
-              histo1D["mTop_div_aveMTop_TT_matched_reco"]->Fill(matchedTopMass_reco/aveTopMass[0]);
+              histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[0]);
               
               if ( all4JetsMatched_MCdef_ )
               {
@@ -811,11 +810,11 @@ int main(int argc, char* argv[])
           MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
           
           MSPlot["Chi2_mTop_div_aveMTopMatch"]->Fill(reco_hadTopMass/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[5], datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[13], datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[4], datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[12], datasets[d], true, Luminosity*scaleFactor);
           
-          if (isData) histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[12]);
-          else histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+4]);
+          if (isData) histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[11]);
+          else histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+3]);
           
           if (hasExactly4Jets)
           {
@@ -894,45 +893,44 @@ int main(int argc, char* argv[])
       ///  CHECK MATCHED COMBINATION  ///
       ///////////////////////////////////
       
+      ///
+      // 3 possibilities:
+      // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
+      // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
+      // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
+      
+      
       if ( dataSetName.find("TT") == 0 && all4PartonsMatched )
       {
-        if ( ( (labelsReco[0] == MCPermutation[0].first && labelsReco[1] == MCPermutation[1].first) 
-            || (labelsReco[0] == MCPermutation[1].first && labelsReco[1] == MCPermutation[0].first) )
-            && labelsReco[2] == MCPermutation[2].first ) // correct jets, correct permutation
+        if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
         {
           nofCorrectlyMatched_chi2++;
           if (calculateAverageMass) txtMassRecoMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
           else
           {
             histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
-            histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
+            histo1D["mTop_div_aveMTop_TT_corr_match_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
           }
-        }
-        else
+        }  // end corr match
+        else  // wrong permutation
         {
           nofNotCorrectlyMatched_chi2++;
-          if (calculateAverageMass) txtMassRecoNotMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+          if (calculateAverageMass) txtMassRecoWrongPerm << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
           else
           {
             histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
-            histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[2]);
+            histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"]->Fill(reco_hadTopMass/aveTopMass[3]);
           }
-          
-          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) ) // correct jets, wrong permutation
-          {
-            if (calculateAverageMass) txtMassRecoWrongPerm << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[3]);
-          }
-          else // wrong jets
-          {
-            if (calculateAverageMass) txtMassRecoWrongJets << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"]->Fill(reco_hadTopMass/aveTopMass[4]);
-          }
-        }
+        }  // end wrong perm
       }
+      else if ( dataSetName.find("TT") == 0 && ! all4PartonsMatched )  // no match
+      {
+        if (calculateAverageMass) txtMassRecoNotMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+        else histo1D["mTop_div_aveMTop_TT_no_match_reco"]->Fill(reco_hadTopMass/aveTopMass[2]);
+      }  // end no match
       else if (! isData && dataSetName.find("TT") != 0  && ! calculateAverageMass)
       {
-        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[13]);
+        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[12]);
       }
       
       
@@ -1038,7 +1036,6 @@ int main(int argc, char* argv[])
         txtMassRecoMatched.close();
         txtMassRecoNotMatched.close();
         txtMassRecoWrongPerm.close();
-        txtMassRecoWrongJets.close();
       }
       
     }  // end TT
@@ -1069,7 +1066,7 @@ int main(int argc, char* argv[])
   {
     sumJER += vJER[d];
     sumJES += vJES[d];
-    sumPU += vPU[d];
+    sumPU  += vPU[d];
   }
   
   if ( sumJER == 0 && sumJES == 0 && sumPU == 0 )
@@ -1422,11 +1419,10 @@ void InitHisto1D()
   histo1D["dR_lep_b_reco_and_wrong_match_chi2"]  = new TH1F("dR_lep_b_reco_and_wrong_match_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 differs from matching); #Delta R(l,b)", 25, 0, 5);
   
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_matched_reco"] = new TH1F("mTop_div_aveMTop_TT_matched_reco","Top mass divided by average top mass for matched TT sample (reco); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_corr_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and correct match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_wrong_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_match_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: correct jets, wrong permutation); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_wrong_jets_match_chi2_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_jets_chi2_reco","Top mass divided by average top mass for matched TT sample (reco via chi2 and wrong match: wrong jets); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_corr_match_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_reco","Top mass divided by average top mass for matched TT sample (reco and correct top match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_no_match_reco"] = new TH1F("mTop_div_aveMTop_TT_no_match_reco","Top mass divided by average top mass for unmatched TT sample (reco and no top match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_match_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation); M_{t}/<M_{t}>", 200, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);

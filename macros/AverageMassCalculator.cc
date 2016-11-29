@@ -10,10 +10,10 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "161124_1303";
+string inputDate = "161129_1425";
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongJets_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -77,7 +77,7 @@ int main()
       sumW += massW;
       sumTop += massTop;
       
-      if ( iFile > 4 && iFile < nInputs-1) // reco
+      if ( iFile > 3 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
         sumWAllMC += massW;
@@ -93,9 +93,9 @@ int main()
     
     
     /// Store mean in file
-    if ( iFile > 5 )
+    if ( iFile > 4 )
     {
-      thisDataSet = dataSetNames[iFile-5];
+      thisDataSet = dataSetNames[iFile-4];
     }
     else if ( iFile == 0 )
     {
@@ -114,10 +114,6 @@ int main()
       thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
     }
     else if ( iFile == 4 )
-    {
-      thisDataSet = dataSetNames[0]+"_reco_wrongJets";
-    }
-    else if ( iFile == 5 )
     {
       thisDataSet = dataSetNames[0]+"_reco";
     }
