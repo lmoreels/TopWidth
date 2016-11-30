@@ -26,13 +26,13 @@ string systStr = "nominal";
 
 string whichDate(string syst)
 {
-  if ( syst.find("nominal") == 0 ) return "161124_1329/NtuplePlots_nominal.root";
+  if ( syst.find("nominal") == 0 ) return "161130_1508/NtuplePlots_nominal.root";
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return "161124_1329/NtuplePlots_nominal.root";
+    return "161130_1508/NtuplePlots_nominal.root";
   }
 }
 
@@ -88,10 +88,10 @@ Double_t lorentzian(Double_t *x,Double_t *par) {
 // Sum of gaussian and lorentzian
 // par[0] = scale; par[1] = mean gaus & lorentz; par[2] = sigma gaus; par[3] = width lorentz
 Double_t voigt(Double_t *x, Double_t *par) {
-  Double_t arg_g = 0;
-  if ( par[2] != 0 ) arg_g = (x[0] - par[1])/par[2];
-  Double_t gaus = TMath::Exp(-0.5*arg_g*arg_g);
-  if ( par[2] != 0 ) gaus = gaus/(par[2]*sqrt(2*TMath::Pi()));
+  if ( par[2] <= 0. ) return 0.;
+  if ( par[3] <= 0. ) return 0.;
+  Double_t arg_g = (x[0] - par[1])/par[2];
+  Double_t gaus = TMath::Exp(-0.5*arg_g*arg_g)/(par[2]*sqrt(2*TMath::Pi()));
   
   Double_t arg_l = par[3]/2.;
   Double_t arg_lx = x[0]-par[1];
@@ -105,7 +105,7 @@ Double_t voigt(Double_t *x, Double_t *par) {
 // Crystal Ball
 Double_t crysBall(Double_t *x, Double_t *par) {
   // params: alpha, n, sigma, mu
-  if ( par[2] < 0. ) return 0.;
+  if ( par[2] <= 0. ) return 0.;
   Double_t alpha = fabs(par[0]);
   Double_t A = pow( par[1]/alpha , par[1]) * exp(-alpha*alpha/2.);
   Double_t B = par[1]/alpha - alpha;
@@ -139,7 +139,7 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_reco", 1}, {"mTop_div_aveMTop_TT_corr_match_chi2_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_chi2_reco", 1}, {"mTop_div_aveMTop_TT_wrong_match_chi2_reco", 0}, {"mTop_div_aveMTop_TT_wrong_jets_chi2_reco", 0} };
+  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 0} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
@@ -160,10 +160,10 @@ int main (int argc, char *argv[])
   {
     //if (! fin->GetListOfKeys()->Contains(("1D_histograms/"+histoNames[iHisto]).c_str()) )  // does not work for histograms in dir
     //{
-      //cout << " *** Histogram " << histoNames[iHisto] << " does not exist... Proceeding to next histogram..." << endl;
+      //cout << "*** Histogram " << histoNames[iHisto] << " does not exist... Proceeding to next histogram..." << endl;
       //continue;
     //}
-    cout << " *** Processing histogram " << histoNames[iHisto].first << endl;
+    cout << "*** Processing histogram " << histoNames[iHisto].first << endl;
     
     /// Get histos
     TH1F* histo = (TH1F*) fin->Get((histDir+histoNames[iHisto].first).c_str());
@@ -194,13 +194,14 @@ int main (int argc, char *argv[])
     }
     else
     {
-      myfit = new TF1("fit", crysBall, 0.6, 2., nPar);  // root name, fit function, range, nPar
+      myfit = new TF1("fit", crysBall, 0.6, 2.2, nPar);  // root name, fit function, range, nPar
       
       myfit->SetParNames("alpha","n","#sigma","#mu","norm");
-      myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 1.);   // wrong match
+      myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 1.);
       
-      myfit->SetParLimits(2,0.00001,1.e+3);
-      myfit->SetParLimits(3, 0.74, 0.86);
+      myfit->SetParLimits(1, 0.001, 50);
+      myfit->SetParLimits(2, 1.e-3, 1.e+3);
+      myfit->SetParLimits(3, 0.74, 0.92);
     }
     
     
