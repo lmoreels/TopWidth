@@ -1419,10 +1419,10 @@ void InitHisto1D()
   histo1D["dR_lep_b_reco_and_wrong_match_chi2"]  = new TH1F("dR_lep_b_reco_and_wrong_match_chi2","Minimal delta R between the lepton and a b jet (where jet combination chi2 differs from matching); #Delta R(l,b)", 25, 0, 5);
   
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_corr_match_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_reco","Top mass divided by average top mass for matched TT sample (reco and correct top match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_no_match_reco"] = new TH1F("mTop_div_aveMTop_TT_no_match_reco","Top mass divided by average top mass for unmatched TT sample (reco and no top match); M_{t}/<M_{t}>", 200, 0.4, 2.4);
-  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_match_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation); M_{t}/<M_{t}>", 200, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 400, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_corr_match_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_reco","Top mass divided by average top mass for matched TT sample (reco and correct top match); M_{t}/<M_{t}>", 400, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_no_match_reco"] = new TH1F("mTop_div_aveMTop_TT_no_match_reco","Top mass divided by average top mass for unmatched TT sample (reco and no top match); M_{t}/<M_{t}>", 400, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_match_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation); M_{t}/<M_{t}>", 400, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);
