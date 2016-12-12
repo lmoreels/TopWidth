@@ -65,6 +65,7 @@ string pathNtuples = "";
 bool isData = false;
 
 int nofMatchedEvents = 0;
+int nofHadrMatchedEvents = 0;
 int nofChi2First4 = 0;
 int nofCorrectlyMatched_chi2 = 0;
 int nofNotCorrectlyMatched_chi2 = 0;
@@ -87,9 +88,16 @@ float sigmaChi2WMass = 10;
 float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
-// Average top mass
-// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
-float aveTopMass[] = {166.931, 169.290, 183.759, 162.863, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+/// Average top mass
+// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+/// no cut on chi2
+//float aveTopMass[] = {166.933, 168.223, 205.082, 184.624, 201.813, 175.303, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+/// cut: chi2 < 2
+float aveTopMass[] = {166.933, 167.531, 192.382, 183.662, 200.401, 174.695, 190.354, 217.753, 214.542, 210.731, 212.884, 200.177, 184.198, 192.049, 190.539};
+/// cut: chi2 < 4
+//float aveTopMass[] = {166.933, 167.876, 195.023, 184.251, 201.242, 175.062, 192.004, 221.724, 218.145, 212.657, 214.665, 201.905, 189.114, 193.777, 192.206};
+/// cut: chi2 < 5
+//float aveTopMass[] = {166.933, 167.963, 195.902, 184.367, 201.420, 175.136, 192.538, 223.597, 219.594, 213.119, 215.540, 202.621, 189.915, 194.406, 192.748};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -105,7 +113,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
-ofstream txtMassGenMatched, txtMassRecoMatched, txtMassRecoNotMatched, txtMassRecoWrongPerm, txtMassReco;
+ofstream txtMassGenMatched, txtMassRecoMatched, txtMassRecoNotMatched, txtMassRecoWrongPerm, txtMassRecoWrongPermWOk, txtMassRecoWrongPermWNotOk, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -298,7 +306,8 @@ int pdgID_top = 6; //top quark
 bool doMatching = true;
 bool all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
 bool all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
-bool hadronictopJetsMatched_MCdef_ = false;
+bool hadronicTopJetsMatched = false;
+bool hadronicTopJetsMatched_MCdef_ = false;
 pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
@@ -474,6 +483,8 @@ int main(int argc, char* argv[])
         txtMassRecoMatched.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
         txtMassRecoNotMatched.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
         txtMassRecoWrongPerm.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
+        txtMassRecoWrongPermWOk.open(("averageMass/mass_reco_wrongPerm_WOk_TT_"+dateString+".txt").c_str());
+        txtMassRecoWrongPermWNotOk.open(("averageMass/mass_reco_wrongPerm_WNotOk_TT_"+dateString+".txt").c_str());
       }
       txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
     }
@@ -658,10 +669,11 @@ int main(int argc, char* argv[])
               //if (electronmatched) tf->fillElectron(...)
 
             }  // end tf
-            
-            
-            
-            /// Plot variables for matched events
+          }
+          
+          /// Plot variables for matched events
+          if (hadronicTopJetsMatched)
+          {  
             float matchedWMass_reco = (jetsMatched[0] + jetsMatched[1]).M();
             float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
             float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
@@ -676,7 +688,7 @@ int main(int argc, char* argv[])
               
               histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[0]);
               
-              if ( all4JetsMatched_MCdef_ )
+              if ( hadronicTopJetsMatched_MCdef_ )
               {
                 histo1D["W_mass_reco_first4matched"]->Fill(matchedWMass_reco);
                 histo1D["top_mass_reco_first4matched"]->Fill(matchedTopMass_reco);
@@ -689,7 +701,7 @@ int main(int argc, char* argv[])
                 histo1D["top_mass_gen_matched_4jets"]->Fill(matchedTopMass_gen);
               }
               
-              if (muonmatched)
+              if (all4PartonsMatched && muonmatched)
               {
                 float matchedMlb_corr = (selectedLepton[0] + jetsMatched[3]).M();  // lept b
                 float matchedMlb_wrong = (selectedLepton[0] + jetsMatched[2]).M();  // hadr b
@@ -720,11 +732,11 @@ int main(int argc, char* argv[])
                   histo1D["dR_lep_b_matched_wrong_4jets"]->Fill(matchedDRLepB_wrong);
                 }
                 
-              }  // end muonMatched
+              }  // end all4PartonsMatched && muonMatched
               
             }  // end fill plots
 
-          }  // end all4PartonsMatched
+          }  // end hadronicTopJetsMatched
         
         }  // end doMatching
         
@@ -771,6 +783,7 @@ int main(int argc, char* argv[])
           }
         }
       }
+      if ( smallestChi2 > 2 ) continue;
       
       WCandidate = selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]];
       for (int kjet = 0; kjet < selectedJets.size(); kjet++)
@@ -810,11 +823,11 @@ int main(int argc, char* argv[])
           MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
           
           MSPlot["Chi2_mTop_div_aveMTopMatch"]->Fill(reco_hadTopMass/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[4], datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[12], datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[6], datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[14], datasets[d], true, Luminosity*scaleFactor);
           
-          if (isData) histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[11]);
-          else histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+3]);
+          if (isData) histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[13]);
+          else histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+5]);
           
           if (hasExactly4Jets)
           {
@@ -900,7 +913,7 @@ int main(int argc, char* argv[])
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
       
-      if ( dataSetName.find("TT") == 0 && all4PartonsMatched )
+      if ( dataSetName.find("TT") == 0 && hadronicTopJetsMatched )
       {
         if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
         {
@@ -921,6 +934,17 @@ int main(int argc, char* argv[])
             histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
             histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"]->Fill(reco_hadTopMass/aveTopMass[3]);
           }
+          
+          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
+          {
+            if (calculateAverageMass) txtMassRecoWrongPermWOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+            else histo1D["mTop_div_aveMTop_TT_wrong_perm_WOk_reco"]->Fill(reco_hadTopMass/aveTopMass[4]);
+          }
+          else
+          {
+            if (calculateAverageMass) txtMassRecoWrongPermWNotOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+            else histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"]->Fill(reco_hadTopMass/aveTopMass[5]);
+          }
         }  // end wrong perm
       }
       else if ( dataSetName.find("TT") == 0 && ! all4PartonsMatched )  // no match
@@ -930,7 +954,7 @@ int main(int argc, char* argv[])
       }  // end no match
       else if (! isData && dataSetName.find("TT") != 0  && ! calculateAverageMass)
       {
-        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[12]);
+        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[14]);
       }
       
       
@@ -1009,8 +1033,9 @@ int main(int argc, char* argv[])
     if ( dataSetName.find("TT") == 0 )
     {
       cout << "Number of matched events: " << nofMatchedEvents << endl;
-      cout << "Correctly matched for chi2Free:     " << setw(8) << right << nofCorrectlyMatched_chi2 << endl;
-      cout << "Not correctly matched for chi2Free: " << setw(8) << right << nofNotCorrectlyMatched_chi2 << endl;
+      cout << "Number of events with hadronic top matched: " << nofHadrMatchedEvents << endl;
+      cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched_chi2 << endl;
+      cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched_chi2 << endl;
       if ( nofCorrectlyMatched_chi2 != 0 || nofNotCorrectlyMatched_chi2 != 0 )
         cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched_chi2 / (float)(nofCorrectlyMatched_chi2 + nofNotCorrectlyMatched_chi2) << "% is correctly matched." << endl;
       
@@ -1036,6 +1061,8 @@ int main(int argc, char* argv[])
         txtMassRecoMatched.close();
         txtMassRecoNotMatched.close();
         txtMassRecoWrongPerm.close();
+        txtMassRecoWrongPermWOk.close();
+        txtMassRecoWrongPermWNotOk.close();
       }
       
     }  // end TT
@@ -1350,14 +1377,14 @@ void InitMSPlots()
   
   
   /// Chi2
-  MSPlot["Chi2_value"] = new MultiSamplePlot(datasets, "Chi2_value", 200, 0, 200, "#chi^{2} value");
-  MSPlot["Chi2_W_mass"] = new MultiSamplePlot(datasets, "Chi2_W_mass", 40, 0, 800, "M_{W} [GeV]");
-  MSPlot["Chi2_hadTop_mass"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass", 40, 0, 800, "M_{t} [GeV]");
-  MSPlot["Chi2_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_4jets", 40, 0, 800, "M_{t} [GeV]");
-  MSPlot["Chi2_hadTop_pT"] = new MultiSamplePlot(datasets, "Chi2_hadTop_pT", 40, 0, 800, "p_{T} [GeV]");
+  MSPlot["Chi2_value"] = new MultiSamplePlot(datasets, "Chi2_value", 800, 0, 200, "#chi^{2} value");
+  MSPlot["Chi2_W_mass"] = new MultiSamplePlot(datasets, "Chi2_W_mass", 100, 0, 400, "M_{W} [GeV]");
+  MSPlot["Chi2_hadTop_mass"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass", 80, 0, 800, "M_{t} [GeV]");
+  MSPlot["Chi2_hadTop_mass_4jets"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_4jets", 80, 0, 800, "M_{t} [GeV]");
+  MSPlot["Chi2_hadTop_pT"] = new MultiSamplePlot(datasets, "Chi2_hadTop_pT", 80, 0, 800, "p_{T} [GeV]");
   
-  MSPlot["Chi2_mlb"] = new MultiSamplePlot(datasets, "Chi2_mlb", 40, 0, 800, "M_{lb} [GeV]");
-  MSPlot["Chi2_mlb_4jets"] = new MultiSamplePlot(datasets, "Chi2_mlb_4jets", 40, 0, 800, "M_{lb} [GeV]");
+  MSPlot["Chi2_mlb"] = new MultiSamplePlot(datasets, "Chi2_mlb", 80, 0, 800, "M_{lb} [GeV]");
+  MSPlot["Chi2_mlb_4jets"] = new MultiSamplePlot(datasets, "Chi2_mlb_4jets", 80, 0, 800, "M_{lb} [GeV]");
 
   MSPlot["Chi2_hadTop_mass_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
   MSPlot["Chi2_hadTop_mass_4jets_mlb_cut"] = new MultiSamplePlot(datasets, "Chi2_hadTop_mass_4jets_mlb_cut", 40, 0, 800, "M_{t} [GeV]");
@@ -1423,6 +1450,8 @@ void InitHisto1D()
   histo1D["mTop_div_aveMTop_TT_corr_match_reco"] = new TH1F("mTop_div_aveMTop_TT_corr_match_reco","Top mass divided by average top mass for matched TT sample (reco and correct top match); M_{t}/<M_{t}>", 400, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_TT_no_match_reco"] = new TH1F("mTop_div_aveMTop_TT_no_match_reco","Top mass divided by average top mass for unmatched TT sample (reco and no top match); M_{t}/<M_{t}>", 400, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_match_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation); M_{t}/<M_{t}>", 400, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_WOk_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_WOk_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation, W jets correct); M_{t}/<M_{t}>", 400, 0.4, 2.4);
+  histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"] = new TH1F("mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco","Top mass divided by average top mass for matched TT sample (reco and wrong top match: wrong permutation, W jets not correct); M_{t}/<M_{t}>", 400, 0.4, 2.4);
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 50, 0, 2);
   histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 50, 0, 2);
@@ -1527,9 +1556,15 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
       all4JetsMatched_MCdef_ = true;
   }
   else if (verbose > 3) cout << "Size JetPartonPair: " << JetPartonPair.size() << ". Not all partons matched!" << endl;
-
-  if ( MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 )
-    hadronictopJetsMatched_MCdef_ = true;
+  
+  if ( MCPermutation[0].first != 9999 && MCPermutation[1].first != 9999 && MCPermutation[2].first != 9999 )
+  {
+    hadronicTopJetsMatched = true;
+    nofHadrMatchedEvents++;
+    if ( MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 )
+      hadronicTopJetsMatched_MCdef_ = true;
+  }
+  
   if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
     muonmatched = true;
 }
@@ -1556,6 +1591,7 @@ void ClearMetaData()
   strSyst = "";
   
   nofMatchedEvents = 0;
+  nofHadrMatchedEvents = 0;
   nofChi2First4 = 0;
   nofCorrectlyMatched_chi2 = 0;
   nofNotCorrectlyMatched_chi2 = 0;
@@ -1668,7 +1704,8 @@ void ClearMatching()
   doMatching = true;
   all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are matched to 4 jets (not necessarily the 4 highest pt jets)
   all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
-  hadronictopJetsMatched_MCdef_ = false;
+  hadronicTopJetsMatched = false;
+  hadronicTopJetsMatched_MCdef_ = false;
   for (int i = 0; i < 4; i++)
   {
     MCPermutation[i] = pair<unsigned int,unsigned int>(9999,9999);
