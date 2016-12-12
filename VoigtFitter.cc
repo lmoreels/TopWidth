@@ -26,13 +26,13 @@ string systStr = "nominal";
 
 string whichDate(string syst)
 {
-  if ( syst.find("nominal") == 0 ) return "161130_1508/NtuplePlots_nominal.root";
+  if ( syst.find("nominal") == 0 ) return "161212_1106/NtuplePlots_nominal.root";
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return "161130_1508/NtuplePlots_nominal.root";
+    return "161212_1106/NtuplePlots_nominal.root";
   }
 }
 
@@ -214,25 +214,31 @@ int main (int argc, char *argv[])
     histo->Write();
     myfit->Write();
     
+    
+    TCanvas* c1 = new TCanvas("c1", "Fit function expanded");
+    c1->cd();
+    histo->SetLineColor(kBlue);
+    histo->Draw();
+    
+    TF1 *func;
     if ( histoNames[iHisto].second == 0 )
-    {
-      TCanvas* c1 = new TCanvas("c1", "Fit function expanded");
-      c1->cd();
-      histo->SetLineColor(kBlue);
-      histo->Draw();
-      
-      TF1 *fcb = new TF1("fcb", crysBall, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
-      fcb->SetParameters(myfit->GetParameter(0), myfit->GetParameter(1), myfit->GetParameter(2), myfit->GetParameter(3), myfit->GetParameter(4));
-      fcb->SetLineColor(kRed);
-      fcb->Draw("same");
-      c1->Update();
-      c1->Write();
-      c1->SaveAs((pathOutput+func_title+".png").c_str());
-      c1->Close();
-      
-      delete fcb;
-      delete c1;
+    {  
+      func = new TF1("fcb", crysBall, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
     }
+    else if ( histoNames[iHisto].second == 1 )
+    {
+      func = new TF1("func", voigt, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
+    }
+    func->SetParameters(myfit->GetParameter(0), myfit->GetParameter(1), myfit->GetParameter(2), myfit->GetParameter(3), myfit->GetParameter(4));
+    func->SetLineColor(kRed);
+    func->Draw("same");
+    c1->Update();
+    c1->Write();
+    c1->SaveAs((pathOutput+func_title+".png").c_str());
+    c1->Close();
+
+    delete func;
+    delete c1;
     
     delete myfit;
     
