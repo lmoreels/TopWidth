@@ -23,16 +23,18 @@ using namespace std;
 
 
 string systStr = "nominal";
+string suffix = "";
 
 string whichDate(string syst)
 {
-  if ( syst.find("nominal") == 0 ) return "161212_1106/NtuplePlots_nominal.root";
+  if ( syst.find("nominal") == 0 ) return "161213_1659/NtuplePlots_nominal.root";
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return "161212_1106/NtuplePlots_nominal.root";
+    suffix = "";
+    return "161212_1421/NtuplePlots_nominal.root";
   }
 }
 
@@ -146,7 +148,7 @@ int main (int argc, char *argv[])
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr);
   string pathOutput = "OutputVoigt/";
   mkdir(pathOutput.c_str(),0777);
-  string outputFileName = pathOutput+"VoigtFit_"+systStr+".root";
+  string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
   
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
@@ -234,7 +236,7 @@ int main (int argc, char *argv[])
     func->Draw("same");
     c1->Update();
     c1->Write();
-    c1->SaveAs((pathOutput+func_title+".png").c_str());
+    c1->SaveAs((pathOutput+func_title+suffix+".png").c_str());
     c1->Close();
 
     delete func;

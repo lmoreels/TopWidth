@@ -44,7 +44,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 2.;
+float scaleWidth = 2;
 
 string systStr = "nominal";
 string whichDate(string syst)
@@ -91,9 +91,9 @@ float sigmaChi2TopMass = 40;
 /// Average top mass
 // TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
 /// no cut on chi2
-//float aveTopMass[] = {166.933, 168.223, 205.082, 184.624, 201.813, 175.303, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+float aveTopMass[] = {166.933, 168.223, 205.082, 184.624, 201.813, 175.303, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
 /// cut: chi2 < 2
-float aveTopMass[] = {166.933, 167.531, 192.382, 183.662, 200.401, 174.695, 190.354, 217.753, 214.542, 210.731, 212.884, 200.177, 184.198, 192.049, 190.539};
+//float aveTopMass[] = {166.933, 167.531, 192.382, 183.662, 200.401, 174.695, 190.354, 217.753, 214.542, 210.731, 212.884, 200.177, 184.198, 192.049, 190.539};
 /// cut: chi2 < 4
 //float aveTopMass[] = {166.933, 167.876, 195.023, 184.251, 201.242, 175.062, 192.004, 221.724, 218.145, 212.657, 214.665, 201.905, 189.114, 193.777, 192.206};
 /// cut: chi2 < 5
@@ -783,7 +783,7 @@ int main(int argc, char* argv[])
           }
         }
       }
-      if ( smallestChi2 > 2 ) continue;
+      //if ( smallestChi2 > 2 ) continue;
       
       WCandidate = selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]];
       for (int kjet = 0; kjet < selectedJets.size(); kjet++)
@@ -913,46 +913,51 @@ int main(int argc, char* argv[])
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
       
-      if ( dataSetName.find("TT") == 0 && hadronicTopJetsMatched )
+      if ( dataSetName.find("TT") == 0 )
       {
-        if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+        if (! applyWidthSF ) widthSF = 1;
+        
+        if (hadronicTopJetsMatched)
         {
-          nofCorrectlyMatched_chi2++;
-          if (calculateAverageMass) txtMassRecoMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-          else
+          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
-            histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
-            histo1D["mTop_div_aveMTop_TT_corr_match_reco"]->Fill(reco_hadTopMass/aveTopMass[1]);
-          }
-        }  // end corr match
-        else  // wrong permutation
+            nofCorrectlyMatched_chi2++;
+            if (calculateAverageMass) txtMassRecoMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+            else
+            {
+              histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
+              histo1D["mTop_div_aveMTop_TT_corr_match_reco"]->Fill(reco_hadTopMass/aveTopMass[1], widthSF);
+            }
+          }  // end corr match
+          else  // wrong permutation
+          {
+            nofNotCorrectlyMatched_chi2++;
+            if (calculateAverageMass) txtMassRecoWrongPerm << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+            else
+            {
+              histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
+              histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"]->Fill(reco_hadTopMass/aveTopMass[3], widthSF);
+            }
+
+            if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
+            {
+              if (calculateAverageMass) txtMassRecoWrongPermWOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+              else histo1D["mTop_div_aveMTop_TT_wrong_perm_WOk_reco"]->Fill(reco_hadTopMass/aveTopMass[4], widthSF);
+            }
+            else
+            {
+              if (calculateAverageMass) txtMassRecoWrongPermWNotOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+              else histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
+            }
+          }  // end wrong perm
+        }  // end hadrTopMatch
+        else  // no match
         {
-          nofNotCorrectlyMatched_chi2++;
-          if (calculateAverageMass) txtMassRecoWrongPerm << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-          else
-          {
-            histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
-            histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"]->Fill(reco_hadTopMass/aveTopMass[3]);
-          }
-          
-          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
-          {
-            if (calculateAverageMass) txtMassRecoWrongPermWOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else histo1D["mTop_div_aveMTop_TT_wrong_perm_WOk_reco"]->Fill(reco_hadTopMass/aveTopMass[4]);
-          }
-          else
-          {
-            if (calculateAverageMass) txtMassRecoWrongPermWNotOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"]->Fill(reco_hadTopMass/aveTopMass[5]);
-          }
-        }  // end wrong perm
-      }
-      else if ( dataSetName.find("TT") == 0 && ! all4PartonsMatched )  // no match
-      {
-        if (calculateAverageMass) txtMassRecoNotMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-        else histo1D["mTop_div_aveMTop_TT_no_match_reco"]->Fill(reco_hadTopMass/aveTopMass[2]);
-      }  // end no match
-      else if (! isData && dataSetName.find("TT") != 0  && ! calculateAverageMass)
+          if (calculateAverageMass) txtMassRecoNotMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
+          else histo1D["mTop_div_aveMTop_TT_no_match_reco"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
+        }  // end no match
+      }  // end TT
+      else if (! isData && ! calculateAverageMass)
       {
         histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[14]);
       }
