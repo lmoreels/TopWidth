@@ -44,7 +44,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 2;
+float scaleWidth = 0.5;
 
 string systStr = "nominal";
 string whichDate(string syst)
@@ -633,7 +633,7 @@ int main(int argc, char* argv[])
         {
           TruthMatching(partons, selectedJets, MCPermutation);
           
-          if (all4PartonsMatched && test)
+          if (all4PartonsMatched && test && verbose > 3)
           {
             for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
             {
@@ -752,6 +752,7 @@ int main(int argc, char* argv[])
           
           widthSF = eventWeightCalculator(massForWidth, scaleWidth);
           
+          if ( widthSF != widthSF) continue;  // widthSF = NaN
         }  // end applyWidthSF
         
       }  // end if TT
@@ -799,6 +800,21 @@ int main(int argc, char* argv[])
           labelsReco[2] = kjet;
         }
       }
+      if ( selectedJets.size() > 4 && labelsReco[2] == -9999 )
+      {
+        for (int kjet = 0; kjet < selectedJets.size(); kjet++)
+        {
+          if ( kjet == labelsReco[0] || kjet == labelsReco[1] ) continue;
+
+          deltaR = ROOT::Math::VectorUtil::DeltaR(selectedJets[kjet], WCandidate);
+
+          if (deltaR < minDeltaR)
+          {
+            minDeltaR = deltaR;
+            labelsReco[2] = kjet;
+          }
+        }
+      }
       
       
       if ( labelsReco[0] < 4 && labelsReco[1] < 4 && labelsReco[2] < 4 )
@@ -836,11 +852,11 @@ int main(int argc, char* argv[])
           
           if ( dataSetName.find("TT") == 0 )
           {
-            histo1D["Chi2_W_mass_reco"]->Fill(reco_hadWMass);
-            histo1D["Chi2_top_mass_reco"]->Fill(reco_hadTopMass);
+            histo1D["Chi2_W_mass_reco"]->Fill(reco_hadWMass, widthSF);
+            histo1D["Chi2_top_mass_reco"]->Fill(reco_hadTopMass, widthSF);
             if (hasExactly4Jets)
             {
-              histo1D["Chi2_top_mass_reco_4jets"]->Fill(reco_hadTopMass);
+              histo1D["Chi2_top_mass_reco_4jets"]->Fill(reco_hadTopMass, widthSF);
             }
           }
           
@@ -872,7 +888,7 @@ int main(int argc, char* argv[])
             MSPlot["Chi2_dR_lep_b"]->Fill(reco_dRLepB, datasets[d], true, Luminosity*scaleFactor);
             if ( dataSetName.find("TT") == 0 )
             {
-              histo1D["dR_lep_b_unmatched_chi2"]->Fill(reco_dRLepB);
+              histo1D["dR_lep_b_unmatched_chi2"]->Fill(reco_dRLepB, widthSF);
             }
             
             if (hasExactly4Jets)
@@ -915,17 +931,26 @@ int main(int argc, char* argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        if (! applyWidthSF ) widthSF = 1;
+        if (! applyWidthSF ) widthSF = 1.;
+        //if (test) cout << "Reco done, about to check match..." << endl;
         
         if (hadronicTopJetsMatched)
-        {
+        { 
+          if ( test && reco_hadTopMass == -1 )
+          {
+            cout << "Event: " << ievt << "; mass for width: " << massForWidth << ";  widthSF " << widthSF << endl;
+            cout << "Size selectedJets:  " << selectedJets.size() << endl;
+            cout << "Labels MCParticles: " << MCPermutation[0].first << "  " << MCPermutation[1].first << "  " << MCPermutation[2].first << endl;
+            cout << "Labels jets:        " << labelsReco[0] << "  " << labelsReco[1] << "  " << labelsReco[2] << endl;
+          }
+          
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
             nofCorrectlyMatched_chi2++;
             if (calculateAverageMass) txtMassRecoMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else
+            else if (! test)
             {
-              histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB);
+              histo1D["dR_lep_b_reco_and_corr_match_chi2"]->Fill(reco_dRLepB, widthSF);
               histo1D["mTop_div_aveMTop_TT_corr_match_reco"]->Fill(reco_hadTopMass/aveTopMass[1], widthSF);
             }
           }  // end corr match
@@ -933,9 +958,9 @@ int main(int argc, char* argv[])
           {
             nofNotCorrectlyMatched_chi2++;
             if (calculateAverageMass) txtMassRecoWrongPerm << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-            else
+            else if (! test)
             {
-              histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB);
+              histo1D["dR_lep_b_reco_and_wrong_match_chi2"]->Fill(reco_dRLepB, widthSF);
               histo1D["mTop_div_aveMTop_TT_wrong_perm_match_reco"]->Fill(reco_hadTopMass/aveTopMass[3], widthSF);
             }
 
@@ -947,17 +972,20 @@ int main(int argc, char* argv[])
             else
             {
               if (calculateAverageMass) txtMassRecoWrongPermWNotOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-              else histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
+              else if (! test)
+                histo1D["mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
             }
           }  // end wrong perm
         }  // end hadrTopMatch
         else  // no match
         {
           if (calculateAverageMass) txtMassRecoNotMatched << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-          else histo1D["mTop_div_aveMTop_TT_no_match_reco"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
+          else if (! test)
+            histo1D["mTop_div_aveMTop_TT_no_match_reco"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
         }  // end no match
+        //if (test) cout << "checked match" << endl;
       }  // end TT
-      else if (! isData && ! calculateAverageMass)
+      else if (! isData && ! calculateAverageMass && ! test)
       {
         histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[14]);
       }
@@ -1003,7 +1031,7 @@ int main(int argc, char* argv[])
         MSPlot["dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity*scaleFactor);
         if ( dataSetName.find("TT") == 0 )
         {
-          histo1D["dR_lep_b_unmatched_all"]->Fill(dRLepB);
+          histo1D["dR_lep_b_unmatched_all"]->Fill(dRLepB, widthSF);
         }
         
         MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity*scaleFactor);
