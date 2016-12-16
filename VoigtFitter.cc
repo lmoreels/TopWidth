@@ -22,19 +22,26 @@
 using namespace std;
 
 
+bool usePredef = true;
 string systStr = "nominal";
 string suffix = "";
 
-string whichDate(string syst)
+string whichDate(string syst, string suff)
 {
-  if ( syst.find("nominal") == 0 ) return "161213_1659/NtuplePlots_nominal.root";
+  if ( syst.find("nominal") == 0 ) 
+  {
+    if ( suff.find("widthx2") != std::string::npos )        return "161215_1517/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p5") != std::string::npos ) return "161215_1542/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )   return "161216_1133/NtuplePlots_nominal.root";
+    else                                                    return "161215_1420/NtuplePlots_nominal.root";
+  }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "161212_1421/NtuplePlots_nominal.root";
+    return "161215_1420/NtuplePlots_nominal.root";
   }
 }
 
@@ -104,6 +111,28 @@ Double_t voigt(Double_t *x, Double_t *par) {
   //return gaussian(x,par) + lorentzian(x,&par[3]);
 }
 
+Double_t voigt_predef(Double_t *x, Double_t *par) {
+  // Computation of Voigt function (normalised).
+  // Voigt is a convolution of
+  // gauss(xx) = 1/(sqrt(2*pi)*sigma) * exp(xx*xx/(2*sigma*sigma)
+  // and
+  // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + g*g/4)
+  // functions.
+  //
+  // The Voigt function is known to be the real part of Faddeeva function also
+  // called complex error function [2].
+  //
+  // The algoritm was developed by J. Humlicek [1].
+  // This code is based on fortran code presented by R. J. Wells [2].
+  // Translated and adapted by Miha D. Puc
+  //
+  // To calculate the Faddeeva function with relative error less than 10^(-r).
+  // r can be set by the the user subject to the constraints 2 <= r <= 5.
+  
+  /// Voigt(x, sigma, lg, r)
+  return TMath::Voigt(x[0]-par[0], par[1], par[2], par[3])*par[4];
+}
+
 // Crystal Ball
 Double_t crysBall(Double_t *x, Double_t *par) {
   // params: alpha, n, sigma, mu
@@ -141,14 +170,15 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 0} };
+  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WOk_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 0} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
-  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr);
+  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr, suffix);
   string pathOutput = "OutputVoigt/";
   mkdir(pathOutput.c_str(),0777);
   string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
+  cout << "Output file: " << outputFileName << endl;
   
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
@@ -175,6 +205,18 @@ int main (int argc, char *argv[])
     Double_t scale = 1./histo->Integral();
     histo->Scale(scale);
     
+    float fitMin = -9., fitMax = -9.;
+    for (int iBin = 0; iBin < histo->GetNbinsX(); iBin++)
+    {
+      if ( fitMax != -9. ) break;
+      if ( fitMin != -9. && iBin < histo->GetXaxis()->FindBin(1.3) ) continue;
+      float binContent = histo->GetBinContent(iBin) - 1e-4;
+      if ( fitMin == -9. && binContent > 0.) fitMin = histo->GetXaxis()->GetBinCenter(iBin);
+      if ( fitMin != -9. && fitMax == -9. && binContent < 0. ) fitMax = histo->GetXaxis()->GetBinCenter(iBin);
+    }
+    if ( fitMin < 0.4 ) fitMin = 0.4;
+    if ( fitMax > 2.2 ) fitMax = 2.2;
+    cout << "Fit min = " << fitMin << "; fit Max = " << fitMax << endl;
     
     /// Declare fit function
     int nBins = histo->GetXaxis()->GetNbins();
@@ -184,25 +226,40 @@ int main (int argc, char *argv[])
     
     if ( histoNames[iHisto].second == 1 )
     {
-      myfit = new TF1("fit", voigt, 0.5, 2., nPar);  // root name, fit function, range, nPar
-      
-      myfit->SetParNames("ps","#mu","#sigma","#gamma","norm");
-      myfit->SetParameters(0.5, 1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
-      
-      myfit->SetParLimits(0,0.,1.);
-      myfit->SetParLimits(1,0.95,1.05);
-      myfit->SetParLimits(2,0.001,1.e+3);
-      myfit->SetParLimits(3,0.001,1.e+3);
+      if (usePredef)
+      {
+        myfit = new TF1("fit", voigt_predef, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
+        
+        myfit->SetParNames("#mu","#sigma","#gamma", "r", "norm");
+        myfit->SetParameters(1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 3., 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+        
+        myfit->SetParLimits(0, 0.95, 1.05);
+        myfit->SetParLimits(1, 1e-4, 1.e+3);
+        myfit->SetParLimits(2, 1e-4, 1.e+3);
+        myfit->SetParLimits(3, 2., 5.);
+      }
+      else
+      {
+        myfit = new TF1("fit", voigt, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
+        
+        myfit->SetParNames("ps","#mu","#sigma","#gamma","norm");
+        myfit->SetParameters(0.5, 1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+        
+        myfit->SetParLimits(0,0.,1.);
+        myfit->SetParLimits(1,0.95,1.05);
+        myfit->SetParLimits(2,1e-4,1.e+3);
+        myfit->SetParLimits(3,1e-4,1.e+3);
+      }
     }
     else
     {
-      myfit = new TF1("fit", crysBall, 0.6, 2.2, nPar);  // root name, fit function, range, nPar
+      myfit = new TF1("fit", crysBall, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
       
       myfit->SetParNames("alpha","n","#sigma","#mu","norm");
       myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 1.);
       
       myfit->SetParLimits(1, 0.001, 50);
-      myfit->SetParLimits(2, 1.e-3, 1.e+3);
+      myfit->SetParLimits(2, 1.e-4, 1.e+3);
       myfit->SetParLimits(3, 0.74, 0.92);
     }
     
@@ -217,7 +274,7 @@ int main (int argc, char *argv[])
     myfit->Write();
     
     
-    TCanvas* c1 = new TCanvas("c1", "Fit function expanded");
+    TCanvas* c1 = new TCanvas(func_title.c_str(), func_title.c_str());
     c1->cd();
     histo->SetLineColor(kBlue);
     histo->Draw();
@@ -229,7 +286,8 @@ int main (int argc, char *argv[])
     }
     else if ( histoNames[iHisto].second == 1 )
     {
-      func = new TF1("func", voigt, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
+      if (usePredef) func = new TF1("func", voigt_predef, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
+      else func = new TF1("func", voigt, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
     }
     func->SetParameters(myfit->GetParameter(0), myfit->GetParameter(1), myfit->GetParameter(2), myfit->GetParameter(3), myfit->GetParameter(4));
     func->SetLineColor(kRed);
