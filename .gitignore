@@ -38,3 +38,4 @@ testGenJets
 testSkims
 testTFs
 testWeights
+toys/*
