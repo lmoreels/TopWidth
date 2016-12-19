@@ -23,6 +23,7 @@ using namespace std;
 
 
 bool usePredef = true;
+bool useTest = false;
 string systStr = "nominal";
 string suffix = "";
 
@@ -30,10 +31,12 @@ string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx2") != std::string::npos )        return "161215_1517/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p5") != std::string::npos ) return "161215_1542/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )   return "161216_1133/NtuplePlots_nominal.root";
-    else                                                    return "161215_1420/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "161219_1033/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "161219_1055/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "161219_1110/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "161219_1128/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p25") != std::string::npos ) return "161219_1145/NtuplePlots_nominal.root";
+    else                                                     return "161219_1243/NtuplePlots_nominal.root";
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
@@ -41,7 +44,7 @@ string whichDate(string syst, string suff)
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "161215_1420/NtuplePlots_nominal.root";
+    return "161219_1243/NtuplePlots_nominal.root";
   }
 }
 
@@ -90,7 +93,7 @@ Double_t gaussian(Double_t *x,Double_t *par) {
 Double_t lorentzian(Double_t *x,Double_t *par) {
   Double_t arg1 = par[1]/2.;
   Double_t arg2 = x[0]-par[2];
-  Double_t fitval = (par[0]/TMath::Pi())*arg1/(arg2*arg2 + arg1*arg1);
+  Double_t fitval = (par[0]/TMath::Pi())*arg1/TMath::Max(1.e-10,(arg2*arg2 + arg1*arg1));
   return fitval;
 }
 
@@ -153,6 +156,9 @@ Double_t crysBall(Double_t *x, Double_t *par) {
   return fitfunc*par[4];
 }
 
+Double_t testFit(Double_t *x, Double_t *par) {
+  return crysBall(x,par) + lorentzian(x,&par[3]);
+}
 
 int main (int argc, char *argv[])
 {
@@ -170,7 +176,7 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WOk_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 0} };
+  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WOk_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 2} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
@@ -206,15 +212,17 @@ int main (int argc, char *argv[])
     histo->Scale(scale);
     
     float fitMin = -9., fitMax = -9.;
+    float baseline = 1e-4;
+    if ( histoNames[iHisto].second != 1 ) baseline = 11e-5;
     for (int iBin = 0; iBin < histo->GetNbinsX(); iBin++)
     {
       if ( fitMax != -9. ) break;
-      if ( fitMin != -9. && iBin < histo->GetXaxis()->FindBin(1.3) ) continue;
-      float binContent = histo->GetBinContent(iBin) - 1e-4;
+      if ( fitMin != -9. && iBin < histo->GetXaxis()->FindBin(1.2) ) continue;
+      float binContent = histo->GetBinContent(iBin) - baseline;
       if ( fitMin == -9. && binContent > 0.) fitMin = histo->GetXaxis()->GetBinCenter(iBin);
       if ( fitMin != -9. && fitMax == -9. && binContent < 0. ) fitMax = histo->GetXaxis()->GetBinCenter(iBin);
     }
-    if ( fitMin < 0.4 ) fitMin = 0.4;
+    if ( fitMin < 0.2 ) fitMin = 0.2;
     if ( fitMax > 2.2 ) fitMax = 2.2;
     cout << "Fit min = " << fitMin << "; fit Max = " << fitMax << endl;
     
@@ -231,12 +239,13 @@ int main (int argc, char *argv[])
         myfit = new TF1("fit", voigt_predef, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
         
         myfit->SetParNames("#mu","#sigma","#gamma", "r", "norm");
-        myfit->SetParameters(1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 3., 1.);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+        myfit->SetParameters(1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 3., 0.00255256);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
         
         myfit->SetParLimits(0, 0.95, 1.05);
         myfit->SetParLimits(1, 1e-4, 1.e+3);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
         myfit->SetParLimits(3, 2., 5.);
+        myfit->SetParLimits(4, 0.00255256, 0.00255256);
       }
       else
       {
@@ -253,14 +262,41 @@ int main (int argc, char *argv[])
     }
     else
     {
-      myfit = new TF1("fit", crysBall, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
-      
-      myfit->SetParNames("alpha","n","#sigma","#mu","norm");
-      myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 1.);
-      
-      myfit->SetParLimits(1, 0.001, 50);
-      myfit->SetParLimits(2, 1.e-4, 1.e+3);
-      myfit->SetParLimits(3, 0.74, 0.92);
+      if (useTest)
+      {
+        myfit = new TF1("fit", testFit, fitMin, fitMax, 8);  // root name, fit function, range, nPar
+        
+        myfit->SetParNames("alpha","n","#sigma","#mu","norm","scaleL", "meanL", "sigmaL");
+        myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 1., 0.05, 0.5, 0.0001);
+        
+        myfit->SetParLimits(1, 0.001, 50);
+        myfit->SetParLimits(2, 1.e-4, 1.e+3);
+        myfit->SetParLimits(3, 0.70, 0.92);
+        myfit->SetParLimits(5, 1e-4, 1.e+3);
+        myfit->SetParLimits(6, 0.45, 0.6);
+        myfit->SetParLimits(7, 1e-6, 1.e+2);
+      }
+      else
+      {
+        myfit = new TF1("fit", crysBall, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
+        
+        myfit->SetParNames("alpha","n","#sigma","#mu","norm");
+        
+        if ( histoNames[iHisto].second == 2 ) // no match
+        {
+          myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00398775);
+          myfit->SetParLimits(4, 0.00398775, 0.00398775);
+        }
+        else
+        {
+          myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00445472);
+          myfit->SetParLimits(4, 0.00445472, 0.00445472);
+        }
+        
+        myfit->SetParLimits(1, 0.1, 20);
+        myfit->SetParLimits(2, 1.e-4, 1.e+3);
+        myfit->SetParLimits(3, 0.70, 0.92);
+      }
     }
     
     
@@ -280,14 +316,14 @@ int main (int argc, char *argv[])
     histo->Draw();
     
     TF1 *func;
-    if ( histoNames[iHisto].second == 0 )
-    {  
-      func = new TF1("fcb", crysBall, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
-    }
-    else if ( histoNames[iHisto].second == 1 )
+    if ( histoNames[iHisto].second == 1 )
     {
       if (usePredef) func = new TF1("func", voigt_predef, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
       else func = new TF1("func", voigt, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
+    }
+    else
+    {  
+      func = new TF1("fcb", crysBall, histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 5);
     }
     func->SetParameters(myfit->GetParameter(0), myfit->GetParameter(1), myfit->GetParameter(2), myfit->GetParameter(3), myfit->GetParameter(4));
     func->SetLineColor(kRed);
