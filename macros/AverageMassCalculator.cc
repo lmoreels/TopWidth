@@ -13,7 +13,7 @@ using namespace std;
 string inputDate = "161215_0927";
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WNotOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WNotOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -77,7 +77,7 @@ int main()
       sumW += massW;
       sumTop += massTop;
       
-      if ( iFile > 5 && iFile < nInputs-1) // reco
+      if ( iFile > 6 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
         sumWAllMC += massW;
@@ -93,9 +93,9 @@ int main()
     
     
     /// Store mean in file
-    if ( iFile > 6 )
+    if ( iFile > 7 )
     {
-      thisDataSet = dataSetNames[iFile-6];
+      thisDataSet = dataSetNames[iFile-7];
     }
     else if ( iFile == 0 )
     {
@@ -107,21 +107,25 @@ int main()
     }
     else if ( iFile == 2 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_noMatch";
+      thisDataSet = dataSetNames[0]+"_reco_wrongMatch_WP/UP";
     }
     else if ( iFile == 3 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
+      thisDataSet = dataSetNames[0]+"_reco_noMatch";
     }
     else if ( iFile == 4 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_wrongPerm_WOk";
+      thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
     }
     else if ( iFile == 5 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_wrongPerm_WNotOk";
+      thisDataSet = dataSetNames[0]+"_reco_wrongPerm_WOk";
     }
     else if ( iFile == 6 )
+    {
+      thisDataSet = dataSetNames[0]+"_reco_wrongPerm_WNotOk";
+    }
+    else if ( iFile == 7 )
     {
       thisDataSet = dataSetNames[0]+"_reco";
     }
@@ -176,7 +180,7 @@ void ClearVars(bool isNewDataset)
 
 void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, double meanTop)
 {
-  fout << left << setw(26) << thisDataSet;
+  fout << left << setw(27) << thisDataSet;
   cout.setf(ios::fixed,ios::floatfield);  // Add zero to obtain the asked number of digits
   //cout.precision(3);  // setprecision(3) --> set maximum number of meaningful digits to 3. When 'fixed' or 'scientific', only count after decimal point.
   fout << "   " << fixed << showpoint << setprecision(3) << meanW;  // showpoint --> also when decimal part is zero
