@@ -35,7 +35,7 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool calculateTransferFunctions = false;
-bool calculateAverageMass = true;
+bool calculateAverageMass = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -44,7 +44,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 0.5;
+float scaleWidth = 1.;
 
 string systStr = "nominal";
 string whichDate(string syst)
@@ -89,10 +89,9 @@ float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 /// Average top mass
-// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
 /// no cut on chi2
-float aveTopMass[] = {166.933, 168.186, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
- // 166.933, 168.223, 205.082, 184.624, 201.813, 175.303, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+float aveTopMass[] = {166.933, 168.186, 202.651, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
 /// cut: chi2 < 2
 //float aveTopMass[] = {166.933, 167.531, 192.382, 183.662, 200.401, 174.695, 190.354, 217.753, 214.542, 210.731, 212.884, 200.177, 184.198, 192.049, 190.539};
 /// cut: chi2 < 4
@@ -894,18 +893,18 @@ int main(int argc, char* argv[])
           MSPlot["Chi2_hadTop_pT"]->Fill(reco_hadTopPt, datasets[d], true, Luminosity*scaleFactor);
           
           MSPlot["Chi2_mTop_div_aveMTopMatch"]->Fill(reco_hadTopMass/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[6]/*FIXME-7*/, datasets[d], true, Luminosity*scaleFactor);
-          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[14]/*FIXME-15*/, datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopTTChi2"]->Fill(reco_hadTopMass/aveTopMass[7], datasets[d], true, Luminosity*scaleFactor);
+          MSPlot["Chi2_mTop_div_aveMTopAllChi2"]->Fill(reco_hadTopMass/aveTopMass[15], datasets[d], true, Luminosity*scaleFactor);
           
           if (isData)
           {
-            histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[13]/*FIXME-14*/);
-            MSPlot["Chi2_mTop_div_aveMTop_stack"]->Fill(reco_hadTopMass/aveTopMass[13]/*FIXME-14*/, datasets[d], true, Luminosity*scaleFactor*widthSF);
+            histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[14]);
+            MSPlot["Chi2_mTop_div_aveMTop_stack"]->Fill(reco_hadTopMass/aveTopMass[14], datasets[d], true, Luminosity*scaleFactor*widthSF);
           }
           else
           {
-            histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+5]/*FIXME-d+6*/);
-            MSPlot["Chi2_mTop_div_aveMTop_stack"]->Fill(reco_hadTopMass/aveTopMass[d+5]/*FIXME-d+6*/, datasets[d], true, Luminosity*scaleFactor*widthSF);
+            histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+6]);
+            MSPlot["Chi2_mTop_div_aveMTop_stack"]->Fill(reco_hadTopMass/aveTopMass[d+6], datasets[d], true, Luminosity*scaleFactor*widthSF);
           }
           
           if (hasExactly4Jets)
@@ -1011,8 +1010,8 @@ int main(int argc, char* argv[])
             else if (! test)
             {
               
-              histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(reco_hadTopMass/aveTopMass[3], widthSF);
-              histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(reco_hadTopMass/aveTopMass[3]/*FIXME*/, widthSF);
+              histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(reco_hadTopMass/aveTopMass[4], widthSF);
+              histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
               histo1D["minMlb_reco_WP"]->Fill(reco_minMlb, widthSF);
               histo1D["dR_lep_b_lep_reco_WP"]->Fill(reco_dRLepB_lep, widthSF);
               histo1D["dR_lep_b_had_reco_WP"]->Fill(reco_dRLepB_had, widthSF);
@@ -1023,13 +1022,13 @@ int main(int argc, char* argv[])
             if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
             {
               if (calculateAverageMass) txtMassRecoWPWOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-              else histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(reco_hadTopMass/aveTopMass[4]/*FIXME-5*/, widthSF);
+              else histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
             }
             else
             {
               if (calculateAverageMass) txtMassRecoWPWNotOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
               else if (! test)
-                histo1D["mTop_div_aveMTop_TT_reco_WP_WNotOk"]->Fill(reco_hadTopMass/aveTopMass[5]/*FIXME-6*/, widthSF);
+                histo1D["mTop_div_aveMTop_TT_reco_WP_WNotOk"]->Fill(reco_hadTopMass/aveTopMass[6], widthSF);
             }
           }  // end wrong perm
         }  // end hadrTopMatch
@@ -1042,8 +1041,8 @@ int main(int argc, char* argv[])
           }
           else if (! test)
           {
-            histo1D["mTop_div_aveMTop_TT_reco_UP"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
-            histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(reco_hadTopMass/aveTopMass[2]/*FIXME*/, widthSF);
+            histo1D["mTop_div_aveMTop_TT_reco_UP"]->Fill(reco_hadTopMass/aveTopMass[3], widthSF);
+            histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
             histo1D["minMlb_reco_UP"]->Fill(reco_minMlb, widthSF);
             histo1D["dR_lep_b_lep_reco_UP"]->Fill(reco_dRLepB_lep, widthSF);
             histo1D["dR_lep_b_had_reco_UP"]->Fill(reco_dRLepB_had, widthSF);
@@ -1055,7 +1054,7 @@ int main(int argc, char* argv[])
       }  // end TT
       else if (! isData && ! calculateAverageMass && ! test)
       {
-        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[14]/*FIXME-15*/);
+        histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[15]);
       }
       
       
