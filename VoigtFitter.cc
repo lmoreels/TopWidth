@@ -25,18 +25,19 @@ using namespace std;
 bool usePredef = true;
 bool useTest = false;
 string systStr = "nominal";
-string suffix = "";
+string suffix = "_widthx4";
 
 string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx0p5") != std::string::npos )       return "161219_1033/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx2") != std::string::npos )    return "161219_1055/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx3") != std::string::npos )    return "161219_1110/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )    return "161219_1128/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p25") != std::string::npos ) return "161219_1145/NtuplePlots_nominal.root";
-    else                                                     return "161219_1243/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "161220_2056/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "161220_2057/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "161220_2059/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "161220_2100/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p25") != std::string::npos ) return "161220_2101/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p33") != std::string::npos ) return "161220_2102/NtuplePlots_nominal.root";
+    else                                                     return "161220_2105/NtuplePlots_nominal.root";
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
@@ -44,7 +45,7 @@ string whichDate(string syst, string suff)
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "161219_1243/NtuplePlots_nominal.root";
+    return "161220_2033/NtuplePlots_nominal.root";
   }
 }
 
@@ -80,6 +81,7 @@ string MakeTimeStamp()
   string date_str = year_str + month_str + day_str + "_" + hour_str + min_str;
   return date_str;
 }
+
 
 /// Declare fit functions
 Double_t gaussian(Double_t *x,Double_t *par) {
@@ -160,6 +162,7 @@ Double_t testFit(Double_t *x, Double_t *par) {
   return crysBall(x,par) + lorentzian(x,&par[3]);
 }
 
+
 int main (int argc, char *argv[])
 {
   string dateString = MakeTimeStamp();
@@ -176,7 +179,7 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_corr_match_reco", 1}, {"mTop_div_aveMTop_TT_wrong_perm_match_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WOk_reco", 0}, {"mTop_div_aveMTop_TT_wrong_perm_WNotOk_reco", 0}, {"mTop_div_aveMTop_TT_no_match_reco", 2} };
+  pair<const string, int> histoNames[] = { {"mTop_div_aveMTop_TT_matched_jets", 1}, {"mTop_div_aveMTop_TT_reco_CP", 1}, {"mTop_div_aveMTop_TT_reco_WP", 0}, {"mTop_div_aveMTop_TT_reco_WP_WOk", 0}, {"mTop_div_aveMTop_TT_reco_WP_WNotOk", 0}, {"mTop_div_aveMTop_TT_reco_UP", 2}, {"mTop_div_aveMTop_TT_reco_WPUP", 2} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
@@ -186,6 +189,9 @@ int main (int argc, char *argv[])
   string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
   cout << "Output file: " << outputFileName << endl;
   
+  ofstream fileOut;
+  string outputOFileName = pathOutput+"FitParams"+suffix+".txt";
+  fileOut.open(outputOFileName.c_str());
   
   TFile *fin = new TFile(inputFileName.c_str(), "READ");
   fin->cd();
@@ -245,7 +251,7 @@ int main (int argc, char *argv[])
         myfit->SetParLimits(1, 1e-4, 1.e+3);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
         myfit->SetParLimits(3, 2., 5.);
-        myfit->SetParLimits(4, 0.00255256, 0.00255256);
+        //myfit->SetParLimits(4, 0.00255256, 0.00255256);
       }
       else
       {
@@ -285,12 +291,12 @@ int main (int argc, char *argv[])
         if ( histoNames[iHisto].second == 2 ) // no match
         {
           myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00398775);
-          myfit->SetParLimits(4, 0.00398775, 0.00398775);
+          //myfit->SetParLimits(4, 0.00398775, 0.00398775);
         }
         else
         {
           myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00445472);
-          myfit->SetParLimits(4, 0.00445472, 0.00445472);
+          //myfit->SetParLimits(4, 0.00445472, 0.00445472);
         }
         
         myfit->SetParLimits(1, 0.1, 20);
@@ -310,6 +316,17 @@ int main (int argc, char *argv[])
     myfit->Write();
     
     
+    /// Write fit params to file
+    if ( histoNames[iHisto].second == 1 ) fileOut << "Voigt: ";
+    else fileOut << "CrystalBall: ";
+    fileOut << histoNames[iHisto].first << endl;
+    for (int iPar = 0; iPar < nPar; iPar++)
+    {
+      fileOut << iPar << "   " << myfit->GetParName(iPar) << "   " << myfit->GetParameter(iPar) << "   " << myfit->GetParError(iPar) << endl;
+    }
+    fileOut << endl;
+    
+    /// Plot function with fit params over entire range
     TCanvas* c1 = new TCanvas(func_title.c_str(), func_title.c_str());
     c1->cd();
     histo->SetLineColor(kBlue);
