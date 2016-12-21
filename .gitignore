@@ -26,6 +26,7 @@ nohup*.txt
 output*/
 test*/*
 AverageMassCalculator
+Likelihood
 NtupleAnalyser
 Ntupler
 ReweightTopWidth
