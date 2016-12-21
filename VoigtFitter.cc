@@ -366,6 +366,7 @@ int main (int argc, char *argv[])
   
   fin->Close();
   fout->Close();
+  fileOut.close();
   
   delete fin;
   delete fout;

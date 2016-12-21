@@ -156,8 +156,8 @@ int main()
 
 bool fexists(const char *filename)
 {
-	ifstream ifile(filename);
-	return ifile;
+  ifstream ifile(filename);
+  return ifile;
 }
 
 void ClearVars(bool isNewDataset)
