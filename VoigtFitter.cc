@@ -25,7 +25,7 @@ using namespace std;
 bool usePredef = true;
 bool useTest = false;
 string systStr = "nominal";
-string suffix = "_widthx4";
+string suffix = "_widthx0p66";
 
 string whichDate(string syst, string suff)
 {
@@ -37,7 +37,11 @@ string whichDate(string syst, string suff)
     else if ( suff.find("widthx4") != std::string::npos )    return "161220_2100/NtuplePlots_nominal.root";
     else if ( suff.find("widthx0p25") != std::string::npos ) return "161220_2101/NtuplePlots_nominal.root";
     else if ( suff.find("widthx0p33") != std::string::npos ) return "161220_2102/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1") != std::string::npos )    return "161220_2105/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p75") != std::string::npos ) return "161222_1136/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p66") != std::string::npos ) return "161222_1137/NtuplePlots_nominal.root";
     else                                                     return "161220_2105/NtuplePlots_nominal.root";
+    
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
   //else if ( syst.find("JERdown") == 0 ) return "161116_1444/NtuplePlots_JERdown.root";
@@ -238,20 +242,23 @@ int main (int argc, char *argv[])
     
     TF1 *myfit;
     
-    if ( histoNames[iHisto].second == 1 )
+    if ( histoNames[iHisto].second == 1 )  // CP
     {
       if (usePredef)
       {
         myfit = new TF1("fit", voigt_predef, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
         
         myfit->SetParNames("#mu","#sigma","#gamma", "r", "norm");
-        myfit->SetParameters(1., 0.58*histo->GetRMS(), 1.36*histo->GetRMS(), 3., 0.00255256);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+        myfit->SetParameters(0.9984, 0.08913, 1.36*histo->GetRMS(), 2.47, 0.002558);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
         
-        myfit->SetParLimits(0, 0.95, 1.05);
-        myfit->SetParLimits(1, 1e-4, 1.e+3);
+        //myfit->SetParLimits(0, 0.95, 1.05);
+        myfit->SetParLimits(0, 0.9984, 0.9984);
+        //myfit->SetParLimits(1, 1e-4, 1.e+3);
+        myfit->SetParLimits(1, 0.08913, 0.08913);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
-        myfit->SetParLimits(3, 2., 5.);
-        //myfit->SetParLimits(4, 0.00255256, 0.00255256);
+        //myfit->SetParLimits(3, 2., 5.);
+        myfit->SetParLimits(3, 2.47, 2.47);
+        myfit->SetParLimits(4, 0.002558, 0.002558);
       }
       else
       {
@@ -266,7 +273,7 @@ int main (int argc, char *argv[])
         myfit->SetParLimits(3,1e-4,1.e+3);
       }
     }
-    else
+    else  // WP/UP
     {
       if (useTest)
       {
@@ -290,18 +297,24 @@ int main (int argc, char *argv[])
         
         if ( histoNames[iHisto].second == 2 ) // no match
         {
-          myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00398775);
-          //myfit->SetParLimits(4, 0.00398775, 0.00398775);
+          myfit->SetParameters(-0.3639, 17.7, 0.1439, 0.7167, 0.003993);
+          myfit->SetParLimits(0, -0.3639, -0.3639);
+          myfit->SetParLimits(2, 0.1439, 0.1439);
+          myfit->SetParLimits(3, 0.7167, 0.7167);
+          myfit->SetParLimits(4, 0.003993, 0.003993);
         }
-        else
+        else  // WP
         {
-          myfit->SetParameters(-0.59, 17.7, 0.2, 0.8, 0.00445472);
-          //myfit->SetParLimits(4, 0.00445472, 0.00445472);
+          myfit->SetParameters(-0.3614, 17.7, 0.1278, 0.7436, 0.004463);
+          myfit->SetParLimits(0, -0.3614, -0.3614);
+          myfit->SetParLimits(2, 0.1278, 0.1278);
+          myfit->SetParLimits(3, 0.7436, 0.7436);
+          myfit->SetParLimits(4, 0.004463, 0.004463);
         }
         
         myfit->SetParLimits(1, 0.1, 20);
-        myfit->SetParLimits(2, 1.e-4, 1.e+3);
-        myfit->SetParLimits(3, 0.70, 0.92);
+        //myfit->SetParLimits(2, 1.e-4, 1.e+3);
+        //myfit->SetParLimits(3, 0.70, 0.92);
       }
     }
     
