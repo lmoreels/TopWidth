@@ -36,6 +36,7 @@ bool test = false;
 bool testHistos = false;
 bool calculateTransferFunctions = false;
 bool calculateAverageMass = false;
+bool useToys = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -44,7 +45,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 1.;
+float scaleWidth = 0.66;
 
 string systStr = "nominal";
 string whichDate(string syst)
@@ -69,7 +70,7 @@ int nofHadrMatchedEvents = 0;
 int nofChi2First4 = 0;
 int nofCorrectlyMatched_chi2 = 0;
 int nofNotCorrectlyMatched_chi2 = 0;
-float Luminosity = 9999.;
+double Luminosity = 9999.;
 
 
 
@@ -316,9 +317,16 @@ bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
-  
+
+/// Toys
+TRandom3 random3;
+double toy; // = random3.Uniform(0,1);
+double toyMax;
+int nToys[10] = {0}, nDataEvts;
+
 /// Meta
 string strSyst = "";
+double eqLumi;
 vector<int> vJER, vJES, vPU;
 
 bool CharSearch( char str[], char substr[] )
@@ -355,6 +363,11 @@ int main(int argc, char* argv[])
     // Add channel to output path
     pathOutput += channel+"/";
     mkdir(pathOutput.c_str(),0777);
+    if (useToys)
+    {
+      pathOutput+= "toys/";
+      mkdir(pathOutput.c_str(),0777);
+    }
     if (testHistos)
     {
       pathOutput += "test/";
@@ -513,6 +526,18 @@ int main(int argc, char* argv[])
     vJES.push_back(appliedJES);
     vPU.push_back(appliedPU);
     
+    if (useToys)
+    {
+      eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();
+      if (isData) nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
+      else toyMax = Luminosity/eqLumi;
+      
+      cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
+      if (test)
+        cout << "      Lumi : " << Luminosity << "; eqLumi: " << (double)datasets[d]->EquivalentLumi() << "; " << eqLumi << endl;
+      cout << "TOYS::Lumi/eqLumi = " << toyMax << endl;
+    }
+    
     
     /// Get data
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
@@ -530,17 +555,27 @@ int main(int argc, char* argv[])
     ////////////////////////////////////
     
     int endEvent = nEntries;
-    if (test || testHistos) endEvent = 1001;
+    if (test || testHistos) endEvent = 2001;
     for (int ievt = 0; ievt < endEvent; ievt++)
     {
       ClearObjects();
       
       
-      if (ievt%1000 == 0)
+      if (ievt%10000 == 0)
         std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
       
       /// Load event
       tTree[(dataSetName).c_str()]->GetEntry(ievt);
+      
+      
+      /// Toys
+      if (useToys)
+      {
+        toy = random3.Rndm();
+        if ( toy > toyMax ) continue;
+        (nToys[d])++;
+      }
+      
       
       /// Scale factors
       if (! isData)
@@ -551,6 +586,8 @@ int main(int argc, char* argv[])
         //if (applyNloSF) { scaleFactor *= nloWeight;}  // additional SF due to number of events with neg weight!!
         //cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << muonIdSF[0] << "  muonIso: " << setw(6) << muonIsoSF[0] << "  muonTrig: " << setw(6) << fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0] << endl;
       }
+      
+      if (useToys) scaleFactor *= eqLumi;  // undo automatic scaling by eqLumi in MSPlots
       
       /// Fill objects
       muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
@@ -1022,7 +1059,8 @@ int main(int argc, char* argv[])
             if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
             {
               if (calculateAverageMass) txtMassRecoWPWOk << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
-              else histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
+              else if (! test)
+                histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(reco_hadTopMass/aveTopMass[5], widthSF);
             }
             else
             {
@@ -1111,6 +1149,7 @@ int main(int argc, char* argv[])
       
     }  // end TT
     
+    if (useToys) cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
     
     if (calculateAverageMass) txtMassReco.close();
     
@@ -1127,6 +1166,14 @@ int main(int argc, char* argv[])
     cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
   }
   
+  if (useToys)
+  {
+    cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
+    for (unsigned int d = 0; d < datasets.size(); d++)
+    {
+      cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
+    }
+  }
   
   //////////////////////////////////////////
   ///  Check Shape Changing Systematics  ///
@@ -1656,12 +1703,15 @@ void ClearMetaData()
   }
   
   strSyst = "";
+  eqLumi = 1.;
   
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofChi2First4 = 0;
   nofCorrectlyMatched_chi2 = 0;
   nofNotCorrectlyMatched_chi2 = 0;
+  
+  toyMax = 1.;
 }
 
 void ClearLeaves()
@@ -1748,6 +1798,7 @@ void ClearLeaves()
   labelMlb = -9999;
   labelMl_nonb = -9999;
   massForWidth = 0.01;
+  toy = -1.;
 }
 
 void ClearTLVs()
