@@ -42,7 +42,10 @@ string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool ClearVars();
 Double_t voigt(Double_t *x, Double_t *par);
-Double_t crysBall(Double_t *x, Double_t *par);
+Double_t crysBall_WP(Double_t *x);
+Double_t crysBall_UP(Double_t *x);
+Double_t combinedProb(Double_t *x, Double_t *par);
+Double_t logLikelihood(Double_t *x, Double_t *par);
 
 
 int main (int argc, char *argv[])
@@ -67,28 +70,32 @@ int main (int argc, char *argv[])
   // prob = f_CP * Voigt + f_WP * CB + f_UP * CB
   // likelihood = - log (prob)
   
-  //TF1 *function = new TF1("function", func, -1, 3, 15);
-  //function->SetParameters(mu_CP, sigma_CP, 1., r_CP, norm_CP, alpha_WP, n_WP, sigma_WP, mu_WP, norm_WP, alpha_UP, n_UP, sigma_UP, mu_UP, norm_UP);
+  TFile *fout = new TFile("Likelihood_test.root", "RECREATE");
+  fout->cd();
+  TCanvas* c3 = new TCanvas("c3", "Probability function");
+  c3->cd();
   
-  //TFormula *function = new TFormula("function", f_CP*Voigt());
-  
-  TF1 *crysBall_WP = new TF1("crysBall_WP",crysBall);
-  crysBall_WP->SetParameters(alpha_WP, n_WP, sigma_WP, mu_WP, norm_WP);
-  TF1 *crysBall_UP = new TF1("crysBall_UP",crysBall);
-  crysBall_UP->SetParameters(alpha_UP, n_UP, sigma_UP, mu_UP, norm_UP);
-  
-  TF1 *voigt_CP = new TF1("voigt_CP",voigt);
-  voigt_CP->SetParameter(0, mu_CP);
-  voigt_CP->SetParameter(1, sigma_CP);
-  voigt_CP->SetParameter(3, r_CP);
-  voigt_CP->SetParameter(4, norm_CP);
-  
-  TF1 *likelihood = new TF1("likelihood", "-TMath::Log( f_CP*voigt_CP + f_WP*crysBall_WP + f_UP*crysBall_UP )" );
+  TF1 *likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
   
   cout << "Created log likelihood function!" << endl;
   
+  likelihood->FixParameter(0,1.5);
+  //likelihood->SetLineColor(kGreen);
+  likelihood->Draw();
+  c3->Update();
+  c3->Write();
+  c3->SaveAs("loglikelihood.png");
+  c3->Close();
+  
+  delete c3;
+  delete likelihood;
+  
+  fout->Write();
+  delete fout;
+  
   return 0;
 }
+
 
 /// Functions
 string ConvertIntToString(int Number, int pad)
@@ -152,24 +159,51 @@ Double_t voigt(Double_t *x, Double_t *par) {
   // r can be set by the the user subject to the constraints 2 <= r <= 5.
   
   /// Voigt(x, sigma, lg, r)
-  return TMath::Voigt(x[0]-par[0], par[1], par[2], par[3])*par[4];
+  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*norm_CP;
 }
 
-Double_t crysBall(Double_t *x, Double_t *par) {
+Double_t crysBall_WP(Double_t *x) {
   // params: alpha, n, sigma, mu
-  if ( par[2] <= 0. ) return 0.;
-  Double_t alpha = fabs(par[0]);
-  Double_t A = pow( par[1]/alpha , par[1]) * exp(-alpha*alpha/2.);
-  Double_t B = par[1]/alpha - alpha;
-  //Double_t C = par[1]/alpha * 1/(par[1]-1) * exp(-alpha*alpha/2.);
+  if ( sigma_WP <= 0. ) return 0.;
+  Double_t alpha = fabs(alpha_WP);
+  Double_t A = pow( n_WP/alpha , n_WP) * exp(-alpha*alpha/2.);
+  Double_t B = n_WP/alpha - alpha;
+  //Double_t C = n_WP/alpha * 1/(n_WP-1) * exp(-alpha*alpha/2.);
   //Double_t D = sqrt(TMath::Pi()/2.) * (1 + erf(alpha/sqrt(2)));
-  //Double_t N = 1/(par[2]*(C+D));
+  //Double_t N = 1/(sigma_WP*(C+D));
   
-  Double_t ref = (x[0] - par[3])/par[2];  // (x-mean)/sigma
-  if ( par[0] < 0 ) ref = -ref;
+  Double_t ref = (x[0] - mu_WP)/sigma_WP;  // (x-mean)/sigma
+  if ( alpha_WP < 0 ) ref = -ref;
   //Double_t fitfunc = N;
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -par[1]);
-  return fitfunc*par[4];
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
+  return fitfunc*norm_WP;
+}
+
+Double_t crysBall_UP(Double_t *x) {
+  // params: alpha, n, sigma, mu
+  if ( sigma_UP <= 0. ) return 0.;
+  Double_t alpha = fabs(alpha_UP);
+  Double_t A = pow( n_UP/alpha , n_UP) * exp(-alpha*alpha/2.);
+  Double_t B = n_UP/alpha - alpha;
+  //Double_t C = n_UP/alpha * 1/(n_UP-1) * exp(-alpha*alpha/2.);
+  //Double_t D = sqrt(TMath::Pi()/2.) * (1 + erf(alpha/sqrt(2)));
+  //Double_t N = 1/(sigma_UP*(C+D));
+  
+  Double_t ref = (x[0] - mu_UP)/sigma_UP;  // (x-mean)/sigma
+  if ( alpha_UP < 0 ) ref = -ref;
+  //Double_t fitfunc = N;
+  Double_t fitfunc = 1.;
+  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
+  return fitfunc*norm_UP;
+}
+
+Double_t combinedProb(Double_t *x, Double_t *par) {
+  return f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x);
+}
+
+Double_t logLikelihood(Double_t *x, Double_t *par) {
+  return -TMath::Log(combinedProb(x, par));
 }
