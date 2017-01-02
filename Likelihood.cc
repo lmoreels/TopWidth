@@ -35,17 +35,18 @@ const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, n
 /// Define vars
 int nTot;
 double f_CP, f_WP, f_UP;
-
+TF1 *likelihood;
 
 /// Define functions
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool ClearVars();
 Double_t voigt(Double_t *x, Double_t *par);
-Double_t crysBall_WP(Double_t *x);
-Double_t crysBall_UP(Double_t *x);
+Double_t crysBall_WP(Double_t *x, Double_t *par);
+Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
+void DrawLikelihood(float width);
 
 
 int main (int argc, char *argv[])
@@ -57,41 +58,32 @@ int main (int argc, char *argv[])
   cout << "* Current time: " << dateString << "    *" << endl;
   cout << "********************************" << endl;
   
-  ClearVars();
   
-  /// Fraction of events that is CP, WP and UP
-  nTot = nCP + nWP + nUP;
-  f_CP = (double)nCP/(double)nTot;
-  f_WP = (double)nWP/(double)nTot;
-  f_UP = (double)nUP/(double)nTot;
+  /// Check if functions are normalised
+  TF1 *voigt_cp = new TF1("voigt_cp", voigt, 1e-10, 4, 1);
+  voigt_cp->SetParameter(0,1.5);
+  std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./voigt_cp->Integral(1e-10,1.9e+3,0) << std::endl;
+  TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, 1e-10, 4, 0);
+  std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./crysball_wp->Integral(1e-10,1.9e+3,0) << std::endl;
+  TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, 1e-10, 4, 0);
+  std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./crysball_up->Integral(1e-10,1.9e+3,0) << std::endl;
   
+  TF1 *combi = new TF1("combi", combinedProb, 1e-10, 4, 1);
+  std::cout << "Integral of the combination is " << combi->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./combi->Integral(1e-10,1.9e+3,0) << std::endl;
   
   /// LIKELIHOOD ///
   // prob = f_CP * Voigt + f_WP * CB + f_UP * CB
   // likelihood = - log (prob)
   
-  TFile *fout = new TFile("Likelihood_test.root", "RECREATE");
-  fout->cd();
-  TCanvas* c3 = new TCanvas("c3", "Probability function");
-  c3->cd();
+  likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
   
-  TF1 *likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
+  // Check if functions are normalised
+  std::cout << "Integral of the likelihood is " << likelihood->Integral(1e-10,1.9e+3,0) << std::endl;
   
-  cout << "Created log likelihood function!" << endl;
+  // Now sum over all x_i to get proper (-)log likelihood
   
-  likelihood->FixParameter(0,1.5);
-  //likelihood->SetLineColor(kGreen);
-  likelihood->Draw();
-  c3->Update();
-  c3->Write();
-  c3->SaveAs("loglikelihood.png");
-  c3->Close();
-  
-  delete c3;
-  delete likelihood;
-  
-  fout->Write();
-  delete fout;
+  if (test) DrawLikelihood(1.5);
+ 
   
   return 0;
 }
@@ -159,10 +151,10 @@ Double_t voigt(Double_t *x, Double_t *par) {
   // r can be set by the the user subject to the constraints 2 <= r <= 5.
   
   /// Voigt(x, sigma, lg, r)
-  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*norm_CP;
+  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*1.260434;
 }
 
-Double_t crysBall_WP(Double_t *x) {
+Double_t crysBall_WP(Double_t *x, Double_t *par) {
   // params: alpha, n, sigma, mu
   if ( sigma_WP <= 0. ) return 0.;
   Double_t alpha = fabs(alpha_WP);
@@ -178,10 +170,10 @@ Double_t crysBall_WP(Double_t *x) {
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
-  return fitfunc*norm_WP;
+  return fitfunc*1.8048;
 }
 
-Double_t crysBall_UP(Double_t *x) {
+Double_t crysBall_UP(Double_t *x, Double_t *par) {
   // params: alpha, n, sigma, mu
   if ( sigma_UP <= 0. ) return 0.;
   Double_t alpha = fabs(alpha_UP);
@@ -197,13 +189,33 @@ Double_t crysBall_UP(Double_t *x) {
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
-  return fitfunc*norm_UP;
+  return fitfunc*1.609878;
 }
 
 Double_t combinedProb(Double_t *x, Double_t *par) {
-  return f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x);
+  /// Fraction of events that is CP, WP and UP
+  nTot = nCP + nWP + nUP;
+  f_CP = (double)nCP/(double)nTot;
+  f_WP = (double)nWP/(double)nTot;
+  f_UP = (double)nUP/(double)nTot;
+  
+  return f_CP*voigt(x, par) + f_WP*crysBall_WP(x, 0) + f_UP*crysBall_UP(x, 0);
 }
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log(combinedProb(x, par));
+}
+
+void DrawLikelihood(float width) {
+  TCanvas* c3 = new TCanvas("c3", "Probability function");
+  c3->cd();
+  likelihood->FixParameter(0,width);
+  //likelihood->SetLineColor(kGreen);
+  likelihood->Draw();
+  c3->Update();
+  //c3->Write();
+  c3->SaveAs("loglikelihood.png");
+  c3->Close();
+  
+  delete c3;
 }
