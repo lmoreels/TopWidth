@@ -36,7 +36,8 @@ bool test = false;
 bool testHistos = false;
 bool calculateTransferFunctions = false;
 bool calculateAverageMass = false;
-bool useToys = true;
+bool calculateLikelihood = true;
+bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -89,10 +90,23 @@ float sigmaChi2WMass = 10;
 float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
+/// Likelihood function
+const int nCP = 588412;
+const int nWP = 1064848;
+const int nUP = 1648250;
+
+// normalisation factor from integral, not from fit
+const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 1.260434;
+const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 1.8048;
+const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 1.609878;
+
 /// Average top mass
 // TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+/// also background in CP/WP/UP cats (unlike name suggests)
+float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
+/// TT only for cats
 /// no cut on chi2
-float aveTopMass[] = {166.933, 168.186, 202.651, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
+//float aveTopMass[] = {166.933, 168.186, 202.651, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
 /// cut: chi2 < 2
 //float aveTopMass[] = {166.933, 167.531, 192.382, 183.662, 200.401, 174.695, 190.354, 217.753, 214.542, 210.731, 212.884, 200.177, 184.198, 192.049, 190.539};
 /// cut: chi2 < 4
@@ -143,9 +157,11 @@ long GetNEvents(TTree* fChain, string var, bool isData);
 void GetHLTFraction(double* fractions);
 double BreitWigner(double topPT, double scale);
 double eventWeightCalculator(double topPT, double scale);
-//void DatasetPlotter(int nBins, float plotLow, float plotHigh, string sVarofinterest, string xmlNom, string TreePath, string pathPNG);
-//void MSPCreator (string pathPNG);
-//void TH2FPlotter (int nBinsX,float lowX, float highX, string sVarofinterestX );
+Double_t voigt(Double_t *x, Double_t *par);
+Double_t crysBall_WP(Double_t *x);
+Double_t crysBall_UP(Double_t *x);
+Double_t logLikelihood(Double_t *x, Double_t *par);
+Double_t logLikelihood(Double_t *x);
 
 
 
@@ -317,6 +333,15 @@ bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
+/// Likelihood
+int nTot = 0;
+double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
+double widthArray[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
+string widthArrayStr[] = {"0p5", "0p66", "0p75", "1", "2", "3", "4"};
+const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
+
+double loglike[nWidths] = {0};
+double loglike_pd[10][nWidths] = {{0}};
 
 /// Toys
 TRandom3 random3;
@@ -381,6 +406,7 @@ int main(int argc, char* argv[])
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
   if ( applyWidthSF && scaleWidth != 1 ) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
+  if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   
   
   /// xml file
@@ -456,6 +482,25 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
+  if (calculateLikelihood)
+  {
+    /// Fraction of events that is CP, WP and UP
+    nTot = nCP + nWP + nUP;
+    f_CP = (double)nCP/(double)nTot;
+    f_WP = (double)nWP/(double)nTot;
+    f_UP = (double)nUP/(double)nTot;
+  }
+  
+  if (calculateAverageMass)
+  {
+    txtMassGenMatched.open(("averageMass/mass_gen_matched_TT_"+dateString+".txt").c_str());
+    txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
+    txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
+    txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
+    txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
+    txtMassRecoWPWOk.open(("averageMass/mass_reco_wrongPerm_WOk_TT_"+dateString+".txt").c_str());
+    txtMassRecoWPWNotOk.open(("averageMass/mass_reco_wrongPerm_WNotOk_TT_"+dateString+".txt").c_str());
+  }
   
   
   ////////////////////////////////////
@@ -498,16 +543,16 @@ int main(int argc, char* argv[])
     
     if (calculateAverageMass)
     {
-      if (dataSetName.find("TT") == 0 )
-      {
-        txtMassGenMatched.open(("averageMass/mass_gen_matched_TT_"+dateString+".txt").c_str());
-        txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
-        txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
-        txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
-        txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
-        txtMassRecoWPWOk.open(("averageMass/mass_reco_wrongPerm_WOk_TT_"+dateString+".txt").c_str());
-        txtMassRecoWPWNotOk.open(("averageMass/mass_reco_wrongPerm_WNotOk_TT_"+dateString+".txt").c_str());
-      }
+//       if (dataSetName.find("TT") == 0 )
+//       {
+//         txtMassGenMatched.open(("averageMass/mass_gen_matched_TT_"+dateString+".txt").c_str());
+//         txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
+//         txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
+//         txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
+//         txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
+//         txtMassRecoWPWOk.open(("averageMass/mass_reco_wrongPerm_WOk_TT_"+dateString+".txt").c_str());
+//         txtMassRecoWPWNotOk.open(("averageMass/mass_reco_wrongPerm_WNotOk_TT_"+dateString+".txt").c_str());
+//       }
       txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
     }
 
@@ -617,6 +662,7 @@ int main(int argc, char* argv[])
       ///  JET PARTON MATCHING  ///
       /////////////////////////////
       
+      //if ( dataSetName.find("TT") == 0 || dataSetName.find("ST") == 0 )  // no matches for ST
       if ( dataSetName.find("TT") == 0 )
       {
         for (int iMC = 0; iMC < nMCParticles; iMC++)
@@ -890,6 +936,28 @@ int main(int argc, char* argv[])
         
         if (calculateAverageMass) txtMassReco << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
         
+        if (calculateLikelihood)
+        {
+          if (isData)
+          { 
+            double tempAveMass = reco_hadTopMass/aveTopMass[14];
+            for (int iWidth = 0; iWidth < nWidths; iWidth++)
+            {
+              loglike[iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+              loglike_pd[d][iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+            }
+          }
+          else
+          {
+            double tempAveMass = reco_hadTopMass/aveTopMass[d+6];  // or [15]? (All MC together)
+            for (int iWidth = 0; iWidth < nWidths; iWidth++)
+            {
+              loglike[iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+              loglike_pd[d][iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+            }
+          }
+        }
+        
         /// Leptonic top mass
         double reco_Mlb_temp = 99999.;
         for (unsigned int i = 0; i < selectedJets.size(); i++)
@@ -942,6 +1010,7 @@ int main(int argc, char* argv[])
           {
             histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(reco_hadTopMass/aveTopMass[d+6]);
             MSPlot["Chi2_mTop_div_aveMTop_stack"]->Fill(reco_hadTopMass/aveTopMass[d+6], datasets[d], true, Luminosity*scaleFactor*widthSF);
+            histo1D["mTop_div_aveMTop_allMCReco"]->Fill(reco_hadTopMass/aveTopMass[15]);
           }
           
           if (hasExactly4Jets)
@@ -1006,7 +1075,8 @@ int main(int argc, char* argv[])
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
       
-      if ( dataSetName.find("TT") == 0 )
+      //if ( dataSetName.find("TT") == 0 )
+      if (! isData)
       {
         if (! applyWidthSF ) widthSF = 1.;
         //if (test) cout << "Reco done, about to check match..." << endl;
@@ -1089,8 +1159,9 @@ int main(int argc, char* argv[])
           }
         }  // end no match
         //if (test) cout << "checked match" << endl;
-      }  // end TT
-      else if (! isData && ! calculateAverageMass && ! test)
+      }  // end TT / ! isData
+      
+      if (! calculateAverageMass && ! test)
       {
         histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[15]);
       }
@@ -1111,10 +1182,11 @@ int main(int argc, char* argv[])
     cout << endl;
     cout << "Number of chi2 made with the 4 most energetic jets: " << nofChi2First4 << " (" << 100*((float)nofChi2First4/(float)endEvent) << "%)" << endl;
     
+    //if ( dataSetName.find("TT") == 0 || dataSetName.find("ST") == 0 )
     if ( dataSetName.find("TT") == 0 )
     {
-      cout << "Number of matched events: " << nofMatchedEvents << endl;
-      cout << "Number of events with hadronic top matched: " << nofHadrMatchedEvents << endl;
+      cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
+      cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
       cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched_chi2 << endl;
       cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched_chi2 << endl;
       if ( nofCorrectlyMatched_chi2 != 0 || nofNotCorrectlyMatched_chi2 != 0 )
@@ -1136,16 +1208,16 @@ int main(int argc, char* argv[])
         delete foutTF;
       }
       
-      if (calculateAverageMass)
-      {
-        txtMassGenMatched.close();
-        txtMassRecoCP.close();
-        txtMassRecoWPUP.close();
-        txtMassRecoUP.close();
-        txtMassRecoWP.close();
-        txtMassRecoWPWOk.close();
-        txtMassRecoWPWNotOk.close();
-      }
+//       if (calculateAverageMass)
+//       {
+//         txtMassGenMatched.close();
+//         txtMassRecoCP.close();
+//         txtMassRecoWPUP.close();
+//         txtMassRecoUP.close();
+//         txtMassRecoWP.close();
+//         txtMassRecoWPWOk.close();
+//         txtMassRecoWPWNotOk.close();
+//       }
       
     }  // end TT
     
@@ -1159,6 +1231,33 @@ int main(int argc, char* argv[])
     
   }  // end loop datasets
   
+  if (calculateAverageMass)
+  {
+    txtMassGenMatched.close();
+    txtMassRecoCP.close();
+    txtMassRecoWPUP.close();
+    txtMassRecoUP.close();
+    txtMassRecoWP.close();
+    txtMassRecoWPWOk.close();
+    txtMassRecoWPWNotOk.close();
+  }
+  
+  if (calculateLikelihood)
+  {
+    cout << endl << "likelihood values: "; 
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << loglike[iWidth];
+      else cout << loglike[iWidth] << ", ";
+    }
+    cout << endl << "widths: ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << widthArray[iWidth];
+      else cout << widthArray[iWidth] << ", ";
+    }
+    cout << endl << endl;
+  }
   
   cout << "Processing time per dataset: " << endl;
   for (unsigned int d = 0; d < datasets.size(); d++)
@@ -1212,7 +1311,7 @@ int main(int argc, char* argv[])
     cerr << "Exiting...." << endl;
     exit(1);
   }
-  cout << "  - Systematics confirmed to be " << strSyst << endl;
+  cout << " - Systematics confirmed to be " << strSyst << endl;
   
   
   if (test)
@@ -1550,6 +1649,7 @@ void InitHisto1D()
   histo1D["mTop_div_aveMTop_ST_t_antitop"] = new TH1F("mTop_div_aveMTop_ST_t_antitop","Top mass divided by average top mass for ST t antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_DYJets"] = new TH1F("mTop_div_aveMTop_DYJets","Top mass divided by average top mass for DY+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_WJets"] = new TH1F("mTop_div_aveMTop_WJets","Top mass divided by average top mass for W+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_allMCReco"] = new TH1F("mTop_div_aveMTop_allMCReco","Top mass divided by average top mass for all MC samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_data"] = new TH1F("mTop_div_aveMTop_data","Top mass divided by average top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   /// mlb
@@ -1952,3 +2052,56 @@ double eventWeightCalculator(double topMass, double scale)
   return BreitWigner(topMass, scale)/BreitWigner(topMass, 1);
 }
 
+Double_t voigt(Double_t *x, Double_t *par) {
+  // Computation of Voigt function (normalised).
+  // Voigt is a convolution of
+  // gauss(xx) = 1/(sqrt(2*pi)*sigma) * exp(xx*xx/(2*sigma*sigma)
+  // and
+  // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + g*g/4)
+  // functions.
+  //
+  // To calculate the Faddeeva function with relative error less than 10^(-r).
+  // r can be set by the the user subject to the constraints 2 <= r <= 5.
+  
+  /// Voigt(x-mu, sigma, lg, r)
+  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*norm_CP;
+}
+
+Double_t crysBall_WP(Double_t *x) {
+  // params: alpha, n, sigma, mu
+  if ( sigma_WP <= 0. ) return 0.;
+  Double_t alpha = fabs(alpha_WP);
+  Double_t A = pow( n_WP/alpha , n_WP) * exp(-alpha*alpha/2.);
+  Double_t B = n_WP/alpha - alpha;
+  
+  Double_t ref = (x[0] - mu_WP)/sigma_WP;  // (x-mean)/sigma
+  if ( alpha_WP < 0 ) ref = -ref;
+  Double_t fitfunc = 1.;
+  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
+  return fitfunc*norm_WP;
+}
+
+Double_t crysBall_UP(Double_t *x) {
+  // params: alpha, n, sigma, mu
+  if ( sigma_UP <= 0. ) return 0.;
+  Double_t alpha = fabs(alpha_UP);
+  Double_t A = pow( n_UP/alpha , n_UP) * exp(-alpha*alpha/2.);
+  Double_t B = n_UP/alpha - alpha;
+  
+  Double_t ref = (x[0] - mu_UP)/sigma_UP;  // (x-mean)/sigma
+  if ( alpha_UP < 0 ) ref = -ref;
+  Double_t fitfunc = 1.;
+  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
+  return fitfunc*norm_UP;
+}
+
+Double_t logLikelihood(Double_t *x, Double_t *par) {
+  return -TMath::Log( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) );
+}
+
+Double_t logLikelihood(Double_t *x) {
+  Double_t *par;
+  return -TMath::Log( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) );
+}

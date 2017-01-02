@@ -1,5 +1,6 @@
 *.d
 *.o
+*.png
 *.root
 *.root.bk
 *.tex
