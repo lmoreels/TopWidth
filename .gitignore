@@ -20,6 +20,7 @@ Trigger/Makefile
 averageMass/*
 data*txt
 eqLumi.txt
+likelihood_per_event_*.txt
 localgridSubmission/SubmitScripts/**
 negWeights/
 negWeightsCalculator

@@ -23,10 +23,11 @@ using namespace std;
 
 bool test = true;
 bool runLocally = false;
+bool printFractions = true;
 
 const int nCP = 588412;
 const int nWP = 1064848;
-const int nUP = 1648250;
+const int nUP = 1679483;
 
 const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
 const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
@@ -62,11 +63,14 @@ int main (int argc, char *argv[])
   /// Check if functions are normalised
   TF1 *voigt_cp = new TF1("voigt_cp", voigt, 1e-10, 4, 1);
   voigt_cp->SetParameter(0,1.5);
-  std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./voigt_cp->Integral(1e-10,1.9e+3,0) << std::endl;
+  double sf_cp = 1./voigt_cp->Integral(1e-10,1.9e+3,0);
+  std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_cp << std::endl;
   TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, 1e-10, 4, 0);
-  std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./crysball_wp->Integral(1e-10,1.9e+3,0) << std::endl;
+  double sf_wp = 1./crysball_wp->Integral(1e-10,1.9e+3,0);
+  std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_wp << std::endl;
   TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, 1e-10, 4, 0);
-  std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./crysball_up->Integral(1e-10,1.9e+3,0) << std::endl;
+  double sf_up = 1./crysball_up->Integral(1e-10,1.9e+3,0);
+  std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_up << std::endl;
   
   TF1 *combi = new TF1("combi", combinedProb, 1e-10, 4, 1);
   std::cout << "Integral of the combination is " << combi->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./combi->Integral(1e-10,1.9e+3,0) << std::endl;
@@ -198,8 +202,13 @@ Double_t combinedProb(Double_t *x, Double_t *par) {
   f_CP = (double)nCP/(double)nTot;
   f_WP = (double)nWP/(double)nTot;
   f_UP = (double)nUP/(double)nTot;
+  if (printFractions)
+  {
+    cout << "f_CP = " << f_CP << "; f_WP = " << f_WP << "; f_UP = " << f_UP << "; Total = " << f_CP+f_WP+f_UP << endl;
+    printFractions = false;
+  }
   
-  return f_CP*voigt(x, par) + f_WP*crysBall_WP(x, 0) + f_UP*crysBall_UP(x, 0);
+  return 0.956039*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x, 0) + f_UP*crysBall_UP(x, 0) );
 }
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {

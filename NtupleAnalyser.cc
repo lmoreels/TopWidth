@@ -93,17 +93,18 @@ float sigmaChi2TopMass = 40;
 /// Likelihood function
 const int nCP = 588412;
 const int nWP = 1064848;
-const int nUP = 1648250;
+const int nUP = 1679483; // ttbar only: 1648250;
 
 // normalisation factor from integral, not from fit
 const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 1.260434;
 const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 1.8048;
 const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 1.609878;
+const double norm_comb = 0.956039;
 
 /// Average top mass
-// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
+// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
 /// also background in CP/WP/UP cats (unlike name suggests)
-float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
+float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};
 /// TT only for cats
 /// no cut on chi2
 //float aveTopMass[] = {166.933, 168.186, 202.651, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
@@ -342,6 +343,10 @@ const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
 
 double loglike[nWidths] = {0};
 double loglike_pd[10][nWidths] = {{0}};
+double loglike2[nWidths] = {0};
+double loglike2_pd[10][nWidths] = {{0}};
+
+ofstream txtLogLike;
 
 /// Toys
 TRandom3 random3;
@@ -484,6 +489,15 @@ int main(int argc, char* argv[])
   
   if (calculateLikelihood)
   {
+    txtLogLike.open(("likelihood_per_event_"+dateString+".txt").c_str());
+    txtLogLike << "## -Log(likelihood) values per event" << endl;
+    txtLogLike << "#  Widths : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      txtLogLike << widthArray[iWidth] << "  ";
+    }
+    txtLogLike << endl;
+    
     /// Fraction of events that is CP, WP and UP
     nTot = nCP + nWP + nUP;
     f_CP = (double)nCP/(double)nTot;
@@ -555,7 +569,12 @@ int main(int argc, char* argv[])
 //       }
       txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
     }
-
+    
+    if (calculateLikelihood)
+    {
+      txtLogLike << endl << "#  Dataset: " << dataSetName << endl;
+    }
+    
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
     
@@ -949,12 +968,30 @@ int main(int argc, char* argv[])
           }
           else
           {
-            double tempAveMass = reco_hadTopMass/aveTopMass[d+6];  // or [15]? (All MC together)
+            double tempAveMass = reco_hadTopMass/aveTopMass[15];  // d+6 or [15]? (All MC together)
             for (int iWidth = 0; iWidth < nWidths; iWidth++)
             {
               loglike[iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
               loglike_pd[d][iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
             }
+          }
+          double tempAveMass = reco_hadTopMass/aveTopMass[16];
+          for (int iWidth = 0; iWidth < nWidths; iWidth++)
+          {
+            loglike2[iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+            loglike2_pd[d][iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+          }
+          if ( ( dataSetName.find("data") == 0 && ievt%1000 == 0 ) 
+               || ( dataSetName.find("TT") == 0 && ievt%100000 == 0 )
+               || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && ievt%100 == 0 ) )
+          {
+            txtLogLike << ievt << "  ";
+            for (int iWidth = 0; iWidth < nWidths; iWidth++)
+            {
+              txtLogLike << logLikelihood(&tempAveMass, &widthArray[iWidth]) << ",  ";
+              
+            }
+            txtLogLike << reco_hadTopMass << endl;
           }
         }
         
@@ -1244,11 +1281,31 @@ int main(int argc, char* argv[])
   
   if (calculateLikelihood)
   {
-    cout << endl << "likelihood values: "; 
+    txtLogLike.close();
+    
+    cout << endl << "likelihood values (all samples) : ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
       if ( iWidth == nWidths-1 ) cout << loglike[iWidth];
       else cout << loglike[iWidth] << ", ";
+    }
+    cout << endl << "likelihood values (data-only) : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << loglike_pd[0][iWidth];
+      else cout << loglike_pd[0][iWidth] << ", ";
+    }
+    cout << endl << "likelihood values 2 (all samples) : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << loglike2[iWidth];
+      else cout << loglike2[iWidth] << ", ";
+    }
+    cout << endl << "likelihood values 2 (data-only) : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << loglike2_pd[0][iWidth];
+      else cout << loglike2_pd[0][iWidth] << ", ";
     }
     cout << endl << "widths: ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
@@ -2098,7 +2155,7 @@ Double_t crysBall_UP(Double_t *x) {
 }
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {
-  return -TMath::Log( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) );
+  return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) ) );
 }
 
 Double_t logLikelihood(Double_t *x) {
