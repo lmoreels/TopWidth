@@ -26,9 +26,9 @@ void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, dou
 
 /// Define vars
 char dataLine[1024];
-int nEntries, nEntriesAllMC, eventId;
+int nEntries, nEntriesAllMC, nEntriesAllSamples, eventId;
 double massW, massTop;
-double sumW, sumTop, sumWAllMC, sumTopAllMC;
+double sumW, sumTop, sumWAllMC, sumTopAllMC, sumWAllSamples, sumTopAllSamples;
 double meanW, meanTop;
 
 ifstream fileIn;
@@ -45,6 +45,9 @@ int main()
   nEntriesAllMC = 0;
   sumWAllMC = 0.;
   sumTopAllMC = 0.;
+  nEntriesAllSamples = 0;
+  sumWAllSamples = 0.;
+  sumTopAllSamples = 0.;
   
   for (int iFile = 0; iFile < nInputs; iFile++)
   {
@@ -82,6 +85,16 @@ int main()
         nEntriesAllMC++;
         sumWAllMC += massW;
         sumTopAllMC += massTop;
+        
+        nEntriesAllSamples++;
+        sumWAllSamples += massW;
+        sumTopAllSamples += massTop;
+      }
+      else if ( iFile == nInputs-1 ) // data
+      {
+        nEntriesAllSamples++;
+        sumWAllSamples += massW;
+        sumTopAllSamples += massTop;
       }
       
     }  // end while
@@ -144,6 +157,13 @@ int main()
   meanTop = sumTopAllMC/((double)nEntriesAllMC);
   
   WriteToFile(fileOut, "Reco All MC", meanW, meanTop);
+  
+  /// Calculate mean reco all samples
+  ClearVars(true);
+  meanW = sumWAllSamples/((double)nEntriesAllSamples);
+  meanTop = sumTopAllSamples/((double)nEntriesAllSamples);
+  
+  WriteToFile(fileOut, "Reco All Samples", meanW, meanTop);
   
   
   /// Close output file
