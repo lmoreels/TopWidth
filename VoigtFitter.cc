@@ -25,22 +25,20 @@ using namespace std;
 bool usePredef = true;
 bool useTest = false;
 string systStr = "nominal";
-string suffix = "_widthx0p66";
+string suffix = "_widthx1";
 
 string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx0p5") != std::string::npos )       return "161220_2056/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx2") != std::string::npos )    return "161220_2057/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx3") != std::string::npos )    return "161220_2059/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )    return "161220_2100/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p25") != std::string::npos ) return "161220_2101/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p33") != std::string::npos ) return "161220_2102/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx1") != std::string::npos )    return "161220_2105/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p75") != std::string::npos ) return "161222_1136/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p66") != std::string::npos ) return "161222_1137/NtuplePlots_nominal.root";
-    else                                                     return "161220_2105/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "170103_1018/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "170103_1015/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "170103_1016/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "170103_1017/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1") != std::string::npos )    return "170103_0951/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p75") != std::string::npos ) return "170103_1019/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p66") != std::string::npos ) return "170103_1020/NtuplePlots_nominal.root";
+    else                                                     return "170103_0951/NtuplePlots_nominal.root";
     
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
