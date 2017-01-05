@@ -340,14 +340,20 @@ vector<unsigned int> partonId;
 /// Likelihood
 int nTot = 0;
 double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
-double widthArray[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
-string widthArrayStr[] = {"0p5", "0p66", "0p75", "1", "2", "3", "4"};
+double widthArray[] = {0.5, 0.66, 0.7, 0.75, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.5, 3., 3.5, 4.};
+string widthArrayStr[] = {"0p5", "0p66", "0p7", "0p75", "0p8", "0p9", "1", "1p1", "1p2", "1p3", "1p4", "1p5", "1p6", "1p7", "1p8", "1p9", "2", "2p5", "3", "3p5", "4"};
 const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
 
 double loglike[nWidths] = {0};
 double loglike_pd[10][nWidths] = {{0}};
 double loglike2[nWidths] = {0};
 double loglike2_pd[10][nWidths] = {{0}};
+double loglike_per_evt[nWidths] = {0};
+double loglike_onlyGoodEvts[nWidths] = {0};
+
+bool isGoodLL = false;
+int nofGoodEvtsLL[10] = {0};
+int nofBadEvtsLL[10] = {0};
 
 ofstream txtLogLike;
 
@@ -1014,9 +1020,35 @@ int main(int argc, char* argv[])
           double tempAveMass = reco_hadTopMass/aveTopMass[16];
           for (int iWidth = 0; iWidth < nWidths; iWidth++)
           {
-            loglike2[iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
-            loglike2_pd[d][iWidth] += logLikelihood(&tempAveMass, &widthArray[iWidth]);
+            loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &widthArray[iWidth]);
+            loglike2[iWidth] += loglike_per_evt[iWidth];
+            loglike2_pd[d][iWidth] += loglike_per_evt[iWidth];
           }
+          
+          /// make loglikelihood only with events that have minimum
+          isGoodLL = false;
+          for (int iWidth = 1; iWidth < nWidths-1; iWidth++)
+          {
+            if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidths-1] )
+            {
+              isGoodLL = true;
+              break;
+            }
+          }
+          if (isGoodLL)
+          {
+            nofGoodEvtsLL[d]++;
+            for (int iWidth = 0; iWidth < nWidths; iWidth++)
+            {
+              loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth];
+            }
+          }
+          else
+          {
+            nofBadEvtsLL[d]++;
+          }
+          
+          /// write debug file
           if ( ( dataSetName.find("data") == 0 && ievt%1000 == 0 ) 
                || ( dataSetName.find("TT") == 0 && ievt%100000 == 0 )
                || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && ievt%100 == 0 ) )
@@ -1305,6 +1337,14 @@ int main(int argc, char* argv[])
       
     }  // end TT
     
+    if (calculateLikelihood)
+    {
+      cout << "Number of events with min in likelihood" << setw(8) << right << nofGoodEvtsLL[d] << endl;
+      cout << "Number of events without min in likelihood" << setw(8) << right << nofBadEvtsLL[d] << endl;
+      if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
+        cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
+    }
+    
     if (useToys) cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
     
     if (calculateAverageMass) txtMassReco.close();
@@ -1353,6 +1393,12 @@ int main(int argc, char* argv[])
     {
       if ( iWidth == nWidths-1 ) cout << loglike2_pd[0][iWidth];
       else cout << loglike2_pd[0][iWidth] << ", ";
+    }
+    cout << endl << "likelihood values (only good events) : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << loglike_onlyGoodEvts[iWidth];
+      else cout << loglike_onlyGoodEvts[iWidth] << ", ";
     }
     cout << endl << "widths: ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
