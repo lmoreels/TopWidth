@@ -340,8 +340,8 @@ vector<unsigned int> partonId;
 /// Likelihood
 int nTot = 0;
 double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
-double widthArray[] = {0.5, 0.66, 0.7, 0.75, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.5, 3., 3.5, 4.};
-string widthArrayStr[] = {"0p5", "0p66", "0p7", "0p75", "0p8", "0p9", "1", "1p1", "1p2", "1p3", "1p4", "1p5", "1p6", "1p7", "1p8", "1p9", "2", "2p5", "3", "3p5", "4"};
+double widthArray[] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4.};
+string widthArrayStr[] = {"0p5", "0p55", "0p6", "0p65", "0p7", "0p75", "0p8", "0p85", "0p9", "0p95", "1", "1p05", "1p1", "1p15", "1p2", "1p25", "1p3", "1p35", "1p4", "1p45", "1p5", "1p55", "1p6", "1p65", "1p7", "1p75", "1p8", "1p85", "1p9", "1p95", "2", "2p25", "2p5", "2p75", "3", "3p25", "3p5", "3p75", "4"};
 const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
 
 double loglike[nWidths] = {0};
@@ -355,7 +355,7 @@ bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
 int nofBadEvtsLL[10] = {0};
 
-ofstream txtLogLike;
+ofstream txtLogLike, txtOutputLogLike;
 
 /// Toys
 TRandom3 random3;
@@ -1407,6 +1407,21 @@ int main(int argc, char* argv[])
       else cout << widthArray[iWidth] << ", ";
     }
     cout << endl << endl;
+    
+    /// Print output to file
+    txtOutputLogLike.open("output_loglikelihood.txt");
+    txtOutputLogLike << "Widths:      ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
+    }
+    txtOutputLogLike << endl << "LLikelihood: ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
+    }
+    txtOutputLogLike << endl;
+    txtOutputLogLike.close();
   }
   
   cout << "Processing time per dataset: " << endl;

@@ -15,6 +15,7 @@
 #include <vector>
 #include <TH1.h>
 #include <TF1.h>
+#include <TGraph.h>
 #include <TFile.h>
 #include <TCanvas.h>
 
@@ -23,6 +24,7 @@ using namespace std;
 
 bool test = true;
 bool runLocally = false;
+bool checkNormFunctions = false;
 bool printFractions = true;
 
 const int nCP = 588412;
@@ -38,9 +40,17 @@ int nTot;
 double f_CP, f_WP, f_UP;
 TF1 *likelihood;
 
+string inputFileName;
+ifstream fileIn;
+string var;
+double val;
+vector<double> widths;
+vector<double> LLvalues;
+
 /// Define functions
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
+bool fexists(const char *filename);
 bool ClearVars();
 Double_t voigt(Double_t *x, Double_t *par);
 Double_t crysBall_WP(Double_t *x, Double_t *par);
@@ -61,33 +71,108 @@ int main (int argc, char *argv[])
   
   
   /// Check if functions are normalised
-  TF1 *voigt_cp = new TF1("voigt_cp", voigt, 1e-10, 4, 1);
-  voigt_cp->SetParameter(0,1.5);
-  double sf_cp = 1./voigt_cp->Integral(1e-10,1.9e+3,0);
-  std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_cp << std::endl;
-  TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, 1e-10, 4, 0);
-  double sf_wp = 1./crysball_wp->Integral(1e-10,1.9e+3,0);
-  std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_wp << std::endl;
-  TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, 1e-10, 4, 0);
-  double sf_up = 1./crysball_up->Integral(1e-10,1.9e+3,0);
-  std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_up << std::endl;
+  if (checkNormFunctions)
+  {  
+    TF1 *voigt_cp = new TF1("voigt_cp", voigt, 1e-10, 4, 1);
+    voigt_cp->SetParameter(0,1.5);
+    double sf_cp = 1./voigt_cp->Integral(1e-10,1.9e+3,0);
+    std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_cp << std::endl;
+    TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, 1e-10, 4, 0);
+    double sf_wp = 1./crysball_wp->Integral(1e-10,1.9e+3,0);
+    std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_wp << std::endl;
+    TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, 1e-10, 4, 0);
+    double sf_up = 1./crysball_up->Integral(1e-10,1.9e+3,0);
+    std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_up << std::endl;
+    
+    TF1 *combi = new TF1("combi", combinedProb, 1e-10, 4, 1);
+    std::cout << "Integral of the combination is " << combi->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./combi->Integral(1e-10,1.9e+3,0) << std::endl;
+    
+    /// LIKELIHOOD ///
+    // prob = f_CP * Voigt + f_WP * CB + f_UP * CB
+    // likelihood = - log (prob)
+    
+    likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
+    
+    // Check if functions are normalised
+    std::cout << "Integral of the likelihood is " << likelihood->Integral(1e-10,1.9e+3,0) << std::endl;
+    
+    if (test) DrawLikelihood(1.5);
+  }
   
-  TF1 *combi = new TF1("combi", combinedProb, 1e-10, 4, 1);
-  std::cout << "Integral of the combination is " << combi->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./combi->Integral(1e-10,1.9e+3,0) << std::endl;
   
-  /// LIKELIHOOD ///
-  // prob = f_CP * Voigt + f_WP * CB + f_UP * CB
-  // likelihood = - log (prob)
+  ClearVars();
   
-  likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
+  /// Get loglikelihood values from file
+  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood.txt";
+  if (! fexists(inputFileName.c_str()) )
+  {
+    cout << "WARNING: File " << inputFileName << " does not exist." << endl;
+    exit(1);
+  }
+  fileIn.open(inputFileName.c_str());
+  cout << "Opening " << inputFileName << "..." << endl;
   
-  // Check if functions are normalised
-  std::cout << "Integral of the likelihood is " << likelihood->Integral(1e-10,1.9e+3,0) << std::endl;
+  string line;
+  while( getline(fileIn, line) )
+  {
+    istringstream iss(line);
+    if ( line.find("Width") == 0 )
+    {
+      iss >> var;
+      while ( iss >> val )
+      {
+        widths.push_back(val);
+      }
+    }
+    if ( line.find("LL") == 0 )
+    {
+      iss >> var;
+      while ( iss >> val )
+      {
+        LLvalues.push_back(val);
+      }
+    }
+  }
   
-  // Now sum over all x_i to get proper (-)log likelihood
+  if (test)
+  {
+    for (int i = 0; i < widths.size(); i++)
+      cout << widths[i] << "  ";
+    cout << endl;
+  }
   
-  if (test) DrawLikelihood(1.5);
- 
+  /// Make TGraph
+  const int nPoints = widths.size();
+  double widthArr[nPoints], LLArr[nPoints];
+  for (int i = 0; i < nPoints; i++)
+  {
+    widthArr[i] = widths[i];
+    LLArr[i] = LLvalues[i];
+  }
+  
+  TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
+  
+  /// Fit minimum with parabola
+  double fitmin = 0.8, fitmax = 1.6;
+  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+  g1->Fit(parabola,"R");
+  
+  if (test)
+  {
+    TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
+    c1->cd();
+    g1->Draw("AL");
+    c1->Update();
+    c1->SaveAs("loglikelihoodVSwidth.png");
+    c1->Close();
+    
+    delete c1;
+  }
+  
+  double minimum = parabola->GetMinimumX(fitmin, fitmax);
+  cout << "The minimum can be found at " << minimum << " times the SM width of the top quark." << endl;
+  
+  
   
   return 0;
 }
@@ -127,13 +212,18 @@ string MakeTimeStamp()
   return date_str;
 }
 
+bool fexists(const char *filename)
+{
+  ifstream ifile(filename);
+  return ifile;
+}
+
 bool ClearVars()
 {
-  nTot = -1.;
-  f_CP = -1.;
-  f_WP = -1.;
-  f_UP = -1.;
-
+  var = "";
+  val = -1.;
+  widths.clear();
+  LLvalues.clear();
 }
 
 Double_t voigt(Double_t *x, Double_t *par) {
