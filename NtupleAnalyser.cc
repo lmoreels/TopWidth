@@ -91,23 +91,23 @@ float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 /// Likelihood function
-const int nCP = 588412;
-const int nWP = 1064848;
-const int nUP = 1679483; // ttbar only: 1648250;
+const int nCP =  593345;
+const int nWP = 1085957;
+const int nUP = 1710501; // ttbar only: 1648250;
 
 // normalisation factor from integral, not from fit
-const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 1.260434;
-const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 1.8048;
-const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 1.609878;
-const double norm_comb = 0.956039;
+const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
+const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
+const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 0.003993;
+const double norm_comb = 1.; //0.956039;
 
 /// Average top mass
 // TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
 /// also background in CP/WP/UP cats (unlike name suggests)
-//  no cuts
-//float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};
+//  no cuts [[nominal]]
+float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};
 //  with cut on dR
-float aveTopMass[] = {166.933, 168.193, 201.842, 209.812, 189.347, 202.179, 182.512, 195.553, 238.844, 232.204, 218.916, 220.941, 212.830, 199.355, 198.380, 195.846, 195.870};
+//float aveTopMass[] = {166.933, 168.193, 201.842, 209.812, 189.347, 202.179, 182.512, 195.553, 238.844, 232.204, 218.916, 220.941, 212.830, 199.355, 198.380, 195.846, 195.870};
 /// TT only for cats
 /// no cut on chi2
 //float aveTopMass[] = {166.933, 168.186, 202.651, 210.589, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855};
@@ -165,7 +165,6 @@ Double_t voigt(Double_t *x, Double_t *par);
 Double_t crysBall_WP(Double_t *x);
 Double_t crysBall_UP(Double_t *x);
 Double_t logLikelihood(Double_t *x, Double_t *par);
-Double_t logLikelihood(Double_t *x);
 
 
 
@@ -354,8 +353,9 @@ double loglike_onlyGoodEvts[nWidths] = {0};
 bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
 int nofBadEvtsLL[10] = {0};
+double maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 
-ofstream txtLogLike, txtOutputLogLike;
+ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike;
 
 /// Toys
 TRandom3 random3;
@@ -507,6 +507,15 @@ int main(int argc, char* argv[])
     }
     txtLogLike << endl;
     
+    txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
+    txtLogLikeTest << "## -Log(likelihood) values per event      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
+    txtLogLikeTest << "#  Widths : ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      txtLogLikeTest << widthArray[iWidth] << "  ";
+    }
+    txtLogLikeTest << endl;
+    
     /// Fraction of events that is CP, WP and UP
     nTot = nCP + nWP + nUP;
     f_CP = (double)nCP/(double)nTot;
@@ -582,6 +591,7 @@ int main(int argc, char* argv[])
     if (calculateLikelihood)
     {
       txtLogLike << endl << "#  Dataset: " << dataSetName << endl;
+      txtLogLikeTest << endl << "#  Dataset: " << dataSetName << endl;
     }
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
@@ -992,7 +1002,7 @@ int main(int argc, char* argv[])
         
         
         /// Test cut on dR
-        if ( reco_dRLepB_lep > 3. && reco_dRLepB_had < 1.2 ) continue;  // skip event
+//        if ( reco_dRLepB_lep > 3. && reco_dRLepB_had < 1.2 ) continue;  // skip event
         
         
         if (calculateAverageMass) txtMassReco << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
@@ -1018,6 +1028,8 @@ int main(int argc, char* argv[])
             }
           }
           double tempAveMass = reco_hadTopMass/aveTopMass[16];
+          if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
+          if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
           for (int iWidth = 0; iWidth < nWidths; iWidth++)
           {
             loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &widthArray[iWidth]);
@@ -1173,7 +1185,6 @@ int main(int argc, char* argv[])
             if (calculateAverageMass) txtMassRecoCP << ievt << "  " << reco_hadWMass << "  " << reco_hadTopMass << endl;
             else if (! test)
             {
-              
               histo1D["mTop_div_aveMTop_TT_reco_CP"]->Fill(reco_hadTopMass/aveTopMass[1], widthSF);
               histo1D["minMlb_reco_CP"]->Fill(reco_minMlb, widthSF);
               histo1D["dR_lep_b_lep_reco_CP"]->Fill(reco_dRLepB_lep, widthSF);
@@ -1194,6 +1205,24 @@ int main(int argc, char* argv[])
               if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
                 histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
             }
+            
+            /// write debug file
+            if ( calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
+                 || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
+                 || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+            {
+              if (test)
+              {
+                txtLogLikeTest << setw(8) << right << ievt << "  CP  ";
+                txtLogLikeTest << reco_hadTopMass << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
+              }
+              histo1D["debugLL_hadr_top_mass_reco"]->Fill(reco_hadTopMass);
+              histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
+              histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
+              histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
+              histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
+            }
+            
           }  // end corr match
           else  // wrong permutation
           {
@@ -1205,7 +1234,6 @@ int main(int argc, char* argv[])
             }
             else if (! test)
             {
-              
               histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(reco_hadTopMass/aveTopMass[4], widthSF);
               histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(reco_hadTopMass/aveTopMass[2], widthSF);
               histo1D["minMlb_reco_WP"]->Fill(reco_minMlb, widthSF);
@@ -1226,6 +1254,15 @@ int main(int argc, char* argv[])
                 histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
               if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
                 histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+            }
+            
+            /// write debug file
+            if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
+                 || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
+                 || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+            {
+              txtLogLikeTest << setw(8) << right << ievt << "  WP  ";
+              txtLogLikeTest << reco_hadTopMass << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
             }
 
             if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
@@ -1271,8 +1308,17 @@ int main(int argc, char* argv[])
               histo2D["ttbar_mass_vs_minMlb_dRBothCuts_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
             if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
               histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            
           }
+          
+          /// write debug file
+          if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
+               || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
+               || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+          {
+            txtLogLikeTest << setw(8) << right << ievt << "  UP  ";
+            txtLogLikeTest << reco_hadTopMass << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
+          }
+            
         }  // end no match
         //if (test) cout << "checked match" << endl;
       }  // end TT / ! isData
@@ -1339,8 +1385,8 @@ int main(int argc, char* argv[])
     
     if (calculateLikelihood)
     {
-      cout << "Number of events with min in likelihood" << setw(8) << right << nofGoodEvtsLL[d] << endl;
-      cout << "Number of events without min in likelihood" << setw(8) << right << nofBadEvtsLL[d] << endl;
+      cout << "Number of events with min in likelihood    " << setw(8) << right << nofGoodEvtsLL[d] << endl;
+      cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
       if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
         cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
     }
@@ -1369,38 +1415,42 @@ int main(int argc, char* argv[])
   if (calculateLikelihood)
   {
     txtLogLike.close();
+    txtLogLikeTest.close();
     
-    cout << endl << "likelihood values (all samples) : ";
+    cout << "Minimum top mass divided by average top mass: " << minMtDivAveMt << endl;
+    cout << "Maximum top mass divided by average top mass: " << maxMtDivAveMt << endl;
+    
+    cout << endl << "likelihood values (all samples) : {";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike[iWidth];
-      else cout << loglike[iWidth] << ", ";
+      if ( iWidth == nWidths-1 ) cout << loglike[iWidth]/(1e+6);
+      else cout << loglike[iWidth]/(1e+6) << ", ";
     }
-    cout << endl << "likelihood values (data-only) : ";
+    cout << "} *10^6 " << endl << "likelihood values (data-only) : ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
       if ( iWidth == nWidths-1 ) cout << loglike_pd[0][iWidth];
       else cout << loglike_pd[0][iWidth] << ", ";
     }
-    cout << endl << "likelihood values 2 (all samples) : ";
+    cout << endl << "likelihood values 2 (all samples) : {";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike2[iWidth];
-      else cout << loglike2[iWidth] << ", ";
+      if ( iWidth == nWidths-1 ) cout << loglike2[iWidth]/(1e+6);
+      else cout << loglike2[iWidth]/(1e+6) << ", ";
     }
-    cout << endl << "likelihood values 2 (data-only) : ";
+    cout << "} *10^6 " << endl << "likelihood values 2 (data-only) : ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
       if ( iWidth == nWidths-1 ) cout << loglike2_pd[0][iWidth];
       else cout << loglike2_pd[0][iWidth] << ", ";
     }
-    cout << endl << "likelihood values (only good events) : ";
+    cout << endl << "likelihood values (only good events) : {";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike_onlyGoodEvts[iWidth];
-      else cout << loglike_onlyGoodEvts[iWidth] << ", ";
+      if ( iWidth == nWidths-1 ) cout << loglike_onlyGoodEvts[iWidth]/(1e+6);
+      else cout << loglike_onlyGoodEvts[iWidth]/(1e+6) << ", ";
     }
-    cout << endl << "widths: ";
+    cout << "} *10^6 " << endl << "widths: ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
     {
       if ( iWidth == nWidths-1 ) cout << widthArray[iWidth];
@@ -1837,6 +1887,13 @@ void InitHisto1D()
   histo1D["ttbar_mass_reco_CP"] = new TH1F("ttbar_mass_reco_CP","Reconstructed mass of the top quark pair (reco, correct match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
   histo1D["ttbar_mass_reco_WP"] = new TH1F("ttbar_mass_reco_WP","Reconstructed mass of the top quark pair (reco, wrong permutation); M_{t#bar{t}} [GeV]", 500, 0, 1000);
   histo1D["ttbar_mass_reco_UP"] = new TH1F("ttbar_mass_reco_UP","Reconstructed mass of the top quark pair (reco, no match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
+  
+  // debug
+  histo1D["debugLL_hadr_top_mass_reco"] = new TH1F("debugLL_hadr_top_mass_reco","Reconstructed mass of the hadronic top quark; M_{t} [GeV]", 400, 0, 800);
+  histo1D["debugLL_minMlb_reco"]  = new TH1F("debugLL_minMlb_reco","Minimal reconstructed M_{lb} mass; min(M_{lb}) [GeV]", 400, 0, 800);
+  histo1D["debugLL_ttbar_mass_reco"] = new TH1F("debugLL_ttbar_mass_reco","Reconstructed mass of the top quark pair; M_{t#bar{t}} [GeV]", 500, 0, 1000);
+  histo1D["debugLL_dR_lep_b_lep_reco"]  = new TH1F("debugLL_dR_lep_b_lep_reco","Minimal delta R between the lepton and the leptonic b jet; #Delta R(l,b_{l})", 25, 0, 5);
+  histo1D["debugLL_dR_lep_b_had_reco"]  = new TH1F("debugLL_dR_lep_b_had_reco","Minimal delta R between the lepton and the hadronic b jet; #Delta R(l,b_{h})", 25, 0, 5);
 }
 
 void InitHisto2D()
@@ -2292,9 +2349,4 @@ Double_t crysBall_UP(Double_t *x) {
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) ) );
-}
-
-Double_t logLikelihood(Double_t *x) {
-  Double_t *par;
-  return -TMath::Log( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) );
 }
