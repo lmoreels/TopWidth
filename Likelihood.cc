@@ -27,9 +27,9 @@ bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = true;
 
-const int nCP = 588412;
-const int nWP = 1064848;
-const int nUP = 1679483;
+const int nCP = 593345;
+const int nWP = 1085957;
+const int nUP = 1710501; // ttbar only: 1648250;
 
 const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
 const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
@@ -57,6 +57,7 @@ Double_t crysBall_WP(Double_t *x, Double_t *par);
 Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
+void DrawFunction(TF1* function, string name, float width, bool writeToFile);
 void DrawLikelihood(float width);
 
 
@@ -72,31 +73,59 @@ int main (int argc, char *argv[])
   
   /// Check if functions are normalised
   if (checkNormFunctions)
-  {  
-    TF1 *voigt_cp = new TF1("voigt_cp", voigt, 1e-10, 4, 1);
-    voigt_cp->SetParameter(0,1.5);
-    double sf_cp = 1./voigt_cp->Integral(1e-10,1.9e+3,0);
-    std::cout << "Integral of the voigt function is " << voigt_cp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_cp << std::endl;
-    TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, 1e-10, 4, 0);
-    double sf_wp = 1./crysball_wp->Integral(1e-10,1.9e+3,0);
-    std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_wp << std::endl;
-    TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, 1e-10, 4, 0);
-    double sf_up = 1./crysball_up->Integral(1e-10,1.9e+3,0);
-    std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << sf_up << std::endl;
+  {
+    double lowerRange = 1e-10, upperRange = 20.;
+    double combMin = 1e-10, combMax = 20.;
     
-    TF1 *combi = new TF1("combi", combinedProb, 1e-10, 4, 1);
-    std::cout << "Integral of the combination is " << combi->Integral(1e-10,1.9e+3,0) << ", so norm scale factor should be " << 1./combi->Integral(1e-10,1.9e+3,0) << std::endl;
+    TF1 *voigt_cp = new TF1("voigt_cp", voigt, combMin, combMax, 1);
+    voigt_cp->SetParameter(0,1.5);
+    double sf_cp = 1./voigt_cp->Integral(lowerRange, upperRange, 0);
+    std::cout << "Integral of the voigt function is " << voigt_cp->Integral(lowerRange, upperRange, 0) << ", so norm scale factor should be " << sf_cp << std::endl;
+    TF1 *crysball_wp = new TF1("crysball_wp", crysBall_WP, combMin, combMax, 0);
+    double sf_wp = 1./crysball_wp->Integral(lowerRange, upperRange, 0);
+    std::cout << "Integral of the crystal ball function (WP) is " << crysball_wp->Integral(lowerRange, upperRange, 0) << ", so norm scale factor should be " << sf_wp << std::endl;
+    TF1 *crysball_up = new TF1("crysball_up", crysBall_UP, combMin, combMax, 0);
+    double sf_up = 1./crysball_up->Integral(lowerRange, upperRange, 0);
+    std::cout << "Integral of the crystal ball function (UP) is " << crysball_up->Integral(lowerRange, upperRange, 0) << ", so norm scale factor should be " << sf_up << std::endl;
+    
+    TF1 *combi = new TF1("combi", combinedProb, combMin, combMax, 1);
+    std::cout << "Integral of the combination is " << combi->Integral(lowerRange, upperRange, 0) << ", so norm scale factor should be " << 1./combi->Integral(lowerRange, upperRange, 0) << std::endl;
     
     /// LIKELIHOOD ///
     // prob = f_CP * Voigt + f_WP * CB + f_UP * CB
     // likelihood = - log (prob)
     
-    likelihood = new TF1("likelihood", logLikelihood, 1e-10, 2, 1);
+    likelihood = new TF1("likelihood", logLikelihood, combMin, combMax, 1);
     
     // Check if functions are normalised
-    std::cout << "Integral of the likelihood is " << likelihood->Integral(1e-10,1.9e+3,0) << std::endl;
+    std::cout << "Integral of the likelihood is " << likelihood->Integral(lowerRange, upperRange, 0) << std::endl;
     
-    if (test) DrawLikelihood(1.5);
+    
+    /// Integrate "by hand"
+    double evalin, testwidth = 1.;
+    double stepSize = (combMax - combMin)/2000;
+    double manualInt_CP = 0, manualInt_WP = 0, manualInt_UP = 0;
+    for (int i = 0; i < 2000; i++)
+    {
+      evalin = i*stepSize;
+      manualInt_CP += voigt(&evalin, &testwidth);
+      manualInt_WP += crysBall_WP(&evalin, &testwidth);
+      manualInt_UP += crysBall_UP(&evalin, &testwidth);
+    }
+    cout << "Manual integral calculation (2000 points):" << endl;
+    cout << "CP: " <<  manualInt_CP << endl;
+    cout << "WP: " <<  manualInt_WP << endl;
+    cout << "UP: " <<  manualInt_UP << endl;
+    
+    TFile *foutNorm = new TFile("CheckPDFNormalisation.root", "RECREATE");
+    foutNorm->cd();
+    DrawFunction(voigt_cp, "checkNorm_Voigt", 1., true);
+    DrawFunction(crysball_wp, "checkNorm_CB_WP", 1., true);
+    DrawFunction(crysball_up, "checkNorm_CB_UP", 1., true);
+    DrawFunction(combi, "checkNorm_combi", 1., true);
+    DrawFunction(likelihood, "loglikelihood", 1., true);
+    foutNorm->Close();
+    delete foutNorm;
   }
   
   
@@ -245,7 +274,7 @@ Double_t voigt(Double_t *x, Double_t *par) {
   // r can be set by the the user subject to the constraints 2 <= r <= 5.
   
   /// Voigt(x, sigma, lg, r)
-  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*1.260434;
+  return norm_CP*TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)/*1.268018*/;
 }
 
 Double_t crysBall_WP(Double_t *x, Double_t *par) {
@@ -264,7 +293,7 @@ Double_t crysBall_WP(Double_t *x, Double_t *par) {
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
-  return fitfunc*1.8048;
+  return norm_WP*fitfunc/*1.804797*/;
 }
 
 Double_t crysBall_UP(Double_t *x, Double_t *par) {
@@ -283,7 +312,7 @@ Double_t crysBall_UP(Double_t *x, Double_t *par) {
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
-  return fitfunc*1.609878;
+  return norm_UP*fitfunc/*1.6098745*/;
 }
 
 Double_t combinedProb(Double_t *x, Double_t *par) {
@@ -298,11 +327,24 @@ Double_t combinedProb(Double_t *x, Double_t *par) {
     printFractions = false;
   }
   
-  return 0.956039*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x, 0) + f_UP*crysBall_UP(x, 0) );
+  return f_CP*voigt(x, par) + f_WP*crysBall_WP(x, 0) + f_UP*crysBall_UP(x, 0) ;
 }
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log(combinedProb(x, par));
+}
+
+void DrawFunction(TF1* function, string name, float width, bool writeToFile) {
+  TCanvas* c2 = new TCanvas(name.c_str(), name.c_str());
+  c2->cd();
+  function->FixParameter(0,width);
+  function->Draw();
+  c2->Update();
+  if (writeToFile) c2->Write();
+  c2->SaveAs((name+".png").c_str());
+  c2->Close();
+  
+  delete c2;
 }
 
 void DrawLikelihood(float width) {

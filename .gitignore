@@ -26,6 +26,7 @@ negWeights/
 negWeightsCalculator
 nohup*.txt
 output*/
+output*.txt
 test*/*
 AverageMassCalculator
 GetFitParams

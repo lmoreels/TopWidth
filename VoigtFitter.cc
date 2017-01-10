@@ -24,6 +24,7 @@ using namespace std;
 
 bool usePredef = true;
 bool useTest = false;
+bool debug = false;
 string systStr = "nominal";
 string suffix = "_widthx1";
 
@@ -212,12 +213,13 @@ int main (int argc, char *argv[])
     cout << "*** Processing histogram " << histoNames[iHisto].first << endl;
     
     /// Get histos
-    TH1F* histo = (TH1F*) fin->Get((histDir+histoNames[iHisto].first).c_str());
-    histo->Write();
+    TH1F* histoIn = (TH1F*) fin->Get((histDir+histoNames[iHisto].first).c_str());
+    histoIn->Write();
     
     // Normalise histogram
-    Double_t scale = 1./histo->Integral();
-    histo->Scale(scale);
+    Double_t scale = 1./histoIn->Integral();  // histoIn->Integral(0, histoIn->GetNbinsX()+1);
+    histoIn->Scale(scale);
+    TH1F *histo = (TH1F*) histoIn->Clone("histo");
     
     float fitMin = -9., fitMax = -9.;
     float baseline = 1e-4;
@@ -360,7 +362,11 @@ int main (int argc, char *argv[])
     c1->Write();
     c1->SaveAs((pathOutput+func_title+suffix+".png").c_str());
     c1->Close();
-
+    
+    if (debug)
+      cout << "Integrate histogram: " << histo->Integral() << "; Histo sum .. : " << histo->GetSumOfWeights() << "; Integral function: " << func->Integral(histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax(), 0) << endl;
+    
+    
     delete func;
     delete c1;
     
