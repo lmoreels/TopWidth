@@ -12,6 +12,13 @@ const std::string TransferFunctions::histoNames[] = {"Eparton_vs_Eparton-Ebjet",
 
 const std::string TransferFunctions::histoDescription[] = {"b jet energy", "b jet theta", "b jet eta", "b jet phi", "non-b jet energy", "non-b jet theta", "non-b jet eta", "non-b jet phi", "muon inv. pt", "muon theta", "muon eta", "muon phi", "electron energy", "electron theta", "electron eta", "electron phi"};
 
+Double_t TransferFunctions::dblGaus(Double_t *x, Double_t *par)
+{
+  Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par[5]/TMath::Sqrt( pow(par[1], 2) + par[2]*pow(par[4], 2) );
+  Double_t smallGaus = TMath::Exp( - TMath::Power( (x[0] - par[0])/par[1] , 2) /2. );
+  Double_t broadGaus = TMath::Exp( - TMath::Power( (x[0] - par[3])/par[4] , 2) /2. );
+  return norm * ( smallGaus + par[2] * broadGaus );
+}
 
 TransferFunctions::TransferFunctions(bool calculateTransferFunctions):
 muon(false), electron(false), getHistos(false), histoTr2D(), inputFileName("PlotsForTransferFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0]))
@@ -351,15 +358,15 @@ void TransferFunctions::makeFit()
     
     int nBins = histo->GetXaxis()->GetNbins();
     std::cout << "nbins: " << nBins << std::endl;
-    //int nPar = 6;
-    int nPar = 5;
+    int nPar = 6;
+    //int nPar = 5;
     
     /// Create one histogram for each function parameter -> 6 histograms for each 2D plot
     TH1D **hlist = new TH1D*[nPar];
-    //std::string parnames[nPar]={"a1","a2","a3","a4","a5","a6"};
-    std::string parnames[nPar]={"a1","a2","a3","a4","a5"};
+    std::string parnames[nPar]={"a1","a2","a3","a4","a5","a6"};
+    //std::string parnames[nPar]={"a1","a2","a3","a4","a5"};
     std::string name=""; std::string title="";
-    const TArrayD *bins = histo->GetXaxis()->GetXbins();
+    //const TArrayD *bins = histo->GetXaxis()->GetXbins();
     for (int iPar = 0; iPar < nPar; iPar++)
     {
       name = std::string(histo->GetName())+ "_" + parnames[iPar];
@@ -392,16 +399,18 @@ void TransferFunctions::makeFit()
       //TF1 *myfit = new TF1("myfit", "[2]*(TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2)))+[5]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))))");
       //TF1 *myfit = new TF1("myfit", "(1./TMath::Sqrt(2*TMath::Pi()))*(1./([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2))) + [2]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))) )");
       
-      TF1 *myfit = new TF1("myfit", "(1./([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0]),2)/(2.*TMath::Power([1],2))) + [2]*TMath::Exp(-TMath::Power((x-[3]),2)/(2.*TMath::Power([4],2))) )/sqrt(2.*3.14159)");
-      //TF1 *myfit = new TF1("myfit", "(1./([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2))) + [2]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))) )");
+      //TF1 *myfit2 = new TF1("myfit", "([5]/([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0])/[1],2)/2.) + [2]*TMath::Exp(-TMath::Power((x-[3])/[4],2)/2.) )/sqrt(2.*TMath::Pi())");  // FOUT: norm factor, zie dblGaus
+      
+      
+      TF1 *myfit = new TF1("myfit", dblGaus, -100, 100, nPar);
       
       //  Give names to the parameters
-      myfit->SetParName(0,"a1");
-      myfit->SetParName(1,"a2");
-      myfit->SetParName(2,"a3");
-      myfit->SetParName(3,"a4");
-      myfit->SetParName(4,"a5");
-      //myfit->SetParName(5,"a6");
+      myfit->SetParName(0,"a0");
+      myfit->SetParName(1,"a1");
+      myfit->SetParName(2,"a2");
+      myfit->SetParName(3,"a3");
+      myfit->SetParName(4,"a4");
+      myfit->SetParName(5,"a5");
       //  Set initial values
       if ( f == 0 || f == 4 )  // energy (non-)b jet
       {
@@ -417,40 +426,41 @@ void TransferFunctions::makeFit()
         //myfit->SetParameter(3, hp->GetMean());  //central value of second, narrow gaussian
         //myfit->SetParameter(4, hp->GetRMS());   //sigma value of second, narrow gaussian
         
+        // Mean around zero
+        //myfit->SetParLimits(0,-10,10);
+        myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/2., hp->GetMean() + hp->GetRMS()/2.);
+        myfit->SetParLimits(3, -30., 30.);
+        // Restrict sigma to be positive
+        myfit->SetParLimits(1, 5., 50.);
+        myfit->SetParLimits(4, 10., 100.);
+        
         /// Split for bins 1-2 and bins 3-4 ??
-        if ( xBin == 1 )
-        {
-          myfit->SetParameters(2.6, 7.6, 0.2, hp->GetMean(), hp->GetRMS()*2);
+        //if ( xBin == 1 )
+        //{
+          //myfit->SetParameters(2.6, 7.6, 0.2, hp->GetMean(), hp->GetRMS()*2);
           //myfit->SetParameters(hp->GetMean(), hp->GetRMS()*2, 40.0, hp->GetMean(), hp->GetRMS());
-          myfit->SetParLimits(0, 2.6 - 7.6/2., 2.6 + 7.6/2.);
-        }
-        else if ( xBin == 2 )
+          //myfit->SetParLimits(3, 2.6 - 7.6/2., 2.6 + 7.6/2.);
+        //}
+        if ( xBin == 1 || xBin == 2 )
         {
-          myfit->SetParameters(4., 14.4, 0.3, hp->GetMean(), hp->GetRMS()*2);
-          myfit->SetParLimits(0, 4. - 14.4/2., 4. + 14.4/2.);
+          myfit->SetParameters(hp->GetMean()-1., hp->GetRMS(), 0.3, 2., 14.4, 1.);
+          //myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/2., hp->GetMean() + hp->GetRMS()/2.);
+          //myfit->SetParLimits(3, 2. - 14.4/2., 2. + 14.4/2.);
         }
         else if ( xBin == 3 )
         {
-          myfit->SetParameters(4.4, 23.0, 0.9, hp->GetMean(), hp->GetRMS()*2);
-          myfit->SetParLimits(0, 4.4 - 23./2., 4.4 + 23./2.);
+          myfit->SetParameters(hp->GetMean(), hp->GetRMS(), 0.9, 4.4, 23.0, 1.);
+          myfit->SetParLimits(3, 4.4 - 23./2., 4.4 + 23./2.);
         }
         else if ( xBin == 4 )
         {
-          myfit->SetParameters(6.6, 36.5, 2, hp->GetMean(), hp->GetRMS()*2);
-          myfit->SetParLimits(0, 6.6 - 36.5/2., 6.6 + 36.5/2.);
+          myfit->SetParameters(hp->GetMean(), hp->GetRMS(), 2., 6.6, 36.5, 1.);
+          myfit->SetParLimits(3, 6.6 - 36.5/2., 6.6 + 36.5/2.);
         }
         
-        // Mean around zero
-        //myfit->SetParLimits(0,-10,10);
-        
-        myfit->SetParLimits(3,-30,30);
-        // Restrict sigma to be positive
-        myfit->SetParLimits(1,5,50);
-        myfit->SetParLimits(4,20,1000);
-        
-        
       }
-      else if ( f == 1 || f == 3 || f == 5 || f == 7 )  // theta & phi of jet (CHECK: also eta??)
+      else continue;  // test fitting on range
+/*      else if ( f == 1 || f == 3 || f == 5 || f == 7 )  // theta & phi of jet (CHECK: also eta??)
       {
         //myfit->SetParameter(0, 0.0); 		//central value of first, broad gaussian
         //myfit->SetParameter(1, 0.3);    //sigma value of first, broad gaussian
@@ -499,11 +509,11 @@ void TransferFunctions::makeFit()
         myfit->SetParameter(3, 0.0);     //central value of second, narrow gaussian
         myfit->SetParameter(4, 0.00001); //sigma value of second, narrow gaussian
       }
-      
+*/      
       //  Fit
       std::string func_title = std::string(histo->GetName())+"_sliceXbin"+toStr(xBin)+"_Fitted";
       myfit->SetName(func_title.c_str());
-      hp->Fit(myfit);
+      hp->Fit(myfit, "R");
       int npFits = myfit->GetNumberFitPoints();
       if (npFits > nPar && npFits >= cut)
       {

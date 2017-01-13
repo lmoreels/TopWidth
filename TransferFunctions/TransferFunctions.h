@@ -56,6 +56,7 @@ class TransferFunctions{
     int nHistos;
     static const std::string histoNames[];
     static const std::string histoDescription[];
+    static Double_t dblGaus(Double_t *x, Double_t *par);
 
 };
 
