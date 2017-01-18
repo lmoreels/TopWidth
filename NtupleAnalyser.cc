@@ -36,7 +36,7 @@ bool test = false;
 bool testHistos = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -1398,14 +1398,16 @@ int main(int argc, char* argv[])
       if (calculateResolutionFunctions)
       {
         string rfFileName = "PlotsForResolutionFunctions.root";
+        string rfFitFileName = "PlotsForResolutionFunctions_Fitted.root";
         TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
         foutRF->cd();
 
         rf->writeHistograms();
 
         foutRF->Close();
-
-        rf->writeTable(rfFileName);
+        
+        rf->makeFit(rfFileName, rfFitFileName);
+        rf->writeTable(rfFitFileName);
 
         delete foutRF;
       }

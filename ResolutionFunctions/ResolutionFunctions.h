@@ -10,6 +10,7 @@
 #define ResolutionFunctions_h
 
 #include <stdio.h>
+#include "TStyle.h"
 #include <cmath>
 #include <TMath.h>
 #include <Math/GenVector/VectorUtil.h>

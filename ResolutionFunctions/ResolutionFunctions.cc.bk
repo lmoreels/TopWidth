@@ -15,9 +15,9 @@ const std::string ResolutionFunctions::histoDescription[] = {"b jet energy", "b 
 Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
 {
   Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par[5]/TMath::Sqrt( pow(par[1], 2) + par[2]*pow(par[4], 2) );
-  Double_t smallGaus = TMath::Exp( - TMath::Power( (x[0] - par[0])/par[1] , 2) /2. );
+  Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[0] - par[0])/par[1] , 2) /2. );
   Double_t broadGaus = TMath::Exp( - TMath::Power( (x[0] - par[3])/par[4] , 2) /2. );
-  return norm * ( smallGaus + par[2] * broadGaus );
+  return norm * ( narrowGaus + par[2] * broadGaus );
 }
 
 ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions):
@@ -54,9 +54,9 @@ void ResolutionFunctions::bookHistograms()
   
   /// Energy, pT
   histoRes2D["Eparton_vs_Enonbjet"] = new TH2F("Eparton_vs_Enonbjet","Eparton_vs_Enonbjet", 50, 0, 400, 50, 0, 400);
-  histoRes2D["Eparton_vs_Eparton-Enonbjet"] = new TH2F("Eparton_vs_Eparton-Enonbjet","Eparton_vs_Eparton-Enonbjet", 4, 0, 250, 100, -100, 100);
+  histoRes2D["Eparton_vs_Eparton-Enonbjet"] = new TH2F("Eparton_vs_Eparton-Enonbjet","Eparton_vs_Eparton-Enonbjet", 6, 0, 250, 100, -100, 100);
   histoRes2D["Eparton_vs_Ebjet"] = new TH2F("Eparton_vs_Ebjet","Eparton_vs_Ebjet", 50, 0, 400, 50, 0, 400);
-  histoRes2D["Eparton_vs_Eparton-Ebjet"] = new TH2F("Eparton_vs_Eparton-Ebjet","Eparton_vs_Eparton-Ebjet", 4, 0, 300, 100, -100, 100);
+  histoRes2D["Eparton_vs_Eparton-Ebjet"] = new TH2F("Eparton_vs_Eparton-Ebjet","Eparton_vs_Eparton-Ebjet", 6, 0, 300, 100, -100, 100);
   histoRes2D["EgenEl_vs_ErecEl"] = new TH2F("EgenEl_vs_ErecEl","EgenEl_vs_ErecEl", 50, 0, 400, 50, 0, 400);
   histoRes2D["EgenEl_vs_EgenEl-ErecEl"] = new TH2F("EgenEl_vs_EgenEl-ErecEl","EgenEl_vs_EgenEl-ErecEl", 50, 0, 400, 100, -50, 50);
   histoRes2D["InvPtgenMu_vs_InvPtrecMu"] = new TH2F("InvPtgenMu_vs_InvPtrecMu","InvPtgenMu_vs_InvPtrecMu", 50, 0, 0.05, 50, 0, 0.05);
@@ -74,9 +74,9 @@ void ResolutionFunctions::bookHistograms()
   
   /// Energy, pT vs theta
   histoRes2D["Eparton_vs_Thnonbjet"] = new TH2F("Eparton_vs_Thnonbjet","Eparton_vs_Thnonbjet", 50, 0, 400, 60, 0, 3.15);
-  histoRes2D["Eparton_vs_Thparton-Thnonbjet"] = new TH2F("Eparton_vs_Thparton-Thnonbjet","Eparton_vs_Thparton-Thnonbjet", 4, 0, 250, 100, -0.15, 0.15);
+  histoRes2D["Eparton_vs_Thparton-Thnonbjet"] = new TH2F("Eparton_vs_Thparton-Thnonbjet","Eparton_vs_Thparton-Thnonbjet", 6, 0, 250, 100, -0.15, 0.15);
   histoRes2D["Eparton_vs_Thbjet"] = new TH2F("Eparton_vs_Thbjet","Eparton_vs_Thbjet", 50, 0, 400, 60, 0, 3.15);
-  histoRes2D["Eparton_vs_Thparton-Thbjet"] = new TH2F("Eparton_vs_Thparton-Thbjet","Eparton_vs_Thparton-Thbjet", 4, 0, 300, 100, -0.15, 0.15);
+  histoRes2D["Eparton_vs_Thparton-Thbjet"] = new TH2F("Eparton_vs_Thparton-Thbjet","Eparton_vs_Thparton-Thbjet", 6, 0, 300, 100, -0.15, 0.15);
   histoRes2D["EgenEl_vs_ThrecEl"] = new TH2F("EgenEl_vs_ThrecEl","EgenEl_vs_ThrecEl", 50, 0, 400, 60, 0, 3.15);
   histoRes2D["EgenEl_vs_ThgenEl-ThrecEl"] = new TH2F("EgenEl_vs_ThgenEl-ThrecEl","EgenEl_vs_ThgenEl-ThrecEl", 5, 0, 400, 100, -0.05, 0.05);
   histoRes2D["InvPtgenMu_vs_ThrecMu"] = new TH2F("InvPtgenMu_vs_ThrecMu","InvPtgenMu_vs_ThrecMu", 50, 0, 0.05, 60, 0, 3.15);
@@ -94,9 +94,9 @@ void ResolutionFunctions::bookHistograms()
   
   /// Energy, pT vs eta
   histoRes2D["Eparton_vs_Etanonbjet"] = new TH2F("Eparton_vs_Etanonbjet","Eparton_vs_Etanonbjet", 50, 0, 400, 60, 0, 2.5);
-  histoRes2D["Eparton_vs_Etaparton-Etanonbjet"] = new TH2F("Eparton_vs_Etaparton-Etanonbjet","Eparton_vs_Etaparton-Etanonbjet", 4, 0, 250, 100, -0.15, 0.15);
+  histoRes2D["Eparton_vs_Etaparton-Etanonbjet"] = new TH2F("Eparton_vs_Etaparton-Etanonbjet","Eparton_vs_Etaparton-Etanonbjet", 6, 0, 250, 100, -0.15, 0.15);
   histoRes2D["Eparton_vs_Etabjet"] = new TH2F("Eparton_vs_Etabjet","Eparton_vs_Etabjet", 50, 0, 400, 60, 0, 2.5);
-  histoRes2D["Eparton_vs_Etaparton-Etabjet"] = new TH2F("Eparton_vs_Etaparton-Etabjet","Eparton_vs_Etaparton-Etabjet", 4, 0, 300, 100, -0.15, 0.15);
+  histoRes2D["Eparton_vs_Etaparton-Etabjet"] = new TH2F("Eparton_vs_Etaparton-Etabjet","Eparton_vs_Etaparton-Etabjet", 6, 0, 300, 100, -0.15, 0.15);
   histoRes2D["EgenEl_vs_EtarecEl"] = new TH2F("EgenEl_vs_EtarecEl","EgenEl_vs_EtarecEl", 50, 0, 400, 60, 0, 2.5);
   histoRes2D["EgenEl_vs_EtagenEl-EtarecEl"] = new TH2F("EgenEl_vs_EtagenEl-EtarecEl","EgenEl_vs_EtagenEl-EtarecEl", 5, 0, 400, 100, -0.05, 0.05);
   histoRes2D["InvPtgenMu_vs_EtarecMu"] = new TH2F("InvPtgenMu_vs_EtarecMu","InvPtgenMu_vs_EtarecMu", 50, 0, 0.05, 60, 0, 2.5);
@@ -114,15 +114,15 @@ void ResolutionFunctions::bookHistograms()
   
   /// Energy, pT vs phi
   histoRes2D["Eparton_vs_Phinonbjet"] = new TH2F("Eparton_vs_Phinonbjet","Eparton_vs_Phinonbjet", 50, 0, 400, 120, -3.2, 3.2);
-  histoRes2D["Eparton_vs_Phiparton-Phinonbjet"] = new TH2F("Eparton_vs_Phiparton-Phinonbjet","Eparton_vs_Phiparton-Phinonbjet", 5, 0, 250, 100, -0.3, 0.3);
+  histoRes2D["Eparton_vs_Phiparton-Phinonbjet"] = new TH2F("Eparton_vs_Phiparton-Phinonbjet","Eparton_vs_Phiparton-Phinonbjet", 6, 0, 250, 100, -0.3, 0.3);
   histoRes2D["Eparton_vs_Phibjet"] = new TH2F("Eparton_vs_Phibjet","Eparton_vs_Phibjet", 50, 0, 400, 120, -3.2, 3.2);
-  histoRes2D["Eparton_vs_Phiparton-Phibjet"] = new TH2F("Eparton_vs_Phiparton-Phibjet","Eparton_vs_Phiparton-Phibjet", 5, 0, 300, 100, -0.2, 0.2);
+  histoRes2D["Eparton_vs_Phiparton-Phibjet"] = new TH2F("Eparton_vs_Phiparton-Phibjet","Eparton_vs_Phiparton-Phibjet", 6, 0, 300, 100, -0.2, 0.2);
   histoRes2D["EgenEl_vs_PhirecEl"] = new TH2F("EgenEl_vs_PhirecEl","EgenEl_vs_PhirecEl", 50, 0, 400, 120, -3.2, 3.2);
   histoRes2D["EgenEl_vs_PhigenEl-PhirecEl"] = new TH2F("EgenEl_vs_PhigenEl-PhirecEl","EgenEl_vs_PhigenEl-PhirecEl", 5, 0, 400, 100, -0.05, 0.05);
   histoRes2D["InvPtgenMu_vs_PhirecMu"] = new TH2F("InvPtgenMu_vs_PhirecMu","InvPtgenMu_vs_PhirecMu", 50, 0, 0.05, 120, -3.2, 3.2);
   histoRes2D["InvPtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("InvPtgenMu_vs_PhigenMu-PhirecMu","InvPtgenMu_vs_PhigenMu-PhirecMu", 5, 0.002, 0.04, 100, -0.002, 0.002);
   
-  std::cout << "                                  - Histograms booked" << std::endl;
+  std::cout << "                                    - Histograms booked" << std::endl;
 }
 
 void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet)
@@ -331,12 +331,12 @@ void ResolutionFunctions::writeHistograms()
   }
   
   std::cout << "ResolutionFunctions: Histograms written to file" << std::endl;
-  makeFit();
+  //makeFit();
 }
 
 void ResolutionFunctions::makeFit()
 {
-  std::cout << "                   Starting fit procedure... " << std::endl;
+  std::cout << "                     Starting fit procedure... " << std::endl;
   
   
   for (int f = 0; f < nHistos; f++)
@@ -431,7 +431,7 @@ void ResolutionFunctions::makeFit()
         myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/2., hp->GetMean() + hp->GetRMS()/2.);
         myfit->SetParLimits(3, -30., 30.);
         // Restrict sigma to be positive
-        myfit->SetParLimits(1, 5., 50.);
+        myfit->SetParLimits(1, 2., 50.);
         myfit->SetParLimits(4, 10., 100.);
         
         /// Split for bins 1-2 and bins 3-4 ??
@@ -447,12 +447,12 @@ void ResolutionFunctions::makeFit()
           //myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/2., hp->GetMean() + hp->GetRMS()/2.);
           //myfit->SetParLimits(3, 2. - 14.4/2., 2. + 14.4/2.);
         }
-        else if ( xBin == 3 )
+        else if ( xBin == 3 || xBin == 4 )
         {
           myfit->SetParameters(hp->GetMean(), hp->GetRMS(), 0.9, 4.4, 23.0, 1.);
-          myfit->SetParLimits(3, 4.4 - 23./2., 4.4 + 23./2.);
+          myfit->SetParLimits(3, 4.4 - 26./2., 4.4 + 26./2.);
         }
-        else if ( xBin == 4 )
+        else if ( xBin > 4 )
         {
           myfit->SetParameters(hp->GetMean(), hp->GetRMS(), 2., 6.6, 36.5, 1.);
           myfit->SetParLimits(3, 6.6 - 36.5/2., 6.6 + 36.5/2.);
@@ -514,6 +514,7 @@ void ResolutionFunctions::makeFit()
       std::string func_title = std::string(histo->GetName())+"_sliceXbin"+toStr(xBin)+"_Fitted";
       myfit->SetName(func_title.c_str());
       hp->Fit(myfit, "R");
+      gStyle->SetOptFit(0111);
       int npFits = myfit->GetNumberFitPoints();
       if (npFits > nPar && npFits >= cut)
       {
@@ -643,12 +644,12 @@ void ResolutionFunctions::writeTable(std::string inputFileName)
       myResolutionFunctions<<"\\hline" << std::endl;
       myResolutionFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($\\sqrt{E}$) & $a_{i2}$ ($E$)" << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
-      myResolutionFunctions << "Mean broad gaussian & $a_{10}$ = " << RF_par1->GetParameter(0) << "$\\pm$" << RF_par1->GetParError(0) << " & $a_{11}$ = " << RF_par1->GetParameter(1) << "$\\pm$" << RF_par1->GetParError(1) << " & $a_{12}$ = " << RF_par1->GetParameter(2) << "$\\pm$" << RF_par1->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width broad gaussian & $a_{20}$ = " << RF_par2->GetParameter(0) << "$\\pm$" << RF_par2->GetParError(0) << " & $a_{21}$ = " << RF_par2->GetParameter(1) << "$\\pm$" << RF_par2->GetParError(1) << " & $a_{22}$ = " << RF_par2->GetParameter(2) << "$\\pm$" << RF_par2->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Constant broad gaussian & $a_{30}$ = " << RF_par3->GetParameter(0) << "$\\pm$" << RF_par3->GetParError(0) << " & $a_{31}$ = " << RF_par3->GetParameter(1) << "$\\pm$" << RF_par3->GetParError(1) << " & $a_{32}$ = " << RF_par3->GetParameter(2) << "$\\pm$" << RF_par3->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Mean narrow gaussian & $a_{40}$ = " << RF_par4->GetParameter(0) << "$\\pm$" << RF_par4->GetParError(0) << " & $a_{41}$ = " << RF_par4->GetParameter(1) << "$\\pm$" << RF_par4->GetParError(1) << " & $a_{42}$ = " << RF_par4->GetParameter(2) << "$\\pm$" << RF_par4->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width narrow gaussian & $a_{50}$ = " << RF_par5->GetParameter(0) << "$\\pm$" << RF_par5->GetParError(0) << " & $a_{51}$ = " << RF_par5->GetParameter(1) << "$\\pm$" << RF_par5->GetParError(1) << " & $a_{52}$ = " << RF_par5->GetParameter(2) << "$\\pm$" << RF_par5->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Constant narrow gaussian & $a_{60}$ = " << RF_par6->GetParameter(0) << "$\\pm$" << RF_par6->GetParError(0) << " & $a_{61}$ = " << RF_par6->GetParameter(1) << "$\\pm$" << RF_par6->GetParError(1) << " & $a_{62}$ = " << RF_par6->GetParameter(2) << "$\\pm$" << RF_par6->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean narrow gaussian & $a_{10}$ = " << RF_par1->GetParameter(0) << "$\\pm$" << RF_par1->GetParError(0) << " & $a_{11}$ = " << RF_par1->GetParameter(1) << "$\\pm$" << RF_par1->GetParError(1) << " & $a_{12}$ = " << RF_par1->GetParameter(2) << "$\\pm$" << RF_par1->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Width narrow gaussian & $a_{20}$ = " << RF_par2->GetParameter(0) << "$\\pm$" << RF_par2->GetParError(0) << " & $a_{21}$ = " << RF_par2->GetParameter(1) << "$\\pm$" << RF_par2->GetParError(1) << " & $a_{22}$ = " << RF_par2->GetParameter(2) << "$\\pm$" << RF_par2->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Scale factor gaussians & $a_{30}$ = " << RF_par3->GetParameter(0) << "$\\pm$" << RF_par3->GetParError(0) << " & $a_{31}$ = " << RF_par3->GetParameter(1) << "$\\pm$" << RF_par3->GetParError(1) << " & $a_{32}$ = " << RF_par3->GetParameter(2) << "$\\pm$" << RF_par3->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean broad gaussian & $a_{40}$ = " << RF_par4->GetParameter(0) << "$\\pm$" << RF_par4->GetParError(0) << " & $a_{41}$ = " << RF_par4->GetParameter(1) << "$\\pm$" << RF_par4->GetParError(1) << " & $a_{42}$ = " << RF_par4->GetParameter(2) << "$\\pm$" << RF_par4->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Width broad gaussian & $a_{50}$ = " << RF_par5->GetParameter(0) << "$\\pm$" << RF_par5->GetParError(0) << " & $a_{51}$ = " << RF_par5->GetParameter(1) << "$\\pm$" << RF_par5->GetParError(1) << " & $a_{52}$ = " << RF_par5->GetParameter(2) << "$\\pm$" << RF_par5->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Amplitude & $a_{60}$ = " << RF_par6->GetParameter(0) << "$\\pm$" << RF_par6->GetParError(0) << " & $a_{61}$ = " << RF_par6->GetParameter(1) << "$\\pm$" << RF_par6->GetParError(1) << " & $a_{62}$ = " << RF_par6->GetParameter(2) << "$\\pm$" << RF_par6->GetParError(2) << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
       myResolutionFunctions<<"\\end{tabular}"<< std::endl;
       myResolutionFunctions<<"\\end{table}"<<std::endl;
