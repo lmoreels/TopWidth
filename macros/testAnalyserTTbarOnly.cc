@@ -45,7 +45,7 @@
 
 // user defined
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
 
 
 using namespace std;
@@ -146,7 +146,7 @@ int main (int argc, char *argv[])
   /////////////////////
   
   bool testTTbarOnly = true;  
-  bool calculateTransferFunctions = true;
+  bool calculateResolutionFunctions = true;
   bool doChi2 = false;
   bool printTriggers = false;
   bool applyTriggers = true;
@@ -589,7 +589,7 @@ int main (int argc, char *argv[])
   ///  Initialise Transfer Functions  ///
   ///////////////////////////////////////
   
-  TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
+  ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions);
   
   
   
@@ -1394,7 +1394,7 @@ int main (int argc, char *argv[])
         ///  Transfer functions
         ///////////////////
         
-        if (all4PartonsMatched && calculateTransferFunctions)
+        if (all4PartonsMatched && calculateResolutionFunctions)
         {
           
           partonTLV.clear(); jetTLV.clear();  // vector<TLV>
@@ -1410,12 +1410,12 @@ int main (int argc, char *argv[])
             jetTLV.push_back(selectedJetsTLV[JetPartonPair[iMatch].first]);
           }
           
-          tf->fillJets(partonTLV, jetTLV);
+          rf->fillJets(partonTLV, jetTLV);
           
-          if (muonmatched) tf->fillMuon((TLorentzVector*) mcParticles[genmuon], (TLorentzVector*) selectedMuons[0]);
-          //if (electronmatched) tf->fillElectron(...)
+          if (muonmatched) rf->fillMuon((TLorentzVector) *mcParticles[genmuon], (TLorentzVector) *selectedMuons[0]);
+          //if (electronmatched) rf->fillElectron(...)
           
-        }  // end tf
+        }  // end rf
         
         
       }  /// End matching
@@ -1873,19 +1873,19 @@ int main (int argc, char *argv[])
       
       
       /// Transfer functions
-      if (calculateTransferFunctions)
+      if (calculateResolutionFunctions)
       {
-        string tfFileName = "PlotsForTransferFunctions.root";
-        TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
-        foutTF->cd();
+        string rfFileName = "PlotsForResolutionFunctions.root";
+        TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
+        foutRF->cd();
 
-        tf->writeHistograms();
+        rf->writeHistograms();
 
-        foutTF->Close();
+        foutRF->Close();
 
-        tf->writeTable(tfFileName);
+        rf->writeTable(rfFileName);
 
-        delete foutTF;
+        delete foutRF;
       }
     }  // end TT
     

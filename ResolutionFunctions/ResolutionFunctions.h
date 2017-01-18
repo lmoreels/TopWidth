@@ -1,13 +1,13 @@
 //
-//  TransferFunctions.h
+//  ResolutionFunctions.h
 //  
 //
 //  Created by Lieselotte Moreels on 25/01/16.
 //
 //
 
-#ifndef TransferFunctions_h
-#define TransferFunctions_h
+#ifndef ResolutionFunctions_h
+#define ResolutionFunctions_h
 
 #include <stdio.h>
 #include <cmath>
@@ -17,7 +17,6 @@
 #include <ostream>
 #include <fstream>
 #include <sstream>
-//#include <ofstream>
 #include <string>
 #include <sys/stat.h>
 #include <errno.h>
@@ -31,10 +30,10 @@
 #include <TLorentzVector.h>
 
 
-class TransferFunctions{
+class ResolutionFunctions{
   public:
-    TransferFunctions(bool calculateTransferFunctions);
-    ~TransferFunctions();
+    ResolutionFunctions(bool calculateResolutionFunctions);
+    ~ResolutionFunctions();
     std::string toStr(int number);
     void bookHistograms();
     void fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet);
@@ -50,7 +49,7 @@ class TransferFunctions{
     bool muon;
     bool electron;
     bool getHistos;
-    std::map<std::string,TH2F*> histoTr2D;
+    std::map<std::string,TH2F*> histoRes2D;
     std::map<std::string,TH2F*> fitHisto2D;
     std::string inputFileName;
     int nHistos;

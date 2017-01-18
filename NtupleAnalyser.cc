@@ -25,7 +25,7 @@
 //#include "../macros/Style.C"
 
 // user defined
-#include "TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
 
 
 using namespace std;
@@ -34,7 +34,7 @@ using namespace TopTree;
 
 bool test = false;
 bool testHistos = false;
-bool calculateTransferFunctions = false;
+bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = true;
 bool useToys = false;
@@ -400,6 +400,12 @@ int main(int argc, char* argv[])
   //else if ( CharSearch(argv[1], "el") || CharSearch(argv[1], "El") || CharSearch(argv[1], "EL") || CharSearch(argv[1], "e") ) channel = "el";
   //else if ( (argv[1]).find("all") != std::string::npos || (argv[1]).find("All") != std::string::npos || (argv[1]).find("ALL") != std::string::npos ) channel = "all";
   
+  if (calculateAverageMass)
+  {
+    calculateLikelihood = false;
+    useToys = false;
+  }
+  
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -491,7 +497,7 @@ int main(int argc, char* argv[])
   ///  Initialise ...  ///
   ////////////////////////
   
-  TransferFunctions* tf = new TransferFunctions(calculateTransferFunctions);
+  ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions);
   
   if (! test && ! calculateAverageMass)
   {
@@ -809,7 +815,7 @@ int main(int argc, char* argv[])
           
           
           ///////////////////
-          ///  Transfer functions
+          ///  Resolution functions
           ///////////////////
           
           if (all4PartonsMatched)
@@ -825,14 +831,14 @@ int main(int argc, char* argv[])
               jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
             }
             
-            if (calculateTransferFunctions)
+            if (calculateResolutionFunctions)
             {
-              tf->fillJets(partonsMatched, jetsMatched);
+              rf->fillJets(partonsMatched, jetsMatched);
               
-              if (muonmatched) tf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
-              //if (electronmatched) tf->fillElectron(...)
+              if (muonmatched) rf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
+              //if (electronmatched) rf->fillElectron(...)
 
-            }  // end tf
+            }  // end rf
           }
           
           /// Plot variables for matched events
@@ -1388,20 +1394,20 @@ int main(int argc, char* argv[])
       if ( nofCorrectlyMatched_chi2 != 0 || nofNotCorrectlyMatched_chi2 != 0 )
         cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched_chi2 / (float)(nofCorrectlyMatched_chi2 + nofNotCorrectlyMatched_chi2) << "% is correctly matched." << endl;
       
-      /// Transfer functions
-      if (calculateTransferFunctions)
+      /// Resolution functions
+      if (calculateResolutionFunctions)
       {
-        string tfFileName = "PlotsForTransferFunctions.root";
-        TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
-        foutTF->cd();
+        string rfFileName = "PlotsForResolutionFunctions.root";
+        TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
+        foutRF->cd();
 
-        tf->writeHistograms();
+        rf->writeHistograms();
 
-        foutTF->Close();
+        foutRF->Close();
 
-        tf->writeTable(tfFileName);
+        rf->writeTable(rfFileName);
 
-        delete foutTF;
+        delete foutRF;
       }
       
 //       if (calculateAverageMass)

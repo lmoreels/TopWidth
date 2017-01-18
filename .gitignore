@@ -13,14 +13,15 @@ Ntupler_an_Isis.cc
 Output*/*
 OutputPlots/*
 Plots*/*
-TransferFunctions/*.txt
+ResolutionFunctions/*.txt
+ResolutionFunctions_TABLE.txt
 TransferFunctions_TABLE.txt
 Trigger/*.txt
 Trigger/Makefile
 averageMass/*
 data*txt
 eqLumi.txt
-likelihood_per_event_*.txt
+likelihood/*
 localgridSubmission/SubmitScripts/**
 negWeights/
 negWeightsCalculator
@@ -41,6 +42,6 @@ testAnalyserTTbarOnly
 testMatching
 testGenJets
 testSkims
-testTFs
+testRFs
 testWeights
 toys/*

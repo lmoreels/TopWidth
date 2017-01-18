@@ -24,7 +24,7 @@
 
 
 // user defined
-#include "TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
 
 
 using namespace std;
@@ -80,23 +80,23 @@ int main (int argc, char *argv[])
   
   
   
-  TransferFunctions* tf = new TransferFunctions(false);
+  ResolutionFunctions* rf = new ResolutionFunctions(false);
   
-  string inputFileName = "PlotsForTransferFunctions.root";
+  string inputFileName = "PlotsForResolutionFunctions.root";
   
-  string tfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForTransferFunctions_test.root";
-  //TFile *foutTF = new TFile(tfFileName.c_str(), "RECREATE");
-  //foutTF->cd();
-  //TDirectory* rootDir = foutTF->mkdir(dateString.c_str());
+  string rfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_test.root";
+  //TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
+  //foutRF->cd();
+  //TDirectory* rootDir = foutRF->mkdir(dateString.c_str());
   //rootDir->cd();
   
-  tf->makeFit(inputFileName, tfFileName);
+  rf->makeFit(inputFileName, rfFileName);
   
-  //foutTF->Close();
+  //foutRF->Close();
   
-  //tf->writeTable(tfFileName);
+  //rf->writeTable(rfFileName);
   
-  //delete foutTF;
+  //delete foutRF;
   
   
   

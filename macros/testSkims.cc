@@ -44,7 +44,7 @@
 
 // user defined
 #include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
 
 
 using namespace std;
