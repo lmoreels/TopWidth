@@ -43,6 +43,8 @@ class ResolutionFunctions{
     void writeHistograms();
     void makeFit();
     void makeFit(std::string inputFileName, std::string outputFileName);
+    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, bool verbose);
+    void getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, bool verbose = false);
     void writeTable(std::string inputFileName);
 
     
@@ -57,6 +59,7 @@ class ResolutionFunctions{
     static const std::string histoNames[];
     static const std::string histoDescription[];
     static Double_t dblGaus(Double_t *x, Double_t *par);
+    static Double_t lineFunc(Double_t *x, Double_t *par0, Double_t *par1);
 
 };
 

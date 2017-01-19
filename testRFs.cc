@@ -90,7 +90,12 @@ int main (int argc, char *argv[])
   //TDirectory* rootDir = foutRF->mkdir(dateString.c_str());
   //rootDir->cd();
   
-  rf->makeFit(inputFileName, rfFileName);
+  //rf->makeFit(inputFileName, rfFileName);
+  
+  //rf->getResolutionFunction(rfFileName, "E", "bjet", 50, 15, true);
+  
+  std::vector<std::array<double, 2> > myarray = rf->getParameters(rfFileName, "E", "bjet", true);
+  cout << myarray[0][0] << "  " << myarray[0][1] << endl;
   
   //foutRF->Close();
   

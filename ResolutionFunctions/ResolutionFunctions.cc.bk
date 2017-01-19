@@ -20,6 +20,11 @@ Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
   return norm * ( narrowGaus + par[2] * broadGaus );
 }
 
+Double_t ResolutionFunctions::lineFunc(Double_t *x, Double_t *par0, Double_t *par1)
+{
+  return par0[0] + x[0] * par1[0];
+}
+
 ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions):
 muon(false), electron(false), getHistos(false), histoRes2D(), inputFileName("PlotsForResolutionFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0]))
 {
@@ -43,7 +48,8 @@ ResolutionFunctions::~ResolutionFunctions()
 std::string ResolutionFunctions::toStr(int number)
 {
   std::ostringstream convert;
-  convert.clear();
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
   convert << number;
   return convert.str();
 }
@@ -405,12 +411,12 @@ void ResolutionFunctions::makeFit()
       TF1 *myfit = new TF1("myfit", dblGaus, -100, 100, nPar);
       
       //  Give names to the parameters
-      myfit->SetParName(0,"a0");
-      myfit->SetParName(1,"a1");
-      myfit->SetParName(2,"a2");
-      myfit->SetParName(3,"a3");
-      myfit->SetParName(4,"a4");
-      myfit->SetParName(5,"a5");
+      myfit->SetParName(0,"a1");
+      myfit->SetParName(1,"a2");
+      myfit->SetParName(2,"a3");
+      myfit->SetParName(3,"a4");
+      myfit->SetParName(4,"a5");
+      myfit->SetParName(5,"a6");
       //  Set initial values
       if ( f == 0 || f == 4 )  // energy (non-)b jet
       {
@@ -605,6 +611,62 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
   delete foutRF;
 }
 
+std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, bool verbose)
+{
+  int varId = -1, objId = -1;
+  if ( varName.std::string::find("E") != std::string::npos ) varId = 0;
+  else if ( varName.std::string::find("theta") != std::string::npos ) varId = 1;
+  else if ( varName.std::string::find("eta") != std::string::npos ) varId = 2;
+  else if ( varName.std::string::find("phi") != std::string::npos ) varId = 3;
+  
+  if ( objName.std::string::find("bjet") != std::string::npos ) objId = 0;
+  else if ( objName.std::string::find("nonbjet") != std::string::npos ) objId = 1;
+  else if ( objName.std::string::find("mu") != std::string::npos ) objId = 2;
+  else if ( objName.std::string::find("el") != std::string::npos ) objId = 3;
+  
+  if ( varId == -1 || objId == -1 )
+  {
+    if ( varId == -1 ) std::cout << "ResolutionFunctions::Variable " << varName << " is unknown. Parameters cannot be found..." << std::endl;
+    if ( objId == -1 ) std::cout << "ResolutionFunctions::Object " << objName << " is unknown. Parameters cannot be found..." << std::endl;
+    return {{0,0}};
+  }
+  
+  int f = 4*objId+varId;
+  if (verbose)
+    std::cout << "ResolutionFunctions::Getting resolution function for the " << histoDescription[f] << std::endl;
+  
+  TF1 *TF_par;
+  TFile* rf = new TFile(inputFileName.c_str(),"READ");
+  rf->cd();
+  
+  const int nParams = 6;
+  std::vector<std::array<double, 2> > params;
+  params.clear();
+  for (int iPar = 0; iPar < nParams; iPar++)
+  {
+    std::string name = histoNames[f]+"_a"+toStr(iPar+1)+"_Fitted";
+    TF_par = (TF1*)rf->Get(name.c_str());
+    params.push_back({TF_par->GetParameter(0),TF_par->GetParameter(1)});
+  }
+  
+  rf->Close();
+  return params;
+  
+}
+
+void ResolutionFunctions::getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, bool verbose)
+{
+  std::vector<std::array<double, 2> > params = getParameters(inputFileName, varName, objName, verbose);
+  
+  if (verbose)
+  {
+    int nParams = 6;
+    for (int iPar = 0; iPar < nParams; iPar++)
+      std::cout << "ResolutionFunctions::Interpolation of parameter a" << iPar+1 << ": " << params[iPar][0] << " + E * " << params[iPar][1] << " = " << lineFunc(&var, &params[iPar][0], &params[iPar][1]) << " for E = " << var << std::endl;
+  }
+  
+}
+
 void ResolutionFunctions::writeTable(std::string inputFileName)
 {
   std::cout << "ResolutionFunctions::Writing table with parameters..." << std::endl;
@@ -615,7 +677,7 @@ void ResolutionFunctions::writeTable(std::string inputFileName)
   
   for(int f = 0; f < nHistos; f++)
   {
-    TF1 *RF_par1,*RF_par2,*RF_par3,*RF_par4,*RF_par5,*RF_par6;
+    TF1 *TF_par1,*TF_par2,*TF_par3,*TF_par4,*TF_par5,*TF_par6;
     std::string name1 = histoNames[f]+"_a1_Fitted";
     std::string name2 = histoNames[f]+"_a2_Fitted";
     std::string name3 = histoNames[f]+"_a3_Fitted";
@@ -625,15 +687,15 @@ void ResolutionFunctions::writeTable(std::string inputFileName)
     
     TFile* rf = new TFile(inputFileName.c_str(),"READ");
     rf->cd();
-    RF_par1 = (TF1*)rf->Get(name1.c_str());
-    RF_par2 = (TF1*)rf->Get(name2.c_str());
-    RF_par3 = (TF1*)rf->Get(name3.c_str());
-    RF_par4 = (TF1*)rf->Get(name4.c_str());
-    RF_par5 = (TF1*)rf->Get(name5.c_str());
-    RF_par6 = (TF1*)rf->Get(name6.c_str());
+    TF_par1 = (TF1*)rf->Get(name1.c_str());
+    TF_par2 = (TF1*)rf->Get(name2.c_str());
+    TF_par3 = (TF1*)rf->Get(name3.c_str());
+    TF_par4 = (TF1*)rf->Get(name4.c_str());
+    TF_par5 = (TF1*)rf->Get(name5.c_str());
+    TF_par6 = (TF1*)rf->Get(name6.c_str());
     
     /// Write values to table
-    if (RF_par1 && RF_par2 && RF_par3 && RF_par4 && RF_par5 && RF_par6)
+    if (TF_par1 && TF_par2 && TF_par3 && TF_par4 && TF_par5 && TF_par6)
     {
       myResolutionFunctions<< std::endl;
       myResolutionFunctions<<"\\begin{table}" << std::endl;
@@ -644,12 +706,12 @@ void ResolutionFunctions::writeTable(std::string inputFileName)
       myResolutionFunctions<<"\\hline" << std::endl;
       myResolutionFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($\\sqrt{E}$) & $a_{i2}$ ($E$)" << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
-      myResolutionFunctions << "Mean narrow gaussian & $a_{10}$ = " << RF_par1->GetParameter(0) << "$\\pm$" << RF_par1->GetParError(0) << " & $a_{11}$ = " << RF_par1->GetParameter(1) << "$\\pm$" << RF_par1->GetParError(1) << " & $a_{12}$ = " << RF_par1->GetParameter(2) << "$\\pm$" << RF_par1->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width narrow gaussian & $a_{20}$ = " << RF_par2->GetParameter(0) << "$\\pm$" << RF_par2->GetParError(0) << " & $a_{21}$ = " << RF_par2->GetParameter(1) << "$\\pm$" << RF_par2->GetParError(1) << " & $a_{22}$ = " << RF_par2->GetParameter(2) << "$\\pm$" << RF_par2->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Scale factor gaussians & $a_{30}$ = " << RF_par3->GetParameter(0) << "$\\pm$" << RF_par3->GetParError(0) << " & $a_{31}$ = " << RF_par3->GetParameter(1) << "$\\pm$" << RF_par3->GetParError(1) << " & $a_{32}$ = " << RF_par3->GetParameter(2) << "$\\pm$" << RF_par3->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Mean broad gaussian & $a_{40}$ = " << RF_par4->GetParameter(0) << "$\\pm$" << RF_par4->GetParError(0) << " & $a_{41}$ = " << RF_par4->GetParameter(1) << "$\\pm$" << RF_par4->GetParError(1) << " & $a_{42}$ = " << RF_par4->GetParameter(2) << "$\\pm$" << RF_par4->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width broad gaussian & $a_{50}$ = " << RF_par5->GetParameter(0) << "$\\pm$" << RF_par5->GetParError(0) << " & $a_{51}$ = " << RF_par5->GetParameter(1) << "$\\pm$" << RF_par5->GetParError(1) << " & $a_{52}$ = " << RF_par5->GetParameter(2) << "$\\pm$" << RF_par5->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Amplitude & $a_{60}$ = " << RF_par6->GetParameter(0) << "$\\pm$" << RF_par6->GetParError(0) << " & $a_{61}$ = " << RF_par6->GetParameter(1) << "$\\pm$" << RF_par6->GetParError(1) << " & $a_{62}$ = " << RF_par6->GetParameter(2) << "$\\pm$" << RF_par6->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean narrow gaussian & $a_{10}$ = " << TF_par1->GetParameter(0) << "$\\pm$" << TF_par1->GetParError(0) << " & $a_{11}$ = " << TF_par1->GetParameter(1) << "$\\pm$" << TF_par1->GetParError(1) << " & $a_{12}$ = " << TF_par1->GetParameter(2) << "$\\pm$" << TF_par1->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Width narrow gaussian & $a_{20}$ = " << TF_par2->GetParameter(0) << "$\\pm$" << TF_par2->GetParError(0) << " & $a_{21}$ = " << TF_par2->GetParameter(1) << "$\\pm$" << TF_par2->GetParError(1) << " & $a_{22}$ = " << TF_par2->GetParameter(2) << "$\\pm$" << TF_par2->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Scale factor gaussians & $a_{30}$ = " << TF_par3->GetParameter(0) << "$\\pm$" << TF_par3->GetParError(0) << " & $a_{31}$ = " << TF_par3->GetParameter(1) << "$\\pm$" << TF_par3->GetParError(1) << " & $a_{32}$ = " << TF_par3->GetParameter(2) << "$\\pm$" << TF_par3->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean broad gaussian & $a_{40}$ = " << TF_par4->GetParameter(0) << "$\\pm$" << TF_par4->GetParError(0) << " & $a_{41}$ = " << TF_par4->GetParameter(1) << "$\\pm$" << TF_par4->GetParError(1) << " & $a_{42}$ = " << TF_par4->GetParameter(2) << "$\\pm$" << TF_par4->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Width broad gaussian & $a_{50}$ = " << TF_par5->GetParameter(0) << "$\\pm$" << TF_par5->GetParError(0) << " & $a_{51}$ = " << TF_par5->GetParameter(1) << "$\\pm$" << TF_par5->GetParError(1) << " & $a_{52}$ = " << TF_par5->GetParameter(2) << "$\\pm$" << TF_par5->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Amplitude & $a_{60}$ = " << TF_par6->GetParameter(0) << "$\\pm$" << TF_par6->GetParError(0) << " & $a_{61}$ = " << TF_par6->GetParameter(1) << "$\\pm$" << TF_par6->GetParError(1) << " & $a_{62}$ = " << TF_par6->GetParameter(2) << "$\\pm$" << TF_par6->GetParError(2) << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
       myResolutionFunctions<<"\\end{tabular}"<< std::endl;
       myResolutionFunctions<<"\\end{table}"<<std::endl;
