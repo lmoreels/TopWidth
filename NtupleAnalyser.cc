@@ -36,7 +36,7 @@ bool test = false;
 bool testHistos = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -355,6 +355,8 @@ double loglike_onlyGoodEvts[nWidths] = {0};
 double fakelike_CP[nWidths] = {0};
 double fakelike_CP_per_evt[nWidths] = {0};
 double fakelike_onlyGoodEvts[nWidths] = {0};
+double fakelike_CP_Res[nWidths] = {0};
+double fakelike_CP_Res2[nWidths] = {0};
 
 bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
@@ -1220,11 +1222,20 @@ int main(int argc, char* argv[])
             
             if (calculateLikelihood)
             {
+              float sumJetEnergies = selectedJets[MCPermutation[0].first].E() + selectedJets[MCPermutation[1].first].E() + selectedJets[MCPermutation[2].first].E();
+              float sumJetMinusPartonEnergies = sumJetEnergies - mcParticles[partonId[MCPermutation[0].second]].E() - mcParticles[partonId[MCPermutation[1].second]].E() - mcParticles[partonId[MCPermutation[2].second]].E();
+              
               double tempAveMass = reco_hadTopMass/aveTopMass[16];
               for (int iWidth = 0; iWidth < nWidths; iWidth++)
               {
                 fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
                 fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
+                if ( fabs(sumJetMinusPartonEnergies) < 0.01 * sumJetEnergies )
+                  fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
+                if ( fabs(selectedJets[MCPermutation[0].first].E()-mcParticles[partonId[MCPermutation[0].second]].E()) < 0.01 * selectedJets[MCPermutation[0].first].E() 
+                    && fabs(selectedJets[MCPermutation[1].first].E()-mcParticles[partonId[MCPermutation[1].second]].E()) < 0.01 * selectedJets[MCPermutation[1].first].E()
+                    && fabs(selectedJets[MCPermutation[2].first].E()-mcParticles[partonId[MCPermutation[2].second]].E()) < 0.01 * selectedJets[MCPermutation[2].first].E() )
+                  fakelike_CP_Res2[iWidth] += fakelike_CP_per_evt[iWidth];
               }
 
               /// make loglikelihood only with events that have minimum
@@ -1503,6 +1514,18 @@ int main(int argc, char* argv[])
     {
       if ( iWidth == nWidths-1 ) cout << fakelike_onlyGoodEvts[iWidth]/(1e+6);
       else cout << fakelike_onlyGoodEvts[iWidth]/(1e+6) << ", ";
+    }
+    cout << "} *10^6 " << endl << "fake likelihood values (CP) with E_jet - E_q < 0.01*E_jet (sum): ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << fakelike_CP_Res[iWidth]/(1e+6);
+      else cout << fakelike_CP_Res[iWidth]/(1e+6) << ", ";
+    }
+    cout << "} *10^6 " << endl << "fake likelihood values (CP) with E_jet - E_q < 0.01*E_jet (seperate): ";
+    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    {
+      if ( iWidth == nWidths-1 ) cout << fakelike_CP_Res2[iWidth]/(1e+6);
+      else cout << fakelike_CP_Res2[iWidth]/(1e+6) << ", ";
     }
     cout << "} *10^6" << endl << "widths: ";
     for (int iWidth = 0; iWidth < nWidths; iWidth++)
