@@ -21,6 +21,10 @@
 #include <TH1.h>
 #include <TH2.h>
 #include <TLorentzVector.h>
+#include <TCanvas.h>
+#include <TPad.h>
+#include <TPaveText.h>
+#include <TF2.h>
 
 
 // user defined
@@ -30,6 +34,8 @@
 using namespace std;
 // using namespace reweight;
 // using namespace TopTree;
+
+bool test = false;
 
 
 string ConvertIntToString(int Number, int pad)
@@ -65,6 +71,43 @@ string MakeTimeStamp()
   return date_str;
 }
 
+Double_t dblGaus(Double_t *x, Double_t *par)
+{
+  Double_t par0 = par[0] + x[0] * par[1];
+  Double_t par1 = par[2] + x[0] * par[3];
+  Double_t par2 = par[4] + x[0] * par[5];
+  Double_t par3 = par[6] + x[0] * par[7];
+  Double_t par4 = par[8] + x[0] * par[9];
+  Double_t par5 = par[10] + x[0] * par[11];
+  
+  Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par5/TMath::Sqrt( pow(par1, 2) + par2*pow(par4, 2) );
+  Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[1] - par0)/par1 , 2) /2. );
+  Double_t broadGaus = TMath::Exp( - TMath::Power( (x[1] - par3)/par4 , 2) /2. );
+  return norm * ( narrowGaus + par2 * broadGaus );
+}
+
+void DrawFunction(TF2* f, string varName, string saveName)
+{
+  TCanvas *c1 = new TCanvas("c1",("Resolution function for "+varName).c_str(),10,200,900,700);
+  
+  f->SetContour(48);
+  f->SetFillColor(45);
+  
+  // Draw this function with color mesh option
+  f->SetLineWidth(1);
+  f->SetLineColor(5);
+  f->Draw("surf1");
+  
+  f->GetHistogram()->GetXaxis()->SetTitle(varName.c_str());
+  f->GetHistogram()->GetYaxis()->SetTitle((varName+" difference").c_str());
+  f->GetHistogram()->GetXaxis()->SetTitleOffset(1.6);
+  f->GetHistogram()->GetYaxis()->SetTitleOffset(1.6);
+  
+  c1->Update();
+  c1->SaveAs((saveName+".png").c_str());
+  
+  delete c1;
+}
 
 int main (int argc, char *argv[])
 {
@@ -92,10 +135,9 @@ int main (int argc, char *argv[])
   
   //rf->makeFit(inputFileName, rfFileName);
   
-  //rf->getResolutionFunction(rfFileName, "E", "bjet", 50, 15, true);
-  
-  std::vector<std::array<double, 2> > myarray = rf->getParameters(rfFileName, "E", "bjet", true);
-  cout << myarray[0][0] << "  " << myarray[0][1] << endl;
+  std::vector<std::array<double, 2> > myParams = rf->getParameters(rfFileName, "E", "bjet", true);
+  if (test) cout << myParams[0][0] << "  " << myParams[0][1] << endl;
+  if (test) cout << myParams[1][0] << "  " << myParams[1][1] << endl;
   
   //foutRF->Close();
   
@@ -103,6 +145,21 @@ int main (int argc, char *argv[])
   
   //delete foutRF;
   
+  /// Create function
+  TF2 *f2 = new TF2("f2",dblGaus,0.,200.,-80.,80., 12);
+  for (int iPar = 0; iPar < 12; iPar++)
+  {
+    int par = (int) ((double)iPar/2.);
+    //if ( iPar%2 != 0 ) par += 1;
+    f2->SetParameter(iPar, myParams[par][iPar%2]);
+    if (test) cout << "Parameter " << iPar << " set to " << myParams[par][iPar%2] << endl;
+  }
+  //cout << f2->Eval(10.,5.) << endl;
+  
+  DrawFunction(f2, "bjet energy", "RF_bjet_E");
+
+
+  delete f2;
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
