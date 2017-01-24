@@ -3,7 +3,10 @@
 # if there is one arg compile only this .cc
 if [[ -n $1 ]]
 then
-    ccfile=$1
+    if [[ $1 == *".cc" ]]
+    then ccfile=$1
+    else ccfile=$1".cc"
+    fi
 
     ofile=`echo $ccfile |sed 's/\.cc$//g'`
     echo "compiling : " $ccfile ", executible name: " $ofile
