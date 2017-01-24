@@ -73,8 +73,8 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Etparton_vs_Etparton-Etnonbjet"] = new TH2F("Etparton_vs_Etparton-Etnonbjet","Etparton_vs_Etparton-Etnonbjet", 6, 0, 250, 100, -100, 100);
   histoRes2D["Etparton_vs_Etbjet"] = new TH2F("Etparton_vs_Etbjet","Etparton_vs_Etbjet", 50, 0, 400, 50, 0, 400);
   histoRes2D["Etparton_vs_Etparton-Etbjet"] = new TH2F("Etparton_vs_Etparton-Etbjet","Etparton_vs_Etparton-Etbjet", 6, 0, 300, 100, -100, 100);
-  histoRes2D["EgenEl_vs_ErecEl"] = new TH2F("EgenEl_vs_ErecEl","EgenEl_vs_ErecEl", 50, 0, 400, 50, 0, 400);
-  histoRes2D["EgenEl_vs_EgenEl-ErecEl"] = new TH2F("EgenEl_vs_EgenEl-ErecEl","EgenEl_vs_EgenEl-ErecEl", 50, 0, 400, 100, -50, 50);
+  histoRes2D["EtgenEl_vs_EtrecEl"] = new TH2F("EtgenEl_vs_EtrecEl","EtgenEl_vs_EtrecEl", 50, 0, 400, 50, 0, 400);
+  histoRes2D["EtgenEl_vs_EtgenEl-EtrecEl"] = new TH2F("EtgenEl_vs_EtgenEl-EtrecEl","EtgenEl_vs_EtgenEl-EtrecEl", 50, 0, 400, 100, -50, 50);
   histoRes2D["EtgenMu_vs_EtrecMu"] = new TH2F("EtgenMu_vs_EtrecMu","EtgenMu_vs_EtrecMu", 50, 0, 0.05, 50, 0, 0.05);
   histoRes2D["EtgenMu_vs_EtgenMu-EtrecMu"] = new TH2F("EtgenMu_vs_EtgenMu-EtrecMu","EtgenMu_vs_EtgenMu-EtrecMu", 5, 0.002, 0.04, 100, -0.003, 0.003);
   
@@ -97,8 +97,8 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Ptparton_vs_Ptparton-Ptnonbjet"] = new TH2F("Ptparton_vs_Ptparton-Ptnonbjet","Ptparton_vs_Ptparton-Ptnonbjet", 6, 0, 250, 100, -100, 100);
   histoRes2D["Ptparton_vs_Ptbjet"] = new TH2F("Ptparton_vs_Ptbjet","Ptparton_vs_Ptbjet", 50, 0, 400, 50, 0, 400);
   histoRes2D["Ptparton_vs_Ptparton-Ptbjet"] = new TH2F("Ptparton_vs_Ptparton-Ptbjet","Ptparton_vs_Ptparton-Ptbjet", 6, 0, 300, 100, -100, 100);
-  histoRes2D["EgenEl_vs_ErecEl"] = new TH2F("EgenEl_vs_ErecEl","EgenEl_vs_ErecEl", 50, 0, 400, 50, 0, 400);
-  histoRes2D["EgenEl_vs_EgenEl-ErecEl"] = new TH2F("EgenEl_vs_EgenEl-ErecEl","EgenEl_vs_EgenEl-ErecEl", 50, 0, 400, 100, -50, 50);
+  histoRes2D["PtgenEl_vs_PtrecEl"] = new TH2F("PtgenEl_vs_PtrecEl","PtgenEl_vs_PtrecEl", 50, 0, 400, 50, 0, 400);
+  histoRes2D["PtgenEl_vs_PtgenEl-PtrecEl"] = new TH2F("PtgenEl_vs_PtgenEl-PtrecEl","PtgenEl_vs_PtgenEl-PtrecEl", 50, 0, 400, 100, -50, 50);
   histoRes2D["PtgenMu_vs_PtrecMu"] = new TH2F("PtgenMu_vs_PtrecMu","PtgenMu_vs_PtrecMu", 50, 0, 0.05, 50, 0, 0.05);
   histoRes2D["PtgenMu_vs_PtgenMu-PtrecMu"] = new TH2F("PtgenMu_vs_PtgenMu-PtrecMu","PtgenMu_vs_PtgenMu-PtrecMu", 5, 0.002, 0.04, 100, -0.003, 0.003);
   
@@ -496,13 +496,13 @@ void ResolutionFunctions::writeHistograms()
     histoRes2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Write();
   }
   
-  std::cout << "ResolutionFunctions: Histograms written to file" << std::endl;
+  std::cout << "ResolutionFunctions::writeHistograms - Histograms written to file" << std::endl;
   //makeFit();
 }
 
 void ResolutionFunctions::makeFit()
 {
-  std::cout << "                     Starting fit procedure... " << std::endl;
+  std::cout << "                             - Starting fit procedure... " << std::endl;
   
   
   for (int f = 0; f < nHistos; f++)
@@ -736,7 +736,7 @@ void ResolutionFunctions::makeFit()
 
 void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName)
 {
-  std::cout << "ResolutionFunctions::Getting histograms from file  " << inputFileName << std::endl;
+  std::cout << "ResolutionFunctions::makeFit - Getting histograms from file  " << inputFileName << std::endl;
   getHistos = true;
   
   TFile *fin = new TFile(inputFileName.c_str(),"read");
