@@ -36,6 +36,8 @@ using namespace std;
 // using namespace TopTree;
 
 bool test = false;
+bool testFit = true;
+bool testRead = false;
 
 
 string ConvertIntToString(int Number, int pad)
@@ -125,41 +127,47 @@ int main (int argc, char *argv[])
   
   ResolutionFunctions* rf = new ResolutionFunctions(false);
   
-  string inputFileName = "PlotsForResolutionFunctions.root";
+  string inputFileName = "PlotsForResolutionFunctions_test.root";
   
-  string rfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_test.root";
+  string rfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root";
   //TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
   //foutRF->cd();
   //TDirectory* rootDir = foutRF->mkdir(dateString.c_str());
   //rootDir->cd();
   
-  //rf->makeFit(inputFileName, rfFileName);
+  if (testFit)
+  {
+    rf->makeFit(inputFileName, rfFileName);
+  }
   
-  std::vector<std::array<double, 2> > myParams = rf->getParameters(rfFileName, "E", "bjet", true);
-  if (test) cout << myParams[0][0] << "  " << myParams[0][1] << endl;
-  if (test) cout << myParams[1][0] << "  " << myParams[1][1] << endl;
+  if (testRead)
+  {
+    std::vector<std::array<double, 2> > myParams = rf->getParameters(rfFileName, "E", "bjet", true);
+    if (test) cout << myParams[0][0] << "  " << myParams[0][1] << endl;
+    if (test) cout << myParams[1][0] << "  " << myParams[1][1] << endl;
+    
+    /// Create function
+    TF2 *f2 = new TF2("f2",dblGaus,0.,200.,-80.,80., 12);
+    for (int iPar = 0; iPar < 12; iPar++)
+    {
+      int par = (int) ((double)iPar/2.);
+      //if ( iPar%2 != 0 ) par += 1;
+      f2->SetParameter(iPar, myParams[par][iPar%2]);
+      if (test) cout << "Parameter " << iPar << " set to " << myParams[par][iPar%2] << endl;
+    }
+    //cout << f2->Eval(10.,5.) << endl;
+    
+    DrawFunction(f2, "bjet energy", "RF_bjet_E");
+    
+    
+    delete f2;
+  }
   
   //foutRF->Close();
   
   //rf->writeTable(rfFileName);
   
   //delete foutRF;
-  
-  /// Create function
-  TF2 *f2 = new TF2("f2",dblGaus,0.,200.,-80.,80., 12);
-  for (int iPar = 0; iPar < 12; iPar++)
-  {
-    int par = (int) ((double)iPar/2.);
-    //if ( iPar%2 != 0 ) par += 1;
-    f2->SetParameter(iPar, myParams[par][iPar%2]);
-    if (test) cout << "Parameter " << iPar << " set to " << myParams[par][iPar%2] << endl;
-  }
-  //cout << f2->Eval(10.,5.) << endl;
-  
-  DrawFunction(f2, "bjet energy", "RF_bjet_E");
-
-
-  delete f2;
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
