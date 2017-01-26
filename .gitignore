@@ -3,10 +3,12 @@
 *.png
 *.root
 *.root.bk
+*.so
 *.tex
 *.xml.bk
 *Class.C
 *Class.h
+Dict*
 NtupleContent/*
 NtupleOutput/*
 Ntupler_an_Isis.cc
@@ -21,6 +23,7 @@ Trigger/Makefile
 averageMass/*
 data*txt
 eqLumi.txt
+likelihood*.txt
 likelihood/*
 localgridSubmission/SubmitScripts/**
 negWeights/

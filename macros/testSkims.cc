@@ -43,8 +43,8 @@
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 
 // user defined
-#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
-#include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
+#include "Tools/interface/ResolutionFunctions.h"
+#include "Tools/interface/Trigger.h"
 
 
 using namespace std;

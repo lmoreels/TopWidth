@@ -22,7 +22,7 @@
 #include <TH2.h>
 #include <TLorentzVector.h>
 
-//used TopTreeAnalysis classes
+// used TopTreeAnalysis classes
 #include "../TopTreeProducer/interface/TRootRun.h"
 #include "../TopTreeProducer/interface/TRootEvent.h"
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
@@ -41,7 +41,9 @@
 #include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
-#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
+
+// user defined
+#include "Tools/interface/Trigger.h"
 
 
 using namespace std;

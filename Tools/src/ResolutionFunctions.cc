@@ -110,7 +110,7 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["ThgenEl_vs_ThrecEl"] = new TH2F("ThgenEl_vs_ThrecEl","ThgenEl_vs_ThrecEl", 60, 0, 3.15, 60, 0, 3.15);
   histoRes2D["ThgenEl_vs_ThgenEl-ThrecEl"] = new TH2F("ThgenEl_vs_ThgenEl-ThrecEl","ThgenEl_vs_ThgenEl-ThrecEl", 5, 0.2, 3.0, 60, -0.05, 0.05);
   histoRes2D["ThgenMu_vs_ThrecMu"] = new TH2F("ThgenMu_vs_ThrecMu","ThgenMu_vs_ThrecMu", 60, 0, 3.15, 60, 0, 3.15);
-  histoRes2D["ThgenMu_vs_ThgenMu-ThrecMu"] = new TH2F("ThgenMu_vs_ThgenMu-ThrecMu","ThgenMu_vs_ThgenMu-ThrecMu", 5, 0, 3.0, 60, -0.05, 0.05);
+  histoRes2D["ThgenMu_vs_ThgenMu-ThrecMu"] = new TH2F("ThgenMu_vs_ThgenMu-ThrecMu","ThgenMu_vs_ThgenMu-ThrecMu", 5, 0.2, 3.0, 60, -0.05, 0.05);
   
   /// Energy vs theta
   histoRes2D["Eparton_vs_Thnonbjet"] = new TH2F("Eparton_vs_Thnonbjet","Eparton_vs_Thnonbjet", 40, 0, 400, 60, 0, 3.15);
@@ -609,11 +609,7 @@ void ResolutionFunctions::makeFit()
         
       }
       else continue;  // temporarily
-/*      else if ( f == 2 || f == 8 )  // pt of (non-)b jet
-      {
-        // 
-      }
-      else if ( f == 3 || f == 5 || f == 9 || f == 11 )  // theta & phi of jet (CHECK: also eta??)
+/*      else if ( f == 3 || f == 5 || f == 9 || f == 11 )  // theta & phi of jet (CHECK: also eta??)
       {
         //myfit->SetParameter(0, 0.0); 		//central value of first, broad gaussian
         //myfit->SetParameter(1, 0.3);    //sigma value of first, broad gaussian

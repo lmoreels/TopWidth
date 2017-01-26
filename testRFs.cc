@@ -28,7 +28,7 @@
 
 
 // user defined
-#include "TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
+#include "Tools/interface/ResolutionFunctions.h"
 
 
 using namespace std;

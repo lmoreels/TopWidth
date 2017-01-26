@@ -25,7 +25,7 @@
 //#include "../macros/Style.C"
 
 // user defined
-#include "TopTreeAnalysisBase/MCInformation/interface/ResolutionFunctions.h"
+#include "Tools/interface/ResolutionFunctions.h"
 
 
 using namespace std;
@@ -1230,11 +1230,11 @@ int main(int argc, char* argv[])
               {
                 fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
                 fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
-                if ( fabs(sumJetMinusPartonEnergies) < 0.01 * sumJetEnergies )
+                if ( fabs(sumJetMinusPartonEnergies) < 0.005 * sumJetEnergies )
                   fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
-                if ( fabs(selectedJets[MCPermutation[0].first].E()-mcParticles[partonId[MCPermutation[0].second]].E()) < 0.01 * selectedJets[MCPermutation[0].first].E() 
-                    && fabs(selectedJets[MCPermutation[1].first].E()-mcParticles[partonId[MCPermutation[1].second]].E()) < 0.01 * selectedJets[MCPermutation[1].first].E()
-                    && fabs(selectedJets[MCPermutation[2].first].E()-mcParticles[partonId[MCPermutation[2].second]].E()) < 0.01 * selectedJets[MCPermutation[2].first].E() )
+                if ( fabs(selectedJets[MCPermutation[0].first].E()-mcParticles[partonId[MCPermutation[0].second]].E()) < 0.005 * selectedJets[MCPermutation[0].first].E() 
+                    && fabs(selectedJets[MCPermutation[1].first].E()-mcParticles[partonId[MCPermutation[1].second]].E()) < 0.005 * selectedJets[MCPermutation[1].first].E()
+                    && fabs(selectedJets[MCPermutation[2].first].E()-mcParticles[partonId[MCPermutation[2].second]].E()) < 0.005 * selectedJets[MCPermutation[2].first].E() )
                   fakelike_CP_Res2[iWidth] += fakelike_CP_per_evt[iWidth];
               }
 

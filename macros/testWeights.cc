@@ -22,7 +22,7 @@
 #include <TH2.h>
 #include <TLorentzVector.h>
 
-//used TopTreeAnalysis classes
+// used TopTreeAnalysis classes
 #include "../TopTreeProducer/interface/TRootRun.h"
 #include "../TopTreeProducer/interface/TRootEvent.h"
 #include "../TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
@@ -33,18 +33,16 @@
 #include "../TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "../TopTreeAnalysisBase/Content/interface/Dataset.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/MCWeighter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/ElectronPlotter.h"
 #include "../TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
-#include "../TopTreeAnalysisBase/Selection/interface/MuonPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/JetPlotter.h"
-#include "../TopTreeAnalysisBase/Selection/interface/VertexPlotter.h"
 #include "../TopTreeAnalysisBase/Tools/interface/JetTools.h"
 #include "../TopTreeAnalysisBase/Tools/interface/LeptonTools.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/ResolutionFit.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
 #include "../TopTreeAnalysisBase/Reconstruction/interface/JetCorrectorParameters.h"
 #include "../TopTreeAnalysisBase/MCInformation/interface/LumiReWeighting.h"
-#include "../TopTreeAnalysisBase/Tools/interface/Trigger.h"
+
+// user defined
+#include "Tools/interface/Trigger.h"
 
 
 using namespace std;
@@ -815,7 +813,7 @@ int main (int argc, char *argv[])
       
       if ( dataSetName.find("TT") == 0 )
       {
-        treeLoader.LoadMCEvent(ievt, 0, 0, mcParticles, false);
+        treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
         sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
       }
       

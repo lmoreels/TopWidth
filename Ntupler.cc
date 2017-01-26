@@ -55,8 +55,8 @@
 #include "TopTreeAnalysisBase/Reconstruction/interface/TTreeObservables.h"
 
 // user defined
-#include "TopTreeAnalysisBase/Tools/interface/Trigger.h"
-#include "TopTreeAnalysisBase/MCInformation/interface/TransferFunctions.h"
+#include "Tools/interface/ResolutionFunctions.h"
+#include "Tools/interface/Trigger.h"
 
 
 using namespace std;

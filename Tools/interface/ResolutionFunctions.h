@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef ResolutionFunctions_h
-#define ResolutionFunctions_h
+#ifndef INTERFACE_RESOLUTIONFUNCTIONS_H
+#define INTERFACE_RESOLUTIONFUNCTIONS_H
 
 #include <stdio.h>
 #include "TStyle.h"
