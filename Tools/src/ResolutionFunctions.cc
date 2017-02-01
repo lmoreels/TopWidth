@@ -8,9 +8,9 @@
 
 #include "../interface/ResolutionFunctions.h"
 
-const std::string ResolutionFunctions::histoNames[] = {"Eparton_vs_Eparton-Ebjet", "Etparton_vs_Etparton-Etbjet", "Ptparton_vs_Ptparton-Ptbjet", "Eparton_vs_Thparton-Thbjet", "Eparton_vs_Etaparton-Etabjet", "Eparton_vs_Phiparton-Phibjet", "Eparton_vs_Eparton-Enonbjet", "Etparton_vs_Etparton-Etnonbjet", "Ptparton_vs_Ptparton-Ptnonbjet", "Eparton_vs_Thparton-Thnonbjet", "Eparton_vs_Etaparton-Etanonbjet", "Eparton_vs_Phiparton-Phinonbjet", "EgenMu_vs_EgenMu-ErecMu", "EtgenMu_vs_EtgenMu-EtrecMu", "PtgenMu_vs_PtgenMu-PtrecMu", "PtgenMu_vs_ThgenMu-ThrecMu", "PtgenMu_vs_EtagenMu-EtarecMu", "PtgenMu_vs_PhigenMu-PhirecMu", "EgenEl_vs_EgenEl-ErecEl", "EtgenEl_vs_EtgenEl-EtrecEl", "PtgenEl_vs_PtgenEl-PtrecEl", "genEl_vs_ThgenEl-ThrecEl", "EgenEl_vs_EtagenEl-EtarecEl", "EgenEl_vs_PhigenEl-PhirecEl"};
+const std::string ResolutionFunctions::histoNames[] = {"Eparton_vs_Eparton-Ebjet", "Etparton_vs_Etparton-Etbjet", "Ptparton_vs_Ptparton-Ptbjet", "Eparton_vs_Thparton-Thbjet", "Eparton_vs_Etaparton-Etabjet", "Eparton_vs_Phiparton-Phibjet", "Eparton_vs_Eparton-Enonbjet", "Etparton_vs_Etparton-Etnonbjet", "Ptparton_vs_Ptparton-Ptnonbjet", "Eparton_vs_Thparton-Thnonbjet", "Eparton_vs_Etaparton-Etanonbjet", "Eparton_vs_Phiparton-Phinonbjet", "EgenMu_vs_EgenMu-ErecMu", "EtgenMu_vs_EtgenMu-EtrecMu", "PtgenMu_vs_PtgenMu-PtrecMu", "PtgenMu_vs_ThgenMu-ThrecMu", "PtgenMu_vs_EtagenMu-EtarecMu", "PtgenMu_vs_PhigenMu-PhirecMu", "EgenEl_vs_EgenEl-ErecEl", "EtgenEl_vs_EtgenEl-EtrecEl", "PtgenEl_vs_PtgenEl-PtrecEl", "genEl_vs_ThgenEl-ThrecEl", "EgenEl_vs_EtagenEl-EtarecEl", "EgenEl_vs_PhigenEl-PhirecEl", "Etparton_vs_Etparton-Etbjet_B", "Etparton_vs_Etparton-Etbjet_O", "Etparton_vs_Etparton-Etbjet_E", "Etparton_vs_Etparton-Etnonbjet_B", "Etparton_vs_Etparton-Etnonbjet_O", "Etparton_vs_Etparton-Etnonbjet_E"};
 
-const std::string ResolutionFunctions::histoDescription[] = {"b jet energy", "b jet Et", "b jet pt", "b jet theta", "b jet eta", "b jet phi", "non-b jet energy", "non-b jet Et", "non-b jet pt", "non-b jet theta", "non-b jet eta", "non-b jet phi", "muon energy", "muon Et", "muon pt", "muon theta", "muon eta", "muon phi", "electron energy", "electron Et", "electron pt", "electron theta", "electron eta", "electron phi"};
+const std::string ResolutionFunctions::histoDescription[] = {"b jet energy", "b jet Et", "b jet pt", "b jet theta", "b jet eta", "b jet phi", "non-b jet energy", "non-b jet Et", "non-b jet pt", "non-b jet theta", "non-b jet eta", "non-b jet phi", "muon energy", "muon Et", "muon pt", "muon theta", "muon eta", "muon phi", "electron energy", "electron Et", "electron pt", "electron theta", "electron eta", "electron phi", "b jet Et barrel", "b jet Et overlap area", "b jet Et endcap", "non-b jet Et barrel", "non-b jet Et overlap area", "non-b jet Et endcap"};
 
 Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
 {
@@ -20,9 +20,19 @@ Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
   return norm * ( narrowGaus + par[2] * broadGaus );
 }
 
-Double_t ResolutionFunctions::lineFunc(Double_t *x, Double_t *par0, Double_t *par1)
+Double_t ResolutionFunctions::dblGausParFill(Double_t *x, Double_t *par)
 {
-  return par0[0] + x[0] * par1[0];
+  Double_t par0 = par[0] + x[0] * par[1];
+  Double_t par1 = par[2] + x[0] * par[3];
+  Double_t par2 = par[4] + x[0] * par[5];
+  Double_t par3 = par[6] + x[0] * par[7];
+  Double_t par4 = par[8] + x[0] * par[9];
+  Double_t par5 = par[10] + x[0] * par[11];
+  
+  Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par5/TMath::Sqrt( pow(par1, 2) + par2*pow(par4, 2) );
+  Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[1] - par0)/par1 , 2) /2. );
+  Double_t broadGaus = TMath::Exp( - TMath::Power( (x[1] - par3)/par4 , 2) /2. );
+  return norm * ( narrowGaus + par2 * broadGaus );
 }
 
 ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions):
@@ -511,7 +521,9 @@ void ResolutionFunctions::makeFit()
     // 6-11 : non-b jet
     // 12-17: muon
     // 18-23: electron
-    if ( f != 0 && f != 6 && f != 1 && f != 7  && f != 2 && f != 8) continue;
+    // 24-26: b-jet Et in eta bins
+    // 27-29: non-b jet Et in eta bins
+    if ( f != 0 && f != 6 && f != 1 && f != 7  && f != 2 && f != 8 && f != 24 && f != 25 && f != 26 && f != 27 && f != 28 && f != 29 ) continue;
     
     if (! muon && (f == 12 || f == 13 || f == 14 || f == 15 || f == 16 || f == 17) ) continue;
     if (! electron && (f == 18 || f == 19 || f == 20 || f == 21 || f == 22 || f == 23) ) continue;
@@ -528,7 +540,7 @@ void ResolutionFunctions::makeFit()
     
     int nBins = histo->GetXaxis()->GetNbins();
     std::cout << "nbins: " << nBins << std::endl;
-    int nPar = 6;
+    const int nPar = 6;
     //int nPar = 5;
     
     /// Create one histogram for each function parameter -> 6 histograms for each 2D plot
@@ -581,7 +593,7 @@ void ResolutionFunctions::makeFit()
       myfit->SetParName(4,"a5");  // sigma value of second, broad gaussian
       myfit->SetParName(5,"a6");  // amplitude
       //  Set initial values
-      if ( f == 0 || f == 1 || f == 2 || f == 6 || f == 7 || f == 8 )  // energy, Et, pt of (non-)b jet
+      if ( f == 0 || f == 1 || f == 2 || f == 6 || f == 7 || f == 8 || f == 24 || f == 25 || f == 26 || f == 27 || f == 28 || f == 29)  // energy, Et, pt of (non-)b jet, with & without eta bins
       {
         // Mean around zero
         //myfit->SetParLimits(0,-10,10);
@@ -764,7 +776,7 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
   delete foutRF;
 }
 
-std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, bool verbose)
+std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
 {
   int varId = -1, objId = -1;
   if ( varName.std::string::find("E") != std::string::npos ) varId = 0;
@@ -785,6 +797,10 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   }
   
   int f = 4*objId+varId;
+  if ( option.std::string::find("B") == 0 ) f = 24 + 3*objId;
+  else if ( option.std::string::find("O") == 0 ) f = 25 + 3*objId;
+  else if ( option.std::string::find("E") == 0 ) f = 26 + 3*objId;
+  
   if (verbose)
     std::cout << "ResolutionFunctions::Getting resolution function for the " << histoDescription[f] << std::endl;
   
@@ -807,17 +823,46 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   
 }
 
-void ResolutionFunctions::getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, bool verbose)
+TF2* ResolutionFunctions::getResolutionFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
 {
-  std::vector<std::array<double, 2> > params = getParameters(inputFileName, varName, objName, verbose);
+  std::vector<std::array<double, 2> > params = getParameters(inputFileName, varName, objName, option, verbose);
   
-  if (verbose)
+  TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,-80.,80., 12);
+  for (int iPar = 0; iPar < 12; iPar++)
   {
-    int nParams = 6;
-    for (int iPar = 0; iPar < nParams; iPar++)
-      std::cout << "ResolutionFunctions::Interpolation of parameter a" << iPar+1 << ": " << params[iPar][0] << " + E * " << params[iPar][1] << " = " << lineFunc(&var, &params[iPar][0], &params[iPar][1]) << " for E = " << var << std::endl;
+    int par = (int) ((double)iPar/2.);
+    //if ( iPar%2 != 0 ) par += 1;
+    f2->SetParameter(iPar, params[par][iPar%2]);
+    if (verbose) std::cout << "Parameter " << iPar << " set to " << params[par][iPar%2] << std::endl;
   }
   
+  return f2;
+}
+
+TF1* ResolutionFunctions::getResolutionFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
+{
+  TF2* f2 = getResolutionFunction2D(inputFileName, varName, objName, option, verbose);
+  
+  // Make projection on x axis (remove depency on reco/gen difference)
+  TF12 *f2x = new TF12("f2x", f2, 0, "x");
+  // Convert to independent TF1
+  TF1 *f1x = (TF1*) gROOT->GetFunction("f2x");
+  
+  return f1x; 
+}
+
+double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, std::string option, bool verbose)
+{
+  TF2* f2 = getResolutionFunction2D(inputFileName, varName, objName, option, verbose);
+  
+  return f2->Eval(var, varDiff);
+}
+
+double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option, bool verbose)
+{
+  TF1* f1 = getResolutionFunction1D(inputFileName, varName, objName, option, verbose);
+  
+  return f1->Eval(var);
 }
 
 void ResolutionFunctions::writeTable(std::string inputFileName)

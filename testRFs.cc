@@ -24,6 +24,7 @@
 #include <TCanvas.h>
 #include <TPad.h>
 #include <TPaveText.h>
+#include <TF1.h>
 #include <TF2.h>
 
 
@@ -35,9 +36,9 @@ using namespace std;
 // using namespace reweight;
 // using namespace TopTree;
 
-bool test = false;
-bool testFit = true;
-bool testRead = false;
+bool test = true;
+bool testFit = false;
+bool testRead = true;
 
 
 string ConvertIntToString(int Number, int pad)
@@ -73,21 +74,6 @@ string MakeTimeStamp()
   return date_str;
 }
 
-Double_t dblGaus(Double_t *x, Double_t *par)
-{
-  Double_t par0 = par[0] + x[0] * par[1];
-  Double_t par1 = par[2] + x[0] * par[3];
-  Double_t par2 = par[4] + x[0] * par[5];
-  Double_t par3 = par[6] + x[0] * par[7];
-  Double_t par4 = par[8] + x[0] * par[9];
-  Double_t par5 = par[10] + x[0] * par[11];
-  
-  Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par5/TMath::Sqrt( pow(par1, 2) + par2*pow(par4, 2) );
-  Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[1] - par0)/par1 , 2) /2. );
-  Double_t broadGaus = TMath::Exp( - TMath::Power( (x[1] - par3)/par4 , 2) /2. );
-  return norm * ( narrowGaus + par2 * broadGaus );
-}
-
 void DrawFunction(TF2* f, string varName, string saveName)
 {
   TCanvas *c1 = new TCanvas("c1",("Resolution function for "+varName).c_str(),10,200,900,700);
@@ -111,6 +97,21 @@ void DrawFunction(TF2* f, string varName, string saveName)
   delete c1;
 }
 
+void DrawFunction(TF1* f, string varName, string saveName)
+{
+  TCanvas *c1 = new TCanvas("c1",("Projection of resolution function for "+varName).c_str(),10,200,900,700);
+  
+  f->Draw();
+  
+  f->GetHistogram()->GetXaxis()->SetTitle(varName.c_str());
+  f->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
+  
+  c1->Update();
+  c1->SaveAs((saveName+".png").c_str());
+  
+  delete c1;
+}
+
 int main (int argc, char *argv[])
 {
   string dateString = MakeTimeStamp();
@@ -127,7 +128,7 @@ int main (int argc, char *argv[])
   
   ResolutionFunctions* rf = new ResolutionFunctions(false);
   
-  string inputFileName = "PlotsForResolutionFunctions_test.root";
+  string inputFileName = "PlotsForResolutionFunctions.root";
   
   string rfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root";
   //TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
@@ -141,25 +142,20 @@ int main (int argc, char *argv[])
   }
   
   if (testRead)
-  {
-    std::vector<std::array<double, 2> > myParams = rf->getParameters(rfFileName, "E", "bjet", true);
-    if (test) cout << myParams[0][0] << "  " << myParams[0][1] << endl;
-    if (test) cout << myParams[1][0] << "  " << myParams[1][1] << endl;
+  { 
+    TF2* f2 = (TF2*) rf->getResolutionFunction2D(rfFileName, "Et", "bjet", "B", true);
+    DrawFunction(f2, "bjet Et", "RF_bjet_Et_B");
     
-    /// Create function
-    TF2 *f2 = new TF2("f2",dblGaus,0.,200.,-80.,80., 12);
-    for (int iPar = 0; iPar < 12; iPar++)
+    TF1 *f1 = (TF1*) rf->getResolutionFunction1D(rfFileName, "Et", "bjet", "B", true);
+    DrawFunction(f1, "bjet Et (barrel)", "RF_bjet_Et_B_x");
+    
+    if (test)
     {
-      int par = (int) ((double)iPar/2.);
-      //if ( iPar%2 != 0 ) par += 1;
-      f2->SetParameter(iPar, myParams[par][iPar%2]);
-      if (test) cout << "Parameter " << iPar << " set to " << myParams[par][iPar%2] << endl;
+      cout << "Resolution of (0,5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., 0., "B", false) << "   (0,100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., 0., "B", false) << endl;
+      cout << "Resolution of   (5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., "B", false) << "     (100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., "B", false) << endl;
     }
-    //cout << f2->Eval(10.,5.) << endl;
     
-    DrawFunction(f2, "bjet energy", "RF_bjet_E");
-    
-    
+    delete f1;
     delete f2;
   }
   
