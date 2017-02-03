@@ -26,17 +26,19 @@
 
 // user defined
 #include "Tools/interface/ResolutionFunctions.h"
+#include "Tools/interface/KinFitter.h"
 
 
 using namespace std;
 using namespace TopTree;
 
 
-bool test = false;
+bool test = true;
 bool testHistos = false;
+bool testTTbarOnly = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -338,6 +340,11 @@ bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
+/// KinFitter
+TKinFitter* kFitter;
+double kFitChi2 = 99.;
+int nofAcceptedKFit = 0;
+
 /// Likelihood
 int nTot = 0;
 double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
@@ -499,7 +506,8 @@ int main(int argc, char* argv[])
   ///  Initialise ...  ///
   ////////////////////////
   
-  ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions);
+  ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
+  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root");
   
   if (! test && ! calculateAverageMass)
   {
@@ -571,6 +579,8 @@ int main(int argc, char* argv[])
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
+    if (testTTbarOnly && (datasets[d]->Name()).find("TT") == std::string::npos ) continue;
+    
     clock_t startDataSet = clock();
     
     ClearMetaData();
@@ -652,7 +662,7 @@ int main(int argc, char* argv[])
     ////////////////////////////////////
     
     int endEvent = nEntries;
-    if (test || testHistos) endEvent = 2001;
+    if (test || testHistos) endEvent = 21;
     for (int ievt = 0; ievt < endEvent; ievt++)
     {
       ClearObjects();
@@ -973,6 +983,18 @@ int main(int argc, char* argv[])
           }
         }
       }
+      
+      ///-----Test KinFit------///
+      cout << "Event " << setw(5) << right << ievt << "   ";
+      kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]]);
+      if ( kFitter->getStatus() == 0 )
+      {
+        kFitChi2 = kFitter->getS();
+        cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
+      }
+      //if ( kFitChi2 > 10. ) continue;
+      nofAcceptedKFit++;
+      
       
       
       if ( labelsReco[0] < 4 && labelsReco[1] < 4 && labelsReco[2] < 4 )
@@ -1394,6 +1416,7 @@ int main(int argc, char* argv[])
     
     cout << endl;
     cout << "Number of chi2 made with the 4 most energetic jets: " << nofChi2First4 << " (" << 100*((float)nofChi2First4/(float)endEvent) << "%)" << endl;
+    cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)endEvent) << "%)" << endl;
     
     //if ( dataSetName.find("TT") == 0 || dataSetName.find("ST") == 0 )
     if ( dataSetName.find("TT") == 0 )
@@ -1608,13 +1631,13 @@ int main(int argc, char* argv[])
     if ( sumPU > 0 ) { strSyst = "PUup";}
     else if ( sumPU < 0 ) { strSyst = "PUdown";}
   }
-  else
+  else if (! testTTbarOnly)
   {
     cerr << "Shape changing systematics not consistent accross datasets or multiple applied at once" << endl;
     cerr << "Exiting...." << endl;
     exit(1);
   }
-  cout << " - Systematics confirmed to be " << strSyst << endl;
+  if (! testTTbarOnly) cout << " - Systematics confirmed to be " << strSyst << endl;
   
   
   if (test)
@@ -2148,6 +2171,7 @@ void ClearMetaData()
   nofChi2First4 = 0;
   nofCorrectlyMatched_chi2 = 0;
   nofNotCorrectlyMatched_chi2 = 0;
+  nofAcceptedKFit = 0;
   
   toyMax = 1.;
 }
@@ -2236,6 +2260,7 @@ void ClearLeaves()
   labelMlb = -9999;
   labelMl_nonb = -9999;
   massForWidth = 0.01;
+  kFitChi2 = 99.;
   toy = -1.;
 }
 
