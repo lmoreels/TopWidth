@@ -36,7 +36,7 @@
 
 class ResolutionFunctions{
   public:
-    ResolutionFunctions(bool calculateResolutionFunctions);
+    ResolutionFunctions(bool calculateResolutionFunctions, bool _verbose);
     ~ResolutionFunctions();
     std::string toStr(int number);
     void bookHistograms();
@@ -46,15 +46,15 @@ class ResolutionFunctions{
     void writeHistograms();
     void makeFit();
     void makeFit(std::string inputFileName, std::string outputFileName);
-    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option = "", bool verbose = false);
-    TF2* getResolutionFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option = "", bool verbose = false);
-    TF1* getResolutionFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option = "", bool verbose = false);
-    double getResolution(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, std::string option = "", bool verbose = false);
-    double getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option = "", bool verbose = false);
+    TF2* getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
+    TF1* getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
+    TF1* getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
+    double getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option = "");
     void writeTable(std::string inputFileName);
-
-    
+  
+  
   private:
+    bool verbose;
     bool muon;
     bool electron;
     bool getHistos;
@@ -67,6 +67,7 @@ class ResolutionFunctions{
     static const std::string histoDescription[];
     static Double_t dblGaus(Double_t *x, Double_t *par);
     static Double_t dblGausParFill(Double_t *x, Double_t *par);
+    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
 };
 
 

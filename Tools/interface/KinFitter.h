@@ -28,9 +28,10 @@
 
 class KinFitter{
   public:
+    KinFitter();
     KinFitter(std::string _rfFileName);
     ~KinFitter();
-    void doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
+    TKinFitter* doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
       
   private:
     TKinFitter *fitter_;

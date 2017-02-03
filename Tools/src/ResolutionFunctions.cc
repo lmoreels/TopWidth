@@ -35,16 +35,17 @@ Double_t ResolutionFunctions::dblGausParFill(Double_t *x, Double_t *par)
   return norm * ( narrowGaus + par2 * broadGaus );
 }
 
-ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions):
-muon(false), electron(false), getHistos(false), histoRes2D(), inputFileName("PlotsForResolutionFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0]))
+ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions, bool _verbose):
+verbose(true), muon(false), electron(false), getHistos(false), histoRes2D(), inputFileName("PlotsForResolutionFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0]))
 {
-  std::cout << "ResolutionFunctions::ResolutionFunctions - Initialising..." << std::endl;
+  verbose = _verbose;
+  if (verbose) std::cout << "ResolutionFunctions::ResolutionFunctions - Initialising..." << std::endl;
   
   if (calculateResolutionFunctions)
   {
-    bookHistograms();
+    this->bookHistograms();
   }
-  else
+  else if (verbose)
   {
     std::cout << "Using resolution functions from file..." << std::endl;
   }
@@ -66,7 +67,7 @@ std::string ResolutionFunctions::toStr(int number)
 
 void ResolutionFunctions::bookHistograms()
 {
-  std::cout << "ResolutionFunctions::bookHistograms - Initialising..." << std::endl;
+  if (verbose) std::cout << "ResolutionFunctions::bookHistograms - Initialising..." << std::endl;
   
   /// Energy
   histoRes2D["Eparton_vs_Enonbjet"] = new TH2F("Eparton_vs_Enonbjet","Eparton_vs_Enonbjet", 40, 0, 400, 40, 0, 400);
@@ -172,7 +173,7 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["PtgenMu_vs_PhirecMu"] = new TH2F("PtgenMu_vs_PhirecMu","PtgenMu_vs_PhirecMu", 30, 0, 300, 120, -3.2, 3.2);
   histoRes2D["PtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("PtgenMu_vs_PhigenMu-PhirecMu","PtgenMu_vs_PhigenMu-PhirecMu", 5, 0, 250, 100, -0.002, 0.002);
   
-  std::cout << "                                    - Histograms booked" << std::endl;
+  if (verbose) std::cout << "                                    - Histograms booked" << std::endl;
 }
 
 void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet)
@@ -506,13 +507,13 @@ void ResolutionFunctions::writeHistograms()
     histoRes2D["PhigenEl_vs_PhigenEl-PhirecEl"]->Write();
   }
   
-  std::cout << "ResolutionFunctions::writeHistograms - Histograms written to file" << std::endl;
-  //makeFit();
+  if (verbose) std::cout << "ResolutionFunctions::writeHistograms - Histograms written to file" << std::endl;
+  //this->makeFit();
 }
 
 void ResolutionFunctions::makeFit()
 {
-  std::cout << "                             - Starting fit procedure... " << std::endl;
+  if (verbose) std::cout << "                             - Starting fit procedure... " << std::endl;
   
   
   for (int f = 0; f < nHistos; f++)
@@ -539,7 +540,7 @@ void ResolutionFunctions::makeFit()
     
     
     int nBins = histo->GetXaxis()->GetNbins();
-    std::cout << "nbins: " << nBins << std::endl;
+    if (verbose) std::cout << "nbins: " << nBins << std::endl;
     const int nPar = 6;
     //int nPar = 5;
     
@@ -575,7 +576,7 @@ void ResolutionFunctions::makeFit()
       Double_t scale = 1./hp->Integral();
       hp->Scale(scale);
       
-      std::cout << "Integral of the histo is " << hp->Integral() << std::endl;
+      if (verbose) std::cout << "Integral of the histo is " << hp->Integral() << std::endl;
       /// Declare the fit function
       //  ! Its range depends on the jet/lepton energy range (hence, the Y-axis)
       //TF1 *myfit = new TF1("myfit", "[2]*(TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2)))+[5]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))))");
@@ -700,7 +701,7 @@ void ResolutionFunctions::makeFit()
       hp->Write();
       myfit->Write();
       
-      std::cout << "Integral of the fit is " << myfit->Integral(-100,100,0) << std::endl;
+      if (verbose) std::cout << "Integral of the fit is " << myfit->Integral(-100,100,0) << std::endl;
       
       delete hp;
       delete myfit;
@@ -738,7 +739,7 @@ void ResolutionFunctions::makeFit()
 
 void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName)
 {
-  std::cout << "ResolutionFunctions::makeFit - Getting histograms from file  " << inputFileName << std::endl;
+  if (verbose) std::cout << "ResolutionFunctions::makeFit - Getting histograms from file  " << inputFileName << std::endl;
   getHistos = true;
   
   TFile *fin = new TFile(inputFileName.c_str(),"read");
@@ -767,7 +768,7 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
     fitHisto2D[histoNames[f]]->Write();
   }
   
-  makeFit();
+  this->makeFit();
   
   fin->Close();
   foutRF->Close();
@@ -776,7 +777,7 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
   delete foutRF;
 }
 
-std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
+std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option)
 {
   int varId = -1, objId = -1;
   if ( varName.std::string::find("E") != std::string::npos ) varId = 0;
@@ -823,9 +824,9 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   
 }
 
-TF2* ResolutionFunctions::getResolutionFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
+TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option)
 {
-  std::vector<std::array<double, 2> > params = getParameters(inputFileName, varName, objName, option, verbose);
+  std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, option);
   
   TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,-80.,80., 12);
   for (int iPar = 0; iPar < 12; iPar++)
@@ -833,15 +834,15 @@ TF2* ResolutionFunctions::getResolutionFunction2D(std::string inputFileName, std
     int par = (int) ((double)iPar/2.);
     //if ( iPar%2 != 0 ) par += 1;
     f2->SetParameter(iPar, params[par][iPar%2]);
-    if (verbose) std::cout << "Parameter " << iPar << " set to " << params[par][iPar%2] << std::endl;
+    //if (verbose) std::cout << "Parameter " << iPar << " set to " << params[par][iPar%2] << std::endl;
   }
   
   return f2;
 }
 
-TF1* ResolutionFunctions::getResolutionFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option, bool verbose)
+TF1* ResolutionFunctions::getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option)
 {
-  TF2* f2 = getResolutionFunction2D(inputFileName, varName, objName, option, verbose);
+  TF2* f2 = this->getFitFunction2D(inputFileName, varName, objName, option);
   
   // Make projection on x axis (remove depency on reco/gen difference)
   TF12 *f2x = new TF12("f2x", f2, 0, "x");
@@ -851,23 +852,28 @@ TF1* ResolutionFunctions::getResolutionFunction1D(std::string inputFileName, std
   return f1x; 
 }
 
-double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, double varDiff, std::string option, bool verbose)
+TF1* ResolutionFunctions::getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string option)
 {
-  TF2* f2 = getResolutionFunction2D(inputFileName, varName, objName, option, verbose);
+  std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, option);
   
-  return f2->Eval(var, varDiff);
+  TF1 *f = new TF1("f", "[0] + [1]*x", 0., 250.);
+  // fill params for narrow gaussian sigma
+  f->FixParameter(0, params[1][0]);
+  f->FixParameter(1, params[1][1]);
+  
+  return f; 
 }
 
-double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option, bool verbose)
+double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option)
 {
-  TF1* f1 = getResolutionFunction1D(inputFileName, varName, objName, option, verbose);
+  TF1* f = this->getResolutionFunction(inputFileName, varName, objName, option);
   
-  return f1->Eval(var);
+  return f->Eval(var);
 }
 
 void ResolutionFunctions::writeTable(std::string inputFileName)
 {
-  std::cout << "ResolutionFunctions::Writing table with parameters..." << std::endl;
+  if (verbose) std::cout << "ResolutionFunctions::Writing table with parameters..." << std::endl;
   
   std::ofstream myResolutionFunctions;
   std::string myResolutionFunctions_TABLE = "ResolutionFunctions_TABLE.txt";

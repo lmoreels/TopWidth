@@ -126,7 +126,7 @@ int main (int argc, char *argv[])
   
   
   
-  ResolutionFunctions* rf = new ResolutionFunctions(false);
+  ResolutionFunctions* rf = new ResolutionFunctions(false, true);
   
   string inputFileName = "PlotsForResolutionFunctions.root";
   
@@ -143,16 +143,18 @@ int main (int argc, char *argv[])
   
   if (testRead)
   { 
-    TF2* f2 = (TF2*) rf->getResolutionFunction2D(rfFileName, "Et", "bjet", "B", true);
-    DrawFunction(f2, "bjet Et", "RF_bjet_Et_B");
+    TF2* f2 = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "bjet", "B");
+    DrawFunction(f2, "bjet Et (barrel)", "RF_bjet_Et_B_fitF");
     
-    TF1 *f1 = (TF1*) rf->getResolutionFunction1D(rfFileName, "Et", "bjet", "B", true);
-    DrawFunction(f1, "bjet Et (barrel)", "RF_bjet_Et_B_x");
+    TF1 *f1 = (TF1*) rf->getFitFunction1D(rfFileName, "Et", "bjet", "B");
+    DrawFunction(f1, "bjet Et (barrel)", "RF_bjet_Et_B_fitF_x");
+    
+    TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
+    DrawFunction(f, "bjet Et (barrel)", "RF_bjet_Et_B");
     
     if (test)
     {
-      cout << "Resolution of (0,5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., 0., "B", false) << "   (0,100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., 0., "B", false) << endl;
-      cout << "Resolution of   (5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., "B", false) << "     (100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., "B", false) << endl;
+      cout << "Resolution of   (5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., "B") << "     (100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., "B") << endl;
     }
     
     delete f1;
