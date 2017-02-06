@@ -785,8 +785,8 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   else if ( varName.std::string::find("eta") != std::string::npos ) varId = 2;
   else if ( varName.std::string::find("phi") != std::string::npos ) varId = 3;
   
-  if ( objName.std::string::find("bjet") != std::string::npos ) objId = 0;
-  else if ( objName.std::string::find("nonbjet") != std::string::npos ) objId = 1;
+  if ( objName.std::string::find("nonbjet") != std::string::npos ) objId = 1;
+  else if ( objName.std::string::find("bjet") != std::string::npos ) objId = 0;
   else if ( objName.std::string::find("mu") != std::string::npos ) objId = 2;
   else if ( objName.std::string::find("el") != std::string::npos ) objId = 3;
   
@@ -866,7 +866,7 @@ TF1* ResolutionFunctions::getResolutionFunction(std::string inputFileName, std::
 
 double ResolutionFunctions::getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option)
 {
-  TF1* f = this->getResolutionFunction(inputFileName, varName, objName, option);
+  TF1* f = (TF1*) this->getResolutionFunction(inputFileName, varName, objName, option);
   
   return f->Eval(var);
 }

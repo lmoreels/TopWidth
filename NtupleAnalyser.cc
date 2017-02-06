@@ -320,6 +320,7 @@ TLorentzVector WCandidate;
 vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
+vector<TLorentzVector> selectedJetsKFcorrected;
 vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
@@ -508,7 +509,7 @@ int main(int argc, char* argv[])
   
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
   KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root");
-  
+    
   if (! test && ! calculateAverageMass)
   {
     InitMSPlots();
@@ -696,7 +697,12 @@ int main(int argc, char* argv[])
       
       if (useToys) scaleFactor *= eqLumi;  // undo automatic scaling by eqLumi in MSPlots
       
-      /// Fill objects
+      
+      
+      //////////////////////
+      ///  Fill objects  ///
+      //////////////////////
+      
       muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
       selectedLepton.push_back(muon);
       
@@ -717,6 +723,11 @@ int main(int argc, char* argv[])
       }
       //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
       
+      /// Make plots
+      if (! test && ! calculateAverageMass)
+      {
+        FillGeneralPlots(d);
+      }
       
       
       
@@ -995,6 +1006,12 @@ int main(int argc, char* argv[])
       //if ( kFitChi2 > 10. ) continue;
       nofAcceptedKFit++;
       
+      selectedJetsKFcorrected = kf->getCorrectedJets();
+      if (test)
+      {
+        cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << endl;
+        cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << endl;
+      }
       
       
       if ( labelsReco[0] < 4 && labelsReco[1] < 4 && labelsReco[2] < 4 )
@@ -1401,15 +1418,6 @@ int main(int argc, char* argv[])
         histo1D["mTop_div_aveMTop_bkgd"]->Fill(reco_hadTopMass/aveTopMass[15]);
       }
       
-      
-      ////////////////////
-      ///  Make plots  ///
-      ////////////////////
-      
-      if (! test && ! calculateAverageMass)
-      {
-        FillGeneralPlots(d);
-      }
       
     }  // end loop events
     
@@ -2273,6 +2281,7 @@ void ClearTLVs()
   selectedLepton.clear();
   selectedJets.clear();
   selectedBJets.clear();
+  selectedJetsKFcorrected.clear();
   mcParticles.clear();
   partons.clear();
   partonsMatched.clear();

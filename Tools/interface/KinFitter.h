@@ -31,7 +31,10 @@ class KinFitter{
     KinFitter();
     KinFitter(std::string _rfFileName);
     ~KinFitter();
+    void GetErrorFunctions();
+    void SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
     TKinFitter* doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
+    std::vector<TLorentzVector> getCorrectedJets();
       
   private:
     TKinFitter *fitter_;
@@ -43,10 +46,11 @@ class KinFitter{
     TMatrixD mErrJet2 = TMatrixD(3,3);
     TMatrixD mErrJet3 = TMatrixD(3,3);
     std::string rfFileName;
-    map<std::string, TF1*> errorFuncMap;
+    std::map<std::string, TF1*> errorFuncMap;
+    TLorentzVector tempJet;
+    std::vector<TLorentzVector> corrJets;
     
-    void GetErrorFunctions();
-    void SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
+    
 };
 
 

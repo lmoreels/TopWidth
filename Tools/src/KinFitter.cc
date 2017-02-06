@@ -1,8 +1,10 @@
 #include "../interface/KinFitter.h"
 
 KinFitter::KinFitter():
-rfFileName("/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root")
+rfFileName("/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root"), errorFuncMap()
 {
+  std::cout << "KinFitter::KinFitter - Initialising..." << std::endl;
+  
   // Initialise error matrices
   mErrJet1.Zero();
   mErrJet2.Zero();
@@ -11,11 +13,18 @@ rfFileName("/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResoluti
   this->GetErrorFunctions();
 }
 
-KinFitter::KinFitter(std::string _rfFileName)
+KinFitter::KinFitter(std::string _rfFileName):errorFuncMap()
 {
+  std::cout << "KinFitter::KinFitter - Initialising..." << std::endl;
+  
   rfFileName = _rfFileName;
   
-  KinFitter();
+  // Initialise error matrices
+  mErrJet1.Zero();
+  mErrJet2.Zero();
+  mErrJet3.Zero();
+  
+  this->GetErrorFunctions();
 }
 
 KinFitter::~KinFitter()
@@ -28,12 +37,14 @@ void KinFitter::GetErrorFunctions()
   ResolutionFunctions *rf = new ResolutionFunctions(false, false);
   
   // At the moment only errors for Et
-  errorFuncMap["bjetEt_B"]    = rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
-  errorFuncMap["bjetEt_O"]    = rf->getResolutionFunction(rfFileName, "Et", "bjet", "O");
-  errorFuncMap["bjetEt_E"]    = rf->getResolutionFunction(rfFileName, "Et", "bjet", "E");
-  errorFuncMap["nonbjetEt_B"] = rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
-  errorFuncMap["nonbjetEt_O"] = rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "O");
-  errorFuncMap["nonbjetEt_E"] = rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "E");
+  errorFuncMap["bjetEt_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
+  errorFuncMap["bjetEt_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "O");
+  errorFuncMap["bjetEt_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "E");
+  errorFuncMap["nonbjetEt_B"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
+  errorFuncMap["nonbjetEt_O"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "O");
+  errorFuncMap["nonbjetEt_E"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "E");
+  
+  delete rf;
 }
 
 void KinFitter::SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3)
@@ -44,9 +55,9 @@ void KinFitter::SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVect
   Double_t Eta1 = fabs(jet1.Eta());
   Double_t Eta2 = fabs(jet2.Eta());
   Double_t Eta3 = fabs(jet3.Eta());
-  if ( Et1 > 250 ) Et1 = 250;
-  if ( Et2 > 250 ) Et2 = 250;
-  if ( Et3 > 250 ) Et3 = 250;
+  if ( Et1 > 250. ) Et1 = 250.;
+  if ( Et2 > 250. ) Et2 = 250.;
+  if ( Et3 > 250. ) Et3 = 250.;
   
   /// jet 1 & jet 2 "from W boson" ==> light jets; jet 3 ==> b jet
   if ( Eta1 <= 1.3 )                    mErrJet1(0,0) = pow( errorFuncMap["nonbjetEt_B"]->Eval(Et1), 2);
@@ -96,4 +107,23 @@ TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzV
   fitter_->fit();
   
   return fitter_;
+}
+
+vector<TLorentzVector> KinFitter::getCorrectedJets()
+{
+  tempJet.Clear();
+  corrJets.clear();
+  
+  if ( fitter_->getStatus() == 0 )
+  {
+    tempJet.SetPxPyPzE( jet1_->getCurr4Vec()->Px(), jet1_->getCurr4Vec()->Py(), jet1_->getCurr4Vec()->Pz(), jet1_->getCurr4Vec()->E() );
+    corrJets.push_back(tempJet);
+    tempJet.SetPxPyPzE( jet2_->getCurr4Vec()->Px(), jet2_->getCurr4Vec()->Py(), jet2_->getCurr4Vec()->Pz(), jet2_->getCurr4Vec()->E() );
+    corrJets.push_back(tempJet);
+    tempJet.SetPxPyPzE( jet3_->getCurr4Vec()->Px(), jet3_->getCurr4Vec()->Py(), jet3_->getCurr4Vec()->Pz(), jet3_->getCurr4Vec()->E() );
+    corrJets.push_back(tempJet);
+  }
+  else std::cerr << "KinFitter::getCorrectedJets: Fit did not converge! Returning zero..." << std::endl;
+  
+  return corrJets;
 }

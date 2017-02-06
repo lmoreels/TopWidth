@@ -40,6 +40,7 @@ bool test = true;
 bool testFit = false;
 bool testRead = true;
 
+std::map<std::string, TF1*> errorFuncMap;
 
 string ConvertIntToString(int Number, int pad)
 {
@@ -149,16 +150,23 @@ int main (int argc, char *argv[])
     TF1 *f1 = (TF1*) rf->getFitFunction1D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f1, "bjet Et (barrel)", "RF_bjet_Et_B_fitF_x");
     
-    TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
-    DrawFunction(f, "bjet Et (barrel)", "RF_bjet_Et_B");
+    TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
+    //DrawFunction(f, "bjet Et (barrel)", "RF_bjet_Et_B");
+    DrawFunction(f, "non-bjet Et (barrel)", "RF_nonbjet_Et_B");
     
     if (test)
     {
-      cout << "Resolution of   (5) = " << rf->getResolution(rfFileName, "Et", "bjet", 5., "B") << "     (100) = " << rf->getResolution(rfFileName, "Et", "bjet", 100., "B") << endl;
+      cout << "Calculate resolution from function: " << f->Eval(100.) << endl;
+      cout << "Resolution of   (5) = " << rf->getResolution(rfFileName, "Et", "nonbjet", 5., "B") << "     (100) = " << rf->getResolution(rfFileName, "Et", "nonbjet", 100., "B") << endl;
+      
+      errorFuncMap["nonbjetEt_B"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
+      DrawFunction(errorFuncMap["nonbjetEt_B"], "non-bjet Et (barrel)", "RF_nonbjet_Et_B2");
+      cout << errorFuncMap["nonbjetEt_B"]->Eval(100.) << endl;
     }
     
     delete f1;
     delete f2;
+    delete f;
   }
   
   //foutRF->Close();
