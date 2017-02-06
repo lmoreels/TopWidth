@@ -59,6 +59,8 @@ If you use the ssh link, you need to enter the passphrase of your ssh key.
 git clone ssh://git@github.com/lmoreels/TopWidth TopBrussels/TopWidth
 
 cd TopBrussels/TopWidth
+
+make
 ~~~
 
 
@@ -92,11 +94,11 @@ source compile.sh
 ## Compile one macro
 
 ~~~
-source compile.sh testAnalyser.cc
+source compile.sh NtupleAnalyser.cc
 ~~~
 
 ## Run
 
 ~~~
-./testAnalyser
+./NtupleAnalyser
 ~~~
