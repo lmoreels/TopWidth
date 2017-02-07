@@ -33,7 +33,8 @@ class KinFitter{
     ~KinFitter();
     void GetErrorFunctions();
     void SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
-    TKinFitter* doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3);
+    void SetupFitter();
+    TKinFitter* doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3, int _verbosity);
     std::vector<TLorentzVector> getCorrectedJets();
       
   private:

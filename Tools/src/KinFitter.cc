@@ -11,6 +11,7 @@ rfFileName("/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResoluti
   mErrJet3.Zero();
   
   this->GetErrorFunctions();
+  this->SetupFitter();
 }
 
 KinFitter::KinFitter(std::string _rfFileName):errorFuncMap()
@@ -25,6 +26,7 @@ KinFitter::KinFitter(std::string _rfFileName):errorFuncMap()
   mErrJet3.Zero();
   
   this->GetErrorFunctions();
+  this->SetupFitter();
 }
 
 KinFitter::~KinFitter()
@@ -78,14 +80,12 @@ void KinFitter::SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVect
   mErrJet3(1,1) = 1.; mErrJet3(2,2) = 1.;
 }
 
-TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3)
+void KinFitter::SetupFitter()
 {
-  this->SetErrors(jet1, jet2, jet3);
-  
   /// Define particles
-  jet1_ = new TFitParticleEtThetaPhi( "jet1", "jet1", &jet1, &mErrJet1);
-  jet2_ = new TFitParticleEtThetaPhi( "jet2", "jet2", &jet2, &mErrJet2);
-  jet3_ = new TFitParticleEtThetaPhi( "jet3", "jet3", &jet3, &mErrJet3);
+  jet1_ = new TFitParticleEtThetaPhi( "jet1", "jet1", 0, &mErrJet1);
+  jet2_ = new TFitParticleEtThetaPhi( "jet2", "jet2", 0, &mErrJet2);
+  jet3_ = new TFitParticleEtThetaPhi( "jet3", "jet3", 0, &mErrJet3);
   
   /// Define constraints
   consMW_ = new TFitConstraintM( "WMassConstraint", "WMassConstraint", 0, 0, 80.385);  // pdg2014
@@ -97,11 +97,25 @@ TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzV
   fitter_->addConstraint( consMW_ );
   fitter_->addMeasParticles( jet1_, jet2_, jet3_ );
   
-  /// Set convergence criteria (?)  --> functions do not exist in our kinfitter?
+  /// Set convergence criteria
   fitter_->setMaxNbIter(30);
   fitter_->setMaxDeltaS(5e-5);
   fitter_->setMaxF(1e-4);
   fitter_->setVerbosity(0);
+}
+
+TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3, int _verbosity)
+{
+  /// Get errors
+  this->SetErrors(jet1, jet2, jet3);
+  
+  /// Fill particles
+  jet1_->setIni4Vec(&jet1); jet1_->setCovMatrix(&mErrJet1);
+  jet2_->setIni4Vec(&jet2); jet2_->setCovMatrix(&mErrJet2);
+  jet3_->setIni4Vec(&jet3); jet3_->setCovMatrix(&mErrJet3);
+  
+  if ( _verbosity != 0 )
+    fitter_->setVerbosity(_verbosity);
   
   /// Perform fit
   fitter_->fit();
