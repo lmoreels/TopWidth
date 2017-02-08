@@ -734,6 +734,9 @@ int main(int argc, char* argv[])
         selectedJets.push_back(jet);
       }
       
+      /// Only look at events with exactly 4 jets
+      //if ( selectedJets.size() > 4 ) continue;
+      
       for (int iJet = 0; iJet < selectedJets.size(); iJet++)
       {
         if ( jet_bdiscr[iJet] > CSVv2Medium )
