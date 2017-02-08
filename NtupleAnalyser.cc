@@ -453,6 +453,7 @@ int main(int argc, char* argv[])
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
   if ( applyWidthSF && scaleWidth != 1 ) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
+  if (testHistos) cout << "Testing histogram consistency..." << endl;
   
   
   /// xml file
@@ -1062,6 +1063,61 @@ int main(int argc, char* argv[])
           histo1D["KF_top_mass_corr_TT"]->Fill(topmass_reco_kf);
           histo2D["KF_W_mass_orig_vs_corr_TT"]->Fill(Wmass_reco_orig, Wmass_reco_kf);
           histo2D["KF_top_mass_orig_vs_corr_TT"]->Fill(topmass_reco_orig, topmass_reco_kf);
+          
+          histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
+          
+          if ( selectedJets.size() == 4)
+          {
+            histo1D["KF_top_mass_orig_ex4j_TT"]->Fill(topmass_reco_orig);
+            histo1D["KF_top_mass_corr_ex4j_TT"]->Fill(topmass_reco_kf);
+          }
+          else
+          {
+            histo1D["KF_top_mass_orig_mt4j_TT"]->Fill(topmass_reco_orig);
+            histo1D["KF_top_mass_corr_mt4j_TT"]->Fill(topmass_reco_kf);
+          }
+          
+          histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
+          if ( kFitChi2 < 10. )
+          {
+            if ( selectedJets.size() == 4)
+            {
+              histo1D["KF_top_mass_orig_ex4j_chi2cut10_TT"]->Fill(topmass_reco_orig);
+              histo1D["KF_top_mass_corr_ex4j_chi2cut10_TT"]->Fill(topmass_reco_kf);
+            }
+            else
+            {
+              histo1D["KF_top_mass_orig_mt4j_chi2cut10_TT"]->Fill(topmass_reco_orig);
+              histo1D["KF_top_mass_corr_mt4j_chi2cut10_TT"]->Fill(topmass_reco_kf);
+            }
+            
+            if ( kFitChi2 < 5. )
+            {
+              if ( selectedJets.size() == 4)
+              {
+                histo1D["KF_top_mass_orig_ex4j_chi2cut5_TT"]->Fill(topmass_reco_orig);
+                histo1D["KF_top_mass_corr_ex4j_chi2cut5_TT"]->Fill(topmass_reco_kf);
+              }
+              else
+              {
+                histo1D["KF_top_mass_orig_mt4j_chi2cut5_TT"]->Fill(topmass_reco_orig);
+                histo1D["KF_top_mass_corr_mt4j_chi2cut5_TT"]->Fill(topmass_reco_kf);
+              }
+              if ( kFitChi2 < 2. )
+              {
+                if ( selectedJets.size() == 4)
+                {
+                  histo1D["KF_top_mass_orig_ex4j_chi2cut2_TT"]->Fill(topmass_reco_orig);
+                  histo1D["KF_top_mass_corr_ex4j_chi2cut2_TT"]->Fill(topmass_reco_kf);
+                }
+                else
+                {
+                  histo1D["KF_top_mass_orig_mt4j_chi2cut2_TT"]->Fill(topmass_reco_orig);
+                  histo1D["KF_top_mass_corr_mt4j_chi2cut2_TT"]->Fill(topmass_reco_kf);
+                }
+              }  // 2
+            }  // 5
+          }  // 10
         }
       }
       
@@ -2063,10 +2119,31 @@ void InitHisto1D()
   histo1D["debugLL_dR_lep_b_had_reco"]  = new TH1F("debugLL_dR_lep_b_had_reco","Minimal delta R between the lepton and the hadronic b jet; #Delta R(l,b_{h})", 25, 0, 5);
   
   /// KinFitter
+  histo1D["KF_Chi2_TT"] = new TH1F("KF_Chi2_TT", "Chi2 value of kinFitter (TT); #chi^{2}", 200, 0, 20);
   histo1D["KF_W_mass_orig_TT"] = new TH1F("KF_W_mass_orig_TT", "W mass before kinFitter (TT); m_{W} [GeV]", 250, 0, 500);
   histo1D["KF_top_mass_orig_TT"] = new TH1F("KF_top_mass_orig_TT", "Top mass before kinFitter (TT); m_{t} [GeV]", 400, 0, 800);
   histo1D["KF_W_mass_corr_TT"] = new TH1F("KF_W_mass_corr_TT", "W mass after kinFitter (TT); m_{W,kf} [GeV]", 250, 0, 500);
   histo1D["KF_top_mass_corr_TT"] = new TH1F("KF_top_mass_corr_TT", "Top mass after kinFitter (TT); m_{t,kf} [GeV]", 400, 0, 800);
+  
+  histo1D["KF_top_mass_orig_ex4j_TT"] = new TH1F("KF_top_mass_orig_ex4j_TT", "Top mass before kinFitter (TT) (exactly 4 jets); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_ex4j_TT"] = new TH1F("KF_top_mass_corr_ex4j_TT", "Top mass after kinFitter (TT) (exactly 4 jets); m_{t,kf} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_orig_mt4j_TT"] = new TH1F("KF_top_mass_orig_mt4j_TT", "Top mass before kinFitter (TT) (more than 4 jets); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_mt4j_TT"] = new TH1F("KF_top_mass_corr_mt4j_TT", "Top mass after kinFitter (TT) (more than 4 jets); m_{t,kf} [GeV]", 400, 0, 800);
+  
+  histo1D["KF_top_mass_orig_ex4j_chi2cut10_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut10_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 10); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_ex4j_chi2cut10_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut10_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 10); m_{t,kf} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_orig_mt4j_chi2cut10_TT"] = new TH1F("KF_top_mass_orig_mt4j_chi2cut10_TT", "Top mass before kinFitter (TT) (more than 4 jets - KF chi2 < 10); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_mt4j_chi2cut10_TT"] = new TH1F("KF_top_mass_corr_mt4j_chi2cut10_TT", "Top mass after kinFitter (TT) (more than 4 jets - KF chi2 < 10); m_{t,kf} [GeV]", 400, 0, 800);
+  
+  histo1D["KF_top_mass_orig_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut5_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut5_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t,kf} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_orig_mt4j_chi2cut5_TT"] = new TH1F("KF_top_mass_orig_mt4j_chi2cut5_TT", "Top mass before kinFitter (TT) (more than 4 jets - KF chi2 < 5); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_mt4j_chi2cut5_TT"] = new TH1F("KF_top_mass_corr_mt4j_chi2cut5_TT", "Top mass after kinFitter (TT) (more than 4 jets - KF chi2 < 5); m_{t,kf} [GeV]", 400, 0, 800);
+  
+  histo1D["KF_top_mass_orig_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut2_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut2_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t,kf} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_orig_mt4j_chi2cut2_TT"] = new TH1F("KF_top_mass_orig_mt4j_chi2cut2_TT", "Top mass before kinFitter (TT) (more than 4 jets - KF chi2 < 2); m_{t} [GeV]", 400, 0, 800);
+  histo1D["KF_top_mass_corr_mt4j_chi2cut2_TT"] = new TH1F("KF_top_mass_corr_mt4j_chi2cut2_TT", "Top mass after kinFitter (TT) (more than 4 jets - KF chi2 < 2); m_{t,kf} [GeV]", 400, 0, 800);
 }
 
 void InitHisto2D()
