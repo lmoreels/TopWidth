@@ -599,6 +599,18 @@ int main (int argc, char *argv[])
     ///  Define variables for trees  ///
     ////////////////////////////////////
     
+    // stats of dataset
+    Long64_t nEvents;
+    Long64_t nEventsSel;
+    Int_t nofPosWeights;
+    Int_t nofNegWeights;
+    Double_t sumW;
+    
+    Long64_t nofEventsHLTv2;
+    Long64_t nofEventsHLTv3;
+    Long64_t nofSelEventsHLTv2;
+    Long64_t nofSelEventsHLTv3;
+    
     // event related variables
     Int_t run_num;
     Long64_t evt_num;
@@ -617,17 +629,6 @@ int main (int argc, char *argv[])
     Int_t appliedJER;
     Int_t appliedJES;
     Int_t appliedPU;
-    
-    Long64_t nEvents;
-    Long64_t nEventsSel;
-    Int_t nofPosWeights;
-    Int_t nofNegWeights;
-    Double_t sumW;
-    
-    Long64_t nofEventsHLTv2;
-    Long64_t nofEventsHLTv3;
-    Long64_t nofSelEventsHLTv2;
-    Long64_t nofSelEventsHLTv3;
     
     Bool_t hasHLTv2;
     Bool_t hasHLTv3;
@@ -695,6 +696,15 @@ int main (int argc, char *argv[])
     Double_t jet_M[20];
     Double_t jet_bdiscr[20];
     
+    Int_t nJetsUncorr;
+    Int_t jet_uncorr_charge[20];
+    Double_t jet_uncorr_pt[20];
+    Double_t jet_uncorr_phi[20];
+    Double_t jet_uncorr_eta[20];
+    Double_t jet_uncorr_E[20];
+    Double_t jet_uncorr_M[20];
+    Double_t jet_uncorr_bdiscr[20];
+    
     /// met
     Double_t met_pt;
     Double_t met_phi;
@@ -713,6 +723,10 @@ int main (int argc, char *argv[])
     Double_t mc_eta[200];
     Double_t mc_E[200];
     Double_t mc_M[200];
+    Bool_t mc_isLastCopy[200];
+    Bool_t mc_isPromptFinalState[200];
+    Bool_t mc_isHardProcess[200];
+    Bool_t mc_fromHardProcessFinalState[200];
     
     
     
@@ -868,6 +882,14 @@ int main (int argc, char *argv[])
     myTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
     myTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
     
+//    globalTree->Branch("nJetsUncorr",&nJetsUncorr,"nJetsUncorr/I");
+//    globalTree->Branch("jet_uncorr_charge",&jet_uncorr_charge,"jet_uncorr_charge[nJetsUncorr]/I");
+//    globalTree->Branch("jet_uncorr_pt",&jet_uncorr_pt,"jet_uncorr_pt[nJetsUncorr]/D");
+//    globalTree->Branch("jet_uncorr_phi",&jet_uncorr_phi,"jet_uncorr_phi[nJetsUncorr]/D");
+//    globalTree->Branch("jet_uncorr_eta",&jet_uncorr_eta,"jet_uncorr_eta[nJetsUncorr]/D");
+//    globalTree->Branch("jet_uncorr_E",&jet_uncorr_E,"jet_uncorr_E[nJetsUncorr]/D");
+//    globalTree->Branch("jet_uncorr_M",&jet_uncorr_M,"jet_uncorr_M[nJetsUncorr]/D");
+//    globalTree->Branch("jet_uncorr_bdiscr",&jet_uncorr_bdiscr,"jet_uncorr_bdiscr[nJetsUncorr]/D");
     
     // met
 //    globalTree->Branch("met_pt", &met_pt, "met_pt/D");
@@ -895,6 +917,10 @@ int main (int argc, char *argv[])
 //      globalTree->Branch("mc_eta",&mc_eta,"mc_eta[nMCParticles]/D");
 //      globalTree->Branch("mc_E",&mc_E,"mc_E[nMCParticles]/D");
 //      globalTree->Branch("mc_M",&mc_M,"mc_M[nMCParticles]/D");
+//      globalTree->Branch("mc_isLastCopy", &mc_isLastCopy, "mc_isLastCopy[nMCParticles]/O");
+//      globalTree->Branch("mc_isPromptFinalState", &mc_isPromptFinalState, "mc_isPromptFinalState[nMCParticles]/O");
+//      globalTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
+//      globalTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
       
       myTree->Branch("nMCParticles",&nMCParticles,"nMCParticles/I");
       myTree->Branch("mc_status",&mc_status,"mc_status[nMCParticles]/I");
@@ -906,6 +932,10 @@ int main (int argc, char *argv[])
       myTree->Branch("mc_eta",&mc_eta,"mc_eta[nMCParticles]/D");
       myTree->Branch("mc_E",&mc_E,"mc_E[nMCParticles]/D");
       myTree->Branch("mc_M",&mc_M,"mc_M[nMCParticles]/D");
+      myTree->Branch("mc_isLastCopy", &mc_isLastCopy, "mc_isLastCopy[nMCParticles]/O");
+      myTree->Branch("mc_isPromptFinalState", &mc_isPromptFinalState, "mc_isPromptFinalState[nMCParticles]/O");
+      myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
+      myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
     }
     
     
@@ -1065,6 +1095,7 @@ int main (int argc, char *argv[])
       nElectrons = -1;
       nMuons = -1;
       nJets = -1;
+      nJetsUncorr = -1;
       
       for (Int_t i = 0; i < 10; i++)
       {
@@ -1112,6 +1143,14 @@ int main (int argc, char *argv[])
         jet_E[i] = 0.;
         jet_M[i] = 0.;
         jet_bdiscr[i] = -1.;
+        
+        jet_uncorr_charge[i] = 0;
+        jet_uncorr_pt[i] = 0.;
+        jet_uncorr_phi[i] = 0.;
+        jet_uncorr_eta[i] = 0.;
+        jet_uncorr_E[i] = 0.;
+        jet_uncorr_M[i] = 0.;
+        jet_uncorr_bdiscr[i] = -1.;
       }
       
       met_pt = 0.;
@@ -1133,8 +1172,11 @@ int main (int argc, char *argv[])
         mc_eta[i] = 0.;
         mc_E[i] = 0.;
         mc_M[i] = 0.;
+        mc_isLastCopy[i] = false;
+        mc_isPromptFinalState[i] = false;
+        mc_isHardProcess[i] = false;
+        mc_fromHardProcessFinalState[i] = false;
       }
-            
       
       
       ////////////////////
@@ -1395,8 +1437,26 @@ int main (int argc, char *argv[])
           mc_eta[iMC] = mcParticles[iMC]->Eta();
           mc_E[iMC] = mcParticles[iMC]->E();
           mc_M[iMC] = mcParticles[iMC]->M();
+          mc_isLastCopy[iMC] = mcParticles[iMC]->isLastCopy();
+          mc_isPromptFinalState[iMC] = mcParticles[iMC]->isPromptFinalState();
+          mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
+          mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
         }
       }
+      
+      // without selection
+      nJetsUncorr = init_jets.size();
+      for(Int_t iJet = 0; iJet < nJetsUncorr; iJet++)
+      {
+        jet_charge[iJet] = init_jets[iJet]->charge();
+        jet_pt[iJet] = init_jets[iJet]->Pt();
+        jet_phi[iJet] = init_jets[iJet]->Phi();
+        jet_eta[iJet] = init_jets[iJet]->Eta();
+        jet_E[iJet] = init_jets[iJet]->E();
+        jet_M[iJet] = init_jets[iJet]->M();
+        jet_bdiscr[iJet] = init_jets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
+      }
+      
       
       /// Fill scalefactors
       if (! isData)
