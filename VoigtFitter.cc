@@ -26,20 +26,21 @@ bool usePredef = true;
 bool useTest = false;
 bool debug = false;
 string systStr = "nominal";
-string suffix = "_widthx1";
+string suffix = "_widthx0p66";
 
 string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx0p5") != std::string::npos )       return "170103_1018/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx2") != std::string::npos )    return "170103_1015/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx3") != std::string::npos )    return "170103_1016/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )    return "170103_1017/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx1") != std::string::npos )    return "170103_0951/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p75") != std::string::npos ) return "170103_1019/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p66") != std::string::npos ) return "170103_1020/NtuplePlots_nominal.root";
-    else                                                     return "170103_0951/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "170210_1439/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p66") != std::string::npos ) return "170210_1440/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p75") != std::string::npos ) return "170210_1441/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1") != std::string::npos )    return "170210_1442/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1p5") != std::string::npos )  return "170210_1459/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "170210_1500/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "170210_1502/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "170210_1503/NtuplePlots_nominal.root";
+    else                                                     return "170210_1442/NtuplePlots_nominal.root";
     
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
@@ -48,7 +49,7 @@ string whichDate(string syst, string suff)
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "161220_2033/NtuplePlots_nominal.root";
+    return "170210_1442/NtuplePlots_nominal.root";
   }
 }
 
@@ -187,7 +188,7 @@ int main (int argc, char *argv[])
   
   /// Declare input and output files
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr, suffix);
-  string pathOutput = "OutputVoigt/";
+  string pathOutput = "OutputVoigt/ex4jets/";
   mkdir(pathOutput.c_str(),0777);
   string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
   cout << "Output file: " << outputFileName << endl;
@@ -251,14 +252,14 @@ int main (int argc, char *argv[])
         myfit->SetParNames("#mu","#sigma","#gamma", "r", "norm");
         myfit->SetParameters(0.9984, 0.08913, 1.36*histo->GetRMS(), 2.47, 0.002558);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
         
-        //myfit->SetParLimits(0, 0.95, 1.05);
-        myfit->SetParLimits(0, 0.9984, 0.9984);
-        //myfit->SetParLimits(1, 1e-4, 1.e+3);
-        myfit->SetParLimits(1, 0.08913, 0.08913);
+        myfit->SetParLimits(0, 0.95, 1.05);
+        //myfit->SetParLimits(0, 0.9984, 0.9984);
+        myfit->SetParLimits(1, 1e-4, 1.e+3);
+        //myfit->SetParLimits(1, 0.08913, 0.08913);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
-        //myfit->SetParLimits(3, 2., 5.);
-        myfit->SetParLimits(3, 2.47, 2.47);
-        myfit->SetParLimits(4, 0.002558, 0.002558);
+        myfit->SetParLimits(3, 2., 5.);
+        //myfit->SetParLimits(3, 2.47, 2.47);
+        //myfit->SetParLimits(4, 0.002558, 0.002558);
       }
       else
       {
@@ -298,23 +299,23 @@ int main (int argc, char *argv[])
         if ( histoNames[iHisto].second == 2 ) // no match
         {
           myfit->SetParameters(-0.3639, 17.7, 0.1439, 0.7167, 0.003993);
-          myfit->SetParLimits(0, -0.3639, -0.3639);
-          myfit->SetParLimits(2, 0.1439, 0.1439);
-          myfit->SetParLimits(3, 0.7167, 0.7167);
-          myfit->SetParLimits(4, 0.003993, 0.003993);
+          //myfit->SetParLimits(0, -0.3639, -0.3639);
+          //myfit->SetParLimits(2, 0.1439, 0.1439);
+          //myfit->SetParLimits(3, 0.7167, 0.7167);
+          //myfit->SetParLimits(4, 0.003993, 0.003993);
         }
         else  // WP
         {
           myfit->SetParameters(-0.3614, 17.7, 0.1278, 0.7436, 0.004463);
-          myfit->SetParLimits(0, -0.3614, -0.3614);
-          myfit->SetParLimits(2, 0.1278, 0.1278);
-          myfit->SetParLimits(3, 0.7436, 0.7436);
-          myfit->SetParLimits(4, 0.004463, 0.004463);
+          //myfit->SetParLimits(0, -0.3614, -0.3614);
+          //myfit->SetParLimits(2, 0.1278, 0.1278);
+          //myfit->SetParLimits(3, 0.7436, 0.7436);
+          //myfit->SetParLimits(4, 0.004463, 0.004463);
         }
         
         myfit->SetParLimits(1, 0.1, 20);
-        //myfit->SetParLimits(2, 1.e-4, 1.e+3);
-        //myfit->SetParLimits(3, 0.70, 0.92);
+        myfit->SetParLimits(2, 1.e-4, 1.e+3);
+        myfit->SetParLimits(3, 0.60, 0.92);
       }
     }
     
