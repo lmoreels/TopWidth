@@ -598,15 +598,20 @@ void ResolutionFunctions::makeFit()
       {
         // Mean around zero
         //myfit->SetParLimits(0,-10,10);
-        myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/2., hp->GetMean() + hp->GetRMS()/2.);
+        myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/1.5, hp->GetMean() + hp->GetRMS()/1.5);
         myfit->SetParLimits(3, -35., 35.);
         // Restrict sigma to be positive
-        myfit->SetParLimits(1, 2., 40.);
+        myfit->SetParLimits(1, 2., 30.);
         myfit->SetParLimits(4, 8., 110.);
         
-        if ( xBin == 1 || xBin == 2 )
+        if ( xBin == 1 )
         {
-          myfit->SetParameters(hp->GetMean()-1., hp->GetRMS()/2., 0.3, 2., 14.4, 1.);
+          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, 2., 8., 1.);
+          myfit->SetParLimits(4, 6.5, 110.);
+        }
+        else if ( xBin == 2 )
+        {
+          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.3, 2., 14.4, 1.);
         }
         else if ( xBin == 3 || xBin == 4 )
         {
@@ -616,6 +621,7 @@ void ResolutionFunctions::makeFit()
         else if ( xBin > 4 )
         {
           myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 2., 6.6, 50., 1.);
+          myfit->SetParLimits(4, 25., 125.);
           //if ( f > 6 )  // Et, pt of non-b jet
             //fix such that small gaussian has smallest width
         }
