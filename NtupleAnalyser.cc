@@ -49,7 +49,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 4.;
+float scaleWidth = 1.;
 
 string systStr = "nominal";
 string whichDate(string syst)
@@ -100,10 +100,14 @@ const int nCP =  593345;
 const int nWP = 1085957;
 const int nUP = 1710501; // ttbar only: 1648250;
 
-// normalisation factor from integral, not from fit
-const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
-const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
-const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 0.003993;
+// Voigt/CB fit parameters
+//const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
+//const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
+//const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 0.003993;
+/// Exactly 4 jets
+const double mu_CP = 0.9975, sigma_CP = 0.09843, r_CP = 2.125, norm_CP = 0.002552;
+const double alpha_WP = -0.4209, n_WP = 20., sigma_WP = 0.1598, mu_WP = 0.7693, norm_WP = 0.003956;
+const double alpha_UP = -0.3435, n_UP = 19.9978, sigma_UP = 0.1541, mu_UP = 0.6693, norm_UP = 0.003616;
 const double norm_comb = 1.; //0.956039;
 
 /// Average top mass
