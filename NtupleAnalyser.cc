@@ -38,7 +38,7 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doKinFit = true;
 bool useToys = false;
 bool applyLeptonSF = true;
@@ -109,6 +109,7 @@ const double mu_CP = 0.9975, sigma_CP = 0.09843, r_CP = 2.125, norm_CP = 0.00255
 const double alpha_WP = -0.4209, n_WP = 20., sigma_WP = 0.1598, mu_WP = 0.7693, norm_WP = 0.003956;
 const double alpha_UP = -0.3435, n_UP = 19.9978, sigma_UP = 0.1541, mu_UP = 0.6693, norm_UP = 0.003616;
 const double norm_comb = 1.; //0.956039;
+const double gammaConvConst = 0.0206215, gammaConvRico = 0.00701169;
 
 /// Average top mass
 // TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
@@ -2528,5 +2529,5 @@ Double_t fakeLikelihood(Double_t *x, Double_t *par) {
 }
 
 Double_t widthToGammaTranslation(Double_t *x) {
-  return 0.0247249 + 0.00689775 * x[0];
+  return gammaConvConst + gammaConvRico * x[0];
 }
