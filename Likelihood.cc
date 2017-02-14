@@ -24,16 +24,16 @@ using namespace std;
 
 bool test = true;
 bool runLocally = false;
-bool checkNormFunctions = false;
+bool checkNormFunctions = true;
 bool printFractions = true;
 
-const int nCP = 593345;
-const int nWP = 1085957;
-const int nUP = 1710501; // ttbar only: 1648250;
+const int nCP = 408482;
+const int nWP = 199807;
+const int nUP = 851884;
 
-const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
-const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
-const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 0.003993;
+const double mu_CP = 0.9975, sigma_CP = 0.09843, r_CP = 2.125, norm_CP = 0.002552;
+const double alpha_WP = -0.4209, n_WP = 20., sigma_WP = 0.1598, mu_WP = 0.7693, norm_WP = 0.003956;
+const double alpha_UP = -0.3435, n_UP = 19.9978, sigma_UP = 0.1541, mu_UP = 0.6693, norm_UP = 0.003616;
 
 /// Define vars
 int nTot;
@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
   if (checkNormFunctions)
   {
     double lowerRange = 1e-10, upperRange = 20.;
-    double combMin = 1e-10, combMax = 20.;
+    double combMin = 1e-10, combMax = 2.;
     
     TF1 *voigt_cp = new TF1("voigt_cp", voigt, combMin, combMax, 1);
     voigt_cp->SetParameter(0,1.5);
@@ -123,7 +123,7 @@ int main (int argc, char *argv[])
     DrawFunction(crysball_wp, "checkNorm_CB_WP", 1., true);
     DrawFunction(crysball_up, "checkNorm_CB_UP", 1., true);
     DrawFunction(combi, "checkNorm_combi", 1., true);
-    DrawFunction(likelihood, "loglikelihood", 1., true);
+    DrawFunction(likelihood, "loglikelihood", 0.025, true);
     foutNorm->Close();
     delete foutNorm;
   }
@@ -132,7 +132,7 @@ int main (int argc, char *argv[])
   ClearVars();
   
   /// Get loglikelihood values from file
-  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood.txt";
+  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_gamma.txt";
   if (! fexists(inputFileName.c_str()) )
   {
     cout << "WARNING: File " << inputFileName << " does not exist." << endl;
@@ -182,7 +182,7 @@ int main (int argc, char *argv[])
   TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
   
   /// Fit minimum with parabola
-  double fitmin = 0.8, fitmax = 1.6;
+  double fitmin = 0.8, fitmax = 1.5;
   TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
   g1->Fit(parabola,"R");
   
