@@ -16,7 +16,7 @@ mm = str(now.month).zfill(2)
 yyyy = str(now.year)
 yy = str(now.year-2000)
 hh = str(now.hour).zfill(2)
-mn= str(now.minute).zfill(2)
+mn = str(now.minute).zfill(2)
 
 # make a data string. Pick one of the two above                                                      
 #date = dd+"_"+mm+"_"+yyyy+"_"+hh+"h"+mn+"min"

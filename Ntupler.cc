@@ -193,9 +193,9 @@ int main (int argc, char *argv[])
   bool applyPU = true;
   bool applyPUup = false;
   bool applyPUdown = false;
-  bool applyJER = false;
+  bool applyJER = true;
   bool applyJERup = false;
-  bool applyJERdown = true;
+  bool applyJERdown = false;
   bool applyJEC = true;
   bool applyJESup = false;
   bool applyJESdown = false;
