@@ -10,7 +10,7 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "170104_1548";
+string inputDate = "170216_1140";
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
 string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_WNotOk_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
@@ -27,7 +27,7 @@ void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, dou
 /// Define vars
 char dataLine[1024];
 int nEntries, nEntriesAllMC, nEntriesAllSamples, eventId;
-double massW, massTop;
+double massW, massTop, widthSF;
 double sumW, sumTop, sumWAllMC, sumTopAllMC, sumWAllSamples, sumTopAllSamples;
 double meanW, meanTop;
 
@@ -73,28 +73,28 @@ int main()
       fileIn.seekg(currentPosition);
       fileIn.getline(dataLine,sizeof(dataLine));
       istringstream iss(dataLine);
-      iss >> eventId >> massW >> massTop;
+      iss >> eventId >> massW >> massTop >> widthSF;
       currentPosition = fileIn.tellg();
       
       nEntries++;
       sumW += massW;
-      sumTop += massTop;
+      sumTop += massTop*widthSF;
       
       if ( iFile > 6 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
-        sumWAllMC += massW;
-        sumTopAllMC += massTop;
+        sumWAllMC += massW*widthSF;
+        sumTopAllMC += massTop*widthSF;
         
         nEntriesAllSamples++;
-        sumWAllSamples += massW;
-        sumTopAllSamples += massTop;
+        sumWAllSamples += massW*widthSF;
+        sumTopAllSamples += massTop*widthSF;
       }
       else if ( iFile == nInputs-1 ) // data
       {
         nEntriesAllSamples++;
-        sumWAllSamples += massW;
-        sumTopAllSamples += massTop;
+        sumWAllSamples += massW*widthSF;
+        sumTopAllSamples += massTop*widthSF;
       }
       
     }  // end while
@@ -183,18 +183,19 @@ bool fexists(const char *filename)
 void ClearVars(bool isNewDataset)
 {
   eventId = -1;
-  massW = 0;
-  massTop = 0;
+  massW = 0.;
+  massTop = 0.;
+  widthSF = 1.;
   
   if (isNewDataset)
   {
     thisDataSet = "";
     inputFileName = "";
     nEntries = 0;
-    sumW = 0;
-    sumTop = 0;
-    meanW = 0;
-    meanTop = 0;
+    sumW = 0.;
+    sumTop = 0.;
+    meanW = 0.;
+    meanTop = 0.;
   }
 }
 

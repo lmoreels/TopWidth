@@ -34,7 +34,7 @@ using namespace TopTree;
 
 
 bool test = false;
-bool testHistos = true;
+bool testHistos = false;
 bool testTTbarOnly = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
@@ -51,10 +51,15 @@ bool applyNloSF = false;
 bool applyWidthSF = false;
 float scaleWidth = 1.;
 
+bool useOldNtuples = true;
 string systStr = "nominal";
 string whichDate(string syst)
 {
-  if ( syst.find("nominal") != std::string::npos ) return "160812";
+  if ( syst.find("nominal") != std::string::npos )
+  {
+    if (useOldNtuples) return "160812";
+    else return "170216";
+  }
   else if ( syst.find("JERup") != std::string::npos ) return "160916";
   else if ( syst.find("JERdown") != std::string::npos ) return "160930";
   else
@@ -86,8 +91,8 @@ float CSVv2Medium = 0.800;
 float CSVv2Tight = 0.935;
 
 /// Top width
-double genTopWidth = 1.33; // from fit
-double genTopMass = 172.5; // from fit
+double genTopWidth = 1.366; // from fit
+double genTopMass = 172.3; // from fit
 
 // Temporarily, until calculated from TTbar sample
 float chi2WMass = 80.385;
@@ -117,7 +122,7 @@ const double gammaConvConst = 0.0206215, gammaConvRico = 0.00701169;
 /// also background in CP/WP/UP cats (unlike name suggests)
 //  no cuts [[nominal]]
 //float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};  // old, nJets >= 4
-float aveTopMass[] = {168.425, 168.278, 240.248, 248.177, 206.463, 201.526, 225.231, 219.406, 339.409, 335.295, 258.356, 258.577, 286.428, 274.637, 231.821, 220.190, 220.299};
+float aveTopMass[] = {168.425, 167.348, 203.924, 205.249, 198.282, 202.663, 181.577, 193.225, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.722, 193.781};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -231,6 +236,10 @@ Double_t        mc_phi[200];   //[nMCParticles]
 Double_t        mc_eta[200];   //[nMCParticles]
 Double_t        mc_E[200];   //[nMCParticles]
 Double_t        mc_M[200];   //[nMCParticles]
+Bool_t          mc_isLastCopy[200];   //[nMCParticles]
+Bool_t          mc_isPromptFinalState[200];   //[nMCParticles]
+Bool_t          mc_isHardProcess[200];   //[nMCParticles]
+Bool_t          mc_fromHardProcessFinalState[200];   //[nMCParticles]
 Double_t        nloWeight;
 Double_t        puSF;
 Double_t        btagSF;
@@ -298,6 +307,10 @@ TBranch        *b_mc_phi;   //!
 TBranch        *b_mc_eta;   //!
 TBranch        *b_mc_E;   //!
 TBranch        *b_mc_M;   //!
+TBranch        *b_mc_isLastCopy;   //!
+TBranch        *b_mc_isPromptFinalState;   //!
+TBranch        *b_mc_isHardProcess;   //!
+TBranch        *b_mc_fromHardProcessFinalState;   //!
 TBranch        *b_nloWeight;   //!
 TBranch        *b_puSF;   //!
 TBranch        *b_btagSF;   //!
@@ -469,6 +482,7 @@ int main(int argc, char* argv[])
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
   if ( applyWidthSF && scaleWidth != 1 ) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
+  if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   
@@ -808,18 +822,26 @@ int main(int argc, char* argv[])
         
         for (unsigned int i = 0; i < mcParticles.size(); i++)
         {
-          if (verbose > 4)
+          if ( test && verbose > 4 )
             cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
           
+          /// Find tops
+          if ( mc_pdgId[i] == pdgID_top )  // replace by isLastCopy() ?
+          {
+            if ( mc_status[i] == 22 ) topQuark = i;
+            if ( topQuark == -9999 && mc_status[i] == 44) topQuark = i;
+          }
+          else if ( mc_pdgId[i] == -pdgID_top )
+          {
+            if ( mc_status[i] == 22 ) antiTopQuark = i;
+            if ( antiTopQuark == -9999 && mc_status[i] == 44) antiTopQuark = i;
+          }
           
-          if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;  /// Final state particle or particle from hardest process
           
+          /// Status restriction: Final state particle or particle from hardest process
+          if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
           
-          if ( mc_pdgId[i] == pdgID_top && mc_granny[i] == 2212 )
-            topQuark = i;
-          else if( mc_pdgId[i] == -pdgID_top && mc_granny[i] == 2212 )
-            antiTopQuark = i;
-          
+          /// Muons
           if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
           {
             muMinusFromTop = true;
@@ -833,6 +855,7 @@ int main(int argc, char* argv[])
             else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
           }
           
+          /// Partons/gluons
           if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
           {
             partons.push_back(mcParticles[i]);
@@ -930,7 +953,7 @@ int main(int argc, char* argv[])
             matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
             matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
             
-            if (calculateAverageMass) txtMassGenMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << endl;
+            if (calculateAverageMass) txtMassGenMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
             
             if (makePlots)
             {
@@ -985,8 +1008,9 @@ int main(int argc, char* argv[])
       if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
       
       
+      
       ////////////////////////////
-      ///-----Test KinFit------///
+      ///   Kinematic Fit      ///
       ////////////////////////////
       
       if (doKinFit)
@@ -1039,7 +1063,7 @@ int main(int argc, char* argv[])
       reco_ttbarMass = reco_minMlb + topmass_reco_kf;
       
       //Average mass
-      if (calculateAverageMass) txtMassReco << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+      if (calculateAverageMass) txtMassReco << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
       
       //Fill histos
       if (makePlots)
@@ -1169,7 +1193,7 @@ int main(int argc, char* argv[])
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
             nofCorrectlyMatched++;
-            if (calculateAverageMass) txtMassRecoCP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+            if (calculateAverageMass) txtMassRecoCP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
             else if (makePlots)
             {
               histo1D["mTop_div_aveMTop_TT_reco_CP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
@@ -1249,8 +1273,8 @@ int main(int argc, char* argv[])
             nofNotCorrectlyMatched++;
             if (calculateAverageMass)
             {
-              txtMassRecoWP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
-              txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+              txtMassRecoWP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+              txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
             }
             else if (makePlots)
             {
@@ -1289,13 +1313,13 @@ int main(int argc, char* argv[])
 
             if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
             {
-              if (calculateAverageMass) txtMassRecoWPWOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+              if (calculateAverageMass) txtMassRecoWPWOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
               else if (makePlots)
                 histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(topmass_reco_kf/aveTopMass[5], widthSF);
             }
             else
             {
-              if (calculateAverageMass) txtMassRecoWPWNotOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+              if (calculateAverageMass) txtMassRecoWPWNotOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
               else if (makePlots)
                 histo1D["mTop_div_aveMTop_TT_reco_WP_WNotOk"]->Fill(topmass_reco_kf/aveTopMass[6], widthSF);
             }
@@ -1305,8 +1329,8 @@ int main(int argc, char* argv[])
         {
           if (calculateAverageMass)
           {
-            txtMassRecoUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
-            txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << endl;
+            txtMassRecoUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+            txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
           }
           else if (makePlots)
           {
@@ -1785,6 +1809,13 @@ void InitTree(TTree* tree, bool isData)
     tree->SetBranchAddress("mc_eta", mc_eta, &b_mc_eta);
     tree->SetBranchAddress("mc_E", mc_E, &b_mc_E);
     tree->SetBranchAddress("mc_M", mc_M, &b_mc_M);
+    if (! useOldNtuples)
+    {
+      tree->SetBranchAddress("mc_isLastCopy", mc_isLastCopy, &b_mc_isLastCopy);
+      tree->SetBranchAddress("mc_isPromptFinalState", mc_isPromptFinalState, &b_mc_isPromptFinalState);
+      tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
+      tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
+    }
     tree->SetBranchAddress("nloWeight", &nloWeight, &b_nloWeight);
     tree->SetBranchAddress("puSF", &puSF, &b_puSF);
     tree->SetBranchAddress("btagSF", &btagSF, &b_btagSF);
@@ -1990,7 +2021,7 @@ void InitHisto1DMatch()
   
   histo1D["W_mass_reco_matched"] = new TH1F("W_mass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 125, 0, 250);
   histo1D["top_mass_reco_matched"] = new TH1F("top_mass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
-  histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 175, 0, 350);
+  histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 1200, 100, 250);
   histo1D["mlb_matched_corr"]  = new TH1F("mlb_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["mlb_matched_wrong"] = new TH1F("mlb_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["ttbar_mass_matched_corr"] = new TH1F("ttbar_mass_matched_corr","Reconstructed mass of the top quark pair using correctly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
@@ -2487,7 +2518,7 @@ double BreitWigner(double topMass, double scale)
 
 double eventWeightCalculator(double topMass, double scale)
 {
-  return BreitWigner(topMass, scale)/BreitWigner(topMass, 1);
+  return BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
 }
 
 Double_t voigt(Double_t *x, Double_t *par) {
