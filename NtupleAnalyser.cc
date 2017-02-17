@@ -8,6 +8,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <string>
+#include <array>
 #include "TRandom3.h"
 #include "TNtuple.h"
 #include <TFile.h>
@@ -48,8 +49,8 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = false;
-float scaleWidth = 1.;
+bool applyWidthSF = true;
+float scaleWidth = 0.66;
 
 bool useOldNtuples = true;
 string systStr = "nominal";
@@ -122,7 +123,31 @@ const double gammaConvConst = 0.0206215, gammaConvRico = 0.00701169;
 /// also background in CP/WP/UP cats (unlike name suggests)
 //  no cuts [[nominal]]
 //float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};  // old, nJets >= 4
-float aveTopMass[] = {168.425, 167.348, 203.924, 205.249, 198.282, 202.663, 181.577, 193.225, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.722, 193.781};
+const int nofAveMasses = 17;
+std::array<float, nofAveMasses> aveTopMass;
+std::array<float, nofAveMasses> aveTopMass_noWidth    = {168.425, 167.348, 203.924, 205.249, 198.282, 202.663, 181.577, 193.225, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.722, 193.781};
+std::array<float, nofAveMasses> aveTopMass_widthx0p5  = {166.673, 165.539, 202.773, 204.148, 196.885, 201.428, 179.654, 191.847, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.361, 192.433};
+std::array<float, nofAveMasses> aveTopMass_widthx0p66 = {167.507, 166.408, 203.492, 204.842, 197.710, 202.202, 180.675, 192.615, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.122, 193.187};
+std::array<float, nofAveMasses> aveTopMass_widthx0p75 = {167.696, 166.675, 203.486, 204.876, 197.553, 201.960, 180.794, 192.703, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.207, 193.271};
+std::array<float, nofAveMasses> aveTopMass_widthx1    = {168.430, 167.348, 203.994, 205.296, 198.436, 202.853, 181.637, 193.262, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.760, 193.819};
+std::array<float, nofAveMasses> aveTopMass_widthx2    = {169.126, 167.929, 203.586, 204.520, 199.585, 204.215, 182.032, 193.113, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.614, 193.675};
+std::array<float, nofAveMasses> aveTopMass_widthx3    = {170.473, 168.600, 203.955, 204.386, 202.114, 207.218, 182.704, 193.587, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 194.082, 194.138};
+std::array<float, nofAveMasses> aveTopMass_widthx4    = {167.323, 166.322, 203.447, 204.859, 197.102, 201.482, 180.404, 192.376, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.881, 192.948};
+void getAveMasses(int width)
+{
+  for (int i = 0; i < nofAveMasses; i++)
+  {
+    //if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
+    //else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
+    //else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
+    //else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
+    //else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
+    //else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
+    //else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
+    aveTopMass[i] = aveTopMass_noWidth[i];
+  }
+}
+
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -561,6 +586,9 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
+  /// Load ave top mass
+  getAveMasses(scaleWidth);
+  
   if (calculateLikelihood)
   {
     txtLogLike.open(("likelihood_per_event_"+dateString+".txt").c_str());
@@ -826,15 +854,15 @@ int main(int argc, char* argv[])
             cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
           
           /// Find tops
-          if ( mc_pdgId[i] == pdgID_top )  // replace by isLastCopy() ?
+          if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
           {
             if ( mc_status[i] == 22 ) topQuark = i;
-            if ( topQuark == -9999 && mc_status[i] == 44) topQuark = i;
+            if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
           }
           else if ( mc_pdgId[i] == -pdgID_top )
           {
             if ( mc_status[i] == 22 ) antiTopQuark = i;
-            if ( antiTopQuark == -9999 && mc_status[i] == 44) antiTopQuark = i;
+            if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
           }
           
           
