@@ -34,6 +34,8 @@ vector<double> alphaCB_WP, nCB_WP, sigmaCB_WP, muCB_WP, normCB_WP;
 vector<double> alphaErrCB_WP, nErrCB_WP, sigmaErrCB_WP, muErrCB_WP, normErrCB_WP;
 vector<double> alphaCB_UP, nCB_UP, sigmaCB_UP, muCB_UP, normCB_UP;
 vector<double> alphaErrCB_UP, nErrCB_UP, sigmaErrCB_UP, muErrCB_UP, normErrCB_UP;
+vector<double> alphaCB_WPUP, nCB_WPUP, sigmaCB_WPUP, muCB_WPUP, normCB_WPUP;
+vector<double> alphaErrCB_WPUP, nErrCB_WPUP, sigmaErrCB_WPUP, muErrCB_WPUP, normErrCB_WPUP;
 int paramNb;
 string paramName;
 double paramValue, paramError;
@@ -51,22 +53,23 @@ bool fexists(const char *filename);	// check if file exists
 bool ClearVectors();
 bool ClearVars();
 bool PrintParams();
-
+void writeVoigtMathematicaOutput(std::vector<double> mu, std::vector<double> sigma, std::vector<double> gamma, std::vector<double> r, std::vector<double> norm, std::vector<double> muErr, std::vector<double> sigmaErr, std::vector<double> gammaErr, std::vector<double> rErr, std::vector<double> normErr);
+void writeCBMathematicaOutput(std::vector<double> alpha, std::vector<double> n, std::vector<double> sigma, std::vector<double> mu, std::vector<double> norm, std::vector<double> alphaErr, std::vector<double> nErr, std::vector<double> sigmaErr, std::vector<double> muErr, std::vector<double> normErr);
 
 int main (int argc, char *argv[])
 {
   string dateString = MakeTimeStamp();
-  cout << "********************************" << endl;
-  cout << "***   Get Fit Parameters   ***" << endl;
-  cout << "********************************" << endl;
-  cout << "* Current time: " << dateString << "    *" << endl;
-  cout << "********************************" << endl;
+  cout << "*********************************" << endl;
+  cout << "***    Get Fit Parameters     ***" << endl;
+  cout << "*********************************" << endl;
+  cout << "*   Current time: " << dateString << "   *" << endl;
+  cout << "*********************************" << endl;
   
   ClearVars();
   ClearVectors();
   
-  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/";
-  if (runLocally) pathInput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/161220/";
+  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170220/";
+  if (runLocally) pathInput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/170220/";
   
   /// Get fit parameters from files
   for (int iWidth = 0; iWidth < nWidths; iWidth++)
@@ -75,7 +78,7 @@ int main (int argc, char *argv[])
     inputFileName = pathInput+"FitParams_widthx"+widthStr[iWidth]+".txt";
     if (! fexists(inputFileName.c_str()) )
     {
-      cout << "WARNING: File " << inputFileName << " does not exist." << endl;
+      cerr << "WARNING: File " << inputFileName << " not found..." << endl;
       continue;
     }
     fileIn.open(inputFileName.c_str());
@@ -225,6 +228,52 @@ int main (int argc, char *argv[])
         } while (! string(dataLine).empty() );
         
       }  // end CB UP
+      else if ( string(dataLine).find("CrystalBall") != std::string::npos && string(dataLine).find("WPUP") != std::string::npos )
+      {
+        cout << "  - " << dataLine << ": Adding parameter values for width " << widthStr[iWidth] << "." << endl;
+        ClearVars();
+        
+        fileIn.seekg(currentPosition);
+        fileIn.getline(dataLine,sizeof(dataLine));
+        currentPosition = fileIn.tellg();
+        
+        do // until empty line
+        {
+          istringstream iss(dataLine);
+          iss >> paramNb >> paramName >> paramValue >> paramError;
+          if ( paramNb == 0 ) // alpha
+          {
+            alphaCB_WPUP   .push_back(paramValue);
+            alphaErrCB_WPUP.push_back(paramError);
+          }
+          if ( paramNb == 1 ) // n
+          {
+            nCB_WPUP   .push_back(paramValue);
+            nErrCB_WPUP.push_back(paramError);
+          }
+          if ( paramNb == 2 ) // sigma
+          {
+            sigmaCB_WPUP   .push_back(paramValue);
+            sigmaErrCB_WPUP.push_back(paramError);
+          }
+          if ( paramNb == 3 ) // mu
+          {
+            muCB_WPUP   .push_back(paramValue);
+            muErrCB_WPUP.push_back(paramError);
+          }
+          if ( paramNb == 4 ) // norm
+          {
+            normCB_WPUP   .push_back(paramValue);
+            normErrCB_WPUP.push_back(paramError);
+          }
+          
+          fileIn.seekg(currentPosition);
+          fileIn.getline(dataLine,sizeof(dataLine));
+          currentPosition = fileIn.tellg();
+          
+        } while (! string(dataLine).empty() );
+        
+      }  // end CB WPUP
       
       fileIn.seekg(currentPosition);
       fileIn.getline(dataLine,sizeof(dataLine));
@@ -237,7 +286,8 @@ int main (int argc, char *argv[])
     
   }  // end loop widths (to get fit params)
   
-  PrintParams();
+  if ( muVoigt.size() > 0 )  // if this vector not filled, none filled ==> all files not found
+    PrintParams();
   
   return 0;
 }
@@ -315,45 +365,80 @@ bool ClearVars()
 bool PrintParams()
 {
   cout << endl << "=== MATHEMATICA ===" << endl;
-  cout << endl << "width={" << width[0] << "," << width[1] << "," << width[2] << "," << width[3] << "," << width[4] << "," << width[5] << "," << width[6] << "}; (* times SM width *)" << endl;
+  cout << "width={";
+  for (int i = 0; i < nWidths; i++)
+  {
+    cout << width[i];
+    if ( i != nWidths-1) cout << ",";
+  }
+  cout << "}; (* times SM width *)" << endl;
+  
   cout << endl << "-- VOIGT CP --" << endl;
-  cout << "mu={" << muVoigt[0] << "," << muVoigt[1] << "," << muVoigt[2] << "," << muVoigt[3] << "," << muVoigt[4] << "," << muVoigt[5] << "," << muVoigt[6] << "};" << endl;
-  cout << "onzmu={" << muErrVoigt[0] << "," << muErrVoigt[1] << "," << muErrVoigt[2] << "," << muErrVoigt[3] << "," << muErrVoigt[4] << "," << muErrVoigt[5] << "," << muErrVoigt[6] << "};" << endl;
-  cout << "sigma={" << sigmaVoigt[0] << "," << sigmaVoigt[1] << "," << sigmaVoigt[2] << "," << sigmaVoigt[3] << "," << sigmaVoigt[4] << "," << sigmaVoigt[5] << "," << sigmaVoigt[6] << "};" << endl;
-  cout << "onzsigma={" << sigmaErrVoigt[0] << "," << sigmaErrVoigt[1] << "," << sigmaErrVoigt[2] << "," << sigmaErrVoigt[3] << "," << sigmaErrVoigt[4] << "," << sigmaErrVoigt[5] << "," << sigmaErrVoigt[6] << "};" << endl;
-  cout << "gamma={" << gammaVoigt[0] << "," << gammaVoigt[1] << "," << gammaVoigt[2] << "," << gammaVoigt[3] << "," << gammaVoigt[4] << "," << gammaVoigt[5] << "," << gammaVoigt[6] << "};" << endl;
-  cout << "onzgamma={" << gammaErrVoigt[0] << "," << gammaErrVoigt[1] << "," << gammaErrVoigt[2] << "," << gammaErrVoigt[3] << "," << gammaErrVoigt[4] << "," << gammaErrVoigt[5] << "," << gammaErrVoigt[6] << "};" << endl;
-  cout << "r={" << rVoigt[0] << "," << rVoigt[1] << "," << rVoigt[2] << "," << rVoigt[3] << "," << rVoigt[4] << "," << rVoigt[5] << "," << rVoigt[6] << "};" << endl;
-  cout << "onzr={" << rErrVoigt[0] << "," << rErrVoigt[1] << "," << rErrVoigt[2] << "," << rErrVoigt[3] << "," << rErrVoigt[4] << "," << rErrVoigt[5] << "," << rErrVoigt[6] << "};" << endl;
-  cout << "norm={" << normVoigt[0] << "," << normVoigt[1] << "," << normVoigt[2] << "," << normVoigt[3] << "," << normVoigt[4] << "," << normVoigt[5] << "," << normVoigt[6] << "};" << endl;
-  cout << "onznorm={" << normErrVoigt[0]*1e+6 << "," << normErrVoigt[1]*1e+6 << "," << normErrVoigt[2]*1e+6 << "," << normErrVoigt[3]*1e+6 << "," << normErrVoigt[4]*1e+6 << "," << normErrVoigt[5]*1e+6 << "," << normErrVoigt[6]*1e+6 << "}*10^(-6);" << endl;
+  writeVoigtMathematicaOutput(muVoigt, sigmaVoigt, gammaVoigt, rVoigt, normVoigt, muErrVoigt, sigmaErrVoigt, gammaErrVoigt, rErrVoigt, normErrVoigt);
   
   cout << endl << "-- CRYSTALBALL WP --" << endl;
-  cout << "alpha={" << alphaCB_WP[0] << "," << alphaCB_WP[1] << "," << alphaCB_WP[2] << "," << alphaCB_WP[3] << "," << alphaCB_WP[4] << "," << alphaCB_WP[5] << "," << alphaCB_WP[6] << "};" << endl;
-  cout << "onzalpha={" << alphaErrCB_WP[0] << "," << alphaErrCB_WP[1] << "," << alphaErrCB_WP[2] << "," << alphaErrCB_WP[3] << "," << alphaErrCB_WP[4] << "," << alphaErrCB_WP[5] << "," << alphaErrCB_WP[6] << "};" << endl;
-  cout << "n={" << nCB_WP[0] << "," << nCB_WP[1] << "," << nCB_WP[2] << "," << nCB_WP[3] << "," << nCB_WP[4] << "," << nCB_WP[5] << "," << nCB_WP[6] << "};" << endl;
-  cout << "onzn={" << nErrCB_WP[0] << "," << nErrCB_WP[1] << "," << nErrCB_WP[2] << "," << nErrCB_WP[3] << "," << nErrCB_WP[4] << "," << nErrCB_WP[5] << "," << nErrCB_WP[6] << "};" << endl;
-  cout << "sigma={" << sigmaCB_WP[0] << "," << sigmaCB_WP[1] << "," << sigmaCB_WP[2] << "," << sigmaCB_WP[3] << "," << sigmaCB_WP[4] << "," << sigmaCB_WP[5] << "," << sigmaCB_WP[6] << "};" << endl;
-  cout << "onzsigma={" << sigmaErrCB_WP[0] << "," << sigmaErrCB_WP[1] << "," << sigmaErrCB_WP[2] << "," << sigmaErrCB_WP[3] << "," << sigmaErrCB_WP[4] << "," << sigmaErrCB_WP[5] << "," << sigmaErrCB_WP[6] << "};" << endl;
-  cout << "mu={" << muCB_WP[0] << "," << muCB_WP[1] << "," << muCB_WP[2] << "," << muCB_WP[3] << "," << muCB_WP[4] << "," << muCB_WP[5] << "," << muCB_WP[6] << "};" << endl;
-  cout << "onzmu={" << muErrCB_WP[0] << "," << muErrCB_WP[1] << "," << muErrCB_WP[2] << "," << muErrCB_WP[3] << "," << muErrCB_WP[4] << "," << muErrCB_WP[5] << "," << muErrCB_WP[6] << "};" << endl;
-  cout << "norm={" << normCB_WP[0] << "," << normCB_WP[1] << "," << normCB_WP[2] << "," << normCB_WP[3] << "," << normCB_WP[4] << "," << normCB_WP[5] << "," << normCB_WP[6] << "};" << endl;
-  cout << "onznorm={" << normErrCB_WP[0]*1e+6 << "," << normErrCB_WP[1]*1e+6 << "," << normErrCB_WP[2]*1e+6 << "," << normErrCB_WP[3]*1e+6 << "," << normErrCB_WP[4]*1e+6 << "," << normErrCB_WP[5]*1e+6 << "," << normErrCB_WP[6]*1e+6 << "}*10^(-6);" << endl;
+  writeCBMathematicaOutput(alphaCB_WP, nCB_WP, sigmaCB_WP, muCB_WP, normCB_WP, alphaErrCB_WP, nErrCB_WP, sigmaErrCB_WP, muErrCB_WP, normErrCB_WP);
   
   cout << endl << "-- CRYSTALBALL UP --" << endl;
-  cout << "alpha={" << alphaCB_UP[0] << "," << alphaCB_UP[1] << "," << alphaCB_UP[2] << "," << alphaCB_UP[3] << "," << alphaCB_UP[4] << "," << alphaCB_UP[5] << "," << alphaCB_UP[6] << "};" << endl;
-  cout << "onzalpha={" << alphaErrCB_UP[0] << "," << alphaErrCB_UP[1] << "," << alphaErrCB_UP[2] << "," << alphaErrCB_UP[3] << "," << alphaErrCB_UP[4] << "," << alphaErrCB_UP[5] << "," << alphaErrCB_UP[6] << "};" << endl;
-  cout << "n={" << nCB_UP[0] << "," << nCB_UP[1] << "," << nCB_UP[2] << "," << nCB_UP[3] << "," << nCB_UP[4] << "," << nCB_UP[5] << "," << nCB_UP[6] << "};" << endl;
-  cout << "onzn={" << nErrCB_UP[0] << "," << nErrCB_UP[1] << "," << nErrCB_UP[2] << "," << nErrCB_UP[3] << "," << nErrCB_UP[4] << "," << nErrCB_UP[5] << "," << nErrCB_UP[6] << "};" << endl;
-  cout << "sigma={" << sigmaCB_UP[0] << "," << sigmaCB_UP[1] << "," << sigmaCB_UP[2] << "," << sigmaCB_UP[3] << "," << sigmaCB_UP[4] << "," << sigmaCB_UP[5] << "," << sigmaCB_UP[6] << "};" << endl;
-  cout << "onzsigma={" << sigmaErrCB_UP[0] << "," << sigmaErrCB_UP[1] << "," << sigmaErrCB_UP[2] << "," << sigmaErrCB_UP[3] << "," << sigmaErrCB_UP[4] << "," << sigmaErrCB_UP[5] << "," << sigmaErrCB_UP[6] << "};" << endl;
-  cout << "mu={" << muCB_UP[0] << "," << muCB_UP[1] << "," << muCB_UP[2] << "," << muCB_UP[3] << "," << muCB_UP[4] << "," << muCB_UP[5] << "," << muCB_UP[6] << "};" << endl;
-  cout << "onzmu={" << muErrCB_UP[0] << "," << muErrCB_UP[1] << "," << muErrCB_UP[2] << "," << muErrCB_UP[3] << "," << muErrCB_UP[4] << "," << muErrCB_UP[5] << "," << muErrCB_UP[6] << "};" << endl;
-  cout << "norm={" << normCB_UP[0] << "," << normCB_UP[1] << "," << normCB_UP[2] << "," << normCB_UP[3] << "," << normCB_UP[4] << "," << normCB_UP[5] << "," << normCB_UP[6] << "};" << endl;
-  cout << "onznorm={" << normErrCB_UP[0]*1e+6 << "," << normErrCB_UP[1]*1e+6 << "," << normErrCB_UP[2]*1e+6 << "," << normErrCB_UP[3]*1e+6 << "," << normErrCB_UP[4]*1e+6 << "," << normErrCB_UP[5]*1e+6 << "," << normErrCB_UP[6]*1e+6 << "}*10^(-6);" << endl;
+  writeCBMathematicaOutput(alphaCB_UP, nCB_UP, sigmaCB_UP, muCB_UP, normCB_UP, alphaErrCB_UP, nErrCB_UP, sigmaErrCB_UP, muErrCB_UP, normErrCB_UP);
+  
+  cout << endl << "-- CRYSTALBALL WPUP --" << endl;
+  writeCBMathematicaOutput(alphaCB_WPUP, nCB_WPUP, sigmaCB_WPUP, muCB_WPUP, normCB_WPUP, alphaErrCB_WPUP, nErrCB_WPUP, sigmaErrCB_WPUP, muErrCB_WPUP, normErrCB_WPUP);
   
   cout << endl << "=== LIKELIHOOD ===" << endl;
   cout << "const double mu_CP = " << muVoigt[0] << ", sigma_CP = " << sigmaVoigt[0] << ", r_CP = " << rVoigt[0] << ", norm_CP = " << normVoigt[0] << ";" << endl;
   cout << "const double alpha_WP = " << alphaCB_WP[0] << ", n_WP = " << nCB_WP[0] << ", sigma_WP = " << sigmaCB_WP[0] << ", mu_WP = " << muCB_WP[0] << ", norm_WP = " << normCB_WP[0] << ";" << endl;
   cout << "const double alpha_UP = " << alphaCB_UP[0] << ", n_UP = " << nCB_UP[0] << ", sigma_UP = " << sigmaCB_UP[0] << ", mu_UP = " << muCB_UP[0] << ", norm_UP = " << normCB_UP[0] << ";" << endl;
+  cout << "const double alpha_WPUP = " << alphaCB_WPUP[0] << ", n_WPUP = " << nCB_WPUP[0] << ", sigma_WPUP = " << sigmaCB_WPUP[0] << ", mu_WPUP = " << muCB_WPUP[0] << ", norm_WPUP = " << normCB_WPUP[0] << ";" << endl;
 }
+
+void writeVoigtMathematicaOutput(std::vector<double> mu, std::vector<double> sigma, std::vector<double> gamma, std::vector<double> r, std::vector<double> norm, std::vector<double> muErr, std::vector<double> sigmaErr, std::vector<double> gammaErr, std::vector<double> rErr, std::vector<double> normErr)
+{
+  cout << "mu={";
+  for (int i = 0; i < nWidths; i++) { cout << mu[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzmu={";
+  for (int i = 0; i < nWidths; i++) { cout << muErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "sigma={";
+  for (int i = 0; i < nWidths; i++) { cout << sigma[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzsigma={";
+  for (int i = 0; i < nWidths; i++) { cout << sigmaErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "gamma={";
+  for (int i = 0; i < nWidths; i++) { cout << gamma[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzgamma={";
+  for (int i = 0; i < nWidths; i++) { cout << gammaErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "r={";
+  for (int i = 0; i < nWidths; i++) { cout << r[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzr={";
+  for (int i = 0; i < nWidths; i++) { cout << rErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "norm={";
+  for (int i = 0; i < nWidths; i++) { cout << norm[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onznorm={";
+  for (int i = 0; i < nWidths; i++) { cout << normErr[i]*1e+6; if ( i != nWidths-1) cout << ","; }
+  cout << "}*10^(-6);" << endl;
+}  
+
+
+void writeCBMathematicaOutput(std::vector<double> alpha, std::vector<double> n, std::vector<double> sigma, std::vector<double> mu, std::vector<double> norm, std::vector<double> alphaErr, std::vector<double> nErr, std::vector<double> sigmaErr, std::vector<double> muErr, std::vector<double> normErr)
+{
+  cout << "alpha={";
+  for (int i = 0; i < nWidths; i++) { cout << alpha[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzalpha={";
+  for (int i = 0; i < nWidths; i++) { cout << alphaErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "n={";
+  for (int i = 0; i < nWidths; i++) { cout << n[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzn={";
+  for (int i = 0; i < nWidths; i++) { cout << nErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "sigma={";
+  for (int i = 0; i < nWidths; i++) { cout << sigma[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzsigma={";
+  for (int i = 0; i < nWidths; i++) { cout << sigmaErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "mu={";
+  for (int i = 0; i < nWidths; i++) { cout << mu[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onzmu={";
+  for (int i = 0; i < nWidths; i++) { cout << muErr[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "norm={";
+  for (int i = 0; i < nWidths; i++) { cout << norm[i]; if ( i != nWidths-1) cout << ","; }
+  cout << "};" << endl << "onznorm={";
+  for (int i = 0; i < nWidths; i++) { cout << normErr[i]*1e+6; if ( i != nWidths-1) cout << ","; }
+  cout << "}*10^(-6);" << endl;
+}  

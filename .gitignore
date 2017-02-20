@@ -36,6 +36,7 @@ AverageMassCalculator
 GetFitParams
 Likelihood
 NtupleAnalyser
+NtupleAnalyser__*
 Ntupler
 ReweightTopWidth
 TopReconstruction
@@ -43,6 +44,7 @@ VoigtFitter
 testAnalyser
 testAnalyserTTbarOnly
 testMatching
+testMCParts_ntuples
 testGenJets
 testSkims
 testRFs

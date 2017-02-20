@@ -49,7 +49,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = true;
+bool applyWidthSF = false;
 float scaleWidth = 0.66;
 
 bool useOldNtuples = true;
@@ -102,27 +102,22 @@ float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 float sigmaChi2TopMass = 40;
 
 /// Likelihood function
-const int nCP = 408482;
-const int nWP = 199807;
-const int nUP = 851884;
+const int nCP = 409682;
+const int nWP = 200729;
+const int nUP = 856752;
 
 // Voigt/CB fit parameters
-//const double mu_CP = 0.9984, sigma_CP = 0.08913, r_CP = 2.47, norm_CP = 0.002558;
-//const double alpha_WP = -0.3614, n_WP = 20, sigma_WP = 0.1278, mu_WP = 0.7436, norm_WP = 0.004463;
-//const double alpha_UP = -0.3639, n_UP = 20, sigma_UP = 0.1439, mu_UP = 0.7167, norm_UP = 0.003993;
-/// Exactly 4 jets
-const double mu_CP = 0.9975, sigma_CP = 0.09843, r_CP = 2.125, norm_CP = 0.002552;
-const double alpha_WP = -0.4209, n_WP = 20., sigma_WP = 0.1598, mu_WP = 0.7693, norm_WP = 0.003956;
-const double alpha_UP = -0.3435, n_UP = 19.9978, sigma_UP = 0.1541, mu_UP = 0.6693, norm_UP = 0.003616;
+const double mu_CP = 1.007, sigma_CP = 0.0729, r_CP = 2.062, norm_CP = 0.002591;
+const double alpha_WP = -0.457, n_WP = 20, sigma_WP = 0.1835, mu_WP = 0.7747, norm_WP = 0.003768;
+const double alpha_UP = -0.5966, n_UP = 12, sigma_UP = 0.1835, mu_UP = 0.805, norm_UP = 0.004106;
+const double alpha_WPUP = -0.5966, n_WPUP = 9.691, sigma_WPUP = 0.1835, mu_WPUP = 0.805, norm_WPUP = 0.004091;
 const double norm_comb = 1.; //0.956039;
-const double gammaConvConst = 0.0206215, gammaConvRico = 0.00701169;
+const double gammaConvConst = 0.0441073, gammaConvRico = 0.00766141;
 //const double gammaConvConst = 0., gammaConvRico = 1.;
 
 /// Average top mass
 // TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
-/// also background in CP/WP/UP cats (unlike name suggests)
-//  no cuts [[nominal]]
-//float aveTopMass[] = {166.933, 168.186, 202.938, 210.914, 190.375, 204.165, 182.950, 196.562, 240.086, 232.843, 219.273, 221.202, 213.004, 200.023, 199.332, 196.855, 196.877};  // old, nJets >= 4
+// also background in CP/WP/UP cats (unlike name suggests)
 const int nofAveMasses = 17;
 std::array<float, nofAveMasses> aveTopMass;
 std::array<float, nofAveMasses> aveTopMass_noWidth    = {168.425, 167.348, 203.924, 205.249, 198.282, 202.663, 181.577, 193.225, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.722, 193.781};
@@ -207,6 +202,7 @@ double eventWeightCalculator(double topPT, double scale);
 Double_t voigt(Double_t *x, Double_t *par);
 Double_t crysBall_WP(Double_t *x);
 Double_t crysBall_UP(Double_t *x);
+Double_t crysBall_WPUP(Double_t *x);
 Double_t logLikelihood(Double_t *x, Double_t *par);
 Double_t fakeLikelihood(Double_t *x, Double_t *par);
 Double_t widthToGammaTranslation(Double_t *x);
@@ -2572,7 +2568,7 @@ Double_t crysBall_WP(Double_t *x) {
   Double_t B = n_WP/alpha - alpha;
   
   Double_t ref = (x[0] - mu_WP)/sigma_WP;  // (x-mean)/sigma
-  if ( alpha_WP < 0 ) ref = -ref;
+  if ( alpha_WP < 0. ) ref = -ref;
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
@@ -2587,15 +2583,34 @@ Double_t crysBall_UP(Double_t *x) {
   Double_t B = n_UP/alpha - alpha;
   
   Double_t ref = (x[0] - mu_UP)/sigma_UP;  // (x-mean)/sigma
-  if ( alpha_UP < 0 ) ref = -ref;
+  if ( alpha_UP < 0. ) ref = -ref;
   Double_t fitfunc = 1.;
   if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
   else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
   return fitfunc*norm_UP;
 }
 
+Double_t crysBall_WPUP(Double_t *x) {
+  // params: alpha, n, sigma, mu
+  if ( sigma_WPUP <= 0. ) return 0.;
+  Double_t alpha = fabs(alpha_WPUP);
+  Double_t A = pow( n_WPUP/alpha , n_WPUP) * exp(-alpha*alpha/2.);
+  Double_t B = n_WPUP/alpha - alpha;
+  
+  Double_t ref = (x[0] - mu_WPUP)/sigma_WPUP;  // (x-mean)/sigma
+  if ( alpha_WPUP < 0. ) ref = -ref;
+  Double_t fitfunc = 1.;
+  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
+  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WPUP);
+  return fitfunc*norm_WPUP;
+}
+
 Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) ) );
+}
+
+Double_t logLikelihood2(Double_t *x, Double_t *par) {
+  return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + (f_WP+f_UP)*crysBall_WPUP(x) ) );
 }
 
 Double_t fakeLikelihood(Double_t *x, Double_t *par) {
