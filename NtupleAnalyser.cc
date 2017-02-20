@@ -528,33 +528,33 @@ int main(int argc, char* argv[])
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
     string dataSetName = datasets[d]->Name();
-    if (dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0)
+    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
       Luminosity = datasets[d]->EquivalentLumi();
     
-    if ( dataSetName.find("QCD") == 0 )
+    if ( dataSetName.find("QCD") != std::string::npos )
       datasets[d]->SetColor(kYellow);
-    if ( dataSetName.find("TT") == 0 )
+    if ( dataSetName.find("TT") != std::string::npos )
     {
       datasets[d]->SetTitle("t#bar{t}");
       datasets[d]->SetColor(kRed+1);
     }
-    //if ( dataSetName.find("TTbarJets_Other") == 0 ) datasets[d]->SetColor(kRed-7);
-    if ( dataSetName.find("WJets") == 0 )
+    //if ( dataSetName.find("TTbarJets_Other") != std::string::npos ) datasets[d]->SetColor(kRed-7);
+    if ( dataSetName.find("WJets") != std::string::npos )
     {
       datasets[d]->SetTitle("W#rightarrowl#nu");
       datasets[d]->SetColor(kGreen-3);
     }
-    if ( dataSetName.find("ZJets") == 0 || dataSetName.find("DY") == 0 )
+    if ( dataSetName.find("ZJets") != std::string::npos || dataSetName.find("DY") != std::string::npos )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
       datasets[d]->SetColor(kAzure-2);
       //datasets[d]->SetColor(kMagenta);
     }
-    if ( dataSetName.find("ST") == 0 || dataSetName.find("SingleTop") == 0 )
+    if ( dataSetName.find("ST") != std::string::npos || dataSetName.find("SingleTop") != std::string::npos )
     {
       datasets[d]->SetTitle("ST");
       datasets[d]->SetColor(kBlue-2);
-      //if ( dataSetName.find("tW") == 0 )
+      //if ( dataSetName.find("tW") != std::string::npos )
       //{
       //  datasets[d]->SetTitle("ST tW");
       //  datasets[d]->SetColor(kBlue-4);
@@ -657,11 +657,11 @@ int main(int argc, char* argv[])
     }
     
     isData = false; isTTbar = false;
-    if ( dataSetName.find("Data") == 0 || dataSetName.find("data") == 0 || dataSetName.find("DATA") == 0 )
+    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
     {
       isData = true;
     }
-    else if ( dataSetName.find("TT") == 0 )
+    else if ( dataSetName.find("TT") != std::string::npos )
     {
       isTTbar = true;
     }
@@ -833,8 +833,8 @@ int main(int argc, char* argv[])
       ///  JET PARTON MATCHING  ///
       /////////////////////////////
       
-      //if ( dataSetName.find("TT") == 0 || dataSetName.find("ST") == 0 )  // no matches for ST
-      if ( dataSetName.find("TT") == 0 )
+      //if ( isTTbar || dataSetName.find("ST") != std::string::npos )  // no matches for ST
+      if (isTTbar)
       {
         for (int iMC = 0; iMC < nMCParticles; iMC++)
         {
@@ -1098,7 +1098,7 @@ int main(int argc, char* argv[])
         MSPlot["Reco_mlb"]->Fill(reco_minMlb, datasets[d], true, Luminosity*scaleFactor);
         MSPlot["Reco_ttbar_mass"]->Fill(reco_ttbarMass, datasets[d], true, Luminosity*scaleFactor);
         MSPlot["Reco_dR_lep_b"]->Fill(reco_dRLepB_lep, datasets[d], true, Luminosity*scaleFactor);
-        if ( dataSetName.find("TT") == 0 )
+        if (isTTbar)
         {
           histo1D["Reco_W_mass_reco"]->Fill(Wmass_reco_kf, widthSF);
           histo1D["Reco_top_mass_reco"]->Fill(topmass_reco_kf, widthSF);
@@ -1179,9 +1179,9 @@ int main(int argc, char* argv[])
         }
 
         /// write debug file
-        if ( ( dataSetName.find("data") == 0 && ievt%1000 == 0 ) 
-             || ( dataSetName.find("TT") == 0 && ievt%100000 == 0 )
-             || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && ievt%100 == 0 ) )
+        if ( ( isData && ievt%1000 == 0 )
+             || ( isTTbar && ievt%100000 == 0 )
+             || ( ! isData && ! isTTbar && ievt%100 == 0 ) )
         {
           txtLogLike << ievt << "  ";
           for (int iWidth = 0; iWidth < nWidths; iWidth++)
@@ -1206,7 +1206,7 @@ int main(int argc, char* argv[])
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
       
-      //if ( dataSetName.find("TT") == 0 )
+      //if (isTTbar)
       if (! isData)
       {
         if (! applyWidthSF ) widthSF = 1.;
@@ -1275,9 +1275,9 @@ int main(int argc, char* argv[])
             }
             
             /// write debug file
-            if ( calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
-                 || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
-                 || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+            if ( calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+                 || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+                 || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
             {
               if (test)
               {
@@ -1327,9 +1327,9 @@ int main(int argc, char* argv[])
             }
             
             /// write debug file
-            if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
-                 || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
-                 || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+            if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+                 || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+                 || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
             {
               txtLogLikeTest << setw(8) << right << ievt << "  WP  ";
               txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
@@ -1383,9 +1383,9 @@ int main(int argc, char* argv[])
           }
           
           /// write debug file
-          if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( dataSetName.find("data") == 0 && nofGoodEvtsLL[d]%500 == 0 ) 
-               || ( dataSetName.find("TT") == 0 && nofGoodEvtsLL[d]%50000 == 0 )
-               || ( dataSetName.find("data") != 0 && dataSetName.find("TT") != 0 && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+          if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+               || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+               || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
           {
             txtLogLikeTest << setw(8) << right << ievt << "  UP  ";
             txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
@@ -1408,8 +1408,8 @@ int main(int argc, char* argv[])
     cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
     cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
     
-    //if ( dataSetName.find("TT") == 0 || dataSetName.find("ST") == 0 )
-    if ( dataSetName.find("TT") == 0 )
+    //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
+    if (isTTbar)
     {
       cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
       cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
