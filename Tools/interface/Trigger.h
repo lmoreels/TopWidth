@@ -20,7 +20,6 @@
 #include "TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
 #include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
 #include "TopTreeAnalysisBase/Tools/interface/AnalysisEnvironmentLoader.h"
-#include "TopTreeAnalysisBase/Selection/interface/Run2Selection.h"
 
 
 class Trigger{

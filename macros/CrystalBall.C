@@ -21,7 +21,7 @@
 #include "TCanvas.h"
 
 
-/// NEEDS ROOT 6.06/04 !!!!
+/// NEEDS ROOT 6.06/00 !!!!
 
 void CrystalBall()
 {

@@ -13,9 +13,14 @@ OutPutOpt     = -o
 HeadSuf       = h
 
 ROOTCFLAGS      = $(shell root-config --cflags)
-ROOTLIBS        = $(shell root-config --libs) -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam -lTMVA
-ROOTLIBS_NoTMVA = $(shell root-config --libs) -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam
-ROOTGLIBS       = $(shell root-config --glibs) -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam -lTMVA
+ROOTLIBS        = $(shell root-config --libs)
+ROOTLIBS_NoTMVA = $(shell root-config --libs)
+ROOTGLIBS       = $(shell root-config --glibs)
+ifeq ($(UNAME), Linux)
+ROOTLIBS       += -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam -lTMVA
+ROOTLIBS_NoTMVA+= -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam
+ROOTGLIBS      += -lMinuit -lMathMore -lMinuit2 -lRooFitCore -lRooFit -lRooStats -lFoam -lTMVA
+endif
 ROOTLIBS       += -L$(ROOFITSYS)/lib
 
 # Linux with egcs
@@ -28,7 +33,7 @@ endif
 LD              = g++
 LDFLAGS         = -g -O -Wall -fPIC
 ifeq ($(UNAME), Darwin)
-SOFLAGS         = -dynamiclib
+SOFLAGS         = -bundle -undefined dynamic_lookup # use -dynamiclib for TTAB
 endif
 ifeq ($(UNAME), Linux)
 SOFLAGS         = -shared
@@ -39,6 +44,7 @@ LIBS            = -I./TMVA/include -L./TMVA/lib $(ROOTLIBS) -lEG -I.. -L. -L../T
 LIBS_NoTMVA     = $(ROOTLIBS_NoTMVA) -lEG -I.. -L. -L../TopTreeProducer/src -L../TopTreeAnalysisBase
 ifeq ($(UNAME), Darwin)
 LIBS           += -I/opt/local/include
+LIBS_NoTMVA    += -I/opt/local/include
 endif
 GLIBS           = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
