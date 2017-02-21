@@ -128,18 +128,24 @@ std::array<float, nofAveMasses> aveTopMass_widthx1    = {168.430, 167.348, 203.9
 std::array<float, nofAveMasses> aveTopMass_widthx2    = {169.126, 167.929, 203.586, 204.520, 199.585, 204.215, 182.032, 193.113, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.614, 193.675};
 std::array<float, nofAveMasses> aveTopMass_widthx3    = {170.473, 168.600, 203.955, 204.386, 202.114, 207.218, 182.704, 193.587, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 194.082, 194.138};
 std::array<float, nofAveMasses> aveTopMass_widthx4    = {167.323, 166.322, 203.447, 204.859, 197.102, 201.482, 180.404, 192.376, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.881, 192.948};
-void getAveMasses(int width)
+void getAveMasses(float width)
 {
   for (int i = 0; i < nofAveMasses; i++)
   {
-    //if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
-    //else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
-    //else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
-    //else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
-    //else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
-    //else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
-    //else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
-    aveTopMass[i] = aveTopMass_noWidth[i];
+    if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
+    else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
+    else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
+    else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
+    else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
+    else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
+    else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
+    else
+    {
+      if ( i == 0)
+        cout << "Average top mass for width " << width << " not found. Using average mass for width = 1..." << endl;
+      aveTopMass[i] = aveTopMass_widthx1[i];
+    }
+    if (! applyWidthSF) aveTopMass[i] = aveTopMass_noWidth[i];
   }
 }
 
@@ -408,23 +414,22 @@ int nTot = 0;
 double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
 double widthArray[] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4.};
 string widthArrayStr[] = {"0p5", "0p55", "0p6", "0p65", "0p7", "0p75", "0p8", "0p85", "0p9", "0p95", "1", "1p05", "1p1", "1p15", "1p2", "1p25", "1p3", "1p35", "1p4", "1p45", "1p5", "1p55", "1p6", "1p65", "1p7", "1p75", "1p8", "1p85", "1p9", "1p95", "2", "2p25", "2p5", "2p75", "3", "3p25", "3p5", "3p75", "4"};
-const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
-double gammaArray[nWidths];
+const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
+double gammaArray[nWidthsLL];
 
-double loglike[nWidths] = {0};
-double loglike_pd[10][nWidths] = {{0}};
-double loglike2[nWidths] = {0};
-double loglike2_pd[10][nWidths] = {{0}};
-double loglike_per_evt[nWidths] = {0};
-double loglike_onlyGoodEvts[nWidths] = {0};
-double fakelike_CP[nWidths] = {0};
-double fakelike_CP_per_evt[nWidths] = {0};
-double fakelike_onlyGoodEvts[nWidths] = {0};
-double fakelike_CP_Res[nWidths] = {0};
+double loglike[nWidthsLL] = {0};
+double loglike_pd[10][nWidthsLL] = {{0}};
+double loglike_per_evt[nWidthsLL] = {0};
+double loglike_onlyGoodEvts[nWidthsLL] = {0};
+double fakelike_CP[nWidthsLL] = {0};
+double fakelike_CP_per_evt[nWidthsLL] = {0};
+double fakelike_onlyGoodEvts[nWidthsLL] = {0};
+double fakelike_CP_Res[nWidthsLL] = {0};
 
 bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
 int nofBadEvtsLL[10] = {0};
+double aveTopMassLL = -1.;
 double maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 
 ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike;
@@ -590,7 +595,7 @@ int main(int argc, char* argv[])
     txtLogLike.open(("likelihood_per_event_"+dateString+".txt").c_str());
     txtLogLike << "## -Log(likelihood) values per event" << endl;
     txtLogLike << "#  Widths : ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       txtLogLike << widthArray[iWidth] << "  ";
     }
@@ -599,7 +604,7 @@ int main(int argc, char* argv[])
     txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
     txtLogLikeTest << "## ievt      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
     txtLogLikeTest << "#  Gammas : ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       gammaArray[iWidth] = widthToGammaTranslation(&widthArray[iWidth]);
       txtLogLikeTest << gammaArray[iWidth] << "  ";
@@ -610,6 +615,10 @@ int main(int argc, char* argv[])
     f_CP = (double)nCP/(double)nTot;
     f_WP = (double)nWP/(double)nTot;
     f_UP = (double)nUP/(double)nTot;
+    
+    /// Average top mass for likelihood
+    aveTopMassLL = f_CP*aveTopMass[1] + f_WP*aveTopMass[4] + f_UP*aveTopMass[3];
+    //aveTopMassLL = f_CP*aveTopMass[1] + (f_WP+f_UP)*aveTopMass[2];
   }
   
   if (calculateAverageMass)
@@ -1127,39 +1136,21 @@ int main(int argc, char* argv[])
       //Likelihood
       if (calculateLikelihood)
       {
-        if (isData)
-        { 
-          double tempAveMass = topmass_reco_kf/aveTopMass[14];
-          for (int iWidth = 0; iWidth < nWidths; iWidth++)
-          {
-            loglike[iWidth] += logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-            loglike_pd[d][iWidth] += logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          }
-        }
-        else
-        {
-          double tempAveMass = topmass_reco_kf/aveTopMass[15];  // d+6 or [15]? (All MC together)
-          for (int iWidth = 0; iWidth < nWidths; iWidth++)
-          {
-            loglike[iWidth] += logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-            loglike_pd[d][iWidth] += logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          }
-        }
-        double tempAveMass = topmass_reco_kf/aveTopMass[16];
+        double tempAveMass = topmass_reco_kf/aveTopMassLL;
         if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
         if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
-        for (int iWidth = 0; iWidth < nWidths; iWidth++)
+        for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
         {
           loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          loglike2[iWidth] += loglike_per_evt[iWidth];
-          loglike2_pd[d][iWidth] += loglike_per_evt[iWidth];
+          loglike[iWidth] += loglike_per_evt[iWidth];
+          loglike_pd[d][iWidth] += loglike_per_evt[iWidth];
         }
 
         /// make loglikelihood only with events that have minimum
         isGoodLL = false;
-        for (int iWidth = 1; iWidth < nWidths-1; iWidth++)
+        for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
         {
-          if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidths-1] )
+          if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidthsLL-1] )
           {
             isGoodLL = true;
             break;
@@ -1168,7 +1159,7 @@ int main(int argc, char* argv[])
         if (isGoodLL)
         {
           nofGoodEvtsLL[d]++;
-          for (int iWidth = 0; iWidth < nWidths; iWidth++)
+          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
             loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth];
           }
@@ -1184,7 +1175,7 @@ int main(int argc, char* argv[])
              || ( ! isData && ! isTTbar && ievt%100 == 0 ) )
         {
           txtLogLike << ievt << "  ";
-          for (int iWidth = 0; iWidth < nWidths; iWidth++)
+          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
             txtLogLike << loglike_per_evt[iWidth] << ",  ";
 
@@ -1246,8 +1237,8 @@ int main(int argc, char* argv[])
             if (calculateLikelihood)
             {
               
-              double tempAveMass = topmass_reco_kf/aveTopMass[16];
-              for (int iWidth = 0; iWidth < nWidths; iWidth++)
+              double tempAveMass = topmass_reco_kf/aveTopMassLL;
+              for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
               {
                 fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
                 fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
@@ -1257,9 +1248,9 @@ int main(int argc, char* argv[])
 
               /// make loglikelihood only with events that have minimum
               isGoodLL = false;
-              for (int iWidth = 1; iWidth < nWidths-1; iWidth++)
+              for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
               {
-                if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidths-1] )
+                if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
                 {
                   isGoodLL = true;
                   break;
@@ -1267,7 +1258,7 @@ int main(int argc, char* argv[])
               }
               if (isGoodLL)
               {
-                for (int iWidth = 0; iWidth < nWidths; iWidth++)
+                for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
                 {
                   fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
                 }
@@ -1487,81 +1478,69 @@ int main(int argc, char* argv[])
     cout << "Maximum top mass divided by average top mass: " << maxMtDivAveMt << endl;
     
     cout << endl << "likelihood values (all samples) : {";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike[iWidth]/(1e+6);
-      else cout << loglike[iWidth]/(1e+6) << ", ";
+      cout << loglike[iWidth]/(1e+6);
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << "} *10^6 " << endl << "likelihood values (data-only) : ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike_pd[0][iWidth];
-      else cout << loglike_pd[0][iWidth] << ", ";
-    }
-    cout << endl << "likelihood values 2 (all samples) : {";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
-    {
-      if ( iWidth == nWidths-1 ) cout << loglike2[iWidth]/(1e+6);
-      else cout << loglike2[iWidth]/(1e+6) << ", ";
-    }
-    cout << "} *10^6 " << endl << "likelihood values 2 (data-only) : ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
-    {
-      if ( iWidth == nWidths-1 ) cout << loglike2_pd[0][iWidth];
-      else cout << loglike2_pd[0][iWidth] << ", ";
+      cout << loglike_pd[0][iWidth];
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << endl << "likelihood values (only good events) : {";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << loglike_onlyGoodEvts[iWidth]/(1e+6);
-      else cout << loglike_onlyGoodEvts[iWidth]/(1e+6) << ", ";
+      cout << loglike_onlyGoodEvts[iWidth]/(1e+6);
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << "} *10^6 " << endl << "fake likelihood values (CP) : ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << fakelike_CP[iWidth]/(1e+6);
-      else cout << fakelike_CP[iWidth]/(1e+6) << ", ";
+      cout << fakelike_CP[iWidth]/(1e+6);
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << "} *10^6" << endl << "fake likelihood values (CP - only good events) : {";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << fakelike_onlyGoodEvts[iWidth]/(1e+6);
-      else cout << fakelike_onlyGoodEvts[iWidth]/(1e+6) << ", ";
+      cout << fakelike_onlyGoodEvts[iWidth]/(1e+6);
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << "} *10^6 " << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet (seperate): ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << fakelike_CP_Res[iWidth];
-      else cout << fakelike_CP_Res[iWidth] << ", ";
+      cout << fakelike_CP_Res[iWidth];
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << "} " << endl << "widths: ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << widthArray[iWidth];
-      else cout << widthArray[iWidth] << ", ";
+      cout << widthArray[iWidth];
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << endl << "gammas: ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if ( iWidth == nWidths-1 ) cout << gammaArray[iWidth];
-      else cout << gammaArray[iWidth] << ", ";
+      cout << gammaArray[iWidth];
+      if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
     cout << endl << endl;
     
     /// Print output to file
     txtOutputLogLike.open("output_loglikelihood_gamma.txt");
     txtOutputLogLike << "Widths:      ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
     }
     txtOutputLogLike << endl << "Gammas:      ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       txtOutputLogLike << setw(5) << right << gammaArray[iWidth] << "  ";
     }
     txtOutputLogLike << endl << "LLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidths; iWidth++)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
     }
