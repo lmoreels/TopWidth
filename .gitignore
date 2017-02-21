@@ -1,4 +1,5 @@
 *.d
+*.dylib
 *.o
 *.png
 *.root
@@ -36,6 +37,7 @@ AverageMassCalculator
 GetFitParams
 Likelihood
 NtupleAnalyser
+NtupleAnalyser_oldReco
 NtupleAnalyser__*
 Ntupler
 ReweightTopWidth

@@ -33,7 +33,7 @@ endif
 LD              = g++
 LDFLAGS         = -g -O -Wall -fPIC
 ifeq ($(UNAME), Darwin)
-SOFLAGS         = -bundle -undefined dynamic_lookup # use -dynamiclib for TTAB
+SOFLAGS         = -dynamiclib -undefined dynamic_lookup # use only -dynamiclib for TTAB
 endif
 ifeq ($(UNAME), Linux)
 SOFLAGS         = -shared
