@@ -50,9 +50,9 @@ streampos currentPosition;
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool fexists(const char *filename);	// check if file exists
-bool ClearVectors();
-bool ClearVars();
-bool PrintParams();
+void ClearVectors();
+void ClearVars();
+void PrintParams();
 void writeVoigtMathematicaOutput(std::vector<double> mu, std::vector<double> sigma, std::vector<double> gamma, std::vector<double> r, std::vector<double> norm, std::vector<double> muErr, std::vector<double> sigmaErr, std::vector<double> gammaErr, std::vector<double> rErr, std::vector<double> normErr);
 void writeCBMathematicaOutput(std::vector<double> alpha, std::vector<double> n, std::vector<double> sigma, std::vector<double> mu, std::vector<double> norm, std::vector<double> alphaErr, std::vector<double> nErr, std::vector<double> sigmaErr, std::vector<double> muErr, std::vector<double> normErr);
 
@@ -329,10 +329,10 @@ string MakeTimeStamp()
 bool fexists(const char *filename)
 {
   ifstream ifile(filename);
-  return ifile;
+  return ifile.good();
 }
 
-bool ClearVectors()
+void ClearVectors()
 {
   muVoigt.clear(); muErrVoigt.clear();
   sigmaVoigt.clear(); sigmaErrVoigt.clear();
@@ -353,16 +353,15 @@ bool ClearVectors()
   normCB_UP.clear(); normErrCB_UP.clear();
 }
 
-bool ClearVars()
+void ClearVars()
 {
   paramNb = -1;
   paramName = "";
   paramValue = 9999.;
   paramError = 9999.;
-
 }
 
-bool PrintParams()
+void PrintParams()
 {
   cout << endl << "=== MATHEMATICA ===" << endl;
   cout << "width={";

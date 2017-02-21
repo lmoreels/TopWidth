@@ -297,9 +297,9 @@ int main(int argc, char* argv[])
   
   string channel;
   if ( argc == 1 ) channel = "mu";
-  else if ( argv[1] == "mu" || argv[1] == "Mu" || argv[1] == "MU" || argv[1] == "m" ) channel = "mu";
-  else if ( argv[1] == "el" || argv[1] == "El" || argv[1] == "EL" || argv[1] == "e" ) channel = "el";
-  //else if ( argv[1] == "all" || argv[1] == "All" || argv[1] == "ALL" ) channel = "all";
+  //else if ( CharSearch(argv[1], "mu") || CharSearch(argv[1], "Mu") || CharSearch(argv[1], "MU") || CharSearch(argv[1], "m") ) channel = "mu";
+  //else if ( CharSearch(argv[1], "el") || CharSearch(argv[1], "El") || CharSearch(argv[1], "EL") || CharSearch(argv[1], "e") ) channel = "el";
+  //else if ( (argv[1]).find("all") != std::string::npos || (argv[1]).find("All") != std::string::npos || (argv[1]).find("ALL") != std::string::npos ) channel = "all";
   
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -1049,29 +1049,29 @@ void ClearLeaves()
   hasJetLeptonCleaning = false;
   nLeptons = -1;
   nMuons = -1;
-  muon_charge[1] = 0;
-  muon_pt[1] = 0.;
-  muon_phi[1] = 0.;
-  muon_eta[1] = 0.;
-  muon_E[1] = 0.;
-  muon_M[1] = 0.;
-  muon_d0[1] = 999.;
-  muon_chargedHadronIso[1] = 999.;
-  muon_neutralHadronIso[1] = 999.;
-  muon_photonIso[1] = 999.;
-  muon_puChargedHadronIso[1] = 999.;
-  muon_relIso[1] = 999.;
-  muon_pfIso[1] = 999.;
+  muon_charge[0] = 0;
+  muon_pt[0] = 0.;
+  muon_phi[0] = 0.;
+  muon_eta[0] = 0.;
+  muon_E[0] = 0.;
+  muon_M[0] = 0.;
+  muon_d0[0] = 999.;
+  muon_chargedHadronIso[0] = 999.;
+  muon_neutralHadronIso[0] = 999.;
+  muon_photonIso[0] = 999.;
+  muon_puChargedHadronIso[0] = 999.;
+  muon_relIso[0] = 999.;
+  muon_pfIso[0] = 999.;
   nJets = -1;
   for (Int_t i = 0; i < 20; i++)
   {
-    jet_charge[20] = 0;
-    jet_pt[20] = 0.;
-    jet_phi[20] = 0.;
-    jet_eta[20] = 0.;
-    jet_E[20] = 0.;
-    jet_M[20] = 0.;
-    jet_bdiscr[20] = -1.;
+    jet_charge[i] = 0;
+    jet_pt[i] = 0.;
+    jet_phi[i] = 0.;
+    jet_eta[i] = 0.;
+    jet_E[i] = 0.;
+    jet_M[i] = 0.;
+    jet_bdiscr[i] = -1.;
   }
   met_pt = 0.;
   met_phi = 0.;
@@ -1081,23 +1081,23 @@ void ClearLeaves()
   nMCParticles = -1;
   for (Int_t i = 0; i < 200; i++)
   {
-    mc_status[200] = -1;
-    mc_pdgId[200] = 0;
-    mc_mother[200] = 0;
-    mc_granny[200] = 0;
-    mc_pt[200] = 0.;
-    mc_phi[200] = 0.;
-    mc_eta[200] = 0.;
-    mc_E[200] = 0.;
-    mc_M[200] = 0.;
+    mc_status[i] = -1;
+    mc_pdgId[i] = 0;
+    mc_mother[i] = 0;
+    mc_granny[i] = 0;
+    mc_pt[i] = 0.;
+    mc_phi[i] = 0.;
+    mc_eta[i] = 0.;
+    mc_E[i] = 0.;
+    mc_M[i] = 0.;
   }
   nloWeight = 1.;
   puSF = 1.;
   btagSF = 1.;
-  muonIdSF[1] = 1.;
-  muonIsoSF[1] = 1.;
-  muonTrigSFv2[1] = 1.;
-  muonTrigSFv3[1] = 1.;
+  muonIdSF[0] = 1.;
+  muonIsoSF[0] = 1.;
+  muonTrigSFv2[0] = 1.;
+  muonTrigSFv3[0] = 1.;
   
   scaleFactor = 1.;
   eventSF_gen = 1.;

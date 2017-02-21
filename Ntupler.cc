@@ -624,7 +624,7 @@ int main (int argc, char *argv[])
     Bool_t hasExactly4Jets;
     Bool_t hasJetLeptonCleaning;
 //    Bool_t passedMETFilter;
-    Bool_t cutFlow[10];
+    Int_t cutFlow[10];
     
     Int_t appliedJER;
     Int_t appliedJES;
@@ -737,7 +737,7 @@ int main (int argc, char *argv[])
     
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
-    statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/O");
+    statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/I");
     statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");

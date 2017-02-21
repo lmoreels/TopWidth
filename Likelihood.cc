@@ -51,7 +51,7 @@ vector<double> LLvalues;
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool fexists(const char *filename);
-bool ClearVars();
+void ClearVars();
 Double_t voigt(Double_t *x, Double_t *par);
 Double_t crysBall_WP(Double_t *x, Double_t *par);
 Double_t crysBall_UP(Double_t *x, Double_t *par);
@@ -244,10 +244,10 @@ string MakeTimeStamp()
 bool fexists(const char *filename)
 {
   ifstream ifile(filename);
-  return ifile;
+  return ifile.good();
 }
 
-bool ClearVars()
+void ClearVars()
 {
   var = "";
   val = -1.;
