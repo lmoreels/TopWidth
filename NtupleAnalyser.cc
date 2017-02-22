@@ -50,7 +50,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-float scaleWidth = 0.66;
+double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
 string systStr = "nominal";
@@ -128,7 +128,7 @@ std::array<float, nofAveMasses> aveTopMass_widthx1    = {168.430, 167.348, 203.9
 std::array<float, nofAveMasses> aveTopMass_widthx2    = {169.126, 167.929, 203.586, 204.520, 199.585, 204.215, 182.032, 193.113, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.614, 193.675};
 std::array<float, nofAveMasses> aveTopMass_widthx3    = {170.473, 168.600, 203.955, 204.386, 202.114, 207.218, 182.704, 193.587, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 194.082, 194.138};
 std::array<float, nofAveMasses> aveTopMass_widthx4    = {167.323, 166.322, 203.447, 204.859, 197.102, 201.482, 180.404, 192.376, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.881, 192.948};
-void getAveMasses(float width)
+void getAveMasses(double width)
 {
   for (int i = 0; i < nofAveMasses; i++)
   {
@@ -403,7 +403,9 @@ double matchedDRLepB_corr, matchedDRLepB_wrong;
 
 /// KinFitter
 TKinFitter* kFitter;
-bool kFitVerbosity = false;
+bool addWMassKF = true;
+bool addEqMassKF = false;
+int kFitVerbosity = 0;
 double kFitChi2 = 99.;
 int nofAcceptedKFit = 0;
 double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf;
@@ -576,7 +578,7 @@ int main(int argc, char* argv[])
   ////////////////////////
   
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
-  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root");
+  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
     
   if (makePlots)
   {
@@ -619,6 +621,7 @@ int main(int argc, char* argv[])
     /// Average top mass for likelihood
     aveTopMassLL = f_CP*aveTopMass[1] + f_WP*aveTopMass[4] + f_UP*aveTopMass[3];
     //aveTopMassLL = f_CP*aveTopMass[1] + (f_WP+f_UP)*aveTopMass[2];
+    cout << "LogLike::Average top quark mass = " << aveTopMassLL << endl;
   }
   
   if (calculateAverageMass)
@@ -740,11 +743,11 @@ int main(int argc, char* argv[])
       
       if (ievt%10000 == 0)
         std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
-//       if (ievt > 926500)
-//       {
-//         std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
-//         kFitVerbosity = 1;
-//       }
+      
+      //if (! isTTbar) continue;
+      //if (ievt > 588000) break;
+      //if (ievt != 2062 && ievt != 75831 && ievt != 113603 && ievt != 115687 && ievt != 155732 && ievt != 163161 && ievt != 186900 && ievt != 215759 && ievt != 233634 && ievt != 238021 && ievt != 243052 && ievt != 243674 && ievt != 266399 && ievt != 317190 && ievt != 317752 && ievt != 325854 && ievt != 330813 && ievt != 333620 && ievt != 347247 && ievt != 439571 && ievt != 450329 && ievt != 491328 && ievt != 510024 && ievt != 514196 && ievt != 538345 && ievt != 570225 && ievt != 576194 && ievt != 577278 && ievt != 587570) continue;
+      
       
       /// Load event
       tTree[(dataSetName).c_str()]->GetEntry(ievt);
@@ -957,10 +960,10 @@ int main(int argc, char* argv[])
           ///  Resolution functions
           ///////////////////
           
-          if (all4PartonsMatched)
+          if (hadronicTopJetsMatched)
           {
             
-            for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+            for (unsigned int iMatch = 0; iMatch < 3; iMatch++)
             {
               /// MCPermutation[i].first  = jet number
               /// MCPermutation[i].second = parton number
@@ -969,8 +972,13 @@ int main(int argc, char* argv[])
               partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
               jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
             }
+            if (all4PartonsMatched)
+            {
+              partonsMatched.push_back(partons[MCPermutation[3].second]);
+              jetsMatched.push_back(selectedJets[MCPermutation[3].first]);
+            }
             
-            if (calculateResolutionFunctions)
+            if (all4PartonsMatched && calculateResolutionFunctions)
             {
               rf->fillJets(partonsMatched, jetsMatched);
               
@@ -1027,7 +1035,7 @@ int main(int argc, char* argv[])
       
       if ( labelsReco[3] == bJetId[labelB1] ) labelsReco[2] = bJetId[labelB2];
       else if ( labelsReco[3] == bJetId[labelB2] ) labelsReco[2] = bJetId[labelB1];
-      else cerr << "Seems like something went wrong with the b jets..." << endl;
+      else cerr << endl << "Seems like something went wrong with the b jets..." << endl;
       
       for (int ijet = 0; ijet < selectedJets.size(); ijet++)
       {
@@ -1035,7 +1043,7 @@ int main(int argc, char* argv[])
         
         if ( labelsReco[0] == -9999 ) labelsReco[0] = ijet;
         else if ( labelsReco[1] == -9999 ) labelsReco[1] = ijet;
-        else cerr << "Seems like there are too many jets..." << endl;
+        else cerr << endl << "Seems like there are too many jets..." << endl;
       }
       
       if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
@@ -1048,8 +1056,10 @@ int main(int argc, char* argv[])
       
       if (doKinFit)
       {
-        if (test) cout << "Event " << setw(5) << right << ievt << "   ";
-        kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], kFitVerbosity);
+        /*if (addEqMassKF)
+          kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
+        else if (addWMassKF)*/
+          kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
         
         if ( kFitter->getStatus() != 0 )  // did not converge
         {
@@ -1064,22 +1074,51 @@ int main(int argc, char* argv[])
         nofAcceptedKFit++;
         
         selectedJetsKFcorrected = kf->getCorrectedJets();
-        if (test)
-        {
-          cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << endl;
-          cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << endl;
-        }
+        
       }
       
       
       /// Reconstruct event
-      //  Hadronic variables
+      //  Hadronic variables  // OBS: only W mass constraint ! Jet3 = selectedJets[labelsReco[2]] !
+      if (! doKinFit)
+      {
+        selectedJetsKFcorrected.clear();
+        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[0]]);
+        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[1]]);
+        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
+      }
+      if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
+      
       Wmass_reco_orig = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
       Wmass_reco_kf = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
       topmass_reco_orig = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
       topmass_reco_kf = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M();
       toppt_reco_orig = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
       toppt_reco_kf = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
+      
+      if ( topmass_reco_kf < 0. )
+      {
+        cout << endl <<"Event " << setw(5) << right << ievt << "   ";
+        cout << "Top mass after kinFit is negative! I.e. " << topmass_reco_kf << " Before kinFit: " << topmass_reco_orig << "  ievt " << ievt << endl;
+        cout << "Mass jet 1 & jet 2: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M() << "; Mass jet 1 & jet 3: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[2]).M() << "; Mass jet 2 & jet 3: " << (selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M() << endl;
+        if (test)
+        {
+          cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << "; Jet 3: pT " << selectedJets[labelsReco[2]].Pt() << endl;
+          cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << "; Jet 3: pT " << selectedJetsKFcorrected[2].Pt() << endl;
+          cout << "Original:   Jet 1: px " << selectedJets[labelsReco[0]].Px() << "; py " << selectedJets[labelsReco[0]].Py() << "; pz " << selectedJets[labelsReco[0]].Pz() << "; E " << selectedJets[labelsReco[0]].E() << endl;
+          cout << "Corrected:  Jet 1: px " << selectedJetsKFcorrected[0].Px() << "; py " << selectedJetsKFcorrected[0].Py() << "; pz " << selectedJetsKFcorrected[0].Pz() << "; E " << selectedJetsKFcorrected[0].E() << endl;
+          cout << "Original:   Jet 2: px " << selectedJets[labelsReco[1]].Px() << "; py " << selectedJets[labelsReco[1]].Py() << "; pz " << selectedJets[labelsReco[1]].Pz() << "; E " << selectedJets[labelsReco[1]].E() << endl;
+          cout << "Corrected:  Jet 2: px " << selectedJetsKFcorrected[1].Px() << "; py " << selectedJetsKFcorrected[1].Py() << "; pz " << selectedJetsKFcorrected[1].Pz() << "; E " << selectedJetsKFcorrected[1].E() << endl;
+          cout << "Original:   Jet 1: pt " << selectedJets[labelsReco[0]].Pt() << "; eta " << selectedJets[labelsReco[0]].Eta() << "; phi " << selectedJets[labelsReco[0]].Phi() << "; M " << selectedJets[labelsReco[0]].M() << endl;
+          cout << "Corrected:  Jet 1: pt " << selectedJetsKFcorrected[0].Pt() << "; eta " << selectedJetsKFcorrected[0].Eta() << "; phi " << selectedJetsKFcorrected[0].Phi() << "; M " << selectedJetsKFcorrected[0].M() << endl;
+          cout << "Original:   Jet 2: pt " << selectedJets[labelsReco[1]].Pt() << "; eta " << selectedJets[labelsReco[1]].Eta() << "; phi " << selectedJets[labelsReco[1]].Phi() << "; M " << selectedJets[labelsReco[1]].M() << endl;
+          cout << "Corrected:  Jet 2: pt " << selectedJetsKFcorrected[1].Pt() << "; eta " << selectedJetsKFcorrected[1].Eta() << "; phi " << selectedJetsKFcorrected[1].Phi() << "; M " << selectedJetsKFcorrected[1].M() << endl;
+          cout << "Original:   Jet 1: x " << selectedJets[labelsReco[0]].X() << "; y " << selectedJets[labelsReco[0]].Y() << "; z " << selectedJets[labelsReco[0]].Z() << "; t " << selectedJets[labelsReco[0]].T() << endl;
+          cout << "Corrected:  Jet 1: x " << selectedJetsKFcorrected[0].X() << "; y " << selectedJetsKFcorrected[0].Y() << "; z " << selectedJetsKFcorrected[0].Z() << "; t " << selectedJetsKFcorrected[0].T() << endl;
+          cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
+          cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
+        }
+      }
       
       if ( doKinFit && makePlots )
       {
@@ -1275,11 +1314,14 @@ int main(int argc, char* argv[])
                 txtLogLikeTest << setw(8) << right << ievt << "  CP  ";
                 txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
               }
-              histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
-              histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
-              histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
-              histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
-              histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
+              if (makePlots)
+              {
+                histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
+                histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
+                histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
+                histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
+                histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
+              }
             }
             
           }  // end corr match

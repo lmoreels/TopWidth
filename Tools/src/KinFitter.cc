@@ -1,29 +1,40 @@
 #include "../interface/KinFitter.h"
 
-KinFitter::KinFitter():
+KinFitter::KinFitter(bool addWConstr, bool addEqMassConstr):
 rfFileName("/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root"), errorFuncMap()
 {
   std::cout << "KinFitter::KinFitter - Initialising..." << std::endl;
+  
+  addWConstr_ = addWConstr;
+  addEqMassConstr_ = addEqMassConstr;
   
   // Initialise error matrices
   mErrJet1.Zero();
   mErrJet2.Zero();
   mErrJet3.Zero();
+  mErrJet4.Zero();
+  mErrLepton.Zero();
+  mErrNeutrino.Zero();
   
   this->GetErrorFunctions();
   this->SetupFitter();
 }
 
-KinFitter::KinFitter(std::string _rfFileName):errorFuncMap()
+KinFitter::KinFitter(std::string _rfFileName, bool addWConstr, bool addEqMassConstr):errorFuncMap()
 {
   std::cout << "KinFitter::KinFitter - Initialising..." << std::endl;
   
   rfFileName = _rfFileName;
+  addWConstr_ = addWConstr;
+  addEqMassConstr_ = addEqMassConstr;
   
   // Initialise error matrices
   mErrJet1.Zero();
   mErrJet2.Zero();
   mErrJet3.Zero();
+  mErrJet4.Zero();
+  mErrLepton.Zero();
+  mErrNeutrino.Zero();
   
   this->GetErrorFunctions();
   this->SetupFitter();
@@ -49,35 +60,30 @@ void KinFitter::GetErrorFunctions()
   delete rf;
 }
 
-void KinFitter::SetErrors(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3)
+TMatrixD KinFitter::SetErrors(TLorentzVector part, std::string type)
 {
-  Double_t Et1 = jet1.Et();
-  Double_t Et2 = jet2.Et();
-  Double_t Et3 = jet3.Et();
-  Double_t Eta1 = fabs(jet1.Eta());
-  Double_t Eta2 = fabs(jet2.Eta());
-  Double_t Eta3 = fabs(jet3.Eta());
-  if ( Et1 > 250. ) Et1 = 250.;
-  if ( Et2 > 250. ) Et2 = 250.;
-  if ( Et3 > 250. ) Et3 = 250.;
-  
-  /// jet 1 & jet 2 "from W boson" ==> light jets; jet 3 ==> b jet
-  if ( Eta1 <= 1.3 )                    mErrJet1(0,0) = pow( errorFuncMap["nonbjetEt_B"]->Eval(Et1), 2);
-  else if ( Eta1 > 1.3 && Eta1 <= 1.5 ) mErrJet1(0,0) = pow( errorFuncMap["nonbjetEt_O"]->Eval(Et1), 2);
-  else                                  mErrJet1(0,0) = pow( errorFuncMap["nonbjetEt_E"]->Eval(Et1), 2);
-  
-  if ( Eta2 <= 1.3 )                    mErrJet2(0,0) = pow( errorFuncMap["nonbjetEt_B"]->Eval(Et2), 2);
-  else if ( Eta2 > 1.3 && Eta2 <= 1.5 ) mErrJet2(0,0) = pow( errorFuncMap["nonbjetEt_O"]->Eval(Et2), 2);
-  else                                  mErrJet2(0,0) = pow( errorFuncMap["nonbjetEt_E"]->Eval(Et2), 2);
-  
-  if ( Eta3 <= 1.3 )                    mErrJet3(0,0) = pow( errorFuncMap["bjetEt_B"]->Eval(Et3), 2);
-  else if ( Eta3 > 1.3 && Eta3 <= 1.5 ) mErrJet3(0,0) = pow( errorFuncMap["bjetEt_O"]->Eval(Et3), 2);
-  else                                  mErrJet3(0,0) = pow( errorFuncMap["bjetEt_E"]->Eval(Et3), 2);
+  mErr.Zero();
+    
+  if ( type.find("lepton") != std::string::npos || type.find("muon") != std::string::npos || type.find("electron") != std::string::npos || type.find("neutrino") != std::string::npos )
+  {
+    mErr(0,0) = 1.;
+  }
+  else
+  {
+    Double_t Et = part.Et();
+    Double_t Eta = fabs(part.Eta());
+    if ( Et > 250. ) Et = 250.;
+    
+    /// Errors on Et
+    if ( Eta <= 1.3 )                   mErr(0,0) = pow( errorFuncMap[type+"Et_B"]->Eval(Et), 2);
+    else if ( Eta > 1.3 && Eta <= 1.5 ) mErr(0,0) = pow( errorFuncMap[type+"Et_O"]->Eval(Et), 2);
+    else                                mErr(0,0) = pow( errorFuncMap[type+"Et_E"]->Eval(Et), 2);
+  }
   
   /// No errors on theta & phi atm
-  mErrJet1(1,1) = 1.; mErrJet1(2,2) = 1.;
-  mErrJet2(1,1) = 1.; mErrJet2(2,2) = 1.;
-  mErrJet3(1,1) = 1.; mErrJet3(2,2) = 1.;
+  mErr(1,1) = 1.; mErr(2,2) = 1.;
+  
+  return mErr;
 }
 
 void KinFitter::SetupFitter()
@@ -86,16 +92,34 @@ void KinFitter::SetupFitter()
   jet1_ = new TFitParticleEtThetaPhi( "jet1", "jet1", 0, &mErrJet1);
   jet2_ = new TFitParticleEtThetaPhi( "jet2", "jet2", 0, &mErrJet2);
   jet3_ = new TFitParticleEtThetaPhi( "jet3", "jet3", 0, &mErrJet3);
+  jet4_ = new TFitParticleEtThetaPhi( "jet4", "jet4", 0, &mErrJet4);
+  lepton_ = new TFitParticleEtThetaPhi( "lepton", "lepton", 0, &mErrLepton);
+  neutrino_ = new TFitParticleEtThetaPhi( "neutrino", "neutrino", 0, &mErrNeutrino);  // should be unmeasured part!!
   
   /// Define constraints
   consMW_ = new TFitConstraintM( "WMassConstraint", "WMassConstraint", 0, 0, 80.385);  // pdg2014
   consMW_->addParticles1(jet1_, jet2_);
+  consMNu_ = new TFitConstraintM( "NeutrinoMassConstraint", "NeutrinoMassConstraint", 0, 0, 0.);
+  consMNu_->addParticle1(neutrino_);
+  consEqM_ = new TFitConstraintM( "EqualMassConstraint", "EqualMassConstraint", 0, 0, 0.);
+  consEqM_->addParticles1(jet1_, jet2_, jet3_);
+  consEqM_->addParticles2(jet4_, lepton_, neutrino_);
   
   /// Set up fitter
   //  Add constraints & particles
   fitter_ = new TKinFitter("WMassFit", "WMassFit");
-  fitter_->addConstraint( consMW_ );
-  fitter_->addMeasParticles( jet1_, jet2_, jet3_ );
+  if (addWConstr_)
+  {
+    fitter_->addConstraint( consMW_ );
+    if (! addEqMassConstr_) fitter_->addMeasParticles( jet1_, jet2_);
+  }
+  if (addEqMassConstr_)
+  {
+    fitter_->addConstraint( consEqM_ );
+    fitter_->addConstraint( consMNu_ );
+    fitter_->addMeasParticles( jet1_, jet2_, jet3_, jet4_, lepton_ );
+    fitter_->addUnmeasParticle( neutrino_ );
+  }
   
   /// Set convergence criteria
   fitter_->setMaxNbIter(30);
@@ -104,15 +128,51 @@ void KinFitter::SetupFitter()
   fitter_->setVerbosity(0);
 }
 
-TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3, int _verbosity)
+TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, int _verbosity)
+{
+  if (addEqMassConstr_)
+    std::cerr << "KinFitter::doFit: Too few particles added to apply equal mass constraint!" << endl;
+  
+  /// Get errors
+  mErrJet1 = SetErrors(jet1, "nonbjet");
+  mErrJet2 = SetErrors(jet2, "nonbjet");
+    
+  /// Fill particles
+  jet1_->setIni4Vec(&jet1); jet1_->setCovMatrix(&mErrJet1);
+  jet2_->setIni4Vec(&jet2); jet2_->setCovMatrix(&mErrJet2);
+  
+  if ( _verbosity != 0 )
+    fitter_->setVerbosity(_verbosity);
+  
+  /// Perform fit
+  fitter_->fit();
+  
+  return fitter_;
+}
+
+TKinFitter* KinFitter::doFit(TLorentzVector jet1, TLorentzVector jet2, TLorentzVector jet3, TLorentzVector jet4, TLorentzVector lepton, TLorentzVector neutrino, int _verbosity)
 {
   /// Get errors
-  this->SetErrors(jet1, jet2, jet3);
+  mErrJet1 = SetErrors(jet1, "nonbjet");
+  mErrJet2 = SetErrors(jet2, "nonbjet");
+  if (addEqMassConstr_)
+  {
+    mErrJet3 = SetErrors(jet3, "nonbjet");
+    mErrJet4 = SetErrors(jet4, "nonbjet");
+    mErrLepton = SetErrors(lepton, "muon");
+    mErrNeutrino = SetErrors(neutrino, "neutrino");
+  }
   
   /// Fill particles
   jet1_->setIni4Vec(&jet1); jet1_->setCovMatrix(&mErrJet1);
   jet2_->setIni4Vec(&jet2); jet2_->setCovMatrix(&mErrJet2);
-  jet3_->setIni4Vec(&jet3); jet3_->setCovMatrix(&mErrJet3);
+  if (addEqMassConstr_)
+  {
+    jet3_->setIni4Vec(&jet3); jet3_->setCovMatrix(&mErrJet3);
+    jet4_->setIni4Vec(&jet4); jet4_->setCovMatrix(&mErrJet4);
+    lepton_->setIni4Vec(&lepton); lepton_->setCovMatrix(&mErrLepton);
+    //neutrino??
+  }
   
   if ( _verbosity != 0 )
     fitter_->setVerbosity(_verbosity);
@@ -130,12 +190,20 @@ vector<TLorentzVector> KinFitter::getCorrectedJets()
   
   if ( fitter_->getStatus() == 0 )
   {
-    tempJet.SetPxPyPzE( jet1_->getCurr4Vec()->Px(), jet1_->getCurr4Vec()->Py(), jet1_->getCurr4Vec()->Pz(), jet1_->getCurr4Vec()->E() );
+    tempJet.SetXYZM( jet1_->getCurr4Vec()->X(), jet1_->getCurr4Vec()->Y(), jet1_->getCurr4Vec()->Z(), jet1_->getCurr4Vec()->M() );
     corrJets.push_back(tempJet);
-    tempJet.SetPxPyPzE( jet2_->getCurr4Vec()->Px(), jet2_->getCurr4Vec()->Py(), jet2_->getCurr4Vec()->Pz(), jet2_->getCurr4Vec()->E() );
+    tempJet.SetXYZM( jet2_->getCurr4Vec()->X(), jet2_->getCurr4Vec()->Y(), jet2_->getCurr4Vec()->Z(), jet2_->getCurr4Vec()->M() );
     corrJets.push_back(tempJet);
-    tempJet.SetPxPyPzE( jet3_->getCurr4Vec()->Px(), jet3_->getCurr4Vec()->Py(), jet3_->getCurr4Vec()->Pz(), jet3_->getCurr4Vec()->E() );
-    corrJets.push_back(tempJet);
+    if (addEqMassConstr_)
+    {
+      tempJet.SetXYZM( jet3_->getCurr4Vec()->X(), jet3_->getCurr4Vec()->Y(), jet3_->getCurr4Vec()->Z(), jet3_->getCurr4Vec()->M() );
+      corrJets.push_back(tempJet);
+      tempJet.SetXYZM( jet4_->getCurr4Vec()->X(), jet4_->getCurr4Vec()->Y(), jet4_->getCurr4Vec()->Z(), jet4_->getCurr4Vec()->M() );
+      corrJets.push_back(tempJet);
+      tempJet.SetXYZM( lepton_->getCurr4Vec()->X(), lepton_->getCurr4Vec()->Y(), lepton_->getCurr4Vec()->Z(), lepton_->getCurr4Vec()->M() );
+      corrJets.push_back(tempJet);
+      // neutrino?
+    }
   }
   else std::cerr << "KinFitter::getCorrectedJets: Fit did not converge! Returning zero..." << std::endl;
   
