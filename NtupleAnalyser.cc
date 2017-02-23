@@ -87,19 +87,19 @@ double Luminosity = 9999.;
 
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
-float CSVv2Loose =  0.460;
-float CSVv2Medium = 0.800;
-float CSVv2Tight = 0.935;
+double CSVv2Loose =  0.460;
+double CSVv2Medium = 0.800;
+double CSVv2Tight = 0.935;
 
 /// Top width
 double genTopWidth = 1.366; // from fit
 double genTopMass = 172.3; // from fit
 
 // Temporarily, until calculated from TTbar sample
-float chi2WMass = 80.385;
-float sigmaChi2WMass = 10;
-float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
-float sigmaChi2TopMass = 40;
+double chi2WMass = 80.385;
+double sigmaChi2WMass = 10;
+double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
+double sigmaChi2TopMass = 40;
 
 /// Likelihood function
 const int nCP = 409682;
@@ -119,15 +119,15 @@ const double gammaConvConst = 0.0441073, gammaConvRico = 0.00766141;
 // TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
 // also background in CP/WP/UP cats (unlike name suggests)
 const int nofAveMasses = 17;
-std::array<float, nofAveMasses> aveTopMass;
-std::array<float, nofAveMasses> aveTopMass_noWidth    = {168.425, 167.348, 203.924, 205.249, 198.282, 202.663, 181.577, 193.225, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.722, 193.781};
-std::array<float, nofAveMasses> aveTopMass_widthx0p5  = {166.673, 165.539, 202.773, 204.148, 196.885, 201.428, 179.654, 191.847, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.361, 192.433};
-std::array<float, nofAveMasses> aveTopMass_widthx0p66 = {167.507, 166.408, 203.492, 204.842, 197.710, 202.202, 180.675, 192.615, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.122, 193.187};
-std::array<float, nofAveMasses> aveTopMass_widthx0p75 = {167.696, 166.675, 203.486, 204.876, 197.553, 201.960, 180.794, 192.703, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.207, 193.271};
-std::array<float, nofAveMasses> aveTopMass_widthx1    = {168.430, 167.348, 203.994, 205.296, 198.436, 202.853, 181.637, 193.262, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.760, 193.819};
-std::array<float, nofAveMasses> aveTopMass_widthx2    = {169.126, 167.929, 203.586, 204.520, 199.585, 204.215, 182.032, 193.113, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 193.614, 193.675};
-std::array<float, nofAveMasses> aveTopMass_widthx3    = {170.473, 168.600, 203.955, 204.386, 202.114, 207.218, 182.704, 193.587, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 194.082, 194.138};
-std::array<float, nofAveMasses> aveTopMass_widthx4    = {167.323, 166.322, 203.447, 204.859, 197.102, 201.482, 180.404, 192.376, 258.669, 256.946, 231.481, 229.652, 240.731, 235.611, 200.083, 192.881, 192.948};
+std::array<double, nofAveMasses> aveTopMass;
+std::array<double, nofAveMasses> aveTopMass_noWidth    = {168.719, 168.111, 204.560, 205.939, 198.690, 202.992, 182.280, 193.897, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.393, 194.453};
+std::array<double, nofAveMasses> aveTopMass_widthx0p5  = {166.680, 166.147, 202.979, 204.490, 196.533, 200.905, 179.901, 192.179, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 192.694, 192.770};
+std::array<double, nofAveMasses> aveTopMass_widthx0p66 = {167.605, 167.067, 203.807, 205.278, 197.529, 201.867, 181.030, 193.041, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.547, 193.615};
+std::array<double, nofAveMasses> aveTopMass_widthx0p75 = {167.986, 167.434, 204.120, 205.564, 197.958, 202.287, 181.491, 193.373, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.876, 193.940};
+std::array<double, nofAveMasses> aveTopMass_widthx1    = {168.723, 168.111, 204.631, 205.986, 198.843, 203.183, 182.341, 193.935, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.432, 194.492};
+std::array<double, nofAveMasses> aveTopMass_widthx2    = {169.970, 168.992, 204.813, 205.741, 200.850, 205.472, 183.275, 194.316, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.810, 194.866};
+std::array<double, nofAveMasses> aveTopMass_widthx3    = {170.764, 169.371, 204.597, 205.079, 202.538, 207.556, 183.453, 194.266, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.760, 194.817};
+std::array<double, nofAveMasses> aveTopMass_widthx4    = {169.941, 168.900, 202.590, 202.886, 201.317, 206.443, 181.884, 192.657, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.168, 193.240};
 void getAveMasses(double width)
 {
   for (int i = 0; i < nofAveMasses; i++)
@@ -397,8 +397,8 @@ bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
-float matchedWMass_reco, matchedTopMass_reco, matchedTopMass_gen;
-float matchedMlb_corr, matchedMlb_wrong, matchedTtbarMass_corr, matchedTtbarMass_wrong;
+double matchedWMass_reco, matchedTopMass_reco, matchedTopMass_gen;
+double matchedMlb_corr, matchedMlb_wrong, matchedTtbarMass_corr, matchedTtbarMass_wrong;
 double matchedDRLepB_corr, matchedDRLepB_wrong;
 
 /// KinFitter
@@ -1719,7 +1719,7 @@ int main(int argc, char* argv[])
   if ( time >= 60 )
   {
     int mins = time/60;
-    float secs = time - mins*60;
+    double secs = time - mins*60;
     
     if (mins >= 60 )
     {
@@ -2379,8 +2379,8 @@ void ClearObjects()
 
 void FillGeneralPlots(int d)
 {
-  float M3 = (selectedJets[0] + selectedJets[1] + selectedJets[2]).M();
-  float Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
+  double M3 = (selectedJets[0] + selectedJets[1] + selectedJets[2]).M();
+  double Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
   
   double Mlb_temp = -1;
   for (unsigned int i = 0; i < selectedBJets.size(); i++)
@@ -2421,7 +2421,7 @@ void FillGeneralPlots(int d)
   MSPlot["CSVv2Discr_jet4"]->Fill(jet_bdiscr[3], datasets[d], true, Luminosity*scaleFactor);
   
   int labelB = -1;
-  float highestBDiscr = -999.;
+  double highestBDiscr = -999.;
   for (int iJet = 0; iJet < selectedJets.size(); iJet++)
   {
     MSPlot["CSVv2Discr_allJets"]->Fill(jet_bdiscr[iJet], datasets[d], true, Luminosity*scaleFactor);
