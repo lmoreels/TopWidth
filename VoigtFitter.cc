@@ -32,15 +32,15 @@ string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx0p5") != std::string::npos )       return "170217_1659/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p66") != std::string::npos ) return "170217_1658/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p75") != std::string::npos ) return "170217_1657/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx1") != std::string::npos )    return "170217_1617/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "170223_1244/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p66") != std::string::npos ) return "170223_1245/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p75") != std::string::npos ) return "170223_1246/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1") != std::string::npos )    return "170223_1255/NtuplePlots_nominal.root";
     //else if ( suff.find("widthx1p5") != std::string::npos )  return "170213_1306/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx2") != std::string::npos )    return "170217_1616/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx3") != std::string::npos )    return "170217_1615/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )    return "170217_1614/NtuplePlots_nominal.root";
-    else                                                     return "170217_1617/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "170223_1256/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "170223_1257/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "170223_1258/NtuplePlots_nominal.root";
+    else                                                     return "170223_1255/NtuplePlots_nominal.root";
     
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
@@ -49,7 +49,7 @@ string whichDate(string syst, string suff)
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "170217_1617/NtuplePlots_nominal.root";
+    return "170223_1255/NtuplePlots_nominal.root";
   }
 }
 
@@ -200,7 +200,7 @@ int main (int argc, char *argv[])
   
   /// Declare input and output files
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr, suffix);
-  string pathOutput = "OutputVoigt/ex4jets/170220/";
+  string pathOutput = "OutputVoigt/ex4jets/170223/";
   mkdir(pathOutput.c_str(),0777);
   string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
   cout << "Output file: " << outputFileName << endl;
@@ -234,14 +234,14 @@ int main (int argc, char *argv[])
     histo->Scale(scale);
     //TH1F *histo = (TH1F*) histoIn->Clone("histo");
     
-    float fitMin = -9., fitMax = -9.;
-    float baseline = 18e-5;
+    double fitMin = -9., fitMax = -9.;
+    double baseline = 18e-5;
     if ( histoNames[iHisto].second != 1 ) baseline = 22e-5;
     for (int iBin = 0; iBin < histo->GetNbinsX(); iBin++)
     {
       if ( fitMax != -9. ) break;
       if ( fitMin != -9. && iBin < histo->GetXaxis()->FindBin(1.2) ) continue;
-      float binContent = histo->GetBinContent(iBin) - baseline;
+      double binContent = histo->GetBinContent(iBin) - baseline;
       if ( fitMin == -9. && binContent > 0.) fitMin = histo->GetXaxis()->GetBinCenter(iBin);
       if ( fitMin != -9. && fitMax == -9. && binContent < 0. ) fitMax = histo->GetXaxis()->GetBinCenter(iBin);
     }
@@ -262,16 +262,16 @@ int main (int argc, char *argv[])
         myfit = new TF1("fit", voigt_predef, fitMin, fitMax, nPar);  // root name, fit function, range, nPar
         
         myfit->SetParNames("#mu","#sigma","#gamma", "r", "norm");
-        myfit->SetParameters(0.9975, 0.09843, 1.36*histo->GetRMS(), 2.125, 0.002558);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
+        myfit->SetParameters(1.007, 0.0729, 1.36*histo->GetRMS(), 2.062, 0.002591);  // sigma = 0.57735027 * RMS; FWHM = 1.359556 * RMS (= 2.354820 * sigma)
         
         //myfit->SetParLimits(0, 0.95, 1.05);
         myfit->FixParameter(0, 1.007);
         //myfit->SetParLimits(1, 1e-4, 1.e+3);
-        myfit->FixParameter(1, 0.0729);
+        myfit->FixParameter(1, 0.0749);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
         //myfit->SetParLimits(3, 2., 5.);
-        myfit->FixParameter(3, 2.062);
-        myfit->FixParameter(4, 0.002591);
+        myfit->FixParameter(3, 2.031);
+        myfit->FixParameter(4, 0.002578);
       }
       else
       {
@@ -314,29 +314,30 @@ int main (int argc, char *argv[])
         
         if ( histoNames[iHisto].second == 0 ) // WP
         {
-          myfit->SetParameters(-0.3614, 17.7, 0.1598, 0.7693, 0.004463);
-          myfit->FixParameter(0, -0.457);
+          myfit->SetParameters(-0.457, 12.7, 0.1835, 0.7747, 0.003768);
+          myfit->FixParameter(0, -0.52);
           //myfit->SetParLimits(1, 0.1, 30);
+          myfit->FixParameter(1, 9.5);
           myfit->FixParameter(2, 0.1835);
           myfit->FixParameter(3, 0.7747);
-          myfit->FixParameter(4, 0.003768);
+          myfit->FixParameter(4, 0.003886);
         }
         else  // UP
         {
-          myfit->SetParameters(-0.3639, 17.7, 0.1541, 0.6693, 0.003993);
-          myfit->FixParameter(0, -0.5966);
+          myfit->SetParameters(-0.5966, 12., 0.1835, 0.805, 0.004106);
+          myfit->FixParameter(0, -0.595);
           myfit->FixParameter(2, 0.1835);
-          myfit->FixParameter(3, 0.805);
+          myfit->FixParameter(3, 0.8055);
           
           if ( histoNames[iHisto].second == 2 ) // UP
           {
-            myfit->FixParameter(1, 12.0);
-            myfit->FixParameter(4, 0.004106);
+            myfit->FixParameter(1, 11.14);
+            myfit->FixParameter(4, 0.004097);
           }
           else if ( histoNames[iHisto].second == 3 ) // WPUP
           {
-            myfit->FixParameter(1, 9.691);
-            myfit->FixParameter(4, 0.004091);
+            myfit->FixParameter(1, 9.434);
+            myfit->FixParameter(4, 0.004088);
           }
         }
         
@@ -420,7 +421,7 @@ int main (int argc, char *argv[])
   if ( time >= 60 )
   {
     int mins = time/60;
-    float secs = time - mins*60;
+    double secs = time - mins*60;
     
     if (mins >= 60 )
     {

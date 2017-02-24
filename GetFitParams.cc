@@ -25,7 +25,7 @@ bool runLocally = false;
 
 
 /// Define vars
-float width[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
+double width[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
 string widthStr[] = {"0p5", "0p66", "0p75", "1", "2", "3", "4"};
 int nWidths = sizeof(widthStr)/sizeof(widthStr[0]);
 vector<double> muVoigt, sigmaVoigt, gammaVoigt, rVoigt, normVoigt;
@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
   ClearVars();
   ClearVectors();
   
-  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170220/";
+  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170223/";
   if (runLocally) pathInput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/170220/";
   
   /// Get fit parameters from files

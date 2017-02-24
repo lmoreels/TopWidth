@@ -102,9 +102,9 @@ double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 double sigmaChi2TopMass = 40;
 
 /// Likelihood function
-const int nCP = 409682;
-const int nWP = 200729;
-const int nUP = 856752;
+const int nCP = 410217;
+const int nWP = 201731;
+const int nUP = 858844;
 
 // Voigt/CB fit parameters
 const double mu_CP = 1.007, sigma_CP = 0.0729, r_CP = 2.062, norm_CP = 0.002591;
@@ -413,26 +413,26 @@ double toppt_reco_orig, toppt_reco_kf;
 
 /// Likelihood
 int nTot = 0;
-double f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
-double widthArray[] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4.};
+Double_t f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
+Double_t widthArray[] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4.};
 string widthArrayStr[] = {"0p5", "0p55", "0p6", "0p65", "0p7", "0p75", "0p8", "0p85", "0p9", "0p95", "1", "1p05", "1p1", "1p15", "1p2", "1p25", "1p3", "1p35", "1p4", "1p45", "1p5", "1p55", "1p6", "1p65", "1p7", "1p75", "1p8", "1p85", "1p9", "1p95", "2", "2p25", "2p5", "2p75", "3", "3p25", "3p5", "3p75", "4"};
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
-double gammaArray[nWidthsLL];
+Double_t gammaArray[nWidthsLL];
 
-double loglike[nWidthsLL] = {0};
-double loglike_pd[10][nWidthsLL] = {{0}};
-double loglike_per_evt[nWidthsLL] = {0};
-double loglike_onlyGoodEvts[nWidthsLL] = {0};
-double fakelike_CP[nWidthsLL] = {0};
-double fakelike_CP_per_evt[nWidthsLL] = {0};
-double fakelike_onlyGoodEvts[nWidthsLL] = {0};
-double fakelike_CP_Res[nWidthsLL] = {0};
+Double_t loglike[nWidthsLL] = {0};
+Double_t loglike_pd[10][nWidthsLL] = {{0}};
+Double_t loglike_per_evt[nWidthsLL] = {0};
+Double_t loglike_onlyGoodEvts[nWidthsLL] = {0};
+Double_t fakelike_CP[nWidthsLL] = {0};
+Double_t fakelike_CP_per_evt[nWidthsLL] = {0};
+Double_t fakelike_onlyGoodEvts[nWidthsLL] = {0};
+Double_t fakelike_CP_Res[nWidthsLL] = {0};
 
 bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
 int nofBadEvtsLL[10] = {0};
-double aveTopMassLL = -1.;
-double maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
+Double_t aveTopMassLL = -1.;
+Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 
 ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike;
 
@@ -1469,17 +1469,6 @@ int main(int argc, char* argv[])
         delete foutRF;
       }
       
-//       if (calculateAverageMass)
-//       {
-//         txtMassGenMatched.close();
-//         txtMassRecoCP.close();
-//         txtMassRecoWPUP.close();
-//         txtMassRecoUP.close();
-//         txtMassRecoWP.close();
-//         txtMassRecoWPWOk.close();
-//         txtMassRecoWPWNotOk.close();
-//       }
-      
     }  // end TT
     
     if (calculateLikelihood)
@@ -1525,7 +1514,7 @@ int main(int argc, char* argv[])
       cout << loglike[iWidth]/(1e+6);
       if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
-    cout << "} *10^6 " << endl << "likelihood values (data-only) : ";
+    cout << "} *10^6;" << endl << "likelihood values (data-only) : ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       cout << loglike_pd[0][iWidth];
@@ -1537,25 +1526,25 @@ int main(int argc, char* argv[])
       cout << loglike_onlyGoodEvts[iWidth]/(1e+6);
       if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
-    cout << "} *10^6 " << endl << "fake likelihood values (CP) : ";
+    cout << "} *10^6;" << endl << "fake likelihood values (CP) : {";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       cout << fakelike_CP[iWidth]/(1e+6);
       if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
-    cout << "} *10^6" << endl << "fake likelihood values (CP - only good events) : {";
+    cout << "} *10^6;" << endl << "fake likelihood values (CP - only good events) : {";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      cout << fakelike_onlyGoodEvts[iWidth]/(1e+6);
+      cout << fakelike_onlyGoodEvts[iWidth]/(1e+4);
       if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
-    cout << "} *10^6 " << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet (seperate): ";
+    cout << "} *10^4;" << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet : {";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       cout << fakelike_CP_Res[iWidth];
       if ( iWidth != nWidthsLL-1 ) cout << ", ";
     }
-    cout << "} " << endl << "widths: ";
+    cout << "};" << endl << "widths: ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       cout << widthArray[iWidth];
