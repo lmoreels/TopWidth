@@ -89,12 +89,12 @@ TMatrixD KinFitter::SetErrors(TLorentzVector part, std::string type)
 void KinFitter::SetupFitter()
 {
   /// Define particles
-  jet1_ = new TFitParticleEtThetaPhi( "jet1", "jet1", 0, &mErrJet1);
-  jet2_ = new TFitParticleEtThetaPhi( "jet2", "jet2", 0, &mErrJet2);
-  jet3_ = new TFitParticleEtThetaPhi( "jet3", "jet3", 0, &mErrJet3);
-  jet4_ = new TFitParticleEtThetaPhi( "jet4", "jet4", 0, &mErrJet4);
-  lepton_ = new TFitParticleEtThetaPhi( "lepton", "lepton", 0, &mErrLepton);
-  neutrino_ = new TFitParticleEtThetaPhi( "neutrino", "neutrino", 0, &mErrNeutrino);  // should be unmeasured part!!
+  jet1_ = new TFitParticleEtThetaPhiEMomFix( "jet1", "jet1", 0, &mErrJet1);
+  jet2_ = new TFitParticleEtThetaPhiEMomFix( "jet2", "jet2", 0, &mErrJet2);
+  jet3_ = new TFitParticleEtThetaPhiEMomFix( "jet3", "jet3", 0, &mErrJet3);
+  jet4_ = new TFitParticleEtThetaPhiEMomFix( "jet4", "jet4", 0, &mErrJet4);
+  lepton_ = new TFitParticleEtThetaPhiEMomFix( "lepton", "lepton", 0, &mErrLepton);
+  neutrino_ = new TFitParticleEtThetaPhiEMomFix( "neutrino", "neutrino", 0, &mErrNeutrino);  // should be unmeasured part!!
   
   /// Define constraints
   consMW_ = new TFitConstraintM( "WMassConstraint", "WMassConstraint", 0, 0, 80.385);  // pdg2014

@@ -20,7 +20,7 @@
 #include "TopTreeAnalysisBase/KinFitter/interface/TKinFitter.h"
 #include "TopTreeAnalysisBase/KinFitter/interface/TAbsFitParticle.h"
 #include "TopTreeAnalysisBase/KinFitter/interface/TFitConstraintM.h"
-#include "TopTreeAnalysisBase/KinFitter/interface/TFitParticleEtThetaPhi.h"
+#include "TopTreeAnalysisBase/KinFitter/interface/TFitParticleEtThetaPhiEMomFix.h"
 
 // load user defined
 #include "ResolutionFunctions.h"
