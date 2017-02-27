@@ -37,6 +37,7 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
+bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = true;
@@ -75,7 +76,6 @@ int verbose = 2;
 string pathNtuples = "";
 bool isData = false;
 bool isTTbar = false;
-bool makePlots = true;
 
 int nofHardSelected = 0;
 int nofMatchedEvents = 0;
@@ -1335,8 +1335,8 @@ int main(int argc, char* argv[])
             }
             else if (makePlots)
             {
-              histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(topmass_reco_kf/aveTopMass[4], widthSF);
-              histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[2], widthSF);
+              histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
+              histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
               histo1D["minMlb_reco_WP"]->Fill(reco_minMlb, widthSF);
               histo1D["dR_lep_b_lep_reco_WP"]->Fill(reco_dRLepB_lep, widthSF);
               histo1D["dR_lep_b_had_reco_WP"]->Fill(reco_dRLepB_had, widthSF);
@@ -1391,8 +1391,8 @@ int main(int argc, char* argv[])
           }
           else if (makePlots)
           {
-            histo1D["mTop_div_aveMTop_TT_reco_UP"]->Fill(topmass_reco_kf/aveTopMass[3], widthSF);
-            histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[2], widthSF);
+            histo1D["mTop_div_aveMTop_TT_reco_UP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
+            histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
             histo1D["minMlb_reco_UP"]->Fill(reco_minMlb, widthSF);
             histo1D["dR_lep_b_lep_reco_UP"]->Fill(reco_dRLepB_lep, widthSF);
             histo1D["dR_lep_b_had_reco_UP"]->Fill(reco_dRLepB_had, widthSF);
@@ -2047,6 +2047,9 @@ void InitHisto2D()
   histo2D["KF_W_mass_orig_vs_corr_TT"] = new TH2F("KF_W_mass_orig_vs_corr_TT", "W mass made with KF corrected jets vs. original jets (TT); m_{W,orig} [GeV]; m_{W,kf} [GeV]", 250, 0, 500, 250, 0, 500);
   histo2D["KF_top_mass_orig_vs_corr_TT"] = new TH2F("KF_top_mass_orig_vs_corr_TT", "Top mass made with KF corrected jets vs. original jets (TT); m_{t,orig} [GeV]; m_{t,kf} [GeV]", 400, 0, 800, 400, 0, 800);
   histo2D["KF_jets_Et_diff_TT"] = new TH2F("KF_jets_Et_diff_TT", "Et difference after kinFitter for jet1 in function of jet0 (TT); E_{T,0,kf} - E_{T,0,orig} [GeV]; E_{T,1,kf} - E_{T,1,orig} [GeV]", 400, -50, 50, 400, -50, 50);
+  histo2D["KF_W_px_orig_vs_corr_TT"] = new TH2F("KF_W_px_orig_vs_corr_TT", "W p_{x} made with KF corrected jets vs. original jets (TT); p_{x,orig} [GeV]; p_{x,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+  histo2D["KF_W_py_orig_vs_corr_TT"] = new TH2F("KF_W_py_orig_vs_corr_TT", "W p_{y} made with KF corrected jets vs. original jets (TT); p_{y,orig} [GeV]; p_{y,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+  histo2D["KF_W_pz_orig_vs_corr_TT"] = new TH2F("KF_W_pz_orig_vs_corr_TT", "W p_{z} made with KF corrected jets vs. original jets (TT); p_{z,orig} [GeV]; p_{z,kf} [GeV]", 400, 0, 800, 400, 0, 800);
 }
 
 void InitHisto1DMatch()
@@ -2475,9 +2478,13 @@ void FillKinFitPlots(int d)
   { 
     histo1D["KF_W_mass_orig_TT"]->Fill(Wmass_reco_orig);
     histo1D["KF_W_mass_corr_TT"]->Fill(Wmass_reco_kf);
+    histo2D["KF_W_mass_orig_vs_corr_TT"]->Fill(Wmass_reco_orig, Wmass_reco_kf);
+    histo2D["KF_W_px_orig_vs_corr_TT"]->Fill( (selectedJets[0] + selectedJets[1]).Px(), (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).Px() );
+    histo2D["KF_W_py_orig_vs_corr_TT"]->Fill( (selectedJets[0] + selectedJets[1]).Py(), (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).Py() );
+    histo2D["KF_W_pz_orig_vs_corr_TT"]->Fill( (selectedJets[0] + selectedJets[1]).Pz(), (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).Pz() );
+    
     histo1D["KF_top_mass_orig_TT"]->Fill(topmass_reco_orig);
     histo1D["KF_top_mass_corr_TT"]->Fill(topmass_reco_kf);
-    histo2D["KF_W_mass_orig_vs_corr_TT"]->Fill(Wmass_reco_orig, Wmass_reco_kf);
     histo2D["KF_top_mass_orig_vs_corr_TT"]->Fill(topmass_reco_orig, topmass_reco_kf);
     histo1D["KF_top_pt_orig_TT"]->Fill(toppt_reco_orig);
     histo1D["KF_top_pt_corr_TT"]->Fill(toppt_reco_kf);
