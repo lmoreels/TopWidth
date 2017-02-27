@@ -81,7 +81,7 @@ TMatrixD KinFitter::SetErrors(TLorentzVector part, std::string type)
   }
   
   /// No errors on theta & phi atm
-  mErr(1,1) = 1.; mErr(2,2) = 1.;
+  mErr(1,1) = 1e-7; mErr(2,2) = 1e-7;
   
   return mErr;
 }
