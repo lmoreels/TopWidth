@@ -37,8 +37,8 @@ using namespace std;
 // using namespace TopTree;
 
 bool test = true;
-bool testFit = false;
-bool testRead = true;
+bool testFit = true;
+bool testRead = false;
 
 std::map<std::string, TF1*> errorFuncMap;
 

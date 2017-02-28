@@ -46,10 +46,10 @@ class ResolutionFunctions{
     void writeHistograms();
     void makeFit();
     void makeFit(std::string inputFileName, std::string outputFileName);
-    TF2* getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
-    TF1* getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
-    TF1* getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
-    double getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string option = "");
+    TF2* getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string binName);
+    TF1* getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string binName);
+    TF1* getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string binName);
+    double getResolution(std::string inputFileName, std::string varName, std::string objName, double var, std::string binName);
     void writeTable(std::string inputFileName);
   
   
@@ -67,7 +67,7 @@ class ResolutionFunctions{
     static const std::string histoDescription[];
     static Double_t dblGaus(Double_t *x, Double_t *par);
     static Double_t dblGausParFill(Double_t *x, Double_t *par);
-    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string option = "");
+    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName);
 };
 
 
