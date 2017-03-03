@@ -49,7 +49,6 @@ void KinFitter::GetErrorFunctions()
 {
   ResolutionFunctions *rf = new ResolutionFunctions(false, false);
   
-  // At the moment only errors for Et
   errorFuncMap["bjetEt_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
   errorFuncMap["bjetEt_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "O");
   errorFuncMap["bjetEt_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "E");
@@ -57,12 +56,28 @@ void KinFitter::GetErrorFunctions()
   errorFuncMap["nonbjetEt_O"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "O");
   errorFuncMap["nonbjetEt_E"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "E");
   
+  errorFuncMap["bjetTheta_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
+  errorFuncMap["bjetTheta_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "O");
+  errorFuncMap["bjetTheta_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "E");
+  errorFuncMap["nonbjetTheta_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "B");
+  errorFuncMap["nonbjetTheta_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "O");
+  errorFuncMap["nonbjetTheta_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "E");
+  
+  errorFuncMap["bjetPhi_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "B");
+  errorFuncMap["bjetPhi_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "O");
+  errorFuncMap["bjetPhi_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "E");
+  errorFuncMap["nonbjetPhi_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "B");
+  errorFuncMap["nonbjetPhi_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "O");
+  errorFuncMap["nonbjetPhi_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "E");
+  
   delete rf;
 }
 
 TMatrixD KinFitter::SetErrors(TLorentzVector part, std::string type)
 {
   mErr.Zero();
+  mErr(1,1) = 1e-6;
+  mErr(2,2) = 1e-6;
     
   if ( type.find("lepton") != std::string::npos || type.find("muon") != std::string::npos || type.find("electron") != std::string::npos || type.find("neutrino") != std::string::npos )
   {
@@ -74,14 +89,26 @@ TMatrixD KinFitter::SetErrors(TLorentzVector part, std::string type)
     Double_t Eta = fabs(part.Eta());
     if ( Et > 250. ) Et = 250.;
     
-    /// Errors on Et
-    if ( Eta <= 1.3 )                   mErr(0,0) = pow( errorFuncMap[type+"Et_B"]->Eval(Et), 2);
-    else if ( Eta > 1.3 && Eta <= 1.5 ) mErr(0,0) = pow( errorFuncMap[type+"Et_O"]->Eval(Et), 2);
-    else                                mErr(0,0) = pow( errorFuncMap[type+"Et_E"]->Eval(Et), 2);
+    /// Get errors from functions
+    if ( Eta <= 1.3 )
+    {
+      mErr(0,0) = pow( errorFuncMap[type+"Et_B"]->Eval(Et)   , 2);
+      mErr(1,1) = pow( errorFuncMap[type+"Theta_B"]->Eval(Et), 2);
+      mErr(2,2) = pow( errorFuncMap[type+"Phi_B"]->Eval(Et)  , 2);
+    }
+    else if ( Eta > 1.3 && Eta <= 1.5 )
+    {
+      mErr(0,0) = pow( errorFuncMap[type+"Et_O"]->Eval(Et)   , 2);
+      mErr(1,1) = pow( errorFuncMap[type+"Theta_O"]->Eval(Et), 2);
+      mErr(2,2) = pow( errorFuncMap[type+"Phi_O"]->Eval(Et)  , 2);
+    }
+    else
+    {
+      mErr(0,0) = pow( errorFuncMap[type+"Et_E"]->Eval(Et)   , 2);
+      mErr(1,1) = pow( errorFuncMap[type+"Theta_E"]->Eval(Et), 2);
+      mErr(2,2) = pow( errorFuncMap[type+"Phi_E"]->Eval(Et)  , 2);
+    }
   }
-  
-  /// No errors on theta & phi atm
-  mErr(1,1) = 1e-7; mErr(2,2) = 1e-7;
   
   return mErr;
 }

@@ -36,9 +36,9 @@ using namespace std;
 // using namespace reweight;
 // using namespace TopTree;
 
-bool test = true;
-bool testFit = true;
-bool testRead = false;
+bool test = false;
+bool testFit = false;
+bool testRead = true;
 
 std::map<std::string, TF1*> errorFuncMap;
 
@@ -145,14 +145,20 @@ int main (int argc, char *argv[])
   if (testRead)
   { 
     TF2* f2 = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "bjet", "B");
-    DrawFunction(f2, "bjet Et (barrel)", "RF_bjet_Et_B_fitF");
+    DrawFunction(f2, "b jet Et (barrel)", "RF_bjet_Et_B_fitF");
     
     TF1 *f1 = (TF1*) rf->getFitFunction1D(rfFileName, "Et", "bjet", "B");
-    DrawFunction(f1, "bjet Et (barrel)", "RF_bjet_Et_B_fitF_x");
+    DrawFunction(f1, "b jet Et (barrel)", "RF_bjet_Et_B_fitF_x");
     
     TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
-    //DrawFunction(f, "bjet Et (barrel)", "RF_bjet_Et_B");
-    DrawFunction(f, "non-bjet Et (barrel)", "RF_nonbjet_Et_B");
+    //DrawFunction(f, "b jet Et (barrel)", "RF_bjet_Et_B");
+    DrawFunction(f, "non-b jet Et (barrel)", "RF_nonbjet_Et_B");
+    
+    TF1 *fth = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
+    DrawFunction(fth, "b jet theta (barrel)", "RF_bjet_theta_B");
+    
+    TF1 *fph = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "B");
+    DrawFunction(fph, "non-b jet phi (barrel)", "RF_nonbjet_phi_B");
     
     if (test)
     {
