@@ -585,7 +585,7 @@ void ResolutionFunctions::makeFit()
     // now: 0-2: b jet Et (BOE), 3-5: b jet theta (BOE), 6-8: b jet phi (BOE), 9-11: non-b jet Et (BOE), 12-14: non-b jet theta (BOE), 15-17: non-b jet phi (BOE)
     
     bool fitEt = false, fitTheta = false, fitPhi = false;
-    if ( f == 0 || f == 1 || f == 2 || f == 9 || f == 10 || f == 11 ) /*fitEt = true;*/continue; //temporarily
+    if ( f == 0 || f == 1 || f == 2 || f == 9 || f == 10 || f == 11 ) fitEt = true;
     else if ( f == 3 || f == 4 || f == 5 || f == 12 || f == 13 || f == 14 ) fitTheta = true;
     else if ( f == 6 || f == 7 || f == 8 || f == 15 || f == 16 || f == 17 ) fitPhi = true;
     else continue;
@@ -692,13 +692,6 @@ void ResolutionFunctions::makeFit()
       //else if ( f == 3 || f == 5 || f == 9 || f == 11 )  // theta & phi of jet (CHECK: also eta??)
       else if ( fitTheta || fitPhi )  // theta & phi of (non-b) jet (BOE)
       {
-        //myfit->SetParameter(0, 0.0); 		//central value of first, broad gaussian
-        //myfit->SetParameter(1, 0.3);    //sigma value of first, broad gaussian
-        //myfit->SetParameter(2, 77.0);   //constant value of first, broad gaussian
-        //myfit->SetParameter(3, 0.0004); //central value of second, narrow gaussian
-        //myfit->SetParameter(4, 0.001);  //sigma value of second, narrow gaussian
-        //myfit->SetParameter(5, 26.5);   //constant value of second, narrow gaussian
-        
         // Mean around zero
         myfit->SetParLimits(0,-0.005,0.005);
         myfit->SetParLimits(3,-0.06,0.06);
@@ -723,20 +716,14 @@ void ResolutionFunctions::makeFit()
         else
         {
           myfit->SetParameter(2, 0.1);
-          if (fitPhi) myfit->SetParLimits(1,1e-3,2e-2);
-          myfit->SetParLimits(2,0.06,0.5);
-          myfit->SetParLimits(4,9e-3,3e-1);
+          myfit->SetParLimits(1, 2e-3, 1e-2);
+          if (fitPhi) myfit->SetParLimits(1,3e-3,2e-2);
+          myfit->SetParLimits(2,0.06,0.45);
+          myfit->SetParLimits(4,7e-3,3e-1);
+          if (fitPhi) myfit->SetParLimits(4,15e-3,3e-1);
         }
       }
 /*      else if ( f == 12 )  // energy of muon
-      {
-        //test
-      }
-      else if ( f == 13 )  // Et of muon
-      {
-        //test
-      }
-      else if ( f == 14 )  // pt of muon
       {
         //myfit->SetParameter(0, -0.008);  //central value of first, broad gaussian
         //myfit->SetParameter(1, 0.01);    //sigma value of first, broad gaussian
@@ -749,6 +736,14 @@ void ResolutionFunctions::makeFit()
         myfit->SetParameter(2, 100.0);   //constant value of second, narrow gaussian
         myfit->SetParameter(3, -0.0002); //central value of second, narrow gaussian
         myfit->SetParameter(4, 0.0002);  //sigma value of second, narrow gaussian
+      }
+      else if ( f == 13 )  // Et of muon
+      {
+        //test
+      }
+      else if ( f == 14 )  // pt of muon
+      {
+        //test
       }
       else if ( f == 15 || f == 17 )  // theta & phi of muon (CHECK: also eta??)
       {
