@@ -82,6 +82,8 @@ int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
+int nofCP = 0, nofWP = 0, nofUP = 0;
+int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
 double Luminosity = 9999.;
 
 
@@ -102,9 +104,9 @@ double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 double sigmaChi2TopMass = 40;
 
 /// Likelihood function
-const int nCP = 410217;
-const int nWP = 201731;
-const int nUP = 858844;
+const int nCP = 424657;
+const int nWP = 217980;
+const int nUP = 959425;
 
 // Voigt/CB fit parameters
 const double mu_CP = 1.007, sigma_CP = 0.0729, r_CP = 2.062, norm_CP = 0.002591;
@@ -121,6 +123,8 @@ const double gammaConvConst = 0.0441073, gammaConvRico = 0.00766141;
 const int nofAveMasses = 17;
 std::array<double, nofAveMasses> aveTopMass;
 std::array<double, nofAveMasses> aveTopMass_noWidth    = {168.719, 167.105, 203.378, 204.724, 197.450, 201.182, 185.360, 193.207, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.762, 193.825};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut10= {168.719, 167.019, 191.879, 190.060, 196.152, 200.024, 166.695, 181.571, 248.206, 252.113, 226.179, 224.148, 223.302, 200.685, 186.035, 181.939, 181.975};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut15= {168.719, 166.848, 192.016, 190.654, 195.740, 200.236, 167.958, 182.345, 250.376, 251.513, 223.667, 222.226, 222.102, 206.881, 187.017, 182.734, 182.772};
 std::array<double, nofAveMasses> aveTopMass_widthx0p5  = {166.680, 166.147, 202.979, 204.490, 196.533, 200.905, 179.901, 192.179, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 192.694, 192.770};
 std::array<double, nofAveMasses> aveTopMass_widthx0p66 = {167.605, 167.067, 203.807, 205.278, 197.529, 201.867, 181.030, 193.041, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.547, 193.615};
 std::array<double, nofAveMasses> aveTopMass_widthx0p75 = {167.986, 167.434, 204.120, 205.564, 197.958, 202.287, 181.491, 193.373, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.876, 193.940};
@@ -132,20 +136,21 @@ void getAveMasses(double width)
 {
   for (int i = 0; i < nofAveMasses; i++)
   {
-    if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
-    else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
-    else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
-    else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
-    else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
-    else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
-    else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
-    else
-    {
-      if ( i == 0)
-        cout << "Average top mass for width " << width << " not found. Using average mass for width = 1..." << endl;
-      aveTopMass[i] = aveTopMass_widthx1[i];
-    }
-    if (! applyWidthSF) aveTopMass[i] = aveTopMass_noWidth[i];
+//     if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
+//     else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
+//     else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
+//     else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
+//     else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
+//     else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
+//     else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
+//     else
+//     {
+//       if ( i == 0)
+//         cout << "Average top mass for width " << width << " not found. Using average mass for width = 1..." << endl;
+//       aveTopMass[i] = aveTopMass_widthx1[i];
+//     }
+    /*if (! applyWidthSF)*/ aveTopMass[i] = aveTopMass_noWidth[i];
+    //aveTopMass[i] = aveTopMass_KFchi2cut15[i];
   }
 }
 
@@ -619,7 +624,8 @@ int main(int argc, char* argv[])
     f_UP = (double)nUP/(double)nTot;
     
     /// Average top mass for likelihood
-    aveTopMassLL = f_CP*aveTopMass[1] + f_WP*aveTopMass[4] + f_UP*aveTopMass[3];
+    aveTopMassLL = aveTopMass[1];
+    //aveTopMassLL = f_CP*aveTopMass[1] + f_WP*aveTopMass[4] + f_UP*aveTopMass[3];
     //aveTopMassLL = f_CP*aveTopMass[1] + (f_WP+f_UP)*aveTopMass[2];
     cout << "LogLike::Average top quark mass = " << aveTopMassLL << endl;
   }
@@ -1070,9 +1076,10 @@ int main(int argc, char* argv[])
         kFitChi2 = kFitter->getS();
         if (test) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
-        //if ( kFitChi2 > 10. ) continue;
+        //if ( kFitChi2 > 15. ) continue;
         nofAcceptedKFit++;
         
+        selectedJetsKFcorrected.clear();
         selectedJetsKFcorrected = kf->getCorrectedJets();
         
       }
@@ -1235,6 +1242,7 @@ int main(int argc, char* argv[])
       // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
+      double tempAveMass = topmass_reco_kf/aveTopMass[1];
       
       //if (isTTbar)
       if (! isData)
@@ -1270,13 +1278,22 @@ int main(int argc, char* argv[])
               if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
                 histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
               if (doKinFit) MSPlot["KF_top_mass_corr_CP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-              if (doKinFit) histo1D["KF_top_mass_corr_CP"]->Fill(topmass_reco_kf, widthSF);
+              if (doKinFit)
+              {
+                histo1D["KF_top_mass_corr_CP"]->Fill(topmass_reco_kf, widthSF);
+                histo1D["KF_Chi2_CP"]->Fill(kFitChi2);
+              }
+            }
+            
+            if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+            {
+              nofCP++;
+              if (isTTbar) nofCP_TT++;
             }
             
             if (calculateLikelihood)
             {
               
-              double tempAveMass = topmass_reco_kf/aveTopMassLL;
               for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
               {
                 fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
@@ -1356,7 +1373,17 @@ int main(int argc, char* argv[])
               if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
                 histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
               if (doKinFit) MSPlot["KF_top_mass_corr_WP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-              if (doKinFit) histo1D["KF_top_mass_corr_WP"]->Fill(topmass_reco_kf, widthSF);
+              if (doKinFit)
+              {
+                histo1D["KF_top_mass_corr_WP"]->Fill(topmass_reco_kf, widthSF);
+                histo1D["KF_Chi2_WP"]->Fill(kFitChi2);
+              }
+            }
+            
+            if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+            {
+              nofWP++;
+              if (isTTbar) nofWP_TT++;
             }
             
             /// write debug file
@@ -1412,7 +1439,17 @@ int main(int argc, char* argv[])
             if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
               histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
             if (doKinFit) MSPlot["KF_top_mass_corr_UP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-            if (doKinFit) histo1D["KF_top_mass_corr_UP"]->Fill(topmass_reco_kf, widthSF);
+            if (doKinFit)
+            {
+              histo1D["KF_top_mass_corr_UP"]->Fill(topmass_reco_kf, widthSF);
+              histo1D["KF_Chi2_UP"]->Fill(kFitChi2);
+            }
+          }
+          
+          if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+          {
+            nofUP++;
+            if (isTTbar) nofUP_TT++;
           }
           
           /// write debug file
@@ -1499,6 +1536,9 @@ int main(int argc, char* argv[])
     txtMassRecoWPWOk.close();
     txtMassRecoWPWNotOk.close();
   }
+  
+  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << "  WP: " << nofWP << "  UP: " << nofUP << endl;
+  cout << "                               (TTbar only) CP: " << nofCP_TT << "  WP: " << nofWP_TT << "  UP: " << nofUP_TT << endl;
   
   if (calculateLikelihood)
   {
@@ -2005,6 +2045,10 @@ void InitHisto1D()
   histo1D["KF_top_mass_corr_CP"] = new TH1F("KF_top_mass_corr_CP", "Top mass after kinFitter for correct match (CP); m_{t,kf} [GeV]", 400, 0, 800);
   histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
   histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
+  
+  histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
+  histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
+  histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
 }
 
 void InitHisto2D()
