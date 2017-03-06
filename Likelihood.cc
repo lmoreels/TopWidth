@@ -27,13 +27,13 @@ bool runLocally = false;
 bool checkNormFunctions = true;
 bool printFractions = true;
 
-const int nCP = 408482;
-const int nWP = 199807;
-const int nUP = 851884;
+const int nCP = 424007; //424657;
+const int nWP = 177160; //217980;
+const int nUP = 773143; //959425;
 
-const double mu_CP = 0.9975, sigma_CP = 0.09843, r_CP = 2.125, norm_CP = 0.002552;
-const double alpha_WP = -0.4209, n_WP = 20., sigma_WP = 0.1598, mu_WP = 0.7693, norm_WP = 0.003956;
-const double alpha_UP = -0.3435, n_UP = 19.9978, sigma_UP = 0.1541, mu_UP = 0.6693, norm_UP = 0.003616;
+const double mu_CP = 1.007, sigma_CP = 0.0729, r_CP = 2.062, norm_CP = 0.002591;
+const double alpha_WP = -0.457, n_WP = 20., sigma_WP = 0.1835, mu_WP = 0.7747, norm_WP = 0.003768;
+const double alpha_UP = -0.5966, n_UP = 12., sigma_UP = 0.1835, mu_UP = 0.805, norm_UP = 0.004106;
 
 /// Define vars
 int nTot;
@@ -57,7 +57,8 @@ Double_t crysBall_WP(Double_t *x, Double_t *par);
 Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
-void DrawFunction(TF1* function, string name, float width, bool writeToFile);
+void DrawFunction(TF1* function, string name, double width, bool writeToFile);
+void DrawFunction(TF1* function, string name, bool writeToFile, double width1, double width2, double width3, double width4, double width5, double width6, double width7/*, double width8, double width9, double width10*/);
 void DrawLikelihood(float width);
 
 
@@ -124,6 +125,10 @@ int main (int argc, char *argv[])
     DrawFunction(crysball_up, "checkNorm_CB_UP", 1., true);
     DrawFunction(combi, "checkNorm_combi", 1., true);
     DrawFunction(likelihood, "loglikelihood", 0.025, true);
+    //DrawFunction(voigt_cp, "voigt_multipleW", true, 0.5, 0.66, 0.75, 1., 2., 3., 4.);
+    DrawFunction(voigt_cp, "voigt_multipleG_cut", true, 0.5, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80);
+    //DrawFunction(likelihood, "loglikelihood_multipleW", true, 0.5, 0.66, 0.75, 1., 2., 3., 4.);
+    DrawFunction(likelihood, "loglikelihood_multipleG_cut", true, 0.5, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80);
     foutNorm->Close();
     delete foutNorm;
   }
@@ -334,7 +339,8 @@ Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log(combinedProb(x, par));
 }
 
-void DrawFunction(TF1* function, string name, float width, bool writeToFile) {
+void DrawFunction(TF1* function, string name, double width, bool writeToFile)
+{
   TCanvas* c2 = new TCanvas(name.c_str(), name.c_str());
   c2->cd();
   function->FixParameter(0,width);
@@ -347,7 +353,43 @@ void DrawFunction(TF1* function, string name, float width, bool writeToFile) {
   delete c2;
 }
 
-void DrawLikelihood(float width) {
+void DrawFunction(TF1* function, string name, bool writeToFile, double width1, double width2, double width3, double width4, double width5, double width6, double width7/*, double width8, double width9, double width10*/)
+{
+  vector<double> widths;
+  if ( &width1 != 0 ) widths.push_back(width1);
+  if ( &width2 != 0 ) widths.push_back(width2);
+  if ( &width3 != 0 ) widths.push_back(width3);
+  if ( &width4 != 0 ) widths.push_back(width4);
+  if ( &width5 != 0 ) widths.push_back(width5);
+  if ( &width6 != 0 ) widths.push_back(width6);
+  if ( &width7 != 0 ) widths.push_back(width7);
+/*  if ( &width8 != 0 ) widths.push_back(width8);
+  if ( &width9 != 0 ) widths.push_back(width9);
+  if ( &width10 != 0 ) widths.push_back(width10);*/
+  
+  Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+2, kCyan+1, kBlue+2, kMagenta};
+  TCanvas* c2 = new TCanvas(name.c_str(), name.c_str());
+  c2->cd();
+  function->FixParameter(0,widths[0]);
+  function->SetLineColor(colours[0]);
+  function->DrawCopy();
+  c2->Update();
+  for (int i = 1; i < widths.size(); i++)
+  {
+    function->FixParameter(0,widths[i]);
+    function->SetLineColor(colours[i]);
+    function->DrawCopy("same");
+    c2->Update();
+  }
+  if (writeToFile) c2->Write();
+  c2->SaveAs((name+".png").c_str());
+  c2->Close();
+  
+  delete c2;
+}
+
+void DrawLikelihood(float width)
+{
   TCanvas* c3 = new TCanvas("c3", "Probability function");
   c3->cd();
   likelihood->FixParameter(0,width);
