@@ -123,6 +123,11 @@ const double gammaConvConst = 0.0441073, gammaConvRico = 0.00766141;
 const int nofAveMasses = 17;
 std::array<double, nofAveMasses> aveTopMass;
 std::array<double, nofAveMasses> aveTopMass_noWidth    = {168.719, 167.105, 203.378, 204.724, 197.450, 201.182, 185.360, 193.207, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.762, 193.825};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut5 = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165.839, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut6 = {168.719, 167.206, 192.030, 189.733, 196.637, 199.866, 165.879, 180.978, 249.326, 251.815, 229.616, 224.083, 219.695, 208.480, 184.976, 181.327, 181.359};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut7 = {168.719, 167.156, 191.966, 189.826, 196.450, 199.847, 166.001, 181.128, 248.543, 251.538, 228.486, 224.230, 221.079, 211.266, 185.483, 181.482, 181.517};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut8 = {168.719, 167.111, 191.928, 189.896, 196.361, 199.930, 166.184, 181.282, 247.694, 250.639, 227.952, 224.751, 221.542, 210.461, 185.774, 181.641, 181.677};
+std::array<double, nofAveMasses> aveTopMass_KFchi2cut9 = {168.719, 167.069, 191.902, 189.970, 196.277, 199.995, 166.503, 181.428, 248.440, 251.997, 227.283, 224.807, 223.771, 202.844, 185.814, 181.795, 181.830};
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut10= {168.719, 167.019, 191.879, 190.060, 196.152, 200.024, 166.695, 181.571, 248.206, 252.113, 226.179, 224.148, 223.302, 200.685, 186.035, 181.939, 181.975};
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut15= {168.719, 166.848, 192.016, 190.654, 195.740, 200.236, 167.958, 182.345, 250.376, 251.513, 223.667, 222.226, 222.102, 206.881, 187.017, 182.734, 182.772};
 std::array<double, nofAveMasses> aveTopMass_widthx0p5  = {166.680, 166.147, 202.979, 204.490, 196.533, 200.905, 179.901, 192.179, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 192.694, 192.770};
@@ -150,7 +155,7 @@ void getAveMasses(double width)
 //       aveTopMass[i] = aveTopMass_widthx1[i];
 //     }
     /*if (! applyWidthSF)*/ aveTopMass[i] = aveTopMass_noWidth[i];
-    //aveTopMass[i] = aveTopMass_KFchi2cut15[i];
+    //aveTopMass[i] = aveTopMass_KFchi2cut10[i];
   }
 }
 
@@ -1076,7 +1081,7 @@ int main(int argc, char* argv[])
         kFitChi2 = kFitter->getS();
         if (test) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
-        //if ( kFitChi2 > 15. ) continue;
+        //if ( kFitChi2 > 10. ) continue;
         nofAcceptedKFit++;
         
         selectedJetsKFcorrected.clear();
@@ -1537,7 +1542,7 @@ int main(int argc, char* argv[])
     txtMassRecoWPWNotOk.close();
   }
   
-  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << "  WP: " << nofWP << "  UP: " << nofUP << endl;
+  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)" << endl;
   cout << "                               (TTbar only) CP: " << nofCP_TT << "  WP: " << nofWP_TT << "  UP: " << nofUP_TT << endl;
   
   if (calculateLikelihood)
