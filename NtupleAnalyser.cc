@@ -130,6 +130,7 @@ std::array<double, nofAveMasses> aveTopMass_KFchi2cut8 = {168.719, 167.111, 191.
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut9 = {168.719, 167.069, 191.902, 189.970, 196.277, 199.995, 166.503, 181.428, 248.440, 251.997, 227.283, 224.807, 223.771, 202.844, 185.814, 181.795, 181.830};
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut10= {168.719, 167.019, 191.879, 190.060, 196.152, 200.024, 166.695, 181.571, 248.206, 252.113, 226.179, 224.148, 223.302, 200.685, 186.035, 181.939, 181.975};
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut15= {168.719, 166.848, 192.016, 190.654, 195.740, 200.236, 167.958, 182.345, 250.376, 251.513, 223.667, 222.226, 222.102, 206.881, 187.017, 182.734, 182.772};
+// No cut on KF chi2
 std::array<double, nofAveMasses> aveTopMass_widthx0p5  = {166.680, 166.147, 202.979, 204.490, 196.533, 200.905, 179.901, 192.179, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 192.694, 192.770};
 std::array<double, nofAveMasses> aveTopMass_widthx0p66 = {167.605, 167.067, 203.807, 205.278, 197.529, 201.867, 181.030, 193.041, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.547, 193.615};
 std::array<double, nofAveMasses> aveTopMass_widthx0p75 = {167.986, 167.434, 204.120, 205.564, 197.958, 202.287, 181.491, 193.373, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.876, 193.940};
@@ -154,8 +155,8 @@ void getAveMasses(double width)
 //         cout << "Average top mass for width " << width << " not found. Using average mass for width = 1..." << endl;
 //       aveTopMass[i] = aveTopMass_widthx1[i];
 //     }
-    /*if (! applyWidthSF)*/ aveTopMass[i] = aveTopMass_noWidth[i];
-    //aveTopMass[i] = aveTopMass_KFchi2cut10[i];
+    ///*if (! applyWidthSF)*/ aveTopMass[i] = aveTopMass_noWidth[i];
+    aveTopMass[i] = aveTopMass_KFchi2cut5[i];
   }
 }
 
@@ -1081,7 +1082,7 @@ int main(int argc, char* argv[])
         kFitChi2 = kFitter->getS();
         if (test) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
-        //if ( kFitChi2 > 10. ) continue;
+        if ( kFitChi2 > 5. ) continue;
         nofAcceptedKFit++;
         
         selectedJetsKFcorrected.clear();
