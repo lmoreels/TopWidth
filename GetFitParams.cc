@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
   ClearVars();
   ClearVectors();
   
-  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170223/";
+  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170308/";
   if (runLocally) pathInput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/170220/";
   
   /// Get fit parameters from files
