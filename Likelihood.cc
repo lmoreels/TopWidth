@@ -27,13 +27,15 @@ bool runLocally = false;
 bool checkNormFunctions = true;
 bool printFractions = true;
 
-const int nCP = 424007; //424657;
-const int nWP = 177160; //217980;
-const int nUP = 773143; //959425;
+const int nCP = 356970;  //357134;
+const int nWP = 127011;  //155459;
+const int nUP = 259755;  //297689;
 
-const double mu_CP = 1.007, sigma_CP = 0.0729, r_CP = 2.062, norm_CP = 0.002591;
-const double alpha_WP = -0.457, n_WP = 20., sigma_WP = 0.1835, mu_WP = 0.7747, norm_WP = 0.003768;
-const double alpha_UP = -0.5966, n_UP = 12., sigma_UP = 0.1835, mu_UP = 0.805, norm_UP = 0.004106;
+const double mu_CP = 1.01, sigma_CP = 0.0664, r_CP = 2.0298, norm_CP = 0.002557;
+const double alpha_WP = -0.38, n_WP = 11.668, sigma_WP = 0.1634, mu_WP = 0.889, norm_WP = 0.003655;
+const double alpha_UP = -0.967, n_UP = 2.45, sigma_UP = 0.1897, mu_UP = 0.97, norm_UP = 0.004305;
+const double alpha_WPUP = -0.8207, n_WPUP = 3.05, sigma_WPUP = 0.2, mu_WPUP = 0.97, norm_WPUP = 0.003967;
+const double gammaConvConst = 0.0312447, gammaConvRico = 0.00792538;
 
 /// Define vars
 int nTot;
