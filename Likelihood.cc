@@ -60,7 +60,7 @@ Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
 void DrawFunction(TF1* function, string name, double width, bool writeToFile);
-void DrawFunction(TF1* function, string name, bool writeToFile, double width1, double width2, double width3, double width4, double width5, double width6, double width7/*, double width8, double width9, double width10*/);
+void DrawFunction(TF1* function, string name, std::vector<double> widths, double min, double max, bool writeToFile);
 void DrawLikelihood(float width);
 
 
@@ -127,10 +127,13 @@ int main (int argc, char *argv[])
     DrawFunction(crysball_up, "checkNorm_CB_UP", 1., true);
     DrawFunction(combi, "checkNorm_combi", 1., true);
     DrawFunction(likelihood, "loglikelihood", 0.025, true);
-    //DrawFunction(voigt_cp, "voigt_multipleW", true, 0.5, 0.66, 0.75, 1., 2., 3., 4.);
-    DrawFunction(voigt_cp, "voigt_multipleG_cut", true, 0.5, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80);
-    //DrawFunction(likelihood, "loglikelihood_multipleW", true, 0.5, 0.66, 0.75, 1., 2., 3., 4.);
-    DrawFunction(likelihood, "loglikelihood_multipleG_cut", true, 0.5, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80);
+    //vector<double> gammas = {0.030, 0.035, 0.04, 0.045, 0.05, 0.055, 0.060, 0.065};  // C++11 only !
+    vector<double> gammas = {0.0349, 0.03654, 0.03739, 0.03899, 0.04764, 0.05472, 0.06279};
+    DrawFunction(voigt_cp, "voigt_multipleG_cut", gammas, 0.7, 1.3, true);
+    DrawFunction(likelihood, "loglikelihood_multipleG_cut", gammas, combMin, combMax, true);
+    vector<double> widths = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
+    DrawFunction(voigt_cp, "voigt_multipleW_cut", widths, 0.5, 1.5, true);
+    DrawFunction(likelihood, "loglikelihood_multipleW_cut", widths, combMin, combMax, true);
     foutNorm->Close();
     delete foutNorm;
   }
@@ -189,7 +192,7 @@ int main (int argc, char *argv[])
   TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
   
   /// Fit minimum with parabola
-  double fitmin = 0.8, fitmax = 1.5;
+  double fitmin = 0.8, fitmax = 2.5;
   TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
   g1->Fit(parabola,"R");
   
@@ -355,31 +358,20 @@ void DrawFunction(TF1* function, string name, double width, bool writeToFile)
   delete c2;
 }
 
-void DrawFunction(TF1* function, string name, bool writeToFile, double width1, double width2, double width3, double width4, double width5, double width6, double width7/*, double width8, double width9, double width10*/)
+void DrawFunction(TF1* function, string name, std::vector<double> widths, double min, double max, bool writeToFile)
 {
-  vector<double> widths;
-  if ( &width1 != 0 ) widths.push_back(width1);
-  if ( &width2 != 0 ) widths.push_back(width2);
-  if ( &width3 != 0 ) widths.push_back(width3);
-  if ( &width4 != 0 ) widths.push_back(width4);
-  if ( &width5 != 0 ) widths.push_back(width5);
-  if ( &width6 != 0 ) widths.push_back(width6);
-  if ( &width7 != 0 ) widths.push_back(width7);
-/*  if ( &width8 != 0 ) widths.push_back(width8);
-  if ( &width9 != 0 ) widths.push_back(width9);
-  if ( &width10 != 0 ) widths.push_back(width10);*/
-  
-  Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+2, kCyan+1, kBlue+2, kMagenta};
+  Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+1, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};
   TCanvas* c2 = new TCanvas(name.c_str(), name.c_str());
   c2->cd();
   function->FixParameter(0,widths[0]);
   function->SetLineColor(colours[0]);
+  function->SetRange(min, max);
   function->DrawCopy();
   c2->Update();
   for (int i = 1; i < widths.size(); i++)
   {
     function->FixParameter(0,widths[i]);
-    function->SetLineColor(colours[i]);
+    function->SetLineColor(colours[i%10]);
     function->DrawCopy("same");
     c2->Update();
   }
