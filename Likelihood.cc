@@ -120,7 +120,7 @@ int main (int argc, char *argv[])
     cout << "WP: " <<  manualInt_WP << endl;
     cout << "UP: " <<  manualInt_UP << endl;
     
-    TFile *foutNorm = new TFile("CheckPDFNormalisation.root", "RECREATE");
+    TFile *foutNorm = new TFile("likelihood/CheckPDFNormalisation.root", "RECREATE");
     foutNorm->cd();
     DrawFunction(voigt_cp, "checkNorm_Voigt", 1., true);
     DrawFunction(crysball_wp, "checkNorm_CB_WP", 1., true);
@@ -192,7 +192,7 @@ int main (int argc, char *argv[])
   TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
   
   /// Fit minimum with parabola
-  double fitmin = 0.8, fitmax = 2.5;
+  double fitmin = 1.8, fitmax = 6.;
   TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
   g1->Fit(parabola,"R");
   
@@ -352,7 +352,7 @@ void DrawFunction(TF1* function, string name, double width, bool writeToFile)
   function->Draw();
   c2->Update();
   if (writeToFile) c2->Write();
-  c2->SaveAs((name+".png").c_str());
+  c2->SaveAs(("likelihood/"+name+".png").c_str());
   c2->Close();
   
   delete c2;
@@ -376,7 +376,7 @@ void DrawFunction(TF1* function, string name, std::vector<double> widths, double
     c2->Update();
   }
   if (writeToFile) c2->Write();
-  c2->SaveAs((name+".png").c_str());
+  c2->SaveAs(("likelihood/"+name+".png").c_str());
   c2->Close();
   
   delete c2;

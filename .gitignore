@@ -6,6 +6,7 @@
 *.root.bk
 *.so
 *.tex
+*.txt
 *.xml.bk
 *Class.C
 *Class.h
@@ -21,6 +22,7 @@ ResolutionFunctions_TABLE.txt
 TransferFunctions_TABLE.txt
 Trigger/*.txt
 Trigger/Makefile
+archive/*
 averageMass/*
 data*txt
 eqLumi.txt
@@ -29,10 +31,12 @@ likelihood/*
 localgridSubmission/SubmitScripts/**
 negWeights/
 negWeightsCalculator
+nohup_Ntuple/*
 nohup*.txt
 output*/
 output*.txt
 test*/*
+toys/*
 AverageMassCalculator
 GetFitParams
 Likelihood
@@ -51,4 +55,3 @@ testGenJets
 testSkims
 testRFs
 testWeights
-toys/*
