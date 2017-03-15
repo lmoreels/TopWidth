@@ -50,8 +50,8 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = false;
-double scaleWidth = 0.66;
+bool applyWidthSF = true;
+double scaleWidth = 0.5;
 
 bool useOldNtuples = true;
 string systStr = "nominal";
@@ -193,6 +193,8 @@ struct greater
 };
 
 
+string ConvertDoubleToString(double Number);
+string DotReplace(double var);
 string ConvertIntToString(int nb, bool pad);
 string MakeTimeStamp();
 void GetMetaData(TTree* tree, bool isData);
@@ -932,7 +934,7 @@ int main(int argc, char* argv[])
         ///  Scale factor ttbar sample width  ///
         /////////////////////////////////////////
         
-        if (applyWidthSF)
+        if (isTTbar && applyWidthSF)
         {
           if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
           else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
@@ -946,6 +948,8 @@ int main(int argc, char* argv[])
             
             continue;
           }
+          
+          histo1D["Width_SF"]->Fill(widthSF);
         }  // end applyWidthSF
         
         
@@ -991,7 +995,7 @@ int main(int argc, char* argv[])
               jetsMatched.push_back(selectedJets[MCPermutation[3].first]);
             }
             
-            if (all4PartonsMatched && calculateResolutionFunctions)
+            if (isTTbar && all4PartonsMatched && calculateResolutionFunctions)
             {
               rf->fillJets(partonsMatched, jetsMatched);
               
@@ -999,10 +1003,8 @@ int main(int argc, char* argv[])
               //if (electronmatched) rf->fillElectron(...)
 
             }  // end rf
-          }
-          
-          if (hadronicTopJetsMatched)
-          {  
+            
+            
             matchedWMass_reco = (jetsMatched[0] + jetsMatched[1]).M();
             matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
             matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
@@ -1189,13 +1191,16 @@ int main(int argc, char* argv[])
       //Likelihood
       if (calculateLikelihood)
       {
+        if (! isData && ! applyWidthSF ) widthSF = 1.;
+        else if (! isData && ! isTTbar && applyWidthSF) widthSF = 1.;
+        
         double tempAveMass = topmass_reco_kf/aveTopMassLL;
         if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
         if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
         for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
         {
           loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          if (! isData) loglike[iWidth] += loglike_per_evt[iWidth];
+          if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
           else loglike_data[iWidth] += loglike_per_evt[iWidth];
         }
 
@@ -1214,7 +1219,7 @@ int main(int argc, char* argv[])
           nofGoodEvtsLL[d]++;
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
-            if (! isData) loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth];
+            if (! isData) loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth]*widthSF;
             else loglike_onlyGoodEvts_data[iWidth] += loglike_per_evt[iWidth];
           }
         }
@@ -1613,7 +1618,9 @@ int main(int argc, char* argv[])
     cout << endl << endl;
     
     /// Print output to file
-    txtOutputLogLike.open("output_loglikelihood_gamma.txt");
+    string llFileName = "output_loglikelihood_gamma.txt";
+    if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth)+".txt";
+    txtOutputLogLike.open(llFileName.c_str());
     txtOutputLogLike << "Widths:      ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
@@ -1786,6 +1793,22 @@ int main(int argc, char* argv[])
 
 
 /// Functions
+
+string ConvertDoubleToString(double Number)
+{
+  ostringstream convert;
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
+  convert << Number;
+  return convert.str();
+}
+
+string DotReplace(double var)
+{
+  string str = ConvertDoubleToString(var);
+  replace(str.begin(), str.end(), '.', 'p');
+  return str;
+}
 
 string ConvertIntToString(int Number, int pad)
 {
@@ -1982,6 +2005,9 @@ void InitHisto1D()
   TH1::SetDefaultSumw2();
   
   InitHisto1DMatch();
+  
+  /// SFs
+  histo1D["Width_SF"] = new TH1F("Width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
   
   /// Reco
   histo1D["Reco_W_mass_reco"] = new TH1F("Reco_W_mass_reco","Reconstructed hadronic W mass; M_{W} [GeV]", 80, 0, 800);
