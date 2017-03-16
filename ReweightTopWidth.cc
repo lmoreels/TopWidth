@@ -36,28 +36,30 @@ int verbose = 2;
 
 string pathNtuples = "";
 
+int nofHardSelected = 0;
+int nofSkippedEvents = 0;
 int nofMatchedEvents = 0;
 
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
-float CSVv2Loose =  0.460;
-float CSVv2Medium = 0.800;
-float CSVv2Tight = 0.935;
+double CSVv2Loose =  0.460;
+double CSVv2Medium = 0.800;
+double CSVv2Tight = 0.935;
 
 // Temporarily, until calculated from TTbar sample
-float chi2WMass = 80.385;
-float sigmaChi2WMass = 15;
-float chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
-float sigmaChi2TopMass = 40;
+double chi2WMass = 80.385;
+double sigmaChi2WMass = 15;
+double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
+double sigmaChi2TopMass = 40;
 
 // Average top mass
-// TT gen match, TT reco match, TT reco noMatch, TT reco wrongPerm, TT reco wrongJets, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco
-float aveTopMass[] = {166.931, 169.290, 183.759, 162.863, 185.982, 197.667, 242.341, 235.626, 220.731, 222.694, 214.982, 198.189, 200.452, 197.965};
+// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
+double aveTopMass[] = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165.839, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
 
 
 /// Top width
-double genTopWidth = 1.33; // from fit
-double genTopMass = 172.5; // from fit
+double genTopWidth = 1.363; // from fit
+double genTopMass = 172.3; // from fit
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -68,8 +70,6 @@ map<string,TFile*> tFileMap;
 
 map<string,TTree*> tTree;
 map<string,TTree*> tStatsTree;
-
-//map<string,TNtuple*> ntuple;
 
 vector < Dataset* > datasets;
 
@@ -94,6 +94,7 @@ void ClearMetaData();
 void ClearLeaves();
 void ClearTLVs();
 void ClearMatching();
+void ClearVars();
 void ClearObjects();
 long GetNEvents(TTree* fChain, string var);
 double BreitWigner(double topPT, double scale);
@@ -229,8 +230,10 @@ TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
 
 
-float scaleFactor;
+double scaleFactor;
 vector<unsigned int> bJetId;
+vector<int> selectedJetsCharge;
+vector<double> selectedJetsBDiscr;
 double reco_hadWMass, reco_hadTopMass, reco_hadTopPt;
 double reco_minMlb, reco_ttbarMass, reco_dRLepB;
 double min_Mlb, dRLepB;
@@ -240,6 +243,7 @@ TLorentzVector muon, jet, mcpart;
 vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
+vector<TLorentzVector> selectedJetsKFcorrected;
 vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
@@ -369,7 +373,7 @@ int main(int argc, char* argv[])
     ClearObjects();
     
     
-    if (ievt%1000 == 0)
+    if (ievt%10000 == 0)
       std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
     
     /// Load event
@@ -384,8 +388,15 @@ int main(int argc, char* argv[])
     {
       jet.Clear();
       jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-      selectedJets.push_back(jet);
+      if ( jet.Pt() > 30. )
+      {
+        selectedJets.push_back(jet);
+        selectedJetsCharge.push_back(jet_charge[iJet]);
+        selectedJetsBDiscr.push_back(jet_bdiscr[iJet]);
+      }
     }
+    
+    if ( selectedJets.size() > 4 ) continue;
     
     for (int iJet = 0; iJet < selectedJets.size(); iJet++)
     {
@@ -393,9 +404,15 @@ int main(int argc, char* argv[])
       {
         selectedBJets.push_back(selectedJets[iJet]);
         bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
+                                 /// b discr of selectedBJets[j] = selectedJetsBDiscr[bJetId[j]]
       }
     }
     //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
+    
+    if ( selectedBJets.size() < 2 ) continue;
+    
+    /// Count nof events with exactly 4 jets with pT > 30 GeV of which 2 are b tagged
+    nofHardSelected++;
     
     
     
@@ -414,19 +431,24 @@ int main(int argc, char* argv[])
     for (unsigned int i = 0; i < mcParticles.size(); i++)
     {
       if (verbose > 4)
-        cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
-      
-
-      if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;  /// Final state particle or particle from hardest process
-      
-      if ( verbose > 3 )
         cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << "  Mass: " << mc_M[i] << endl;
       
       
-      if ( mc_pdgId[i] == pdgID_top && mc_granny[i] == 2212 )
-        topQuark = i;
-      else if( mc_pdgId[i] == -pdgID_top && mc_granny[i] == 2212 )
-        antiTopQuark = i;
+      /// Find tops
+      if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
+      {
+        if ( mc_status[i] == 22 ) topQuark = i;
+        if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
+      }
+      else if ( mc_pdgId[i] == -pdgID_top )
+      {
+        if ( mc_status[i] == 22 ) antiTopQuark = i;
+        if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
+      }
+      
+      
+      /// Status restriction: Final state particle or particle from hardest process
+      if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
       
       if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )    // mu-, W-, tbar
       {
@@ -469,9 +491,20 @@ int main(int argc, char* argv[])
       cout << "Size selectedJets:  " << selectedJets.size() << endl;
     }
     
+    if ( topQuark == -9999 || antiTopQuark == -9999 )
+    {
+      if ( test && topQuark == -9999 && antiTopQuark == -9999 ) cout << "WARNING: Both top and antitop quark not found";
+      else if ( test && topQuark == -9999 ) cout << "WARNING: Top quark not found";
+      else if ( test && antiTopQuark == -9999 ) cout << "WARNING: Antitop quark not found";
+      if (test) cout << "... Skipping event " << ievt << "... " << endl;
+      nofSkippedEvents++;
+      continue;
+    }
+    
     if ( muMinusFromTop && muPlusFromTop )
     {
       if (test) cout << "Both tops decay leptonically... Something went wrong... Event " << ievt << endl;
+      nofSkippedEvents++;
       continue;
     }
     
@@ -522,6 +555,7 @@ int main(int argc, char* argv[])
           
           if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
           else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+          else { cerr << "ERROR: Too many partons for hadronic top decay!  Event: " << ievt << endl; continue; }
         }
         
         if ( mc_pdgId[partonId[i]] == -5 && mc_mother[partonId[i]] == -pdgID_top ) blvDecay[0] = partonId[i];  // leptonic b
@@ -536,6 +570,7 @@ int main(int argc, char* argv[])
           
           if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
           else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+          else { cerr << "ERROR: Too many partons for hadronic antitop decay!  Event: " << ievt << endl; continue; }
         }
         
         if ( mc_pdgId[partonId[i]] == 5 && mc_mother[partonId[i]] == pdgID_top ) blvDecay[0] = partonId[i];  // leptonic b
@@ -575,12 +610,12 @@ int main(int argc, char* argv[])
     
     m_hadr = -1.;
     m_lept = -1.;
-    if ( muMinusFromTop && ! muPlusFromTop )
+    if ( muMinusFromTop )
     {
       m_hadr = m_top;
       m_lept = m_antitop;
     }
-    else if (! muMinusFromTop && muPlusFromTop )
+    else if ( muPlusFromTop )
     {
       m_hadr = m_antitop;
       m_lept = m_top;
@@ -648,8 +683,8 @@ int main(int argc, char* argv[])
       if (all4PartonsMatched)
       {
         /// Plot variables for matched events
-        float matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
-        float matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
+        double matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
+        double matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
         
         eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
         eventSF_reco = eventWeightCalculator(matchedTopMass_reco, scaling[s]);
@@ -674,6 +709,8 @@ int main(int argc, char* argv[])
   
   
   cout << endl;
+  cout << "Number of events passing hard selection: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
+  cout << "Number of skipped events: " << nofSkippedEvents << " (" << 100*((float)nofSkippedEvents/(float)nofHardSelected) << "%)" << endl;
   cout << "Number of matched events: " << nofMatchedEvents << endl;
   
   
@@ -1098,29 +1135,6 @@ void ClearLeaves()
   muonIsoSF[0] = 1.;
   muonTrigSFv2[0] = 1.;
   muonTrigSFv3[0] = 1.;
-  
-  scaleFactor = 1.;
-  eventSF_gen = 1.;
-  eventSF_reco = 1.;
-  evWeight_hadr = 1.;
-  evWeight_lept = 1.;
-  evWeight_bjj = 1.;
-  evWeight_blv = 1.;
-  m_top = -1.;
-  m_antitop = -1.;
-  m_bjj = -1.;
-  m_blv = -1.;
-  m_hadr = -1;
-  m_lept = -1;
-  bJetId.clear();
-  reco_hadWMass = -1.;
-  reco_hadTopMass = -1.;
-  reco_hadTopPt = -1.;
-  reco_minMlb = 9999.;
-  reco_ttbarMass = -1.;
-  reco_dRLepB = -1.;
-  min_Mlb = 9999.;
-  dRLepB = -1.;
 }
 
 void ClearTLVs()
@@ -1166,11 +1180,41 @@ void ClearMatching()
   partonId.clear();
 }
 
+void ClearVars()
+{
+  ClearMatching();
+  
+  scaleFactor = 1.;
+  eventSF_gen = 1.;
+  eventSF_reco = 1.;
+  evWeight_hadr = 1.;
+  evWeight_lept = 1.;
+  evWeight_bjj = 1.;
+  evWeight_blv = 1.;
+  m_top = -1.;
+  m_antitop = -1.;
+  m_bjj = -1.;
+  m_blv = -1.;
+  m_hadr = -1;
+  m_lept = -1;
+  bJetId.clear();
+  selectedJetsCharge.clear();
+  selectedJetsBDiscr.clear();
+  reco_hadWMass = -1.;
+  reco_hadTopMass = -1.;
+  reco_hadTopPt = -1.;
+  reco_minMlb = 9999.;
+  reco_ttbarMass = -1.;
+  reco_dRLepB = -1.;
+  min_Mlb = 9999.;
+  dRLepB = -1.;
+}
+
 void ClearObjects()
 {
   ClearLeaves();
   ClearTLVs();
-  ClearMatching();
+  ClearVars();
 }
 
 long GetNEvents(TTree* fChain, string var)
