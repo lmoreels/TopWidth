@@ -24,8 +24,8 @@ using namespace std;
 
 bool test = true;
 bool runLocally = false;
-bool checkNormFunctions = true;
-bool printFractions = true;
+bool checkNormFunctions = false;
+bool printFractions = false;
 
 const int nCP = 356970;  //357134;
 const int nWP = 127011;  //155459;
@@ -142,7 +142,7 @@ int main (int argc, char *argv[])
   ClearVars();
   
   /// Get loglikelihood values from file
-  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_gamma.txt";
+  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_widthx0p5.txt";
   if (! fexists(inputFileName.c_str()) )
   {
     cout << "WARNING: File " << inputFileName << " does not exist." << endl;

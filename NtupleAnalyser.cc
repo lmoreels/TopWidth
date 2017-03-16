@@ -37,10 +37,10 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doKinFit = true;
 bool useToys = false;
 bool applyLeptonSF = true;
@@ -84,6 +84,7 @@ int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
 int nofCP = 0, nofWP = 0, nofUP = 0;
 int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
+double nofCP_weighted = 0, nofWP_weighted = 0, nofUP_weighted = 0;
 double Luminosity = 9999.;
 
 
@@ -94,7 +95,7 @@ double CSVv2Medium = 0.800;
 double CSVv2Tight = 0.935;
 
 /// Top width
-double genTopWidth = 1.366; // from fit
+double genTopWidth = 1.363; // from fit
 double genTopMass = 172.3; // from fit
 
 // Temporarily, until calculated from TTbar sample
@@ -949,7 +950,7 @@ int main(int argc, char* argv[])
             continue;
           }
           
-          histo1D["Width_SF"]->Fill(widthSF);
+          if (makePlots) histo1D["Width_SF"]->Fill(widthSF);
         }  // end applyWidthSF
         
         
@@ -1197,37 +1198,41 @@ int main(int argc, char* argv[])
         double tempAveMass = topmass_reco_kf/aveTopMassLL;
         if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
         if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
-        for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+        
+        if ( tempAveMass > 0.5 && tempAveMass < 1.5)
         {
-          loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
-          else loglike_data[iWidth] += loglike_per_evt[iWidth];
-        }
-
-        /// make loglikelihood only with events that have minimum
-        isGoodLL = false;
-        for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-        {
-          if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidthsLL-1] )
-          {
-            isGoodLL = true;
-            break;
-          }
-        }
-        if (isGoodLL)
-        {
-          nofGoodEvtsLL[d]++;
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
-            if (! isData) loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth]*widthSF;
-            else loglike_onlyGoodEvts_data[iWidth] += loglike_per_evt[iWidth];
+            loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+            if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
+            else loglike_data[iWidth] += loglike_per_evt[iWidth];
           }
-        }
-        else
-        {
-          nofBadEvtsLL[d]++;
-        }
-
+          
+          /// make loglikelihood only with events that have minimum
+          isGoodLL = false;
+          for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
+          {
+            if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidthsLL-1] )
+            {
+              isGoodLL = true;
+              break;
+            }
+          }
+          if (isGoodLL)
+          {
+            nofGoodEvtsLL[d]++;
+            for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+            {
+              if (! isData) loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth]*widthSF;
+              else loglike_onlyGoodEvts_data[iWidth] += loglike_per_evt[iWidth];
+            }
+          }
+          else
+          {
+            nofBadEvtsLL[d]++;
+          }
+        }  // end cut on reduced top mass
+        
         /// write debug file
         if ( ( isData && ievt%1000 == 0 )
              || ( isTTbar && ievt%100000 == 0 )
@@ -1261,6 +1266,7 @@ int main(int argc, char* argv[])
       if (! isData)
       {
         if (! applyWidthSF ) widthSF = 1.;
+        else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;
         
         if (hadronicTopJetsMatched)
         {
@@ -1301,6 +1307,7 @@ int main(int argc, char* argv[])
             if ( tempAveMass > 0.5 && tempAveMass < 1.5)
             {
               nofCP++;
+              nofCP_weighted += widthSF;
               if (isTTbar) nofCP_TT++;
             }
             
@@ -1396,6 +1403,7 @@ int main(int argc, char* argv[])
             if ( tempAveMass > 0.5 && tempAveMass < 1.5)
             {
               nofWP++;
+              nofWP_weighted += widthSF;
               if (isTTbar) nofWP_TT++;
             }
             
@@ -1462,6 +1470,7 @@ int main(int argc, char* argv[])
           if ( tempAveMass > 0.5 && tempAveMass < 1.5)
           {
             nofUP++;
+            nofUP_weighted += widthSF;
             if (isTTbar) nofUP_TT++;
           }
           
@@ -1551,7 +1560,9 @@ int main(int argc, char* argv[])
   }
   
   cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)" << endl;
+  cout << "                                  weighted: CP: " << nofCP_weighted << " (" << nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << nofCP_weighted+nofWP_weighted+nofUP_weighted << endl;
   cout << "                               (TTbar only) CP: " << nofCP_TT << "  WP: " << nofWP_TT << "  UP: " << nofUP_TT << endl;
+  
   
   if (calculateLikelihood)
   {
