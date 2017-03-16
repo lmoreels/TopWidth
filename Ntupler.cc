@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
     startEvent    = strtol(argv[argc-2], NULL, 10);
     endEvent      = strtol(argv[argc-1], NULL, 10);
     
-    // all the files are stored from arg 11 to argc-4
+    // all the files are stored from arg 11 to argc-7
     vecfileNames.clear();
     for(int args = 11; args < argc-7; args++) 
     {
@@ -209,9 +209,9 @@ int main (int argc, char *argv[])
     else if ( JES == 1 ) { applyJEC = false; applyJESup = true; applyJESdown = false;}
     else if ( JES == -1 ) { applyJEC = false; applyJESup = false; applyJESdown = true;}
     
-    //if ( JER == 0 ) { applyJER = true; applyJERup = false; applyJERdown = false;}
-    //else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
-    //else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
+    if ( JER == 0 ) { applyJER = true; applyJERup = false; applyJERdown = false;}
+    else if ( JER == 1 ) { applyJER = false; applyJERup = true; applyJERdown = false;}
+    else if ( JER == -1 ) { applyJER = false; applyJERup = false; applyJERdown = true;}
     
     //if ( fillBtagHisto == 0 ) { applyBTagSF = true; calculateBTagSF = false;}
     //else if ( fillBtagHisto == 1 ) { applyBTagSF = false; calculateBTagSF = true;}
@@ -473,9 +473,9 @@ int main (int argc, char *argv[])
   
   /// Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
   
-  float CSVv2Loose =  0.460;
-  float CSVv2Medium = 0.800;
-  float CSVv2Tight = 0.935;
+  double CSVv2Loose =  0.460;
+  double CSVv2Medium = 0.800;
+  double CSVv2Tight = 0.935;
   
   
   
