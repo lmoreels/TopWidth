@@ -62,8 +62,8 @@ string whichDate(string syst)
     if (useOldNtuples) return "160812";
     else return "170216";
   }
-  else if ( syst.find("JERup") != std::string::npos ) return "160916";
-  else if ( syst.find("JERdown") != std::string::npos ) return "160930";
+  else if ( syst.find("JECup") != std::string::npos ) return "170316";
+  else if ( syst.find("JECdown") != std::string::npos ) return "170317";
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
