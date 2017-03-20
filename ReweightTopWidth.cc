@@ -28,6 +28,7 @@ using namespace TopTree;
 
 
 bool test = false;
+bool makePlots = true;
 string systStr = "nominal";
 
 string ntupleDate = "160812"; // nominal
@@ -66,11 +67,6 @@ double genTopMass = 172.3; // from fit
 map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
 
-map<string,TFile*> tFileMap;
-
-map<string,TTree*> tTree;
-map<string,TTree*> tStatsTree;
-
 vector < Dataset* > datasets;
 
 
@@ -98,6 +94,8 @@ void ClearVars();
 void ClearObjects();
 long GetNEvents(TTree* fChain, string var);
 double BreitWigner(double topPT, double scale);
+double BreitWigner2(double topMass, double scale);
+double BreitWignerNonRel(double topMass, double scale);
 double eventWeightCalculator(double topPT, double scale);
 
 
@@ -243,12 +241,10 @@ TLorentzVector muon, jet, mcpart;
 vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
-vector<TLorentzVector> selectedJetsKFcorrected;
 vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
 vector<TLorentzVector> jetsMatched;
-vector<TLorentzVector> bJetsAfterChi2;
 
 /// Matching
 int pdgID_top = 6; //top quark
@@ -305,21 +301,21 @@ int main(int argc, char* argv[])
   //else if ( CharSearch(argv[1], "el") || CharSearch(argv[1], "El") || CharSearch(argv[1], "EL") || CharSearch(argv[1], "e") ) channel = "el";
   //else if ( (argv[1]).find("all") != std::string::npos || (argv[1]).find("All") != std::string::npos || (argv[1]).find("ALL") != std::string::npos ) channel = "all";
   
+  if (test) makePlots = false;
+  
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
-  pathOutput += "reweighting/";
-  mkdir(pathOutput.c_str(),0777);
-  // Add channel to output path
-  pathOutput += channel+"/";
-  mkdir(pathOutput.c_str(),0777);
-  if (test)
+  if (makePlots)
   {
-    pathOutput += "test/";
+    pathOutput += "reweighting/";
+    mkdir(pathOutput.c_str(),0777);
+    // Add channel to output path
+    pathOutput += channel+"/";
+    mkdir(pathOutput.c_str(),0777);
+    // Give timestamp to output path
+    pathOutput += dateString+"/";
     mkdir(pathOutput.c_str(),0777);
   }
-  // Give timestamp to output path
-  pathOutput += dateString+"/";
-  mkdir(pathOutput.c_str(),0777);
   
   
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
@@ -332,8 +328,11 @@ int main(int argc, char* argv[])
   ///  Initialise ...  ///
   ////////////////////////
   
-  InitHisto1D();
-  InitHisto2D();
+  if (makePlots)
+  {
+    InitHisto1D();
+    InitHisto2D();
+  }
   ClearMetaData();
   
   
@@ -367,7 +366,7 @@ int main(int argc, char* argv[])
   ////////////////////////////////////
   
   int endEvent = nEntries;
-  if (test) endEvent = 100;
+  if (test) endEvent = 10;
   for (int ievt = 0; ievt < endEvent; ievt++)
   {
     ClearObjects();
@@ -396,7 +395,7 @@ int main(int argc, char* argv[])
       }
     }
     
-    if ( selectedJets.size() > 4 ) continue;
+    if ( selectedJets.size() != 4 ) continue;
     
     for (int iJet = 0; iJet < selectedJets.size(); iJet++)
     {
@@ -438,12 +437,12 @@ int main(int argc, char* argv[])
       if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
       {
         if ( mc_status[i] == 22 ) topQuark = i;
-        if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
+        else if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
       }
       else if ( mc_pdgId[i] == -pdgID_top )
       {
         if ( mc_status[i] == 22 ) antiTopQuark = i;
-        if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
+        else if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
       }
       
       
@@ -637,21 +636,24 @@ int main(int argc, char* argv[])
       }
 
       /// Fill plots before matching
-      histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
-      histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
-      histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
-      histo1D[("blv_mass_gen_"+scalingString[s]).c_str()]->Fill(m_blv, evWeight_blv);
-      if ( s == 0 )
+      if (makePlots)
       {
-        histo2D["top_mass_hadr_lept_gen_orig"]->Fill(m_hadr, m_lept);
-        histo2D["top_mass_hadr_bjj_gen_orig"]->Fill(m_hadr, m_bjj);
-        histo2D["top_mass_lept_blv_gen_orig"]->Fill(m_lept, m_blv);
-        histo2D["top_mass_bjj_blv_gen_orig"]->Fill(m_bjj, m_blv);
-      }
-      else
-      {
-        histo2D[("top_mass_hadr_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
-        histo2D[("top_mass_lept_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
+        histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
+        histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
+        histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
+        histo1D[("blv_mass_gen_"+scalingString[s]).c_str()]->Fill(m_blv, evWeight_blv);
+        if ( s == 0 )
+        {
+          histo2D["top_mass_hadr_lept_gen_orig"]->Fill(m_hadr, m_lept);
+          histo2D["top_mass_hadr_bjj_gen_orig"]->Fill(m_hadr, m_bjj);
+          histo2D["top_mass_lept_blv_gen_orig"]->Fill(m_lept, m_blv);
+          histo2D["top_mass_bjj_blv_gen_orig"]->Fill(m_bjj, m_blv);
+        }
+        else
+        {
+          histo2D[("top_mass_hadr_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
+          histo2D[("top_mass_lept_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
+        }
       }
       
       
@@ -689,13 +691,16 @@ int main(int argc, char* argv[])
         eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
         eventSF_reco = eventWeightCalculator(matchedTopMass_reco, scaling[s]);
         
-        if ( s == 0 )
+        if (makePlots)
         {
-          histo1D["top_mass_gen_matched_orig"]->Fill(matchedTopMass_gen);
-          histo1D["top_mass_reco_matched_orig"]->Fill(matchedTopMass_reco);
+          if ( s == 0 )
+          {
+            histo1D["top_mass_gen_matched_orig"]->Fill(matchedTopMass_gen);
+            histo1D["top_mass_reco_matched_orig"]->Fill(matchedTopMass_reco);
+          }
+          histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_gen, eventSF_gen);
+          histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_reco, eventSF_reco);
         }
-        histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_gen, eventSF_gen);
-        histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_reco, eventSF_reco);
         
         
       }  // end all4PartonsMatched
@@ -729,47 +734,50 @@ int main(int argc, char* argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string rootFileName = "NtuplePlots_"+systStr+".root";
-  
-  cout << " - Recreate output file ..." << endl;
-  TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
-  cout << "   Output file is " << pathOutput+rootFileName << endl;
-  
-  ///Write histograms
-  fout->cd();
-  
-  
-  // 1D
-  //TDirectory* th1dir = fout->mkdir("1D_histograms");
-  //th1dir->cd();
-  gStyle->SetOptStat(1111);
-  for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
+  if (makePlots)
   {
-    TH1F *temp = it->second;
-    int N = temp->GetNbinsX();
-    temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
-    temp->SetBinContent(N+1,0);
-    temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
-    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+    string rootFileName = "NtuplePlots_"+systStr+".root";
+    
+    cout << " - Recreate output file ..." << endl;
+    TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
+    cout << "   Output file is " << pathOutput+rootFileName << endl;
+    
+    ///Write histograms
+    fout->cd();
+    
+    
+    // 1D
+    //TDirectory* th1dir = fout->mkdir("1D_histograms");
+    //th1dir->cd();
+    gStyle->SetOptStat(1111);
+    for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
+    {
+      TH1F *temp = it->second;
+      int N = temp->GetNbinsX();
+      temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
+      temp->SetBinContent(N+1,0);
+      temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
+      temp->Write();
+      TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
+      tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+    }
+    
+    // 2D
+    TDirectory* th2dir = fout->mkdir("2D_histograms");
+    th2dir->cd();
+    gStyle->SetPalette(55);
+    for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+    {
+      TH2F *temp = it->second;
+      temp->Write();
+      TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+      tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+    }
+    
+    fout->Close();
+    
+    delete fout;
   }
-  
-  // 2D
-  TDirectory* th2dir = fout->mkdir("2D_histograms");
-  th2dir->cd();
-  gStyle->SetPalette(55);
-  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-  {
-    TH2F *temp = it->second;
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
-    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
-  }
-  
-  fout->Close();
-  
-  delete fout;
   
   
   
@@ -975,7 +983,7 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
   
   
   /// Fill match in JetPartonPair;
-  vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle number
+  vector< pair<unsigned int, unsigned int> > JetPartonPair; // First one is jet number, second one is mcParticle/parton number
   JetPartonPair.clear();
   
   for (unsigned int i = 0; i < partons.size(); i++)
@@ -989,9 +997,9 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
     cout << "Matching done" << endl;
   
   
-  for (unsigned int i = 0; i < JetPartonPair.size(); i++)
+  for (unsigned int iPair = 0; iPair < JetPartonPair.size(); iPair++)
   {
-    unsigned int j = JetPartonPair[i].second;
+    unsigned int j = JetPartonPair[iPair].second;
     
     if ( fabs(mc_pdgId[partonId[j]]) < 6 )  //light/b quarks, 6 should stay hardcoded
     {
@@ -1003,11 +1011,11 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
         
         if (MCPermutation[0].first == 9999)
         {
-          MCPermutation[0] = JetPartonPair[i];
+          MCPermutation[0] = JetPartonPair[iPair];
         }
         else if (MCPermutation[1].first == 9999)
         {
-          MCPermutation[1] = JetPartonPair[i];
+          MCPermutation[1] = JetPartonPair[iPair];
         }
         else
         {
@@ -1027,7 +1035,7 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
         if (verbose > 3)
           cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
         
-        MCPermutation[2] = JetPartonPair[i];
+        MCPermutation[2] = JetPartonPair[iPair];
       }
       else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
         || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
@@ -1035,7 +1043,7 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
         if (verbose > 3)
           cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
         
-        MCPermutation[3] = JetPartonPair[i];
+        MCPermutation[3] = JetPartonPair[iPair];
       }
     }
   }  /// End loop over Jet Parton Pairs
@@ -1149,7 +1157,6 @@ void ClearTLVs()
   partons.clear();
   partonsMatched.clear();
   jetsMatched.clear();
-  bJetsAfterChi2.clear();
 }
 
 void ClearMatching()
@@ -1236,13 +1243,35 @@ double BreitWigner(double topMass, double scale)
   double BWmass = genTopMass; // or topMass (reco)?
   double BWgamma = scale*genTopWidth;
   double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
-  double numerator = 2*sqrt(2)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
+  double numerator = 2.*sqrt(2.)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
   double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(BWmass*BWgamma, 2);
   
   return numerator/denominator;
 }
 
+double BreitWigner2(double topMass, double scale)
+{
+  double BWmass = genTopMass;
+  double BWgamma = scale*genTopWidth;
+  //double numerator = 2.*pow(BWmass*BWgamma, 2)/TMath::Pi();
+  double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
+  double numerator = 2.*sqrt(2.)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
+  double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(topMass, 4)*pow(BWgamma/BWmass, 2);
+  
+  return numerator/denominator;
+}
+
+double BreitWignerNonRel(double topMass, double scale)
+{
+  double BWmass = genTopMass;
+  double BWgamma = scale*genTopWidth/2.;
+
+  double bw = BWgamma/( pow(topMass - BWmass, 2) + pow(BWgamma, 2) );
+  
+  return bw/(TMath::Pi());
+}
+
 double eventWeightCalculator(double topMass, double scale)
 {
-  return BreitWigner(topMass, scale)/BreitWigner(topMass, 1);
+  return BreitWignerNonRel(topMass, scale)/BreitWignerNonRel(topMass, 1.);
 }
