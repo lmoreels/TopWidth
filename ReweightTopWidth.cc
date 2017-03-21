@@ -40,6 +40,9 @@ string pathNtuples = "";
 int nofHardSelected = 0;
 int nofSkippedEvents = 0;
 int nofMatchedEvents = 0;
+double nofEvents_hadr[3] = {0.};
+double nofEvents_lept[3] = {0.};
+double nofEvents_test[3] = {0.};
 
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
@@ -59,8 +62,8 @@ double aveTopMass[] = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165
 
 
 /// Top width
-double genTopWidth = 1.363; // from fit
-double genTopMass = 172.3; // from fit
+double genTopWidth = 1.31; //1.363; // from fit
+double genTopMass = 172.5; //172.3; // from fit
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -366,7 +369,7 @@ int main(int argc, char* argv[])
   ////////////////////////////////////
   
   int endEvent = nEntries;
-  if (test) endEvent = 10;
+  if (test) endEvent = nEntries;
   for (int ievt = 0; ievt < endEvent; ievt++)
   {
     ClearObjects();
@@ -492,17 +495,17 @@ int main(int argc, char* argv[])
     
     if ( topQuark == -9999 || antiTopQuark == -9999 )
     {
-      if ( test && topQuark == -9999 && antiTopQuark == -9999 ) cout << "WARNING: Both top and antitop quark not found";
-      else if ( test && topQuark == -9999 ) cout << "WARNING: Top quark not found";
-      else if ( test && antiTopQuark == -9999 ) cout << "WARNING: Antitop quark not found";
-      if (test) cout << "... Skipping event " << ievt << "... " << endl;
+      if ( test && verbose > 2 && topQuark == -9999 && antiTopQuark == -9999 ) cout << "WARNING: Both top and antitop quark not found";
+      else if ( test && verbose > 2 && topQuark == -9999 ) cout << "WARNING: Top quark not found";
+      else if ( test && verbose > 2 && antiTopQuark == -9999 ) cout << "WARNING: Antitop quark not found";
+      if ( test && verbose > 2 ) cout << "... Skipping event " << ievt << "... " << endl;
       nofSkippedEvents++;
       continue;
     }
     
     if ( muMinusFromTop && muPlusFromTop )
     {
-      if (test) cout << "Both tops decay leptonically... Something went wrong... Event " << ievt << endl;
+      if (test && verbose > 2 ) cout << "Both tops decay leptonically... Something went wrong... Event " << ievt << endl;
       nofSkippedEvents++;
       continue;
     }
@@ -510,7 +513,9 @@ int main(int argc, char* argv[])
     
     TruthMatching(partons, selectedJets, MCPermutation);
     
-    if ( all4PartonsMatched && test && verbose > 3 )
+    if (! all4PartonsMatched) continue;
+    
+    if ( test && verbose > 3 )
     {
       for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
       {
@@ -521,17 +526,14 @@ int main(int argc, char* argv[])
     }
     
     
-    if (all4PartonsMatched)
+    for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
     {
-      for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
-      {
-        /// MCPermutation[i].first  = jet number
-        /// MCPermutation[i].second = parton number
-        /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
-
-        partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
-        jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
-      }
+      /// MCPermutation[i].first  = jet number
+      /// MCPermutation[i].second = parton number
+      /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+      
+      partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
+      jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
     }
     
     
@@ -586,7 +588,7 @@ int main(int argc, char* argv[])
     
     if ( bjjDecay[0] == -9999 || bjjDecay[1] == -9999 || bjjDecay[2] == -9999 || blvDecay[0] == -9999 || blvDecay[1] == -9999 || blvDecay[2] == -9999)
     {
-      if (test) cout << "Not all ttbar components found... Skipping event " << ievt << "..." << endl;
+      if ( test && verbose > 2 ) cout << "Not all ttbar components found... Skipping event " << ievt << "..." << endl;
       continue;
     }
     
@@ -634,7 +636,11 @@ int main(int argc, char* argv[])
         evWeight_bjj = eventWeightCalculator(m_bjj, scaling[s]);
         evWeight_blv = eventWeightCalculator(m_blv, scaling[s]);
       }
-
+      
+      nofEvents_hadr[s] += evWeight_hadr;
+      nofEvents_lept[s] += evWeight_lept;
+      nofEvents_test[s] += (evWeight_hadr+evWeight_lept)/2.;
+      
       /// Fill plots before matching
       if (makePlots)
       {
@@ -642,17 +648,17 @@ int main(int argc, char* argv[])
         histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
         histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
         histo1D[("blv_mass_gen_"+scalingString[s]).c_str()]->Fill(m_blv, evWeight_blv);
+        histo1D[("Width_SF_hadr_"+scalingString[s]).c_str()]->Fill(evWeight_hadr);
+        histo1D[("Width_SF_lept_"+scalingString[s]).c_str()]->Fill(evWeight_lept);
+        histo2D[("Width_SF_hadr_lept_"+scalingString[s]).c_str()]->Fill(evWeight_hadr, evWeight_lept);
+        histo2D[("top_mass_hadr_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
+        histo2D[("top_mass_lept_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
         if ( s == 0 )
         {
           histo2D["top_mass_hadr_lept_gen_orig"]->Fill(m_hadr, m_lept);
           histo2D["top_mass_hadr_bjj_gen_orig"]->Fill(m_hadr, m_bjj);
           histo2D["top_mass_lept_blv_gen_orig"]->Fill(m_lept, m_blv);
           histo2D["top_mass_bjj_blv_gen_orig"]->Fill(m_bjj, m_blv);
-        }
-        else
-        {
-          histo2D[("top_mass_hadr_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
-          histo2D[("top_mass_lept_gen_vs_weight_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
         }
       }
       
@@ -717,6 +723,10 @@ int main(int argc, char* argv[])
   cout << "Number of events passing hard selection: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
   cout << "Number of skipped events: " << nofSkippedEvents << " (" << 100*((float)nofSkippedEvents/(float)nofHardSelected) << "%)" << endl;
   cout << "Number of matched events: " << nofMatchedEvents << endl;
+  cout << endl;
+  cout << "Number of events without scaling hadronic width: " << nofEvents_hadr[0] << "; hadr width x 2: " << nofEvents_hadr[1] << "; hadr width x 0.5: " << nofEvents_hadr[2] << endl;
+  cout << "Number of events without scaling leptonic width: " << nofEvents_lept[0] << "; lept width x 2: " << nofEvents_lept[1] << "; lept width x 0.5: " << nofEvents_lept[2] << endl;
+  cout << "Number of events without scaling width:          " << nofEvents_test[0] << "; test width x 2: " << nofEvents_test[1] << "; test width x 0.5: " << nofEvents_test[2] << endl;
   
   
   origNtuple->Close();
@@ -930,21 +940,29 @@ void InitHisto1D()
 {
   TH1::SetDefaultSumw2();
   
-  histo1D["top_mass_hadr_gen_orig"] = new TH1F("top_mass_hadr_gen_orig","Mass of generated top quark with hadronic decay (no scaling); M_{t_{hadr}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_hadr_gen_s2"] = new TH1F("top_mass_hadr_gen_s2","Mass of generated top quark with hadronic decay (scaled by factor 2); M_{t_{hadr}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_hadr_gen_s0p5"] = new TH1F("top_mass_hadr_gen_s0p5","Mass of generated top quark with hadronic decay (scaled by factor 0.5); M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  /// SFs
+  histo1D["Width_SF_hadr_orig"] = new TH1F("Width_SF_hadr_orig", "Hadronic scale factor to change the ttbar distribution width (no scaling); width SF", 501, 0.4985, 2.0015);
+  histo1D["Width_SF_hadr_s2"] = new TH1F("Width_SF_hadr_s2", "Hadronic scale factor to change the ttbar distribution width (scaled by factor 2); width SF", 501, 0.4985, 2.0015);
+  histo1D["Width_SF_hadr_s0p5"] = new TH1F("Width_SF_hadr_s0p5", "Hadronic scale factor to change the ttbar distribution width (scaled by factor 0.5); width SF", 501, 0.4985, 2.0015);
+  histo1D["Width_SF_lept_orig"] = new TH1F("Width_SF_lept_orig", "Leptonic scale factor to change the ttbar distribution width (no scaling); width SF", 501, 0.4985, 2.0015);
+  histo1D["Width_SF_lept_s2"] = new TH1F("Width_SF_lept_s2", "Leptonic scale factor to change the ttbar distribution width (scaled by factor 2); width SF", 501, 0.4985, 2.00152);
+  histo1D["Width_SF_lept_s0p5"] = new TH1F("Width_SF_lept_s0p5", "Leptonic scale factor to change the ttbar distribution width (scaled by factor 0.5); width SF", 501, 0.4985, 2.0015);
   
-  histo1D["top_mass_lept_gen_orig"] = new TH1F("top_mass_lept_gen_orig","Mass of generated top quark with leptonic decay (no scaling); M_{t_{lept}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_lept_gen_s2"] = new TH1F("top_mass_lept_gen_s2","Mass of generated top quark with leptonic decay (scaled by factor 2); M_{t_{lept}} [GeV]", 2000, 120, 220);
-  histo1D["top_mass_lept_gen_s0p5"] = new TH1F("top_mass_lept_gen_s0p5","Mass of generated top quark with leptonic decay (scaled by factor 0.5); M_{t_{lept}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_orig"] = new TH1F("top_mass_hadr_gen_orig","Mass of generated top quark with hadronic decay (no scaling); M_{t_{hadr}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_hadr_gen_s2"] = new TH1F("top_mass_hadr_gen_s2","Mass of generated top quark with hadronic decay (scaled by factor 2); M_{t_{hadr}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_hadr_gen_s0p5"] = new TH1F("top_mass_hadr_gen_s0p5","Mass of generated top quark with hadronic decay (scaled by factor 0.5); M_{t_{hadr}} [GeV]", 4000, 120, 220);
   
-  histo1D["bjj_mass_gen_orig"] = new TH1F("bjj_mass_gen_orig","Mass of generated bjj quarks (no scaling); M_{bjj} [GeV]", 1000, 50, 300);
-  histo1D["bjj_mass_gen_s2"] = new TH1F("bjj_mass_gen_s2","Mass of generated bjj quarks (scaled by factor 2); M_{bjj} [GeV]", 1000, 50, 300);
-  histo1D["bjj_mass_gen_s0p5"] = new TH1F("bjj_mass_gen_s0p5","Mass of generated bjj quarks (scaled by factor 0.5); M_{bjj} [GeV]", 1000, 50, 300);
+  histo1D["top_mass_lept_gen_orig"] = new TH1F("top_mass_lept_gen_orig","Mass of generated top quark with leptonic decay (no scaling); M_{t_{lept}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_lept_gen_s2"] = new TH1F("top_mass_lept_gen_s2","Mass of generated top quark with leptonic decay (scaled by factor 2); M_{t_{lept}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_lept_gen_s0p5"] = new TH1F("top_mass_lept_gen_s0p5","Mass of generated top quark with leptonic decay (scaled by factor 0.5); M_{t_{lept}} [GeV]", 4000, 120, 220);
   
-  histo1D["blv_mass_gen_orig"] = new TH1F("blv_mass_gen_orig","Mass of generated b, lepton and neutrino (no scaling); M_{blv} [GeV]", 1000, 50, 300);
-  histo1D["blv_mass_gen_s2"] = new TH1F("blv_mass_gen_s2","Mass of generated b, lepton and neutrino (scaled by factor 2); M_{blv} [GeV]", 1000, 50, 300);
-  histo1D["blv_mass_gen_s0p5"] = new TH1F("blv_mass_gen_s0p5","Mass of generated b, lepton and neutrino (scaled by factor 0.5); M_{blv} [GeV]", 1000, 50, 300);
+  histo1D["bjj_mass_gen_orig"] = new TH1F("bjj_mass_gen_orig","Mass of generated bjj quarks (no scaling); M_{bjj} [GeV]", 2000, 50, 300);
+  histo1D["bjj_mass_gen_s2"] = new TH1F("bjj_mass_gen_s2","Mass of generated bjj quarks (scaled by factor 2); M_{bjj} [GeV]", 2000, 50, 300);
+  histo1D["bjj_mass_gen_s0p5"] = new TH1F("bjj_mass_gen_s0p5","Mass of generated bjj quarks (scaled by factor 0.5); M_{bjj} [GeV]", 2000, 50, 300);
+  
+  histo1D["blv_mass_gen_orig"] = new TH1F("blv_mass_gen_orig","Mass of generated b, lepton and neutrino (no scaling); M_{blv} [GeV]", 2000, 50, 300);
+  histo1D["blv_mass_gen_s2"] = new TH1F("blv_mass_gen_s2","Mass of generated b, lepton and neutrino (scaled by factor 2); M_{blv} [GeV]", 2000, 50, 300);
+  histo1D["blv_mass_gen_s0p5"] = new TH1F("blv_mass_gen_s0p5","Mass of generated b, lepton and neutrino (scaled by factor 0.5); M_{blv} [GeV]", 2000, 50, 300);
   
   
   /// Matching
@@ -961,17 +979,24 @@ void InitHisto2D()
 {
   TH2::SetDefaultSumw2();
   
+  /// SFs
+  histo2D["Width_SF_hadr_lept_orig"] = new TH2F("Width_SF_hadr_lept_orig", "Leptonic vs. hadronic scale factor to change the ttbar distribution width; hadr. width SF (no scaling); lept. width SF", 501, 0.4985, 2.0015, 501, 0.4985, 2.0015);
+  histo2D["Width_SF_hadr_lept_s2"] = new TH2F("Width_SF_hadr_lept_s2", "Leptonic vs. hadronic scale factor to change the ttbar distribution width (scaled by factor 2); hadr. width SF; lept. width SF", 501, 0.4985, 2.0015, 501, 0.4985, 2.0015);
+  histo2D["Width_SF_hadr_lept_s0p5"] = new TH2F("Width_SF_hadr_lept_s0p5", "Leptonic vs. hadronic scale factor to change the ttbar distribution width (scaled by factor 0.5); hadr. width SF; lept. width SF", 501, 0.4985, 2.0015, 501, 0.4985, 2.0015);
+  
   histo2D["top_mass_hadr_lept_gen_orig"] = new TH2F("top_mass_hadr_lept_gen_orig","Mass of generated top quark with leptonic decay vs. hadronic decay (no scaling); M_{t_{hadr}} [GeV]; M_{t_{lept}} [GeV]", 1000, 50, 300, 1000, 50, 300);
   histo2D["top_mass_hadr_bjj_gen_orig"] = new TH2F("top_mass_hadr_bjj_gen_orig","Generated mass of bjj quarks vs. hadronically decaying top quark mass (no scaling); M_{t_{hadr}} [GeV]; M_{bjj} [GeV]", 1000, 50, 300, 1000, 50, 300);
   histo2D["top_mass_lept_blv_gen_orig"] = new TH2F("top_mass_lept_blv_gen_orig","Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass (no scaling); M_{t_{lept}} [GeV]; M_{blv} [GeV]", 1000, 50, 300, 1000, 50, 300);
   histo2D["top_mass_bjj_blv_gen_orig"] = new TH2F("top_mass_bjj_blv_gen_orig","Mass of generated b, lepton and neutrino vs. mass of bjj quarks (no scaling); M_{bjj} [GeV]; M_{blv} [GeV]", 1000, 50, 300, 1000, 50, 300);
   
   // Weights
-  histo2D["top_mass_hadr_gen_vs_weight_s2"] = new TH2F("top_mass_hadr_gen_vs_weight_s2","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
-  histo2D["top_mass_hadr_gen_vs_weight_s0p5"] = new TH2F("top_mass_hadr_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
+  histo2D["top_mass_hadr_gen_vs_weight_orig"] = new TH2F("top_mass_hadr_gen_vs_weight_orig","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
+  histo2D["top_mass_hadr_gen_vs_weight_s2"] = new TH2F("top_mass_hadr_gen_vs_weight_s2","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
+  histo2D["top_mass_hadr_gen_vs_weight_s0p5"] = new TH2F("top_mass_hadr_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
   
-  histo2D["top_mass_lept_gen_vs_weight_s2"] = new TH2F("top_mass_lept_gen_vs_weight_s2","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
-  histo2D["top_mass_lept_gen_vs_weight_s0p5"] = new TH2F("top_mass_lept_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 500, 0, 5);
+  histo2D["top_mass_lept_gen_vs_weight_orig"] = new TH2F("top_mass_lept_gen_vs_weight_orig","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
+  histo2D["top_mass_lept_gen_vs_weight_s2"] = new TH2F("top_mass_lept_gen_vs_weight_s2","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
+  histo2D["top_mass_lept_gen_vs_weight_s0p5"] = new TH2F("top_mass_lept_gen_vs_weight_s0p5","Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; weight", 1000, 120, 220, 501, -0.0025, 2.5025);
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
@@ -1273,5 +1298,5 @@ double BreitWignerNonRel(double topMass, double scale)
 
 double eventWeightCalculator(double topMass, double scale)
 {
-  return BreitWignerNonRel(topMass, scale)/BreitWignerNonRel(topMass, 1.);
+  return BreitWigner2(topMass, scale)/BreitWigner2(topMass, 1.);
 }
