@@ -700,8 +700,10 @@ int main(int argc, char* argv[])
         
         if ( s > 0 )
         {
-          eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
-          eventSF_reco = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
+          //eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);  /// Change to mcPart[topQuark].M() ??
+          //eventSF_reco = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
+          eventSF_gen = eventWeightCalculator(m_hadr, scaling[s]);
+          eventSF_reco = eventWeightCalculator(m_hadr, scaling[s]);
         }
         else
         {
@@ -791,17 +793,21 @@ int main(int argc, char* argv[])
       tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
     }
     
-    fout->cd();
+    TDirectory* th1fitdir = fout->mkdir("BreitWigner");
+    th1fitdir->cd();
     TF1 *BW = new TF1("Breit_Wigner", BreitWigner2Func, 120., 220., 2);
     std::vector<double> scales = {0.5, 1., 2.};
     DrawBW(BW, pathOutput+"Breit_Wigner", scales, 120, 220, true);
     
     for (int s = 0; s < nScalings; s++)
     {
-      string histoName = "top_mass_gen_matched_"+scalingString[s];
+      string histoName = "top_mass_hadr_gen_"+scalingString[s];
       cout << "Integral for SM width times " << scaling[s] << ":  "  << histo1D[histoName.c_str()]->Integral(0, histo1D[histoName.c_str()]->GetNbinsX()+1) << endl;
       FitBW(histo1D[histoName], pathOutput+histoName+"_withBW", scaling[s]);
-      //DrawBWonHisto(histo1D[histoName], BW, pathOutput+histoName+"_withBW", scaling[s], 1., 120., 220., true);
+      
+      histoName = "top_mass_gen_matched_"+scalingString[s];
+      cout << "Integral for SM width times " << scaling[s] << ":  "  << histo1D[histoName.c_str()]->Integral(0, histo1D[histoName.c_str()]->GetNbinsX()+1) << endl;
+      FitBW(histo1D[histoName], pathOutput+histoName+"_withBW", scaling[s]);
     }
     
     
@@ -1364,11 +1370,11 @@ void FitBW(TH1F* histoIn, string name, double scale)
   cout << "Fitting " << histoIn->GetName() << " for widthx" << scale << endl;
   
   // Normalise histogram
-  TH1F *histo = (TH1F*) histoIn->Clone(histoIn->GetName());
-  histo->Integral(0, histo->GetNbinsX()+1);
-  histo->Scale(scale);
+  TH1F *histo = (TH1F*) histoIn->Clone((string(histoIn->GetName())+"_norm").c_str());
+  Double_t intgHisto = 1./histo->Integral(0, histo->GetNbinsX()+1);
+  histo->Scale(intgHisto);
   
-  TF1 *BWfit = new TF1("Breit_Wigner", BreitWigner2Func, 170., 174., 2);
+  TF1 *BWfit = new TF1("Breit_Wigner", BreitWigner2Func, 171.5, 173.5, 2);
   BWfit->SetParNames("widthx", "norm");
   BWfit->FixParameter(0, scale);
   
@@ -1380,12 +1386,12 @@ void FitBW(TH1F* histoIn, string name, double scale)
   histo->Write();
   BWfit->Write();
   
-  DrawBWonHisto(histoIn, BWfit, name, BWfit->GetParameter(0), BWfit->GetParameter(1), 120., 220., true);
+  DrawBWonHisto(histo, BWfit, name, BWfit->GetParameter(0), BWfit->GetParameter(1), 165., 179., true);
 }
 
 void DrawBWonHisto(TH1F* histo, TF1* function, string name, double scale, double norm, double min, double max, bool writeToFile)
 {
-  Color_t colours[] = {kBlue+2, kRed};
+  Color_t colours[] = {kBlue+2, kGreen-7};
   TCanvas* c3 = new TCanvas(name.c_str(), name.c_str());
   c3->cd();
   histo->GetXaxis()->SetRangeUser(min, max);
