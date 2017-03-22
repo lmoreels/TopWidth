@@ -62,8 +62,8 @@ double aveTopMass[] = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165
 
 
 /// Top width
-double genTopWidth = 1.31; //1.363; // from fit
-double genTopMass = 172.5; //172.3; // from fit
+double genTopWidth = 1.31; // gen  //1.363; // from fit  //4.015; // from reco fit
+double genTopMass = 172.5; // gen  //172.3; // from fit  //168.6; // from reco fit
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -96,10 +96,14 @@ void ClearMatching();
 void ClearVars();
 void ClearObjects();
 long GetNEvents(TTree* fChain, string var);
+Double_t BreitWigner2Func(Double_t *x, Double_t *scale);
 double BreitWigner(double topPT, double scale);
 double BreitWigner2(double topMass, double scale);
 double BreitWignerNonRel(double topMass, double scale);
 double eventWeightCalculator(double topPT, double scale);
+void DrawBW(TF1* function, string name, std::vector<double> scales, double min, double max, bool writeToFile);
+void FitBW(TH1F* histoIn, string name, double scale);
+void DrawBWonHisto(TH1F* histo, TF1* function, string name, double scale, double norm, double min, double max, bool writeToFile);
 
 
 
@@ -694,16 +698,19 @@ int main(int argc, char* argv[])
         double matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
         double matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
         
-        eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
-        eventSF_reco = eventWeightCalculator(matchedTopMass_reco, scaling[s]);
+        if ( s > 0 )
+        {
+          eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
+          eventSF_reco = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
+        }
+        else
+        {
+          eventSF_gen = 1.;
+          eventSF_reco = 1.;
+        }
         
         if (makePlots)
         {
-          if ( s == 0 )
-          {
-            histo1D["top_mass_gen_matched_orig"]->Fill(matchedTopMass_gen);
-            histo1D["top_mass_reco_matched_orig"]->Fill(matchedTopMass_reco);
-          }
           histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_gen, eventSF_gen);
           histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_reco, eventSF_reco);
         }
@@ -783,6 +790,20 @@ int main(int argc, char* argv[])
       TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
       tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
     }
+    
+    fout->cd();
+    TF1 *BW = new TF1("Breit_Wigner", BreitWigner2Func, 120., 220., 2);
+    std::vector<double> scales = {0.5, 1., 2.};
+    DrawBW(BW, pathOutput+"Breit_Wigner", scales, 120, 220, true);
+    
+    for (int s = 0; s < nScalings; s++)
+    {
+      string histoName = "top_mass_gen_matched_"+scalingString[s];
+      cout << "Integral for SM width times " << scaling[s] << ":  "  << histo1D[histoName.c_str()]->Integral(0, histo1D[histoName.c_str()]->GetNbinsX()+1) << endl;
+      FitBW(histo1D[histoName], pathOutput+histoName+"_withBW", scaling[s]);
+      //DrawBWonHisto(histo1D[histoName], BW, pathOutput+histoName+"_withBW", scaling[s], 1., 120., 220., true);
+    }
+    
     
     fout->Close();
     
@@ -1262,6 +1283,17 @@ long GetNEvents(TTree* fChain, string var)
   return varNew;
 }
 
+Double_t BreitWigner2Func(Double_t *x, Double_t *scale)
+{
+  double BWmass = genTopMass;
+  double BWgamma = scale[0]*genTopWidth;
+  //double numerator = 2.*pow(BWmass*BWgamma, 2)/TMath::Pi();
+  double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
+  double numerator = 2.*sqrt(2.)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
+  double denominator = pow(pow(x[0], 2) - pow(BWmass, 2), 2) + pow(x[0], 4)*pow(BWgamma/BWmass, 2);
+  
+  return numerator/denominator*scale[1];
+}
 
 double BreitWigner(double topMass, double scale)
 {
@@ -1299,4 +1331,78 @@ double BreitWignerNonRel(double topMass, double scale)
 double eventWeightCalculator(double topMass, double scale)
 {
   return BreitWigner2(topMass, scale)/BreitWigner2(topMass, 1.);
+}
+
+void DrawBW(TF1* function, string name, std::vector<double> scales, double min, double max, bool writeToFile)
+{
+  Color_t colours[] = {kRed, kBlue+2, kGreen-7};
+  //Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+1, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};
+  TCanvas* c2 = new TCanvas(name.c_str(), name.c_str());
+  c2->cd();
+  function->FixParameter(0, scales[0]);
+  function->FixParameter(1, 1.);
+  function->SetLineColor(colours[0]);
+  function->SetRange(min, max);
+  function->DrawCopy();
+  c2->Update();
+  for (int i = 1; i < scales.size(); i++)
+  {
+    function->FixParameter(0,scales[i]);
+    function->SetLineColor(colours[i]);
+    function->DrawCopy("same");
+    c2->Update();
+  }
+  if (writeToFile) c2->Write();
+  c2->SaveAs((name+".png").c_str());
+  c2->Close();
+  
+  delete c2;
+}
+
+void FitBW(TH1F* histoIn, string name, double scale)
+{
+  cout << "Fitting " << histoIn->GetName() << " for widthx" << scale << endl;
+  
+  // Normalise histogram
+  TH1F *histo = (TH1F*) histoIn->Clone(histoIn->GetName());
+  histo->Integral(0, histo->GetNbinsX()+1);
+  histo->Scale(scale);
+  
+  TF1 *BWfit = new TF1("Breit_Wigner", BreitWigner2Func, 170., 174., 2);
+  BWfit->SetParNames("widthx", "norm");
+  BWfit->FixParameter(0, scale);
+  
+  std::string func_title = std::string(histo->GetName())+"_Fitted";
+  BWfit->SetName(func_title.c_str());
+  histo->Fit(BWfit, "R");
+  gStyle->SetOptFit(0111);
+  histo->SetStats(1);
+  histo->Write();
+  BWfit->Write();
+  
+  DrawBWonHisto(histoIn, BWfit, name, BWfit->GetParameter(0), BWfit->GetParameter(1), 120., 220., true);
+}
+
+void DrawBWonHisto(TH1F* histo, TF1* function, string name, double scale, double norm, double min, double max, bool writeToFile)
+{
+  Color_t colours[] = {kBlue+2, kRed};
+  TCanvas* c3 = new TCanvas(name.c_str(), name.c_str());
+  c3->cd();
+  histo->GetXaxis()->SetRangeUser(min, max);
+  histo->SetLineStyle(1);
+  histo->SetLineColor(colours[0]);
+  histo->Draw();
+  
+  function->FixParameter(0, scale);
+  function->FixParameter(1, norm);
+  function->SetLineColor(colours[1]);
+  function->SetRange(min, max);
+  function->DrawCopy("same");
+  c3->Update();
+  
+  if (writeToFile) c3->Write();
+  c3->SaveAs((name+".png").c_str());
+  c3->Close();
+  
+  delete c3;
 }
