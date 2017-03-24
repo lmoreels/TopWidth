@@ -955,7 +955,7 @@ void InitHisto1D()
     /// Matching
     histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()] = new TH1F(("top_mass_gen_matched_"+scalingString[s]).c_str(), "Generated top mass of matched events; M_{t} [GeV]", 800, 50, 300);
     histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_matched_"+scalingString[s]).c_str(), "Reconstructed top mass of matched events; M_{t} [GeV]", 400, 0, 400);
-    histo1D[("reduced_top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_"+scalingString[s]).c_str(), "Reduced reconstructed top mass of matched events; M_{t} [GeV]", 400, 0, 400);
+    histo1D[("reduced_top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_"+scalingString[s]).c_str(), "Reduced reconstructed top mass of matched events; M_{t}/<M_{t}>", 400, 0, 2.4);
     
     /// SFs
     histo1D[("Width_SF_hadr_"+scalingString[s]).c_str()] = new TH1F(("Width_SF_hadr_"+scalingString[s]).c_str(), "Hadronic scale factor to change the ttbar distribution width; width SF", 5001, -0.0005, 5.0005);
