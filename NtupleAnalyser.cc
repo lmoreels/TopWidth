@@ -37,7 +37,7 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
-bool makePlots = false;
+bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = false;
@@ -50,7 +50,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = true;
+bool applyWidthSF = false;
 double scaleWidth = 0.5;
 
 bool useOldNtuples = true;
@@ -95,8 +95,9 @@ double CSVv2Medium = 0.800;
 double CSVv2Tight = 0.935;
 
 /// Top width
-double genTopWidth = 1.363; // from fit
-double genTopMass = 172.3; // from fit
+double genTopWidth = 1.31; // gen  //1.363; // from fit
+double genTopMass = 172.5; // gen  //172.3; // from fit
+double corr[2] = {0.0080432, 0.99195679};
 
 // Temporarily, until calculated from TTbar sample
 double chi2WMass = 80.385;
@@ -125,39 +126,12 @@ const int nofAveMasses = 17;
 std::array<double, nofAveMasses> aveTopMass;
 std::array<double, nofAveMasses> aveTopMass_noWidth    = {168.719, 167.105, 203.378, 204.724, 197.450, 201.182, 185.360, 193.207, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.762, 193.825};
 std::array<double, nofAveMasses> aveTopMass_KFchi2cut5 = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165.839, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut6 = {168.719, 167.206, 192.030, 189.733, 196.637, 199.866, 165.879, 180.978, 249.326, 251.815, 229.616, 224.083, 219.695, 208.480, 184.976, 181.327, 181.359};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut7 = {168.719, 167.156, 191.966, 189.826, 196.450, 199.847, 166.001, 181.128, 248.543, 251.538, 228.486, 224.230, 221.079, 211.266, 185.483, 181.482, 181.517};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut8 = {168.719, 167.111, 191.928, 189.896, 196.361, 199.930, 166.184, 181.282, 247.694, 250.639, 227.952, 224.751, 221.542, 210.461, 185.774, 181.641, 181.677};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut9 = {168.719, 167.069, 191.902, 189.970, 196.277, 199.995, 166.503, 181.428, 248.440, 251.997, 227.283, 224.807, 223.771, 202.844, 185.814, 181.795, 181.830};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut10= {168.719, 167.019, 191.879, 190.060, 196.152, 200.024, 166.695, 181.571, 248.206, 252.113, 226.179, 224.148, 223.302, 200.685, 186.035, 181.939, 181.975};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut15= {168.719, 166.848, 192.016, 190.654, 195.740, 200.236, 167.958, 182.345, 250.376, 251.513, 223.667, 222.226, 222.102, 206.881, 187.017, 182.734, 182.772};
-// No cut on KF chi2
-std::array<double, nofAveMasses> aveTopMass_widthx0p5  = {166.680, 166.147, 202.979, 204.490, 196.533, 200.905, 179.901, 192.179, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 192.694, 192.770};
-std::array<double, nofAveMasses> aveTopMass_widthx0p66 = {167.605, 167.067, 203.807, 205.278, 197.529, 201.867, 181.030, 193.041, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.547, 193.615};
-std::array<double, nofAveMasses> aveTopMass_widthx0p75 = {167.986, 167.434, 204.120, 205.564, 197.958, 202.287, 181.491, 193.373, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.876, 193.940};
-std::array<double, nofAveMasses> aveTopMass_widthx1    = {168.723, 168.111, 204.631, 205.986, 198.843, 203.183, 182.341, 193.935, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.432, 194.492};
-std::array<double, nofAveMasses> aveTopMass_widthx2    = {169.970, 168.992, 204.813, 205.741, 200.850, 205.472, 183.275, 194.316, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.810, 194.866};
-std::array<double, nofAveMasses> aveTopMass_widthx3    = {170.764, 169.371, 204.597, 205.079, 202.538, 207.556, 183.453, 194.266, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 194.760, 194.817};
-std::array<double, nofAveMasses> aveTopMass_widthx4    = {169.941, 168.900, 202.590, 202.886, 201.317, 206.443, 181.884, 192.657, 259.186, 257.377, 232.275, 230.366, 241.172, 235.975, 200.818, 193.168, 193.240};
-void getAveMasses(double width)
+void getAveMasses(bool useKFcut)
 {
   for (int i = 0; i < nofAveMasses; i++)
   {
-//     if ( width == 0.5 )       aveTopMass[i] = aveTopMass_widthx0p5[i];
-//     else if ( width == 0.66 ) aveTopMass[i] = aveTopMass_widthx0p66[i];
-//     else if ( width == 0.75 ) aveTopMass[i] = aveTopMass_widthx0p75[i];
-//     else if ( width == 1. )   aveTopMass[i] = aveTopMass_widthx1[i];
-//     else if ( width == 2. )   aveTopMass[i] = aveTopMass_widthx2[i];
-//     else if ( width == 3. )   aveTopMass[i] = aveTopMass_widthx3[i];
-//     else if ( width == 4. )   aveTopMass[i] = aveTopMass_widthx4[i];
-//     else
-//     {
-//       if ( i == 0)
-//         cout << "Average top mass for width " << width << " not found. Using average mass for width = 1..." << endl;
-//       aveTopMass[i] = aveTopMass_widthx1[i];
-//     }
-    ///*if (! applyWidthSF)*/ aveTopMass[i] = aveTopMass_noWidth[i];
-    aveTopMass[i] = aveTopMass_KFchi2cut5[i];
+    if (useKFcut) aveTopMass[i] = aveTopMass_KFchi2cut5[i];
+    else aveTopMass[i] = aveTopMass_noWidth[i];
   }
 }
 
@@ -174,9 +148,9 @@ map<string,TTree*> tStatsTree;
 
 //map<string,TNtuple*> ntuple;
 
-vector < Dataset* > datasets;
+vector < Dataset* > datasets, datasetsMSP, datasetsTemp;
 
-ofstream txtMassGenMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassRecoWPWOk, txtMassRecoWPWNotOk, txtMassReco;
+ofstream txtMassGenMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -217,6 +191,7 @@ void FillMatchingPlots();
 void FillKinFitPlots(int d);
 long GetNEvents(TTree* fChain, string var, bool isData);
 void GetHLTFraction(double* fractions);
+void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
 double BreitWigner(double topPT, double scale);
 double eventWeightCalculator(double topPT, double scale);
 Double_t voigt(Double_t *x, Double_t *par);
@@ -226,6 +201,8 @@ Double_t crysBall_WPUP(Double_t *x);
 Double_t logLikelihood(Double_t *x, Double_t *par);
 Double_t fakeLikelihood(Double_t *x, Double_t *par);
 Double_t widthToGammaTranslation(Double_t *x);
+void PrintMtmLikelihood();
+void PrintKFDebug(int ievt);
 
 
 
@@ -382,6 +359,7 @@ double reco_minMlb, reco_minMl_nonb, reco_ttbarMass, reco_dRLepB_lep, reco_dRLep
 double min_Mlb, dRLepB;
 int labelMlb, labelMl_nonb;
 double massForWidth;
+bool isCP, isWP, isUP;
 
 
 /// Define TLVs
@@ -494,10 +472,8 @@ int main(int argc, char* argv[])
     useToys = false;
     makePlots = false;
   }
-  if (test)
-  {
-    makePlots = false;
-  }
+  if (test) makePlots = false;
+  if (testHistos) makePlots = true;
   
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
@@ -524,7 +500,7 @@ int main(int argc, char* argv[])
   
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
-  if ( applyWidthSF && scaleWidth != 1 ) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
+  if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
@@ -546,7 +522,9 @@ int main(int argc, char* argv[])
   datasets.clear();
   TTreeLoader treeLoader; 
   treeLoader.LoadDatasets(datasets, xmlfile);
+  treeLoader.LoadDatasets(datasetsMSP, xmlfile);
   
+  int dTT = -1;
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
     string dataSetName = datasets[d]->Name();
@@ -554,28 +532,42 @@ int main(int argc, char* argv[])
       Luminosity = datasets[d]->EquivalentLumi();
     
     if ( dataSetName.find("QCD") != std::string::npos )
+    {
       datasets[d]->SetColor(kYellow);
+      datasetsMSP[d]->SetColor(kYellow);
+    }
     if ( dataSetName.find("TT") != std::string::npos )
     {
       datasets[d]->SetTitle("t#bar{t}");
       datasets[d]->SetColor(kRed+1);
+      datasetsMSP[dTT+2]->SetName("TT_UP");
+      datasetsMSP[dTT+2]->SetTitle("t#bar{t} UP");
+      datasetsMSP[dTT+2]->SetColor(kRed-10);
+      
+      dTT = d;
     }
     //if ( dataSetName.find("TTbarJets_Other") != std::string::npos ) datasets[d]->SetColor(kRed-7);
     if ( dataSetName.find("WJets") != std::string::npos )
     {
       datasets[d]->SetTitle("W#rightarrowl#nu");
       datasets[d]->SetColor(kGreen-3);
+      datasetsMSP[d]->SetTitle("W#rightarrowl#nu");
+      datasetsMSP[d]->SetColor(kGreen-3);
     }
     if ( dataSetName.find("ZJets") != std::string::npos || dataSetName.find("DY") != std::string::npos )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
       datasets[d]->SetColor(kAzure-2);
       //datasets[d]->SetColor(kMagenta);
+      datasetsMSP[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
+      datasetsMSP[d]->SetColor(kAzure-2);
     }
     if ( dataSetName.find("ST") != std::string::npos || dataSetName.find("SingleTop") != std::string::npos )
     {
       datasets[d]->SetTitle("ST");
       datasets[d]->SetColor(kBlue-2);
+      datasetsMSP[d]->SetTitle("ST");
+      datasetsMSP[d]->SetColor(kBlue-2);
       //if ( dataSetName.find("tW") != std::string::npos )
       //{
       //  datasets[d]->SetTitle("ST tW");
@@ -585,6 +577,25 @@ int main(int argc, char* argv[])
       //  datasets[d]->SetTitle("ST t");
     }
   }
+  
+  treeLoader.LoadDatasets(datasetsTemp, xmlfile);
+  datasetsTemp[dTT]->SetName("TT_WP");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} WP");
+  datasetsTemp[dTT]->SetColor(kRed-9);
+  datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
+  datasetsTemp.clear();
+  treeLoader.LoadDatasets(datasetsTemp, xmlfile);
+  datasetsTemp[dTT]->SetName("TT_CP");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} CP");
+  datasetsTemp[dTT]->SetColor(kRed-7);
+  datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
+  
+//   cout << "Content datasets  " << endl;
+//   for (int d = 0; d < datasets.size(); d++)
+//     cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
+//   cout << "Content datasetsMSP  " << endl;
+//   for (int d = 0; d < datasetsMSP.size(); d++)
+//     cout << "   Dataset " << d << ": " << datasetsMSP[d]->Name() << " / title : " << datasetsMSP[d]->Title() << endl;
   
   
   
@@ -605,7 +616,8 @@ int main(int argc, char* argv[])
   vJER.clear(); vJES.clear(); vPU.clear();
   
   /// Load ave top mass
-  getAveMasses(scaleWidth);
+  getAveMasses(true);
+  aveTopMassLL = aveTopMass[1];
   
   if (calculateLikelihood)
   {
@@ -618,13 +630,16 @@ int main(int argc, char* argv[])
     }
     txtLogLike << endl;
     
-    txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
-    txtLogLikeTest << "## ievt      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
-    txtLogLikeTest << "#  Gammas : ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    if (test)
     {
-      gammaArray[iWidth] = widthToGammaTranslation(&widthArray[iWidth]);
-      txtLogLikeTest << gammaArray[iWidth] << "  ";
+      txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
+      txtLogLikeTest << "## ievt      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
+      txtLogLikeTest << "#  Gammas : ";
+      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+      {
+        gammaArray[iWidth] = widthToGammaTranslation(&widthArray[iWidth]);
+        txtLogLikeTest << gammaArray[iWidth] << "  ";
+      }
     }
     
     /// Fraction of events that is CP, WP and UP
@@ -632,12 +647,6 @@ int main(int argc, char* argv[])
     f_CP = (double)nCP/(double)nTot;
     f_WP = (double)nWP/(double)nTot;
     f_UP = (double)nUP/(double)nTot;
-    
-    /// Average top mass for likelihood
-    aveTopMassLL = aveTopMass[1];
-    //aveTopMassLL = f_CP*aveTopMass[1] + f_WP*aveTopMass[4] + f_UP*aveTopMass[3];
-    //aveTopMassLL = f_CP*aveTopMass[1] + (f_WP+f_UP)*aveTopMass[2];
-    cout << "LogLike::Average top quark mass = " << aveTopMassLL << endl;
   }
   
   if (calculateAverageMass)
@@ -647,8 +656,6 @@ int main(int argc, char* argv[])
     txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
     txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
     txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
-    txtMassRecoWPWOk.open(("averageMass/mass_reco_wrongPerm_WOk_TT_"+dateString+".txt").c_str());
-    txtMassRecoWPWNotOk.open(("averageMass/mass_reco_wrongPerm_WNotOk_TT_"+dateString+".txt").c_str());
   }
   
   
@@ -670,7 +677,7 @@ int main(int argc, char* argv[])
   cout << "The muon trigger scale factors will be scaled by " << fracHLT[0] << " for HLTv2 and " << fracHLT[1] << " for HLTv3." << endl;
   
   
-  
+  bool hasFoundTTbar = false;
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
@@ -692,6 +699,7 @@ int main(int argc, char* argv[])
     else if ( dataSetName.find("TT") != std::string::npos )
     {
       isTTbar = true;
+      hasFoundTTbar = true;
     }
     
     if (testTTbarOnly && ! isTTbar ) continue;
@@ -705,7 +713,7 @@ int main(int argc, char* argv[])
     if (calculateLikelihood)
     {
       txtLogLike << endl << "#  Dataset: " << dataSetName << endl;
-      txtLogLikeTest << endl << "#  Dataset: " << dataSetName << endl;
+      if (test) txtLogLikeTest << endl << "#  Dataset: " << dataSetName << endl;
     }
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
@@ -847,7 +855,10 @@ int main(int argc, char* argv[])
           labelB2 = iJet;
         }
       }
-        
+      
+      
+      if (! applyWidthSF ) widthSF = 1.;
+      else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
       
       /// Make plots
       if (makePlots)
@@ -862,7 +873,8 @@ int main(int argc, char* argv[])
       /////////////////////////////
       
       //if ( isTTbar || dataSetName.find("ST") != std::string::npos )  // no matches for ST
-      if (isTTbar)
+      //if (isTTbar)
+      if (! isData)
       {
         for (int iMC = 0; iMC < nMCParticles; iMC++)
         {
@@ -935,7 +947,7 @@ int main(int argc, char* argv[])
         ///  Scale factor ttbar sample width  ///
         /////////////////////////////////////////
         
-        if (isTTbar && applyWidthSF)
+        if ( applyWidthSF && isTTbar )
         {
           if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
           else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
@@ -1022,7 +1034,7 @@ int main(int argc, char* argv[])
         }  // end doMatching
         
         
-      }  // end if TT
+      }  // end if not data
       
       
       
@@ -1104,7 +1116,7 @@ int main(int argc, char* argv[])
         selectedJetsKFcorrected.push_back(selectedJets[labelsReco[1]]);
         selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
       }
-      if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
+      else if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
       
       Wmass_reco_orig = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
       Wmass_reco_kf = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
@@ -1114,33 +1126,10 @@ int main(int argc, char* argv[])
       toppt_reco_kf = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
       
       if ( topmass_reco_kf < 0. )
-      {
-        cout << endl <<"Event " << setw(5) << right << ievt << "   ";
-        cout << "Top mass after kinFit is negative! I.e. " << topmass_reco_kf << " Before kinFit: " << topmass_reco_orig << "  ievt " << ievt << endl;
-        cout << "Mass jet 1 & jet 2: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M() << "; Mass jet 1 & jet 3: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[2]).M() << "; Mass jet 2 & jet 3: " << (selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M() << endl;
-        //if (test)
-        //{
-          cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << "; Jet 3: pT " << selectedJets[labelsReco[2]].Pt() << endl;
-          cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << "; Jet 3: pT " << selectedJetsKFcorrected[2].Pt() << endl;
-          cout << "Original:   Jet 1: px " << selectedJets[labelsReco[0]].Px() << "; py " << selectedJets[labelsReco[0]].Py() << "; pz " << selectedJets[labelsReco[0]].Pz() << "; E " << selectedJets[labelsReco[0]].E() << endl;
-          cout << "Corrected:  Jet 1: px " << selectedJetsKFcorrected[0].Px() << "; py " << selectedJetsKFcorrected[0].Py() << "; pz " << selectedJetsKFcorrected[0].Pz() << "; E " << selectedJetsKFcorrected[0].E() << endl;
-          cout << "Original:   Jet 2: px " << selectedJets[labelsReco[1]].Px() << "; py " << selectedJets[labelsReco[1]].Py() << "; pz " << selectedJets[labelsReco[1]].Pz() << "; E " << selectedJets[labelsReco[1]].E() << endl;
-          cout << "Corrected:  Jet 2: px " << selectedJetsKFcorrected[1].Px() << "; py " << selectedJetsKFcorrected[1].Py() << "; pz " << selectedJetsKFcorrected[1].Pz() << "; E " << selectedJetsKFcorrected[1].E() << endl;
-          cout << "Original:   Jet 1: pt " << selectedJets[labelsReco[0]].Pt() << "; eta " << selectedJets[labelsReco[0]].Eta() << "; phi " << selectedJets[labelsReco[0]].Phi() << "; M " << selectedJets[labelsReco[0]].M() << endl;
-          cout << "Corrected:  Jet 1: pt " << selectedJetsKFcorrected[0].Pt() << "; eta " << selectedJetsKFcorrected[0].Eta() << "; phi " << selectedJetsKFcorrected[0].Phi() << "; M " << selectedJetsKFcorrected[0].M() << endl;
-          cout << "Original:   Jet 2: pt " << selectedJets[labelsReco[1]].Pt() << "; eta " << selectedJets[labelsReco[1]].Eta() << "; phi " << selectedJets[labelsReco[1]].Phi() << "; M " << selectedJets[labelsReco[1]].M() << endl;
-          cout << "Corrected:  Jet 2: pt " << selectedJetsKFcorrected[1].Pt() << "; eta " << selectedJetsKFcorrected[1].Eta() << "; phi " << selectedJetsKFcorrected[1].Phi() << "; M " << selectedJetsKFcorrected[1].M() << endl;
-          cout << "Original:   Jet 1: x " << selectedJets[labelsReco[0]].X() << "; y " << selectedJets[labelsReco[0]].Y() << "; z " << selectedJets[labelsReco[0]].Z() << "; t " << selectedJets[labelsReco[0]].T() << endl;
-          cout << "Corrected:  Jet 1: x " << selectedJetsKFcorrected[0].X() << "; y " << selectedJetsKFcorrected[0].Y() << "; z " << selectedJetsKFcorrected[0].Z() << "; t " << selectedJetsKFcorrected[0].T() << endl;
-          cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
-          cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
-        //}
-      }
+        PrintKFDebug(ievt);
       
       if ( doKinFit && makePlots )
-      {
         FillKinFitPlots(d);
-      }
       
       
       //  Leptonic variables
@@ -1153,6 +1142,11 @@ int main(int argc, char* argv[])
       
       //Average mass
       if (calculateAverageMass) txtMassReco << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+      
+      
+      double tempAveMass = topmass_reco_kf/aveTopMassLL;
+      if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
+      if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
       
       //Fill histos
       if (makePlots)
@@ -1170,21 +1164,8 @@ int main(int argc, char* argv[])
           histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
         }
         
-        MSPlot["Reco_mTop_div_aveMTopMatch"]->Fill(topmass_reco_kf/aveTopMass[0], datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["Reco_mTop_div_aveMTopTTReco"]->Fill(topmass_reco_kf/aveTopMass[7], datasets[d], true, Luminosity*scaleFactor);
-        MSPlot["Reco_mTop_div_aveMTopAllReco"]->Fill(topmass_reco_kf/aveTopMass[15], datasets[d], true, Luminosity*scaleFactor);
-        
-        if (isData)
-        {
-          histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(topmass_reco_kf/aveTopMass[14]);
-          MSPlot["Reco_mTop_div_aveMTop_stack"]->Fill(topmass_reco_kf/aveTopMass[14], datasets[d], true, Luminosity*scaleFactor*widthSF);
-        }
-        else
-        {
-          histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(topmass_reco_kf/aveTopMass[d+6]);
-          MSPlot["Reco_mTop_div_aveMTop_stack"]->Fill(topmass_reco_kf/aveTopMass[d+6], datasets[d], true, Luminosity*scaleFactor*widthSF);
-          histo1D["mTop_div_aveMTop_allMCReco"]->Fill(topmass_reco_kf/aveTopMass[15]);
-        }
+        histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(tempAveMass);
+        MSPlot["Reco_mTop_div_aveMTop"]->Fill(tempAveMass, datasets[d], true, Luminosity*scaleFactor*widthSF);
         
       }  // end fill plots
       
@@ -1192,13 +1173,6 @@ int main(int argc, char* argv[])
       //Likelihood
       if (calculateLikelihood)
       {
-        if (! isData && ! applyWidthSF ) widthSF = 1.;
-        else if (! isData && ! isTTbar && applyWidthSF) widthSF = 1.;
-        
-        double tempAveMass = topmass_reco_kf/aveTopMassLL;
-        if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
-        if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
-        
         if ( tempAveMass > 0.5 && tempAveMass < 1.5)
         {
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
@@ -1260,49 +1234,17 @@ int main(int argc, char* argv[])
       // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
-      double tempAveMass = topmass_reco_kf/aveTopMass[1];
       
       //if (isTTbar)
       if (! isData)
       {
-        if (! applyWidthSF ) widthSF = 1.;
-        else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;
-        
         if (hadronicTopJetsMatched)
         {
           /// Correct match
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
+            isCP = true;
             nofCorrectlyMatched++;
-            if (calculateAverageMass) txtMassRecoCP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-            else if (makePlots)
-            {
-              histo1D["mTop_div_aveMTop_TT_reco_CP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
-              histo1D["minMlb_reco_CP"]->Fill(reco_minMlb, widthSF);
-              histo1D["dR_lep_b_lep_reco_CP"]->Fill(reco_dRLepB_lep, widthSF);
-              histo1D["dR_lep_b_had_reco_CP"]->Fill(reco_dRLepB_had, widthSF);
-              histo1D["ttbar_mass_reco_CP"]->Fill(reco_ttbarMass, widthSF);
-              histo2D["dR_lep_b_lep_vs_had_CP"]->Fill(reco_dRLepB_lep, reco_dRLepB_had, widthSF);
-              histo2D["ttbar_mass_vs_minMlb_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 3. )
-                histo2D["ttbar_mass_vs_minMlb_dRlepCut_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_had > 1.2 )
-                histo2D["ttbar_mass_vs_minMlb_dRhadCut_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_had > 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 3. && reco_dRLepB_had > 1.2 )
-                histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if (doKinFit) MSPlot["KF_top_mass_corr_CP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-              if (doKinFit)
-              {
-                histo1D["KF_top_mass_corr_CP"]->Fill(topmass_reco_kf, widthSF);
-                histo1D["KF_Chi2_CP"]->Fill(kFitChi2);
-              }
-            }
             
             if ( tempAveMass > 0.5 && tempAveMass < 1.5)
             {
@@ -1311,94 +1253,11 @@ int main(int argc, char* argv[])
               if (isTTbar) nofCP_TT++;
             }
             
-            if (calculateLikelihood)
-            {
-              
-              for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-              {
-                fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
-                fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
-                if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
-                  fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
-              }
-
-              /// make loglikelihood only with events that have minimum
-              isGoodLL = false;
-              for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-              {
-                if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
-                {
-                  isGoodLL = true;
-                  break;
-                }
-              }
-              if (isGoodLL)
-              {
-                for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-                {
-                  fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
-                }
-              }
-            }
-            
-            /// write debug file
-            if ( calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-                 || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-                 || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-            {
-              if (test)
-              {
-                txtLogLikeTest << setw(8) << right << ievt << "  CP  ";
-                txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
-              }
-              if (makePlots)
-              {
-                histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
-                histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
-                histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
-                histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
-                histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
-              }
-            }
-            
           }  // end corr match
           else  // wrong permutation
           {
+            isWP = true;
             nofNotCorrectlyMatched++;
-            if (calculateAverageMass)
-            {
-              txtMassRecoWP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-              txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-            }
-            else if (makePlots)
-            {
-              histo1D["mTop_div_aveMTop_TT_reco_WP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
-              histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
-              histo1D["minMlb_reco_WP"]->Fill(reco_minMlb, widthSF);
-              histo1D["dR_lep_b_lep_reco_WP"]->Fill(reco_dRLepB_lep, widthSF);
-              histo1D["dR_lep_b_had_reco_WP"]->Fill(reco_dRLepB_had, widthSF);
-              histo1D["ttbar_mass_reco_WP"]->Fill(reco_ttbarMass, widthSF);
-              histo2D["dR_lep_b_lep_vs_had_WP"]->Fill(reco_dRLepB_lep, reco_dRLepB_had, widthSF);
-              histo2D["ttbar_mass_vs_minMlb_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 3. )
-                histo2D["ttbar_mass_vs_minMlb_dRlepCut_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_had > 1.2 )
-                histo2D["ttbar_mass_vs_minMlb_dRhadCut_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_had > 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 3. && reco_dRLepB_had > 1.2 )
-                histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
-                histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-              if (doKinFit) MSPlot["KF_top_mass_corr_WP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-              if (doKinFit)
-              {
-                histo1D["KF_top_mass_corr_WP"]->Fill(topmass_reco_kf, widthSF);
-                histo1D["KF_Chi2_WP"]->Fill(kFitChi2);
-              }
-            }
             
             if ( tempAveMass > 0.5 && tempAveMass < 1.5)
             {
@@ -1407,65 +1266,11 @@ int main(int argc, char* argv[])
               if (isTTbar) nofWP_TT++;
             }
             
-            /// write debug file
-            if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-                 || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-                 || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-            {
-              txtLogLikeTest << setw(8) << right << ievt << "  WP  ";
-              txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
-            }
-
-            if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) )
-            {
-              if (calculateAverageMass) txtMassRecoWPWOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-              else if (makePlots)
-                histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"]->Fill(topmass_reco_kf/aveTopMass[5], widthSF);
-            }
-            else
-            {
-              if (calculateAverageMass) txtMassRecoWPWNotOk << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-              else if (makePlots)
-                histo1D["mTop_div_aveMTop_TT_reco_WP_WNotOk"]->Fill(topmass_reco_kf/aveTopMass[6], widthSF);
-            }
           }  // end wrong perm
         }  // end hadrTopMatch
         else  // no match
         {
-          if (calculateAverageMass)
-          {
-            txtMassRecoUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-            txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
-          }
-          else if (makePlots)
-          {
-            histo1D["mTop_div_aveMTop_TT_reco_UP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
-            histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(topmass_reco_kf/aveTopMass[1], widthSF);
-            histo1D["minMlb_reco_UP"]->Fill(reco_minMlb, widthSF);
-            histo1D["dR_lep_b_lep_reco_UP"]->Fill(reco_dRLepB_lep, widthSF);
-            histo1D["dR_lep_b_had_reco_UP"]->Fill(reco_dRLepB_had, widthSF);
-            histo1D["ttbar_mass_reco_UP"]->Fill(reco_ttbarMass, widthSF);
-            histo2D["dR_lep_b_lep_vs_had_UP"]->Fill(reco_dRLepB_lep, reco_dRLepB_had, widthSF);
-            histo2D["ttbar_mass_vs_minMlb_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_lep < 3. )
-              histo2D["ttbar_mass_vs_minMlb_dRlepCut_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_lep < 2. )
-              histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_had > 1.2 )
-              histo2D["ttbar_mass_vs_minMlb_dRhadCut_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_had > 2. )
-              histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_lep < 3. && reco_dRLepB_had > 1.2 )
-              histo2D["ttbar_mass_vs_minMlb_dRBothCuts_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if ( reco_dRLepB_lep < 2. && reco_dRLepB_had > 2. )
-              histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UP"]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
-            if (doKinFit) MSPlot["KF_top_mass_corr_UP"]->Fill(topmass_reco_kf, datasets[d], true, Luminosity*scaleFactor*widthSF);
-            if (doKinFit)
-            {
-              histo1D["KF_top_mass_corr_UP"]->Fill(topmass_reco_kf, widthSF);
-              histo1D["KF_Chi2_UP"]->Fill(kFitChi2);
-            }
-          }
+          isUP = true;
           
           if ( tempAveMass > 0.5 && tempAveMass < 1.5)
           {
@@ -1474,23 +1279,147 @@ int main(int argc, char* argv[])
             if (isTTbar) nofUP_TT++;
           }
           
-          /// write debug file
-          if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-               || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-               || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-          {
-            txtLogLikeTest << setw(8) << right << ievt << "  UP  ";
-            txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
-          }
-            
         }  // end no match
-        //if (test) cout << "checked match" << endl;
-      }  // end TT / ! isData
+        
+        
+        if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
+        cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
+        
+      }  // not Data
+      
+      
+      string catSuffix = "";
+      string catSuffixList[] = {"_CP", "_WP", "_UP"};
+      if (isCP) catSuffix = catSuffixList[0];
+      else if (isWP) catSuffix = catSuffixList[1];
+      else if (isUP) catSuffix = catSuffixList[2];
+      
+      
+      if (calculateAverageMass && ! isData)
+      {
+        if (isCP) txtMassRecoCP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+        else
+        {
+          txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+          if (isWP)
+            txtMassRecoWP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+          else if (isUP)
+            txtMassRecoUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+        }
+      }  // end aveMassCalc
+      
       
       if (makePlots)
       {
-        histo1D["mTop_div_aveMTop_bkgd"]->Fill(topmass_reco_kf/aveTopMass[15]);
+        if (! isData)
+        {
+          histo1D["mTop_div_aveMTop_bkgd"]->Fill(tempAveMass);
+          if ( isWP || isUP ) histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(tempAveMass, widthSF);
+          histo1D[("mTop_div_aveMTop_TT_reco"+catSuffix).c_str()]->Fill(tempAveMass, widthSF);
+          histo1D[("minMlb_reco"+catSuffix).c_str()]->Fill(reco_minMlb, widthSF);
+          histo1D[("dR_lep_b_lep_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, widthSF);
+          histo1D[("dR_lep_b_had_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_had, widthSF);
+          histo1D[("ttbar_mass_reco"+catSuffix).c_str()]->Fill(reco_ttbarMass, widthSF);
+          histo2D[("dR_lep_b_lep_vs_had"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, reco_dRLepB_had, widthSF);
+          histo2D[("ttbar_mass_vs_minMlb"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+          if ( reco_dRLepB_lep < 3. )
+          {
+            histo2D[("ttbar_mass_vs_minMlb_dRlepCut"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+            if ( reco_dRLepB_had > 1.2 )
+              histo2D[("ttbar_mass_vs_minMlb_dRBothCuts"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+
+            if ( reco_dRLepB_lep < 2. )
+            {
+              histo2D[("ttbar_mass_vs_minMlb_dRlepCutHard"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+              if ( reco_dRLepB_had > 2. )
+                histo2D[("ttbar_mass_vs_minMlb_dRBothCutsHard"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+            }
+          }
+          if ( reco_dRLepB_had > 1.2 )
+          {
+            histo2D[("ttbar_mass_vs_minMlb_dRhadCut"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+            if ( reco_dRLepB_had > 2. )
+              histo2D[("ttbar_mass_vs_minMlb_dRhadCutHard"+catSuffix).c_str()]->Fill(reco_minMlb, reco_ttbarMass, widthSF);
+          }
+        }
+        
+        if (doKinFit)
+        {
+          int dMSP = d;
+          if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+          else if (isTTbar && isWP) dMSP = d+1;
+          else if (isTTbar && isUP) dMSP = d+2;
+          
+          MSPlot["KF_top_mass_corr_test"]->Fill(topmass_reco_kf, datasetsMSP[dMSP], true, Luminosity*scaleFactor*widthSF);
+          MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[dMSP], true, Luminosity*scaleFactor*widthSF);
+          
+          if (! isData)
+          {
+            histo1D[("KF_top_mass_corr"+catSuffix).c_str()]->Fill(topmass_reco_kf, widthSF);
+            histo1D[("KF_Chi2"+catSuffix).c_str()]->Fill(kFitChi2);
+          }
+        }
+      }  // end makePlots
+      
+      
+      if ( isCP && calculateLikelihood )
+      {
+        for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+        {
+          fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
+          fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
+          if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
+            fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
+        }
+        
+        /// make loglikelihood only with events that have minimum
+        isGoodLL = false;
+        for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
+        {
+          if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
+          {
+            isGoodLL = true;
+            break;
+          }
+        }
+        if (isGoodLL)
+        {
+          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+          {
+            fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
+          }
+        }
+        
+        /// write debug file
+        if ( ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+             || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+             || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+        {
+          if (makePlots)
+          {
+            histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
+            histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
+            histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
+            histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
+            histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
+          }
+        }
+        
+      }  // end isCP && likelihood
+
+      /// write debug file
+      if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+           || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+           || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+      {
+        txtLogLikeTest << setw(8) << right << ievt;
+        if (isCP) cout << "  CP  ";
+        else if (isWP) cout << "  WP  ";
+        else if (isUP) cout << "  UP  ";
+        txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
       }
+      
+      
       
       
     }  // end loop events
@@ -1555,11 +1484,9 @@ int main(int argc, char* argv[])
     txtMassRecoWPUP.close();
     txtMassRecoUP.close();
     txtMassRecoWP.close();
-    txtMassRecoWPWOk.close();
-    txtMassRecoWPWNotOk.close();
   }
   
-  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)" << endl;
+  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
   cout << "                                  weighted: CP: " << nofCP_weighted << " (" << nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << nofCP_weighted+nofWP_weighted+nofUP_weighted << endl;
   cout << "                               (TTbar only) CP: " << nofCP_TT << "  WP: " << nofWP_TT << "  UP: " << nofUP_TT << endl;
   
@@ -1567,66 +1494,12 @@ int main(int argc, char* argv[])
   if (calculateLikelihood)
   {
     txtLogLike.close();
-    txtLogLikeTest.close();
+    if (test) txtLogLikeTest.close();
     
     cout << "Minimum top mass divided by average top mass: " << minMtDivAveMt << endl;
     cout << "Maximum top mass divided by average top mass: " << maxMtDivAveMt << endl;
     
-    cout << endl << "likelihood values (all MC) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << loglike[iWidth]/(1e+4);
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "} *10^4;" << endl << "likelihood values (data-only) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << loglike_data[iWidth];
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "};" << endl << "likelihood values (only good MC events) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << loglike_onlyGoodEvts[iWidth]/(1e+2);
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "} *10^2;" << endl << "likelihood values (only good data events) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << loglike_onlyGoodEvts_data[iWidth];
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "};" << endl << "fake likelihood values (CP) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << fakelike_CP[iWidth]/(1e+6);
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "} *10^6;" << endl << "fake likelihood values (CP - only good events) : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << fakelike_onlyGoodEvts[iWidth]/(1e+4);
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "} *10^4;" << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet : {";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << fakelike_CP_Res[iWidth];
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << "};" << endl << "widths: ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << widthArray[iWidth];
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << endl << "gammas: ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      cout << gammaArray[iWidth];
-      if ( iWidth != nWidthsLL-1 ) cout << ", ";
-    }
-    cout << endl << endl;
+    PrintMtmLikelihood();
     
     /// Print output to file
     string llFileName = "output_loglikelihood_gamma.txt";
@@ -1666,44 +1539,9 @@ int main(int argc, char* argv[])
     }
   }
   
-  //////////////////////////////////////////
-  ///  Check Shape Changing Systematics  ///
-  //////////////////////////////////////////
   
-  int sumJER = 0, sumJES = 0, sumPU = 0;
-  for (unsigned int d = 0; d < datasets.size(); d++)
-  {
-    sumJER += vJER[d];
-    sumJES += vJES[d];
-    sumPU  += vPU[d];
-  }
-  
-  if ( sumJER == 0 && sumJES == 0 && sumPU == 0 )
-  {
-    strSyst = "nominal";
-  }
-  else if ( abs(sumJER) == datasets.size() && sumJES == 0 && sumPU == 0 )
-  {
-    if ( sumJER > 0 ) { strSyst = "JERup";}
-    else if ( sumJER < 0 ) { strSyst = "JERdown";}
-  }
-  else if ( sumJER == 0 && abs(sumJES) == datasets.size() && sumPU == 0 )
-  {
-    if ( sumJES > 0 ) { strSyst = "JESup";}
-    else if ( sumJES < 0 ) { strSyst = "JESdown";}
-  }
-  else if ( sumJER == 0 && sumJES == 0 && abs(sumPU) == datasets.size() )
-  {
-    if ( sumPU > 0 ) { strSyst = "PUup";}
-    else if ( sumPU < 0 ) { strSyst = "PUdown";}
-  }
-  else if (! testTTbarOnly)
-  {
-    cerr << "Shape changing systematics not consistent accross datasets or multiple applied at once" << endl;
-    cerr << "Exiting...." << endl;
-    exit(1);
-  }
-  if (! testTTbarOnly) cout << " - Systematics confirmed to be " << strSyst << endl;
+  ///  Check Shape Changing Systematics
+  CheckSystematics(vJER, vJES, vPU);
   
   
   if (test)
@@ -1992,13 +1830,10 @@ void InitMSPlots()
   MSPlot["Reco_dR_lep_b"] = new MultiSamplePlot(datasets, "Reco_dR_lep_b", 25, 0, 5, "#Delta R(l,b)");
   
   
-  MSPlot["Reco_mTop_div_aveMTopMatch"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (from matched events)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-  MSPlot["Reco_mTop_div_aveMTopTTReco"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (of reconstructed TT events)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-  MSPlot["Reco_mTop_div_aveMTopAllReco"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass (of reconstructed events from all datasets)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-  
-  MSPlot["Reco_mTop_div_aveMTop_stack"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
+  MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasets, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   
   /// KinFitter
+  MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 20);
   MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasets, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
   MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasets, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
   MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasets, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
@@ -2006,9 +1841,7 @@ void InitMSPlots()
   MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasets, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf} [GeV]");
   MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasets, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf} [GeV]");
   
-  MSPlot["KF_top_mass_corr_CP"] = new MultiSamplePlot(datasets, "Top mass after kinFitter for correct match (CP)", 400, 0, 800, "m_{t,kf} [GeV]");
-  MSPlot["KF_top_mass_corr_WP"] = new MultiSamplePlot(datasets, "Top mass after kinFitter for wrong permutations (WP)", 400, 0, 800, "m_{t,kf} [GeV]");
-  MSPlot["KF_top_mass_corr_UP"] = new MultiSamplePlot(datasets, "Top mass after kinFitter for no match (UP)", 400, 0, 800, "m_{t,kf} [GeV]");
+  MSPlot["KF_top_mass_corr_test"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter __ test splitting TT", 400, 0, 800, "m_{t,kf} [GeV]");
 }
 
 void InitHisto1D()
@@ -2030,8 +1863,6 @@ void InitHisto1D()
   histo1D["mTop_div_aveMTop_TT_reco_WPUP"] = new TH1F("mTop_div_aveMTop_TT_reco_WPUP","Top mass divided by average top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT_reco_UP"] = new TH1F("mTop_div_aveMTop_TT_reco_UP","Top mass divided by average top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT_reco_WP"] = new TH1F("mTop_div_aveMTop_TT_reco_WP","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WP_WOk"] = new TH1F("mTop_div_aveMTop_TT_reco_WP_WOk","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation, W jets correct); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WP_WNotOk"] = new TH1F("mTop_div_aveMTop_TT_reco_WP_WNotOk","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation, W jets not correct); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
@@ -2448,6 +2279,9 @@ void ClearVars()
   labelMlb = -9999;
   labelMl_nonb = -9999;
   massForWidth = 0.01;
+  isCP = false;
+  isWP = false;
+  isUP = false;
   kFitVerbosity = false;
   kFitChi2 = 99.;
   Wmass_reco_orig = -1.;
@@ -2641,20 +2475,59 @@ void GetHLTFraction(double* fractions)
   ClearMetaData();
 }
 
+void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)
+{
+  int sumJER = 0, sumJES = 0, sumPU = 0;
+  for (unsigned int d = 0; d < datasets.size(); d++)
+  {
+    sumJER += vJER[d];
+    sumJES += vJES[d];
+    sumPU  += vPU[d];
+  }
+  
+  if ( sumJER == 0 && sumJES == 0 && sumPU == 0 )
+  {
+    strSyst = "nominal";
+  }
+  else if ( abs(sumJER) == datasets.size() && sumJES == 0 && sumPU == 0 )
+  {
+    if ( sumJER > 0 ) { strSyst = "JERup";}
+    else if ( sumJER < 0 ) { strSyst = "JERdown";}
+  }
+  else if ( sumJER == 0 && abs(sumJES) == datasets.size() && sumPU == 0 )
+  {
+    if ( sumJES > 0 ) { strSyst = "JESup";}
+    else if ( sumJES < 0 ) { strSyst = "JESdown";}
+  }
+  else if ( sumJER == 0 && sumJES == 0 && abs(sumPU) == datasets.size() )
+  {
+    if ( sumPU > 0 ) { strSyst = "PUup";}
+    else if ( sumPU < 0 ) { strSyst = "PUdown";}
+  }
+  else if (! testTTbarOnly)
+  {
+    cerr << "Shape changing systematics not consistent accross datasets or multiple applied at once" << endl;
+    cerr << "Exiting...." << endl;
+    exit(1);
+  }
+  if (! testTTbarOnly) cout << " - Systematics confirmed to be " << strSyst << endl;
+}
+
 double BreitWigner(double topMass, double scale)
 {
   double BWmass = genTopMass;
   double BWgamma = scale*genTopWidth;
   double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
-  double numerator = 2*sqrt(2)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
-  double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(BWmass*BWgamma, 2);
+  double numerator = 2.*sqrt(2.)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
+  double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(topMass, 4)*pow(BWgamma/BWmass, 2);
   
   return numerator/denominator;
 }
 
 double eventWeightCalculator(double topMass, double scale)
 {
-  return BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
+  Double_t corrNEvts = 1./(corr[0]*scale+corr[1]);
+  return corrNEvts * BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
 }
 
 Double_t voigt(Double_t *x, Double_t *par) {
@@ -2732,3 +2605,88 @@ Double_t fakeLikelihood(Double_t *x, Double_t *par) {
 Double_t widthToGammaTranslation(Double_t *x) {
   return gammaConvConst + gammaConvRico * x[0];
 }
+
+void PrintMtmLikelihood()
+{
+  cout << endl << "likelihood values (all MC) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << loglike[iWidth]/(1e+4);
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "} *10^4;" << endl << "likelihood values (data-only) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << loglike_data[iWidth];
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "};" << endl << "likelihood values (only good MC events) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << loglike_onlyGoodEvts[iWidth]/(1e+2);
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "} *10^2;" << endl << "likelihood values (only good data events) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << loglike_onlyGoodEvts_data[iWidth];
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "};" << endl << "fake likelihood values (CP) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << fakelike_CP[iWidth]/(1e+6);
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "} *10^6;" << endl << "fake likelihood values (CP - only good events) : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << fakelike_onlyGoodEvts[iWidth]/(1e+4);
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "} *10^4;" << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet : {";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << fakelike_CP_Res[iWidth];
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << "};" << endl << "widths: ";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << widthArray[iWidth];
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << endl << "gammas: ";
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    cout << gammaArray[iWidth];
+    if ( iWidth != nWidthsLL-1 ) cout << ", ";
+  }
+  cout << endl << endl;
+}
+
+void PrintKFDebug(int ievt)
+{
+  cout << endl <<"Event " << setw(5) << right << ievt << "   ";
+  cout << "Top mass after kinFit is negative! I.e. " << topmass_reco_kf << " Before kinFit: " << topmass_reco_orig << "  ievt " << ievt << endl;
+  cout << "Mass jet 1 & jet 2: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M() << "; Mass jet 1 & jet 3: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[2]).M() << "; Mass jet 2 & jet 3: " << (selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M() << endl;
+  //if (test)
+  //{
+    cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << "; Jet 3: pT " << selectedJets[labelsReco[2]].Pt() << endl;
+    cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << "; Jet 3: pT " << selectedJetsKFcorrected[2].Pt() << endl;
+    cout << "Original:   Jet 1: px " << selectedJets[labelsReco[0]].Px() << "; py " << selectedJets[labelsReco[0]].Py() << "; pz " << selectedJets[labelsReco[0]].Pz() << "; E " << selectedJets[labelsReco[0]].E() << endl;
+    cout << "Corrected:  Jet 1: px " << selectedJetsKFcorrected[0].Px() << "; py " << selectedJetsKFcorrected[0].Py() << "; pz " << selectedJetsKFcorrected[0].Pz() << "; E " << selectedJetsKFcorrected[0].E() << endl;
+    cout << "Original:   Jet 2: px " << selectedJets[labelsReco[1]].Px() << "; py " << selectedJets[labelsReco[1]].Py() << "; pz " << selectedJets[labelsReco[1]].Pz() << "; E " << selectedJets[labelsReco[1]].E() << endl;
+    cout << "Corrected:  Jet 2: px " << selectedJetsKFcorrected[1].Px() << "; py " << selectedJetsKFcorrected[1].Py() << "; pz " << selectedJetsKFcorrected[1].Pz() << "; E " << selectedJetsKFcorrected[1].E() << endl;
+    cout << "Original:   Jet 1: pt " << selectedJets[labelsReco[0]].Pt() << "; eta " << selectedJets[labelsReco[0]].Eta() << "; phi " << selectedJets[labelsReco[0]].Phi() << "; M " << selectedJets[labelsReco[0]].M() << endl;
+    cout << "Corrected:  Jet 1: pt " << selectedJetsKFcorrected[0].Pt() << "; eta " << selectedJetsKFcorrected[0].Eta() << "; phi " << selectedJetsKFcorrected[0].Phi() << "; M " << selectedJetsKFcorrected[0].M() << endl;
+    cout << "Original:   Jet 2: pt " << selectedJets[labelsReco[1]].Pt() << "; eta " << selectedJets[labelsReco[1]].Eta() << "; phi " << selectedJets[labelsReco[1]].Phi() << "; M " << selectedJets[labelsReco[1]].M() << endl;
+    cout << "Corrected:  Jet 2: pt " << selectedJetsKFcorrected[1].Pt() << "; eta " << selectedJetsKFcorrected[1].Eta() << "; phi " << selectedJetsKFcorrected[1].Phi() << "; M " << selectedJetsKFcorrected[1].M() << endl;
+    cout << "Original:   Jet 1: x " << selectedJets[labelsReco[0]].X() << "; y " << selectedJets[labelsReco[0]].Y() << "; z " << selectedJets[labelsReco[0]].Z() << "; t " << selectedJets[labelsReco[0]].T() << endl;
+    cout << "Corrected:  Jet 1: x " << selectedJetsKFcorrected[0].X() << "; y " << selectedJetsKFcorrected[0].Y() << "; z " << selectedJetsKFcorrected[0].Z() << "; t " << selectedJetsKFcorrected[0].T() << endl;
+    cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
+    cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
+  //}
+}
+
+
