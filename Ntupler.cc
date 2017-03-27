@@ -197,7 +197,7 @@ int main (int argc, char *argv[])
   bool applyJERup = false;
   bool applyJERdown = false;
   bool applyJEC = true;
-  bool applyJESup = false;
+  bool applyJESup = false;  // NOT IMPLEMENTED YET !!
   bool applyJESdown = false;
   bool calculateBTagSF = false;
   bool applyBTagSF = true;
@@ -462,7 +462,7 @@ int main (int argc, char *argv[])
   float electronPTVeto = 15.; // GeV
   float electronEtaVeto = 2.5;
   
-  float jetPT = 20.; // GeV, 30 GeV for selected jets
+  float jetPT = 30.; // GeV
   float jetEta = 2.4;  // to allow b tagging
   
   
@@ -696,15 +696,6 @@ int main (int argc, char *argv[])
     Double_t jet_M[20];
     Double_t jet_bdiscr[20];
     
-    Int_t nJetsUncorr;
-    Int_t jet_uncorr_charge[20];
-    Double_t jet_uncorr_pt[20];
-    Double_t jet_uncorr_phi[20];
-    Double_t jet_uncorr_eta[20];
-    Double_t jet_uncorr_E[20];
-    Double_t jet_uncorr_M[20];
-    Double_t jet_uncorr_bdiscr[20];
-    
     /// met
     Double_t met_pt;
     Double_t met_phi;
@@ -881,15 +872,6 @@ int main (int argc, char *argv[])
     myTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
     myTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
     myTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
-    
-//    globalTree->Branch("nJetsUncorr",&nJetsUncorr,"nJetsUncorr/I");
-//    globalTree->Branch("jet_uncorr_charge",&jet_uncorr_charge,"jet_uncorr_charge[nJetsUncorr]/I");
-//    globalTree->Branch("jet_uncorr_pt",&jet_uncorr_pt,"jet_uncorr_pt[nJetsUncorr]/D");
-//    globalTree->Branch("jet_uncorr_phi",&jet_uncorr_phi,"jet_uncorr_phi[nJetsUncorr]/D");
-//    globalTree->Branch("jet_uncorr_eta",&jet_uncorr_eta,"jet_uncorr_eta[nJetsUncorr]/D");
-//    globalTree->Branch("jet_uncorr_E",&jet_uncorr_E,"jet_uncorr_E[nJetsUncorr]/D");
-//    globalTree->Branch("jet_uncorr_M",&jet_uncorr_M,"jet_uncorr_M[nJetsUncorr]/D");
-//    globalTree->Branch("jet_uncorr_bdiscr",&jet_uncorr_bdiscr,"jet_uncorr_bdiscr[nJetsUncorr]/D");
     
     // met
 //    globalTree->Branch("met_pt", &met_pt, "met_pt/D");
@@ -1095,7 +1077,6 @@ int main (int argc, char *argv[])
       nElectrons = -1;
       nMuons = -1;
       nJets = -1;
-      nJetsUncorr = -1;
       
       for (Int_t i = 0; i < 10; i++)
       {
@@ -1143,14 +1124,6 @@ int main (int argc, char *argv[])
         jet_E[i] = 0.;
         jet_M[i] = 0.;
         jet_bdiscr[i] = -1.;
-        
-        jet_uncorr_charge[i] = 0;
-        jet_uncorr_pt[i] = 0.;
-        jet_uncorr_phi[i] = 0.;
-        jet_uncorr_eta[i] = 0.;
-        jet_uncorr_E[i] = 0.;
-        jet_uncorr_M[i] = 0.;
-        jet_uncorr_bdiscr[i] = -1.;
       }
       
       met_pt = 0.;
@@ -1444,19 +1417,6 @@ int main (int argc, char *argv[])
         }
       }
       
-      // without selection
-      nJetsUncorr = init_jets.size();
-      for(Int_t iJet = 0; iJet < nJetsUncorr; iJet++)
-      {
-        jet_charge[iJet] = init_jets[iJet]->charge();
-        jet_pt[iJet] = init_jets[iJet]->Pt();
-        jet_phi[iJet] = init_jets[iJet]->Phi();
-        jet_eta[iJet] = init_jets[iJet]->Eta();
-        jet_E[iJet] = init_jets[iJet]->E();
-        jet_M[iJet] = init_jets[iJet]->M();
-        jet_bdiscr[iJet] = init_jets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
-      }
-      
       
       /// Fill scalefactors
       if (! isData)
@@ -1498,11 +1458,11 @@ int main (int argc, char *argv[])
               {
                 cutFlow[5]++;
                 
-                /// First 4 jets need pT > 30 GeV
-                if (selectedJets.size() >= 4)
-                {
-                  if (selectedJets[3]->Pt() < 30) selectedJets.clear();
-                }
+//                 /// First 4 jets need pT > 30 GeV
+//                 if (selectedJets.size() >= 4)
+//                 {
+//                   if (selectedJets[3]->Pt() < 30) selectedJets.clear();
+//                 }
                 
                 if ( selectedJets.size() >= 4 )
                 {

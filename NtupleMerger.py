@@ -16,7 +16,7 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170317"
+date = "170327"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
