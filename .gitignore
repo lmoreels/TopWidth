@@ -28,8 +28,8 @@ data*txt
 eqLumi.txt
 likelihood*.txt
 likelihood/*
-localgridSubmission/SubmitScripts/**
-negWeights/
+localgridSubmission/SubmitScripts/*
+negWeights/*
 negWeightsCalculator
 nohup_Ntuple/*
 nohup*.txt

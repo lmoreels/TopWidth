@@ -60,10 +60,11 @@ string whichDate(string syst)
   if ( syst.find("nominal") != std::string::npos )
   {
     if (useOldNtuples) return "160812";
-    else return "170216";
+    //else return "170216";  // WRONG JETS
+    else return "170327";  // All jets have pT > 30 GeV // WRONG JETS
   }
-  else if ( syst.find("JECup") != std::string::npos ) return "170316";
-  else if ( syst.find("JECdown") != std::string::npos ) return "170317";
+  else if ( syst.find("JECup") != std::string::npos ) return "170316";  // WRONG JETS
+  else if ( syst.find("JECdown") != std::string::npos ) return "170317";  // WRONG JETS
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
@@ -120,20 +121,10 @@ const double gammaConvConst = 0.0312447, gammaConvRico = 0.00792538;
 //const double gammaConvConst = 0., gammaConvRico = 1.;
 
 /// Average top mass
-// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
+// TT_gen_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CP/WP/UP cats (unlike name suggests)
 const int nofAveMasses = 17;
-std::array<double, nofAveMasses> aveTopMass;
-std::array<double, nofAveMasses> aveTopMass_noWidth    = {168.719, 167.105, 203.378, 204.724, 197.450, 201.182, 185.360, 193.207, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.762, 193.825};
-std::array<double, nofAveMasses> aveTopMass_KFchi2cut5 = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165.839, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
-void getAveMasses(bool useKFcut)
-{
-  for (int i = 0; i < nofAveMasses; i++)
-  {
-    if (useKFcut) aveTopMass[i] = aveTopMass_KFchi2cut5[i];
-    else aveTopMass[i] = aveTopMass_noWidth[i];
-  }
-}
+std::array<double, nofAveMasses> aveTopMass = {168.719, 167.253, 192.093, 189.672, 196.716, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -424,10 +415,10 @@ Double_t fakelike_CP_Res[nWidthsLL] = {0};
 bool isGoodLL = false;
 int nofGoodEvtsLL[10] = {0};
 int nofBadEvtsLL[10] = {0};
-Double_t aveTopMassLL = -1.;
+Double_t aveTopMassLL = aveTopMass[1];
 Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 
-ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike;
+ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass;
 
 /// Toys
 TRandom3 random3;
@@ -615,9 +606,6 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
-  /// Load ave top mass
-  getAveMasses(true);
-  aveTopMassLL = aveTopMass[1];
   
   if (calculateLikelihood)
   {
@@ -657,6 +645,15 @@ int main(int argc, char* argv[])
     txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
     txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
   }
+  
+  if (applyWidthSF)
+  {
+    txtDebugTopMass.open("debug_missing_topQ.txt");
+    txtDebugTopMass << "## Events where top quark(s) not found in genParticle collection" << endl;
+    txtDebugTopMass << "#  If lepton charge > 0 : leptonically decaying top, hadronically decaying antitop" << endl;
+    txtDebugTopMass << "#  If lepton charge < 0 : hadronically decaying top, leptonically decaying antitop" << endl;
+  }
+  
   
   
   ////////////////////////////////////
@@ -949,6 +946,13 @@ int main(int argc, char* argv[])
         
         if ( applyWidthSF && isTTbar )
         {
+          if ( topQuark == -9999 || antiTopQuark == -9999 )
+          {
+            txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
+            txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
+            continue;
+          }
+          
           if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
           else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
           
@@ -1485,6 +1489,8 @@ int main(int argc, char* argv[])
     txtMassRecoUP.close();
     txtMassRecoWP.close();
   }
+  
+  if (applyWidthSF) txtDebugTopMass.close();
   
   cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
   cout << "                                  weighted: CP: " << nofCP_weighted << " (" << nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << nofCP_weighted+nofWP_weighted+nofUP_weighted << endl;
