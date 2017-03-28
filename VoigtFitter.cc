@@ -24,6 +24,7 @@ using namespace std;
 
 bool usePredef = true;
 bool debug = false;
+bool runLocally = true;
 string systStr = "nominal";
 string suffix = "_widthx0p66";
 
@@ -31,15 +32,15 @@ string whichDate(string syst, string suff)
 {
   if ( syst.find("nominal") == 0 ) 
   {
-    if ( suff.find("widthx0p5") != std::string::npos )       return "170308_0933/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p66") != std::string::npos ) return "170308_0935/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx0p75") != std::string::npos ) return "170308_0936/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx1") != std::string::npos )    return "170308_0937/NtuplePlots_nominal.root";
+    if ( suff.find("widthx0p5") != std::string::npos )       return "170327_1507/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p66") != std::string::npos ) return "170327_1508/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx0p75") != std::string::npos ) return "170327_1509/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx1") != std::string::npos )    return "170327_1510/NtuplePlots_nominal.root";
     //else if ( suff.find("widthx1p5") != std::string::npos )  return "170213_1306/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx2") != std::string::npos )    return "170308_1059/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx3") != std::string::npos )    return "170308_1100/NtuplePlots_nominal.root";
-    else if ( suff.find("widthx4") != std::string::npos )    return "170308_1101/NtuplePlots_nominal.root";
-    else                                                     return "170308_0937/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx2") != std::string::npos )    return "170327_1538/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx3") != std::string::npos )    return "170327_1539/NtuplePlots_nominal.root";
+    else if ( suff.find("widthx4") != std::string::npos )    return "170327_1540/NtuplePlots_nominal.root";
+    else                                                     return "170327_1510/NtuplePlots_nominal.root";
     
   }
   //else if ( syst.find("JERup") == 0 ) return "161116_1401/NtuplePlots_JERup.root";
@@ -48,7 +49,7 @@ string whichDate(string syst, string suff)
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
     suffix = "";
-    return "170308_0937/NtuplePlots_nominal.root";
+    return "170327_1510/NtuplePlots_nominal.root";
   }
 }
 
@@ -190,12 +191,14 @@ int main (int argc, char *argv[])
   
   /// Declare histos to be fitted
   const string histDir = "1D_histograms/";
-  pair<const string, int> histoNames[] = { /*{"mTop_div_aveMTop_TT_matched_jets", 1},*/ {"mTop_div_aveMTop_TT_reco_CP", 1}, {"mTop_div_aveMTop_TT_reco_WP", 0}, /*{"mTop_div_aveMTop_TT_reco_WP_WOk", 0}, {"mTop_div_aveMTop_TT_reco_WP_WNotOk", 0},*/ {"mTop_div_aveMTop_TT_reco_UP", 2}, {"mTop_div_aveMTop_TT_reco_WPUP", 3} };
+  pair<const string, int> histoNames[] = { /*{"mTop_div_aveMTop_TT_matched_jets", 1},*/ {"mTop_div_aveMTop_TT_reco_CP", 1}, {"mTop_div_aveMTop_TT_reco_WP", 0}, {"mTop_div_aveMTop_TT_reco_UP", 2}, {"mTop_div_aveMTop_TT_reco_WPUP", 3} };
   int sizeHistos = sizeof(histoNames)/sizeof(histoNames[0]);
   
   /// Declare input and output files
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+whichDate(systStr, suffix);
-  string pathOutput = "OutputVoigt/ex4jets/170308/";
+  if (runLocally) inputFileName = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/"+whichDate(systStr, suffix);
+  string pathOutput = "OutputVoigt/ex4jets/170328/";
+  if (runLocally) pathOutput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/Ex4jets/170328/";
   mkdir(pathOutput.c_str(),0777);
   string outputFileName = pathOutput+"VoigtFit_"+systStr+suffix+".root";
   cout << "Output file: " << outputFileName << endl;
@@ -240,8 +243,8 @@ int main (int argc, char *argv[])
       if ( fitMin == -9. && binContent > 0.) fitMin = histo->GetXaxis()->GetBinCenter(iBin);
       if ( fitMin != -9. && fitMax == -9. && binContent < 0. ) fitMax = histo->GetXaxis()->GetBinCenter(iBin);
     }
-    if ( fitMin < 0.2 ) fitMin = 0.2;
-    if ( fitMax > 2.2 ) fitMax = 2.2;
+    if ( fitMin < 0.6 ) fitMin = 0.6;
+    if ( fitMax > 2.0 ) fitMax = 2.0;
     cout << "Fit min = " << fitMin << "; fit Max = " << fitMax << endl;
     
     /// Declare fit function
@@ -262,11 +265,11 @@ int main (int argc, char *argv[])
         //myfit->SetParLimits(0, 0.95, 1.05);
         myfit->FixParameter(0, 1.01);
         //myfit->SetParLimits(1, 1e-4, 1.e+3);
-        myfit->FixParameter(1, 0.0664);
+        myfit->FixParameter(1, 0.0665);
         myfit->SetParLimits(2, 1e-4, 1.e+3);
         //myfit->SetParLimits(3, 2., 5.);
-        myfit->FixParameter(3, 2.0298);
-        myfit->FixParameter(4, 0.002557);
+        myfit->FixParameter(3, 2.0222);
+        myfit->FixParameter(4, 0.002556);
       }
       else
       {
@@ -294,32 +297,32 @@ int main (int argc, char *argv[])
       if ( histoNames[iHisto].second == 0 ) // WP
       {
         myfit->SetParameters(-0.457, 12.7, 0.1835, 0.87, 0.003768);
-        myfit->FixParameter(0, -0.38);
-        //myfit->SetParLimits(1, 0.1, 30);
-        myfit->FixParameter(1, 11.668);
-        myfit->FixParameter(2, 0.1634);
+        myfit->FixParameter(0, -0.39);
+        myfit->SetParLimits(1, 0.1, 30);
+        myfit->FixParameter(1, 12.95);
+        myfit->FixParameter(2, 0.185);
         myfit->FixParameter(3, 0.889);
-        myfit->FixParameter(4, 0.003655);
+        myfit->FixParameter(4, 0.003414);
       }
       else  // UP
       {
-        myfit->SetParameters(-0.5966, 12., 0.1835, 1.0, 0.004106);
+        myfit->SetParameters(-0.5966, 12., 0.1977, 1.0, 0.004106);
         //myfit->FixParameter(0, -0.595);
         myfit->FixParameter(3, 0.97);
         
         if ( histoNames[iHisto].second == 2 ) // UP
         {
-          myfit->FixParameter(0, -0.967);
-          myfit->FixParameter(1, 2.45);
-          myfit->FixParameter(2, 0.1897);
-          myfit->FixParameter(4, 0.004305);
+          myfit->FixParameter(0, -1.001);
+          myfit->FixParameter(1, 2.4094);
+          myfit->FixParameter(2, 0.1977);
+          myfit->FixParameter(4, 0.004225);
         }
         else if ( histoNames[iHisto].second == 3 ) // WPUP
         {
-          myfit->FixParameter(0, -0.8207);
-          myfit->FixParameter(1, 3.05);
-          myfit->FixParameter(2, 0.20);
-          myfit->FixParameter(4, 0.003967);
+          myfit->FixParameter(0, -0.8595);
+          myfit->FixParameter(1, 3.044);
+          myfit->FixParameter(2, 0.2128);
+          myfit->FixParameter(4, 0.003862);
         }
       }
     }
