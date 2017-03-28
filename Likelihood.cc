@@ -31,11 +31,11 @@ const int nCP = 356970;  //357134;
 const int nWP = 127011;  //155459;
 const int nUP = 259755;  //297689;
 
-const double mu_CP = 1.01, sigma_CP = 0.0664, r_CP = 2.0298, norm_CP = 0.002557;
-const double alpha_WP = -0.38, n_WP = 11.668, sigma_WP = 0.1634, mu_WP = 0.889, norm_WP = 0.003655;
-const double alpha_UP = -0.967, n_UP = 2.45, sigma_UP = 0.1897, mu_UP = 0.97, norm_UP = 0.004305;
-const double alpha_WPUP = -0.8207, n_WPUP = 3.05, sigma_WPUP = 0.2, mu_WPUP = 0.97, norm_WPUP = 0.003967;
-const double gammaConvConst = 0.0312447, gammaConvRico = 0.00792538;
+const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
+const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
+const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
+const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
+const double gammaConvConst = 0.0314305, gammaConvRico = 0.00763251;
 
 /// Define vars
 int nTot;
