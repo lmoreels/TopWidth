@@ -40,7 +40,7 @@ bool testTTbarOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doKinFit = true;
 bool useToys = false;
 bool applyLeptonSF = true;
@@ -61,7 +61,7 @@ string whichDate(string syst)
   {
     if (useOldNtuples) return "160812";
     //else return "170216";  // WRONG JETS
-    else return "170327";  // All jets have pT > 30 GeV // WRONG JETS
+    else return "170327";  // All jets have pT > 30 GeV
   }
   else if ( syst.find("JECup") != std::string::npos ) return "170316";  // WRONG JETS
   else if ( syst.find("JECdown") != std::string::npos ) return "170317";  // WRONG JETS
@@ -107,9 +107,9 @@ double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 double sigmaChi2TopMass = 40;
 
 /// Likelihood function
-const int nCP = 356970;  //357134;
-const int nWP = 127011;  //155459;
-const int nUP = 259755;  //297689;
+const int nCP = 354711;  // [0.6, 1.4]  //355056;  // [0.5, 1.5]
+const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
+const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
 
 // Voigt/CB fit parameters
 const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
@@ -123,7 +123,7 @@ const double gammaConvConst = 0.0314305, gammaConvRico = 0.00763251;
 /// Average top mass
 // TT_gen_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CP/WP/UP cats (unlike name suggests)
-const int nofAveMasses = 17;
+const int nofAveMasses = 15;
 std::array<double, nofAveMasses> aveTopMass = {168.719, 167.253, 192.093, 189.672, 196.716, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
 
 
@@ -420,6 +420,7 @@ int nofBadEvtsLL[10] = {0};
 Double_t aveTopMassLL = aveTopMass[1];
 Double_t tempAveMass = -1.;
 Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
+Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
 
 ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass;
 
@@ -498,7 +499,7 @@ int main(int argc, char* argv[])
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
-  
+  cout << "Used average top mass is " << aveTopMassLL << endl;
   
   /// xml file
   string xmlFileName ="config/topWidth.xml";
@@ -941,6 +942,13 @@ int main(int argc, char* argv[])
           doMatching = false;
         }
         
+        if ( isTTbar && (topQuark == -9999 || antiTopQuark == -9999) )
+        {
+          txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
+          txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
+          continue;
+        }
+        
         
         
         /////////////////////////////////////////
@@ -949,13 +957,6 @@ int main(int argc, char* argv[])
         
         if ( applyWidthSF && isTTbar )
         {
-          if ( topQuark == -9999 || antiTopQuark == -9999 )
-          {
-            txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
-            txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
-            continue;
-          }
-          
           if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
           else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
           
@@ -1152,7 +1153,7 @@ int main(int argc, char* argv[])
       if (calculateAverageMass) txtMassReco << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
       
       
-      double tempAveMass = topmass_reco_kf/aveTopMassLL;
+      tempAveMass = topmass_reco_kf/aveTopMassLL;
       if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
       if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
       
@@ -1172,7 +1173,7 @@ int main(int argc, char* argv[])
       /// Likelihood
       if (calculateLikelihood)
       {
-        if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+        if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
         {
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
@@ -1245,7 +1246,7 @@ int main(int argc, char* argv[])
             isCP = true;
             nofCorrectlyMatched++;
             
-            if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+            if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
             {
               nofCP++;
               nofCP_weighted += widthSF;
@@ -1258,7 +1259,7 @@ int main(int argc, char* argv[])
             isWP = true;
             nofNotCorrectlyMatched++;
             
-            if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+            if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
             {
               nofWP++;
               nofWP_weighted += widthSF;
@@ -1271,7 +1272,7 @@ int main(int argc, char* argv[])
         {
           isUP = true;
           
-          if ( tempAveMass > 0.5 && tempAveMass < 1.5)
+          if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
           {
             nofUP++;
             nofUP_weighted += widthSF;
@@ -1448,7 +1449,7 @@ int main(int argc, char* argv[])
   
   if (applyWidthSF) txtDebugTopMass.close();
   
-  cout << "Number of events with 0.5 < mt/<mt> < 1.5 : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
+  cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << (double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << (double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << (double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
   cout << "                                  weighted: CP: " << nofCP_weighted << " (" << nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << nofCP_weighted+nofWP_weighted+nofUP_weighted << endl;
   cout << "                               (TTbar only) CP: " << nofCP_TT << "  WP: " << nofWP_TT << "  UP: " << nofUP_TT << endl;
   
@@ -1795,7 +1796,7 @@ void InitMSPlots()
   MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   
   /// KinFitter
-  MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 20);
+  MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 5);
   MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
   MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
   MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
@@ -1832,7 +1833,6 @@ void InitHisto1D()
   histo1D["mTop_div_aveMTop_ST_t_antitop"] = new TH1F("mTop_div_aveMTop_ST_t_antitop","Top mass divided by average top mass for ST t antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_DYJets"] = new TH1F("mTop_div_aveMTop_DYJets","Top mass divided by average top mass for DY+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_WJets"] = new TH1F("mTop_div_aveMTop_WJets","Top mass divided by average top mass for W+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_allMCReco"] = new TH1F("mTop_div_aveMTop_allMCReco","Top mass divided by average top mass for all MC samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_data"] = new TH1F("mTop_div_aveMTop_data","Top mass divided by average top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   /// mlb
@@ -1888,9 +1888,9 @@ void InitHisto1D()
   histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
   histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
   
-  histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
-  histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
-  histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
+  histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
+  histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
+  histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
 }
 
 void InitHisto2D()
