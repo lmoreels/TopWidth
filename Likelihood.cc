@@ -27,15 +27,19 @@ bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = false;
 
-const int nCP = 356970;  //357134;
-const int nWP = 127011;  //155459;
-const int nUP = 259755;  //297689;
+const int nCP = 354711;  // [0.6, 1.4]  //355056;  // [0.5, 1.5]
+const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
+const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
 
 const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
 const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
 const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
 const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
-const double gammaConvConst = 0.0314305, gammaConvRico = 0.00763251;
+const double gammaConv[2] = {0.0314305, 0.00763251};
+
+double widthArray[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
+const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
+
 
 /// Define vars
 int nTot;
@@ -50,6 +54,8 @@ vector<double> widths;
 vector<double> LLvalues;
 
 /// Define functions
+string ConvertDoubleToString(double Number);
+string DotReplace(double var);
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool fexists(const char *filename);
@@ -59,6 +65,7 @@ Double_t crysBall_WP(Double_t *x, Double_t *par);
 Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
+Double_t widthToGammaTranslation(Double_t *x);
 void DrawFunction(TF1* function, string name, double width, bool writeToFile);
 void DrawFunction(TF1* function, string name, std::vector<double> widths, double min, double max, bool writeToFile);
 void DrawLikelihood(float width);
@@ -139,78 +146,87 @@ int main (int argc, char *argv[])
   }
   
   
-  ClearVars();
   
-  /// Get loglikelihood values from file
-  inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_widthx0p5.txt";
-  if (! fexists(inputFileName.c_str()) )
+  for (int iWidth = 0; iWidth < nWidths; iWidth++)
   {
-    cout << "WARNING: File " << inputFileName << " does not exist." << endl;
-    exit(1);
-  }
-  fileIn.open(inputFileName.c_str());
-  cout << "Opening " << inputFileName << "..." << endl;
-  
-  string line;
-  while( getline(fileIn, line) )
-  {
-    istringstream iss(line);
-    if ( line.find("Width") == 0 )
-    {
-      iss >> var;
-      while ( iss >> val )
-      {
-        widths.push_back(val);
-      }
-    }
-    if ( line.find("LL") == 0 )
-    {
-      iss >> var;
-      while ( iss >> val )
-      {
-        LLvalues.push_back(val);
-      }
-    }
-  }
-  
-  if (test)
-  {
-    for (int i = 0; i < widths.size(); i++)
-      cout << widths[i] << "  ";
-    cout << endl;
-  }
-  
-  /// Make TGraph
-  const int nPoints = widths.size();
-  double widthArr[nPoints], LLArr[nPoints];
-  for (int i = 0; i < nPoints; i++)
-  {
-    widthArr[i] = widths[i];
-    LLArr[i] = LLvalues[i];
-  }
-  
-  TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
-  
-  /// Fit minimum with parabola
-  double fitmin = 1.8, fitmax = 6.;
-  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
-  g1->Fit(parabola,"R");
-  
-  if (test)
-  {
-    TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
-    c1->cd();
-    g1->Draw("AL");
-    c1->Update();
-    c1->SaveAs("loglikelihoodVSwidth.png");
-    c1->Close();
+    ClearVars();
     
-    delete c1;
-  }
-  
-  double minimum = parabola->GetMinimumX(fitmin, fitmax);
-  cout << "The minimum can be found at " << minimum << " times the SM width of the top quark." << endl;
-  
+    /// Get loglikelihood values from file
+    inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_widthx"+DotReplace(widthArray[iWidth])+".txt";
+    if (! fexists(inputFileName.c_str()) )
+    {
+      cout << "WARNING: File " << inputFileName << " does not exist." << endl;
+      exit(1);
+    }
+    fileIn.open(inputFileName.c_str());
+    cout << "Opening " << inputFileName << "..." << endl;
+    
+    string line;
+    while( getline(fileIn, line) )
+    {
+      istringstream iss(line);
+      if ( line.find("Width") == 0 )
+      {
+        iss >> var;
+        while ( iss >> val )
+        {
+          widths.push_back(val);
+        }
+      }
+      if ( line.find("LL") == 0 )
+      {
+        iss >> var;
+        while ( iss >> val )
+        {
+          LLvalues.push_back(val);
+        }
+      }
+    }
+    
+    fileIn.close();
+    
+    if (test)
+    {
+      for (int i = 0; i < widths.size(); i++)
+        cout << widths[i] << "  ";
+      cout << endl;
+    }
+    
+    /// Make TGraph
+    const int nPoints = widths.size();
+    double widthArr[nPoints], LLArr[nPoints];
+    for (int i = 0; i < nPoints; i++)
+    {
+      widthArr[i] = widths[i];
+      LLArr[i] = LLvalues[i];
+    }
+    
+    TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
+    
+    /// Fit minimum with parabola
+    double fitmin = 1.8, fitmax = 6.;
+    TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+    g1->Fit(parabola,"R");
+    
+    if (test)
+    {
+      TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
+      c1->cd();
+      g1->Draw("AL");
+      c1->Update();
+      c1->SaveAs("loglikelihoodVSwidth.png");
+      c1->Close();
+
+      delete c1;
+    }
+    
+    double minimum = parabola->GetMinimumX(fitmin, fitmax);
+    cout << "For " << widthArray[iWidth] << " times SM width of the top quark, the minimum can be found at " << minimum << endl;
+    
+    delete parabola;
+    delete g1;
+    
+  }  // end loop widths
   
   
   return 0;
@@ -218,6 +234,22 @@ int main (int argc, char *argv[])
 
 
 /// Functions
+string ConvertDoubleToString(double Number)
+{
+  ostringstream convert;
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
+  convert << Number;
+  return convert.str();
+}
+
+string DotReplace(double var)
+{
+  string str = ConvertDoubleToString(var);
+  replace(str.begin(), str.end(), '.', 'p');
+  return str;
+}
+
 string ConvertIntToString(int Number, int pad)
 {
   ostringstream convert;
@@ -342,6 +374,10 @@ Double_t combinedProb(Double_t *x, Double_t *par) {
 
 Double_t logLikelihood(Double_t *x, Double_t *par) {
   return -TMath::Log(combinedProb(x, par));
+}
+
+Double_t widthToGammaTranslation(Double_t *x) {
+  return gammaConv[0] + gammaConv[1] * x[0];
 }
 
 void DrawFunction(TF1* function, string name, double width, bool writeToFile)
