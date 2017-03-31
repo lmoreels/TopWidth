@@ -37,10 +37,11 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
-bool makePlots = false;
+bool genOnly = true;
+bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doKinFit = true;
 bool useToys = false;
 bool applyLeptonSF = true;
@@ -50,7 +51,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = true;
+bool applyWidthSF = false;
 double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
@@ -121,10 +122,10 @@ const double gammaConv[2] = {0.0314305, 0.00763251};
 //const double gammaConv[2] = {0., 1.};
 
 /// Average top mass
-// TT_gen_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
+// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CP/WP/UP cats (unlike name suggests)
-const int nofAveMasses = 15;
-std::array<double, nofAveMasses> aveTopMass = {168.719, 167.253, 192.093, 189.672, 196.716, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
+const int nofAveMasses = 16;
+std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.261, 192.515, 189.874, 197.630, 180.982, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.326, 181.358};
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -141,7 +142,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets, datasetsMSP, datasetsTemp;
 
-ofstream txtMassGenMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassReco;
+ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -382,7 +383,7 @@ bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
-double matchedWMass_reco, matchedTopMass_reco, matchedTopMass_gen;
+double matchedWMass_reco, matchedWMass_gen, matchedTopMass_reco, matchedTopMass_gen;
 double matchedMlb_corr, matchedMlb_wrong, matchedTtbarMass_corr, matchedTtbarMass_wrong;
 double matchedDRLepB_corr, matchedDRLepB_wrong;
 
@@ -420,7 +421,7 @@ bool isGoodLL = false, isGoodLL_gen = false;
 int nofGoodEvtsLL[10] = {0};
 int nofGoodEvtsLL_gen[10] = {0};
 int nofBadEvtsLL[10] = {0};
-Double_t aveTopMassLL = aveTopMass[1];
+Double_t aveTopMassLL = aveTopMass[2];
 Double_t tempAveMass = -1.;
 Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
@@ -469,9 +470,15 @@ int main(int argc, char* argv[])
     calculateLikelihood = false;
     useToys = false;
     makePlots = false;
+    genOnly = false;
   }
   if (test) makePlots = false;
   if (testHistos) makePlots = true;
+  if (genOnly)
+  {
+    doKinFit = false;
+    useToys = false;
+  }
   
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
@@ -502,7 +509,7 @@ int main(int argc, char* argv[])
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
-  cout << "Used average top mass is " << aveTopMassLL << endl;
+  if (genOnly) cout << "Running only matching..." << endl;
   
   /// xml file
   string xmlFileName ="config/topWidth.xml";
@@ -606,7 +613,7 @@ int main(int argc, char* argv[])
     
   if (makePlots)
   {
-    InitMSPlots();
+    if (! genOnly) InitMSPlots();
     InitHisto1D();
     InitHisto2D();
   }
@@ -656,7 +663,8 @@ int main(int argc, char* argv[])
   
   if (calculateAverageMass)
   {
-    txtMassGenMatched.open(("averageMass/mass_gen_matched_TT_"+dateString+".txt").c_str());
+    txtMassGenPMatched.open(("averageMass/mass_genp_matched_TT_"+dateString+".txt").c_str());
+    txtMassGenJMatched.open(("averageMass/mass_genj_matched_TT_"+dateString+".txt").c_str());
     txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
     txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
     txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
@@ -1040,10 +1048,15 @@ int main(int argc, char* argv[])
             
             
             matchedWMass_reco = (jetsMatched[0] + jetsMatched[1]).M();
+            matchedWMass_gen = (partonsMatched[0] + partonsMatched[1]).M();
             matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
             matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
             
-            if (calculateAverageMass) txtMassGenMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
+            if (calculateAverageMass)
+            {
+              txtMassGenPMatched << ievt << "  " << matchedWMass_gen << "  " << matchedTopMass_gen << "  " << widthSF << endl;
+              txtMassGenJMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
+            }
             
             if (calculateLikelihood)
             {
@@ -1090,11 +1103,9 @@ int main(int argc, char* argv[])
         
       }  // end if not data
       
-      ////////
-      // TEMP !!!
-      ///////
       
-      continue;
+      
+      if (genOnly) continue;
       
       
       
@@ -1493,7 +1504,8 @@ int main(int argc, char* argv[])
   
   if (calculateAverageMass)
   {
-    txtMassGenMatched.close();
+    txtMassGenPMatched.close();
+    txtMassGenJMatched.close();
     txtMassRecoCP.close();
     txtMassRecoWPUP.close();
     txtMassRecoUP.close();
@@ -1578,7 +1590,7 @@ int main(int argc, char* argv[])
   ///*****************///
   
   string rootFileName = "NtuplePlots_"+systStr+".root";
-  mkdir((pathOutput+"MSPlot/").c_str(),0777);
+  if (! genOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
   
   cout << " - Recreate output file ..." << endl;
   TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
@@ -1587,13 +1599,16 @@ int main(int argc, char* argv[])
   ///Write histograms
   fout->cd();
   
-  for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+  if (! genOnly)
   {
-    //cout << "MSPlot: " << it->first << endl;
-    MultiSamplePlot *temp = it->second;
-    string name = it->first;
-    temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
-    temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+    for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+    {
+      //cout << "MSPlot: " << it->first << endl;
+      MultiSamplePlot *temp = it->second;
+      string name = it->first;
+      temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+      temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+    }
   }
   
   // 1D
@@ -1850,13 +1865,16 @@ void InitMSPlots()
   MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   
   /// KinFitter
-  MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 5);
-  MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
-  MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
-  MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
-  MSPlot["KF_W_mass_corr"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 250, 0, 500, "m_{W,kf} [GeV]");
-  MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf} [GeV]");
-  MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf} [GeV]");
+  if (doKinFit)
+  {
+    MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 5);
+    MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
+    MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
+    MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
+    MSPlot["KF_W_mass_corr"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 250, 0, 500, "m_{W,kf} [GeV]");
+    MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf} [GeV]");
+    MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf} [GeV]");
+  }
 }
 
 void InitHisto1D()
@@ -1873,7 +1891,6 @@ void InitHisto1D()
   histo1D["Reco_top_mass_reco"] = new TH1F("Reco_top_mass_reco","Reconstructed top mass; M_{t} [GeV]", 80, 0, 800);
     
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT_reco_CP"] = new TH1F("mTop_div_aveMTop_TT_reco_CP","Top mass divided by average top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT_reco_WPUP"] = new TH1F("mTop_div_aveMTop_TT_reco_WPUP","Top mass divided by average top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT_reco_UP"] = new TH1F("mTop_div_aveMTop_TT_reco_UP","Top mass divided by average top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
@@ -1918,33 +1935,36 @@ void InitHisto1D()
   histo1D["debugLL_dR_lep_b_had_reco"]  = new TH1F("debugLL_dR_lep_b_had_reco","Minimal delta R between the lepton and the hadronic b jet; #Delta R(l,b_{h})", 25, 0, 5);
   
   /// KinFitter
-  histo1D["KF_Chi2_TT"] = new TH1F("KF_Chi2_TT", "Chi2 value of kinFitter (TT); #chi^{2}", 200, 0, 20);
-  histo1D["KF_W_mass_orig_TT"] = new TH1F("KF_W_mass_orig_TT", "W mass before kinFitter (TT); m_{W} [GeV]", 250, 0, 500);
-  histo1D["KF_top_mass_orig_TT"] = new TH1F("KF_top_mass_orig_TT", "Top mass before kinFitter (TT); m_{t} [GeV]", 400, 0, 800);
-  histo1D["KF_top_pt_orig_TT"] = new TH1F("KF_top_pt_orig_TT", "Top pt before kinFitter (TT); p_{T} [GeV]", 400, 0, 800);
-  histo1D["KF_W_mass_corr_TT"] = new TH1F("KF_W_mass_corr_TT", "W mass after kinFitter (TT); m_{W,kf} [GeV]", 250, 0, 500);
-  histo1D["KF_top_mass_corr_TT"] = new TH1F("KF_top_mass_corr_TT", "Top mass after kinFitter (TT); m_{t,kf} [GeV]", 400, 0, 800);
-  histo1D["KF_top_pt_corr_TT"] = new TH1F("KF_top_pt_corr_TT", "Top pt after kinFitter (TT); p_{T,kf} [GeV]", 400, 0, 800);
-  
-  histo1D["KF_top_mass_orig_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut5_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t} [GeV]", 400, 0, 800);
-  histo1D["KF_top_mass_corr_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut5_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t,kf} [GeV]", 400, 0, 800);
-  
-  histo1D["KF_top_mass_orig_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut2_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t} [GeV]", 400, 0, 800);
-  histo1D["KF_top_mass_corr_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut2_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t,kf} [GeV]", 400, 0, 800);
-  
-  histo1D["KF_top_mass_orig_ex4j_chi2cut1p5_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut1p5_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 1.5); m_{t} [GeV]", 400, 0, 800);
-  histo1D["KF_top_mass_corr_ex4j_chi2cut1p5_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut1p5_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 1.5); m_{t,kf} [GeV]", 400, 0, 800);
-  
-  histo1D["KF_jet0_Et_diff_TT"] = new TH1F("KF_jet0_Et_diff_TT", "Et difference after kinFitter for jet0 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
-  histo1D["KF_jet1_Et_diff_TT"] = new TH1F("KF_jet1_Et_diff_TT", "Et difference after kinFitter for jet1 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
-  
-  histo1D["KF_top_mass_corr_CP"] = new TH1F("KF_top_mass_corr_CP", "Top mass after kinFitter for correct match (CP); m_{t,kf} [GeV]", 400, 0, 800);
-  histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
-  histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
-  
-  histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
-  histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
-  histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
+  if (doKinFit)
+  {
+    histo1D["KF_Chi2_TT"] = new TH1F("KF_Chi2_TT", "Chi2 value of kinFitter (TT); #chi^{2}", 200, 0, 20);
+    histo1D["KF_W_mass_orig_TT"] = new TH1F("KF_W_mass_orig_TT", "W mass before kinFitter (TT); m_{W} [GeV]", 250, 0, 500);
+    histo1D["KF_top_mass_orig_TT"] = new TH1F("KF_top_mass_orig_TT", "Top mass before kinFitter (TT); m_{t} [GeV]", 400, 0, 800);
+    histo1D["KF_top_pt_orig_TT"] = new TH1F("KF_top_pt_orig_TT", "Top pt before kinFitter (TT); p_{T} [GeV]", 400, 0, 800);
+    histo1D["KF_W_mass_corr_TT"] = new TH1F("KF_W_mass_corr_TT", "W mass after kinFitter (TT); m_{W,kf} [GeV]", 250, 0, 500);
+    histo1D["KF_top_mass_corr_TT"] = new TH1F("KF_top_mass_corr_TT", "Top mass after kinFitter (TT); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_pt_corr_TT"] = new TH1F("KF_top_pt_corr_TT", "Top pt after kinFitter (TT); p_{T,kf} [GeV]", 400, 0, 800);
+    
+    histo1D["KF_top_mass_orig_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut5_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_ex4j_chi2cut5_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut5_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 5); m_{t,kf} [GeV]", 400, 0, 800);
+    
+    histo1D["KF_top_mass_orig_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut2_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_ex4j_chi2cut2_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut2_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 2); m_{t,kf} [GeV]", 400, 0, 800);
+    
+    histo1D["KF_top_mass_orig_ex4j_chi2cut1p5_TT"] = new TH1F("KF_top_mass_orig_ex4j_chi2cut1p5_TT", "Top mass before kinFitter (TT) (exactly 4 jets - KF chi2 < 1.5); m_{t} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_ex4j_chi2cut1p5_TT"] = new TH1F("KF_top_mass_corr_ex4j_chi2cut1p5_TT", "Top mass after kinFitter (TT) (exactly 4 jets - KF chi2 < 1.5); m_{t,kf} [GeV]", 400, 0, 800);
+    
+    histo1D["KF_jet0_Et_diff_TT"] = new TH1F("KF_jet0_Et_diff_TT", "Et difference after kinFitter for jet0 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
+    histo1D["KF_jet1_Et_diff_TT"] = new TH1F("KF_jet1_Et_diff_TT", "Et difference after kinFitter for jet1 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
+    
+    histo1D["KF_top_mass_corr_CP"] = new TH1F("KF_top_mass_corr_CP", "Top mass after kinFitter for correct match (CP); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
+    
+    histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
+  }
 }
 
 void InitHisto2D()
@@ -1984,12 +2004,15 @@ void InitHisto2D()
   histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
   /// KinFitter
-  histo2D["KF_W_mass_orig_vs_corr_TT"] = new TH2F("KF_W_mass_orig_vs_corr_TT", "W mass made with KF corrected jets vs. original jets (TT); m_{W,orig} [GeV]; m_{W,kf} [GeV]", 250, 0, 500, 250, 0, 500);
-  histo2D["KF_top_mass_orig_vs_corr_TT"] = new TH2F("KF_top_mass_orig_vs_corr_TT", "Top mass made with KF corrected jets vs. original jets (TT); m_{t,orig} [GeV]; m_{t,kf} [GeV]", 400, 0, 800, 400, 0, 800);
-  histo2D["KF_jets_Et_diff_TT"] = new TH2F("KF_jets_Et_diff_TT", "Et difference after kinFitter for jet1 in function of jet0 (TT); E_{T,0,kf} - E_{T,0,orig} [GeV]; E_{T,1,kf} - E_{T,1,orig} [GeV]", 400, -50, 50, 400, -50, 50);
-  histo2D["KF_W_px_orig_vs_corr_TT"] = new TH2F("KF_W_px_orig_vs_corr_TT", "W p_{x} made with KF corrected jets vs. original jets (TT); p_{x,orig} [GeV]; p_{x,kf} [GeV]", 400, 0, 800, 400, 0, 800);
-  histo2D["KF_W_py_orig_vs_corr_TT"] = new TH2F("KF_W_py_orig_vs_corr_TT", "W p_{y} made with KF corrected jets vs. original jets (TT); p_{y,orig} [GeV]; p_{y,kf} [GeV]", 400, 0, 800, 400, 0, 800);
-  histo2D["KF_W_pz_orig_vs_corr_TT"] = new TH2F("KF_W_pz_orig_vs_corr_TT", "W p_{z} made with KF corrected jets vs. original jets (TT); p_{z,orig} [GeV]; p_{z,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+  if (doKinFit)
+  {
+    histo2D["KF_W_mass_orig_vs_corr_TT"] = new TH2F("KF_W_mass_orig_vs_corr_TT", "W mass made with KF corrected jets vs. original jets (TT); m_{W,orig} [GeV]; m_{W,kf} [GeV]", 250, 0, 500, 250, 0, 500);
+    histo2D["KF_top_mass_orig_vs_corr_TT"] = new TH2F("KF_top_mass_orig_vs_corr_TT", "Top mass made with KF corrected jets vs. original jets (TT); m_{t,orig} [GeV]; m_{t,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+    histo2D["KF_jets_Et_diff_TT"] = new TH2F("KF_jets_Et_diff_TT", "Et difference after kinFitter for jet1 in function of jet0 (TT); E_{T,0,kf} - E_{T,0,orig} [GeV]; E_{T,1,kf} - E_{T,1,orig} [GeV]", 400, -50, 50, 400, -50, 50);
+    histo2D["KF_W_px_orig_vs_corr_TT"] = new TH2F("KF_W_px_orig_vs_corr_TT", "W p_{x} made with KF corrected jets vs. original jets (TT); p_{x,orig} [GeV]; p_{x,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+    histo2D["KF_W_py_orig_vs_corr_TT"] = new TH2F("KF_W_py_orig_vs_corr_TT", "W p_{y} made with KF corrected jets vs. original jets (TT); p_{y,orig} [GeV]; p_{y,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+    histo2D["KF_W_pz_orig_vs_corr_TT"] = new TH2F("KF_W_pz_orig_vs_corr_TT", "W p_{z} made with KF corrected jets vs. original jets (TT); p_{z,orig} [GeV]; p_{z,kf} [GeV]", 400, 0, 800, 400, 0, 800);
+  }
 }
 
 void InitHisto1DMatch()
@@ -1998,7 +2021,11 @@ void InitHisto1DMatch()
   
   histo1D["W_mass_reco_matched"] = new TH1F("W_mass_reco_matched","Reconstructed hadronic W mass of matched events; M_{W} [GeV]", 125, 0, 250);
   histo1D["top_mass_reco_matched"] = new TH1F("top_mass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
-  histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 1200, 100, 250);
+  histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 1200, 150, 190);
+  
+  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 400, 0.8, 1.2);
+  histo1D["mTop_div_aveMTop_TT_matched_partons"] = new TH1F("mTop_div_aveMTop_TT_matched_partons","Top mass divided by average top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  
   histo1D["mlb_matched_corr"]  = new TH1F("mlb_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["mlb_matched_wrong"] = new TH1F("mlb_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["ttbar_mass_matched_corr"] = new TH1F("ttbar_mass_matched_corr","Reconstructed mass of the top quark pair using correctly matched events; M_{t#bar{t}} [GeV]", 100, 0, 1000);
@@ -2383,7 +2410,8 @@ void FillMatchingPlots()
     histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco, widthSF);
     histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen, widthSF);
     
-    histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[0]);
+    histo1D["mTop_div_aveMTop_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0]);
+    histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1]);
     
     if (all4PartonsMatched && muonmatched)
     {

@@ -10,10 +10,10 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "170327_1019";  // Should be > 170307_1345 !
+string inputDate = "170331_1024";  // Should be >= 170331_1024 !
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_gen_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_genp_matched_"+dataSetNames[0]+"_"+inputDate, "mass_genj_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -80,7 +80,7 @@ int main()
       sumW += massW;
       sumTop += massTop*widthSF;
       
-      if ( iFile > 4 && iFile < nInputs-1) // reco
+      if ( iFile > 5 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
         sumWAllMC += massW*widthSF;
@@ -106,31 +106,35 @@ int main()
     
     
     /// Store mean in file
-    if ( iFile > 5 )
+    if ( iFile > 6 )
     {
       thisDataSet = dataSetNames[iFile-5];
     }
     else if ( iFile == 0 )
     {
-      thisDataSet = dataSetNames[0]+"_gen_match";
+      thisDataSet = dataSetNames[0]+"_genp_match";
     }
     else if ( iFile == 1 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_match";
+      thisDataSet = dataSetNames[0]+"_genj_match";
     }
     else if ( iFile == 2 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_wrongMatch_WP/UP";
+      thisDataSet = dataSetNames[0]+"_reco_match";
     }
     else if ( iFile == 3 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_noMatch";
+      thisDataSet = dataSetNames[0]+"_reco_wrongMatch_WP/UP";
     }
     else if ( iFile == 4 )
     {
-      thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
+      thisDataSet = dataSetNames[0]+"_reco_noMatch";
     }
     else if ( iFile == 5 )
+    {
+      thisDataSet = dataSetNames[0]+"_reco_wrongPerm";
+    }
+    else if ( iFile == 6 )
     {
       thisDataSet = dataSetNames[0]+"_reco";
     }
