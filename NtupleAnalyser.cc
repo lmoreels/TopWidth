@@ -41,7 +41,7 @@ bool genOnly = true;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doKinFit = true;
 bool useToys = false;
 bool applyLeptonSF = true;
@@ -113,13 +113,15 @@ const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
 const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
 
 // Voigt/CB fit parameters
-const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
+//const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
 const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
 const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
 const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
 const double norm_comb = 1.; //0.956039;
-const double gammaConv[2] = {0.0314305, 0.00763251};
+//const double gammaConv[2] = {0.0314305, 0.00763251};
 //const double gammaConv[2] = {0., 1.};
+const double mu_CP = 1.002, sigma_CP = 0.0005, r_CP = 4.4, norm_CP = 0.00051;  // Voigt parametrisation with partons
+const double gammaConv[2] = {0.00189011, 0.00789034};  // Voigt parametrisation with partons
 
 /// Average top mass
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
@@ -1546,8 +1548,8 @@ int main(int argc, char* argv[])
     txtOutputLogLike << endl << "LLikelihood: ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      //txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
-      txtOutputLogLike << setw(12) << right << loglike_gen_onlyGoodEvts[iWidth] << "  ";
+      if (! genOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
+      else txtOutputLogLike << setw(12) << right << loglike_gen_onlyGoodEvts[iWidth] << "  ";
     }
     txtOutputLogLike << endl;
     txtOutputLogLike.close();
@@ -2023,8 +2025,8 @@ void InitHisto1DMatch()
   histo1D["top_mass_reco_matched"] = new TH1F("top_mass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
   histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 1200, 150, 190);
   
-  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 400, 0.8, 1.2);
-  histo1D["mTop_div_aveMTop_TT_matched_partons"] = new TH1F("mTop_div_aveMTop_TT_matched_partons","Top mass divided by average top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_TT_matched_partons"] = new TH1F("mTop_div_aveMTop_TT_matched_partons","Top mass divided by average top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 800, 0.8, 1.2);
+  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   histo1D["mlb_matched_corr"]  = new TH1F("mlb_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["mlb_matched_wrong"] = new TH1F("mlb_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
@@ -2410,8 +2412,8 @@ void FillMatchingPlots()
     histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco, widthSF);
     histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen, widthSF);
     
-    histo1D["mTop_div_aveMTop_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0]);
-    histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1]);
+    histo1D["mTop_div_aveMTop_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0], widthSF);
+    histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1], widthSF);
     
     if (all4PartonsMatched && muonmatched)
     {

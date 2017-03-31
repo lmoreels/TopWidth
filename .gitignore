@@ -47,6 +47,7 @@ Ntupler
 ReweightTopWidth
 TopReconstruction
 VoigtFitter
+VoigtFitter_gen
 testAnalyser
 testAnalyserTTbarOnly
 testMatching
