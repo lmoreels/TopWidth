@@ -21,7 +21,7 @@
 using namespace std;
 
 
-bool runLocally = true;
+bool runLocally = false;
 
 
 /// Define vars
@@ -44,6 +44,8 @@ char dataLine[1024];
 string inputFileName;
 ifstream fileIn;
 streampos currentPosition;
+
+bool foundCP = false, foundWP = false, foundUP = false, foundWPUP = false;
 
 
 /// Define functions
@@ -68,7 +70,7 @@ int main (int argc, char *argv[])
   ClearVars();
   ClearVectors();
   
-  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/170328/";
+  string pathInput = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputVoigt/ex4jets/gen/170331/";
   if (runLocally) pathInput = "/Users/lmoreels/cernbox/TopWidth/TopTrees/tempPlots/Voigt/Ex4jets/170328/";
   
   /// Get fit parameters from files
@@ -90,8 +92,9 @@ int main (int argc, char *argv[])
     do // until file ends
     {
       //cout << dataLine << endl;
-      if ( /*string(dataLine).find("Voigt") != std::string::npos && */ string(dataLine).find("CP") != std::string::npos )
+      if ( string(dataLine).find("Voigt") != std::string::npos /* && string(dataLine).find("CP") != std::string::npos */ )
       {
+        foundCP = true;
         cout << "  - " << dataLine << ": Adding parameter values for width " << widthStr[iWidth] << "." << endl;
         ClearVars();
         
@@ -138,6 +141,7 @@ int main (int argc, char *argv[])
       }  // end Voigt CP
       else if ( string(dataLine).find("CrystalBall") != std::string::npos && string(dataLine).find("WP") != std::string::npos && string(dataLine).find("UP") == std::string::npos && string(dataLine).find("Ok") == std::string::npos)
       {
+        foundWP = true;
         cout << "  - " << dataLine << ": Adding parameter values for width " << widthStr[iWidth] << "." << endl;
         ClearVars();
         
@@ -184,6 +188,7 @@ int main (int argc, char *argv[])
       }  // end CB WP
       else if ( string(dataLine).find("CrystalBall") != std::string::npos && string(dataLine).find("UP") != std::string::npos && string(dataLine).find("WP") == std::string::npos  )
       {
+        foundUP = true;
         cout << "  - " << dataLine << ": Adding parameter values for width " << widthStr[iWidth] << "." << endl;
         ClearVars();
         
@@ -230,6 +235,7 @@ int main (int argc, char *argv[])
       }  // end CB UP
       else if ( string(dataLine).find("CrystalBall") != std::string::npos && string(dataLine).find("WPUP") != std::string::npos )
       {
+        foundWPUP = true;
         cout << "  - " << dataLine << ": Adding parameter values for width " << widthStr[iWidth] << "." << endl;
         ClearVars();
         
@@ -373,22 +379,22 @@ void PrintParams()
   cout << "}; (* times SM width *)" << endl;
   
   cout << endl << "-- VOIGT CP --" << endl;
-  writeVoigtMathematicaOutput(muVoigt, sigmaVoigt, gammaVoigt, rVoigt, normVoigt, muErrVoigt, sigmaErrVoigt, gammaErrVoigt, rErrVoigt, normErrVoigt);
+  if (foundCP) writeVoigtMathematicaOutput(muVoigt, sigmaVoigt, gammaVoigt, rVoigt, normVoigt, muErrVoigt, sigmaErrVoigt, gammaErrVoigt, rErrVoigt, normErrVoigt);
   
   cout << endl << "-- CRYSTALBALL WP --" << endl;
-  writeCBMathematicaOutput(alphaCB_WP, nCB_WP, sigmaCB_WP, muCB_WP, normCB_WP, alphaErrCB_WP, nErrCB_WP, sigmaErrCB_WP, muErrCB_WP, normErrCB_WP);
+  if (foundWP) writeCBMathematicaOutput(alphaCB_WP, nCB_WP, sigmaCB_WP, muCB_WP, normCB_WP, alphaErrCB_WP, nErrCB_WP, sigmaErrCB_WP, muErrCB_WP, normErrCB_WP);
   
   cout << endl << "-- CRYSTALBALL UP --" << endl;
-  writeCBMathematicaOutput(alphaCB_UP, nCB_UP, sigmaCB_UP, muCB_UP, normCB_UP, alphaErrCB_UP, nErrCB_UP, sigmaErrCB_UP, muErrCB_UP, normErrCB_UP);
+  if (foundUP) writeCBMathematicaOutput(alphaCB_UP, nCB_UP, sigmaCB_UP, muCB_UP, normCB_UP, alphaErrCB_UP, nErrCB_UP, sigmaErrCB_UP, muErrCB_UP, normErrCB_UP);
   
   cout << endl << "-- CRYSTALBALL WPUP --" << endl;
-  writeCBMathematicaOutput(alphaCB_WPUP, nCB_WPUP, sigmaCB_WPUP, muCB_WPUP, normCB_WPUP, alphaErrCB_WPUP, nErrCB_WPUP, sigmaErrCB_WPUP, muErrCB_WPUP, normErrCB_WPUP);
+  if (foundWPUP) writeCBMathematicaOutput(alphaCB_WPUP, nCB_WPUP, sigmaCB_WPUP, muCB_WPUP, normCB_WPUP, alphaErrCB_WPUP, nErrCB_WPUP, sigmaErrCB_WPUP, muErrCB_WPUP, normErrCB_WPUP);
   
   cout << endl << "=== LIKELIHOOD ===" << endl;
-  cout << "const double mu_CP = " << muVoigt[0] << ", sigma_CP = " << sigmaVoigt[0] << ", r_CP = " << rVoigt[0] << ", norm_CP = " << normVoigt[0] << ";" << endl;
-  cout << "const double alpha_WP = " << alphaCB_WP[0] << ", n_WP = " << nCB_WP[0] << ", sigma_WP = " << sigmaCB_WP[0] << ", mu_WP = " << muCB_WP[0] << ", norm_WP = " << normCB_WP[0] << ";" << endl;
-  cout << "const double alpha_UP = " << alphaCB_UP[0] << ", n_UP = " << nCB_UP[0] << ", sigma_UP = " << sigmaCB_UP[0] << ", mu_UP = " << muCB_UP[0] << ", norm_UP = " << normCB_UP[0] << ";" << endl;
-  cout << "const double alpha_WPUP = " << alphaCB_WPUP[0] << ", n_WPUP = " << nCB_WPUP[0] << ", sigma_WPUP = " << sigmaCB_WPUP[0] << ", mu_WPUP = " << muCB_WPUP[0] << ", norm_WPUP = " << normCB_WPUP[0] << ";" << endl;
+  if (foundCP) cout << "const double mu_CP = " << muVoigt[0] << ", sigma_CP = " << sigmaVoigt[0] << ", r_CP = " << rVoigt[0] << ", norm_CP = " << normVoigt[0] << ";" << endl;
+  if (foundWP) cout << "const double alpha_WP = " << alphaCB_WP[0] << ", n_WP = " << nCB_WP[0] << ", sigma_WP = " << sigmaCB_WP[0] << ", mu_WP = " << muCB_WP[0] << ", norm_WP = " << normCB_WP[0] << ";" << endl;
+  if (foundUP) cout << "const double alpha_UP = " << alphaCB_UP[0] << ", n_UP = " << nCB_UP[0] << ", sigma_UP = " << sigmaCB_UP[0] << ", mu_UP = " << muCB_UP[0] << ", norm_UP = " << normCB_UP[0] << ";" << endl;
+  if (foundWPUP) cout << "const double alpha_WPUP = " << alphaCB_WPUP[0] << ", n_WPUP = " << nCB_WPUP[0] << ", sigma_WPUP = " << sigmaCB_WPUP[0] << ", mu_WPUP = " << muCB_WPUP[0] << ", norm_WPUP = " << normCB_WPUP[0] << ";" << endl;
 }
 
 void writeVoigtMathematicaOutput(std::vector<double> mu, std::vector<double> sigma, std::vector<double> gamma, std::vector<double> r, std::vector<double> norm, std::vector<double> muErr, std::vector<double> sigmaErr, std::vector<double> gammaErr, std::vector<double> rErr, std::vector<double> normErr)
