@@ -102,6 +102,8 @@ void DrawFunction(TF1* f, string varName, string saveName)
 {
   TCanvas *c1 = new TCanvas("c1",("Projection of resolution function for "+varName).c_str(),10,200,900,700);
   
+  if ( saveName.std::string::find("_x") == std::string::npos )
+    f->SetTitle(("Resolution function for "+varName).c_str());
   f->Draw();
   
   f->GetHistogram()->GetXaxis()->SetTitle(varName.c_str());
@@ -150,15 +152,29 @@ int main (int argc, char *argv[])
     TF1 *f1 = (TF1*) rf->getFitFunction1D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f1, "b jet Et (barrel)", "RF_bjet_Et_B_fitF_x");
     
-    TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
-    //DrawFunction(f, "b jet Et (barrel)", "RF_bjet_Et_B");
-    DrawFunction(f, "non-b jet Et (barrel)", "RF_nonbjet_Et_B");
+    TF2* f2th = (TF2*) rf->getFitFunction2D(rfFileName, "theta", "bjet", "B");
+    DrawFunction(f2th, "b jet theta (barrel)", "RF_bjet_theta_B_fitF");
+    
+    TF2* f2ph = (TF2*) rf->getFitFunction2D(rfFileName, "phi", "bjet", "B");
+    DrawFunction(f2ph, "b jet phi (barrel)", "RF_bjet_phi_B_fitF");
+    
+    TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
+    DrawFunction(f, "b jet Et (barrel)", "RF_bjet_Et_B");
+    
+    TF1 *fnb = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
+    DrawFunction(fnb, "non-b jet Et (barrel)", "RF_nonbjet_Et_B");
     
     TF1 *fth = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
     DrawFunction(fth, "b jet theta (barrel)", "RF_bjet_theta_B");
     
-    TF1 *fph = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "B");
-    DrawFunction(fph, "non-b jet phi (barrel)", "RF_nonbjet_phi_B");
+    TF1 *fthnb = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
+    DrawFunction(fthnb, "non-b jet theta (barrel)", "RF_nonbjet_theta_B");
+    
+    TF1 *fph = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "B");
+    DrawFunction(fph, "b jet phi (barrel)", "RF_bjet_phi_B");
+    
+    TF1 *fphnb = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "B");
+    DrawFunction(fphnb, "non-b jet phi (barrel)", "RF_nonbjet_phi_B");
     
     if (test)
     {

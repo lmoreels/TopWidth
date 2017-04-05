@@ -909,7 +909,11 @@ TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::strin
 {
   std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, binName);
   
-  TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,-80.,80., 12);
+  double funcMin = -80., funcMax = 80.;
+  if ( varName.std::string::find("theta") != std::string::npos ) { funcMin = -0.1; funcMax = 0.1; }
+  if ( varName.std::string::find("phi") != std::string::npos ) { funcMin = -0.15; funcMax = 0.15; }
+  
+  TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,funcMin,funcMax, 12);
   for (int iPar = 0; iPar < 12; iPar++)
   {
     int par = (int) ((double)iPar/2.);
