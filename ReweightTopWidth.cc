@@ -8,6 +8,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <string>
+#include <array>
 #include "TRandom3.h"
 #include "TNtuple.h"
 #include <TFile.h>
@@ -21,6 +22,7 @@
 #include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"  // needed for ROOT::Math::VectorUtil::DeltaR()
 //#include "../macros/Style.C"
 
+#include "Tools/interface/KinFitter.h"
 
 
 using namespace std;
@@ -29,6 +31,11 @@ using namespace TopTree;
 
 bool test = false;
 bool makePlots = true;
+bool calculateAverageMass = false;
+bool doReco = true;
+bool doKinFit = true;
+bool applyKinFitCut = true;
+double kinFitCutValue = 5.;
 string systStr = "nominal";
 
 string ntupleDate = "160812"; // nominal
@@ -36,6 +43,7 @@ string ntupleDate = "160812"; // nominal
 int verbose = 2;
 
 string pathNtuples = "";
+string dateString = "";
 
 int nofHardSelected = 0;
 int nofSkippedEvents = 0;
@@ -54,14 +62,18 @@ double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 double sigmaChi2TopMass = 40;
 
 // Average top mass
-// TT gen match, TT reco match, TT reco wrongMatch WP/UP, TT reco noMatch, TT reco wrongPerm, TT reco wrongPerm W Ok, TT reco wrongPerm W Not Ok, TT reco, ST_t_top reco, ST_t_antitop reco, ST_tW_top reco, ST_tW_antitop reco, DYJets reco, WJets reco, data reco, all MC reco, all samples reco (data+MC) 
-double aveTopMass[] = {168.719, 167.253, 192.093, 189.672, 196.716, 199.756, 165.839, 180.817, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.158, 181.191};
+// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
+// also background in CP/WP/UP cats (unlike name suggests)
+//std::array<double, 16> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
+// TT_genp_match, TT_genj_match, TT_beforeKF, TT_afterKF
+std::array<double, 5> aveTopMass = {171.808, 168.451, 177.764, 176.230, 167.481};
 
 
 /// Top width
 double genTopWidth = 1.31; // gen  //1.363; // from fit  //4.015; // from reco fit
 double genTopMass = 172.5; // gen  //172.3; // from fit  //168.6; // from reco fit
 double corr[2] = {0.0080432, 0.99195679};
+//double corr[2] = {0, 1};
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -94,6 +106,7 @@ void ClearMatching();
 void ClearVars();
 void ClearObjects();
 long GetNEvents(TTree* fChain, string var);
+void CalculateAverageTopMass();
 Double_t BreitWigner2Func(Double_t *x, Double_t *scale);
 double BreitWigner(double topPT, double scale);
 double BreitWigner2(double topMass, double scale);
@@ -237,9 +250,7 @@ double scaleFactor;
 vector<unsigned int> bJetId;
 vector<int> selectedJetsCharge;
 vector<double> selectedJetsBDiscr;
-double reco_hadWMass, reco_hadTopMass, reco_hadTopPt;
-double reco_minMlb, reco_ttbarMass, reco_dRLepB;
-double min_Mlb, dRLepB;
+
 
 /// Define TLVs
 TLorentzVector muon, jet, mcpart;
@@ -250,6 +261,8 @@ vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
 vector<TLorentzVector> jetsMatched;
+vector<TLorentzVector> selectedJetsKF;
+vector<TLorentzVector> selectedJetsKFMatched;
 
 /// Matching
 int pdgID_top = 6; //top quark
@@ -280,20 +293,40 @@ Double_t m_bjj = -1.;
 Double_t m_blv = -1.;
 Double_t m_hadr = -1;
 Double_t m_lept = -1;
-Double_t scaling[] = {0.5, 0.75, 1., 1.5, 2., 3.};
-string scalingString[] = {"s0p5", "s0p75", "s1", "s1p5", "s2", "s3"};
+Double_t scaling[] = {0.5, 0.75, 1., 1.5, 2., 3., 4., 8.};
+string scalingString[] = {"s0p5", "s0p75", "s1", "s1p5", "s2", "s3", "s4", "s8"};
 const int nScalings = sizeof(scaling)/sizeof(scaling[0]);
 double nofEvents_hadr[nScalings] = {0.};
 double nofEvents_lept[nScalings] = {0.};
 double nofEvents_test[nScalings] = {0.};
 
+/// Reco
+double bdiscrTop, bdiscrTop2, tempbdiscr;
+int labelB1, labelB2;
+int labelsReco[4];
+double deltaR, minDeltaR;
+double reco_hadWMass, reco_hadTopMass, reco_hadTopPt;
+double reco_minMlb, reco_ttbarMass, reco_dRLepB;
+double min_Mlb, dRLepB;
 
+/// Kin fit
+TKinFitter* kFitter;
+TKinFitter* kFitterMatched;
+bool addWMassKF = true;
+bool addEqMassKF = false;
+int kFitVerbosity = 0;
+double kFitChi2 = 99., kFitChi2Matched = 99.;
+int nofAcceptedKFit = 0, nofAcceptedKFitMatched = 0;
+double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf, topmass_reco_kf_matched;
+double toppt_reco_orig, toppt_reco_kf;
+
+ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoBKF, txtMassRecoAKF, txtMassRecoAKFMatched;
 
 
 
 int main(int argc, char* argv[])
 {
-  string dateString = MakeTimeStamp();
+  dateString = MakeTimeStamp();
   cout << "*********************************************" << endl;
   cout << "***         Beginning of program          ***" << endl;
   cout << "*********************************************" << endl;
@@ -310,6 +343,9 @@ int main(int argc, char* argv[])
   //else if ( (argv[1]).find("all") != std::string::npos || (argv[1]).find("All") != std::string::npos || (argv[1]).find("ALL") != std::string::npos ) channel = "all";
   
   if (test) makePlots = false;
+  if (calculateAverageMass) makePlots = false;
+  if (! doKinFit) applyKinFitCut = false;
+  //if (! doReco) { doKinFit = false; applyKinFitCut = false;}
   
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -336,12 +372,24 @@ int main(int argc, char* argv[])
   ///  Initialise ...  ///
   ////////////////////////
   
+  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+  KinFitter *kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+  
   if (makePlots)
   {
     InitHisto1D();
     InitHisto2D();
   }
   ClearMetaData();
+  
+  if (calculateAverageMass)
+  {
+    txtMassGenPMatched.open(("averageMass/mass_genp_matched_"+dateString+".txt").c_str());
+    txtMassGenJMatched.open(("averageMass/mass_genj_matched_"+dateString+".txt").c_str());
+    txtMassRecoBKF.open(("averageMass/mass_recoBKF_"+dateString+".txt").c_str());
+    txtMassRecoAKF.open(("averageMass/mass_recoAKF_"+dateString+".txt").c_str());
+    txtMassRecoAKFMatched.open(("averageMass/mass_recoAKF_matched_"+dateString+".txt").c_str());
+  }
   
   
   
@@ -541,6 +589,15 @@ int main(int argc, char* argv[])
       jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
     }
     
+    double matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
+    double matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
+    
+    if (calculateAverageMass)
+    {
+      txtMassGenPMatched << ievt << "  " << matchedTopMass_gen << endl;
+      txtMassGenJMatched << ievt << "  " << matchedTopMass_reco << endl;
+    }
+    
     
     
     ///////////////////
@@ -648,7 +705,8 @@ int main(int argc, char* argv[])
       {
         histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
         histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()]->Fill(m_lept, evWeight_lept);
-        histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
+        histo1D[("bjj_mass_gen_bjj_weight_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_bjj);
+        histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()]->Fill(m_bjj, evWeight_hadr);
         histo1D[("blv_mass_gen_"+scalingString[s]).c_str()]->Fill(m_blv, evWeight_blv);
         histo1D[("Width_SF_hadr_"+scalingString[s]).c_str()]->Fill(evWeight_hadr);
         histo1D[("Width_SF_lept_"+scalingString[s]).c_str()]->Fill(evWeight_lept);
@@ -668,11 +726,6 @@ int main(int argc, char* argv[])
       if (all4PartonsMatched)
       {
         /// Plot variables for matched events
-        double matchedTopMass_gen = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
-        double matchedTopMass_reco = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
-        
-        //eventSF_gen = eventWeightCalculator(matchedTopMass_gen, scaling[s]);  /// Change to mcPart[topQuark].M() ??
-        //eventSF_reco = eventWeightCalculator(matchedTopMass_gen, scaling[s]);
         eventSF_gen = eventWeightCalculator(m_hadr, scaling[s]);
         eventSF_reco = eventWeightCalculator(m_hadr, scaling[s]);
         
@@ -680,6 +733,7 @@ int main(int argc, char* argv[])
         {
           histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_gen, eventSF_gen);
           histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_reco, eventSF_reco);
+          histo1D[("reduced_top_mass_gen_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_gen/aveTopMass[0], eventSF_gen);
           histo1D[("reduced_top_mass_reco_matched_"+scalingString[s]).c_str()]->Fill(matchedTopMass_reco/aveTopMass[1], eventSF_reco);
         }
         
@@ -689,15 +743,165 @@ int main(int argc, char* argv[])
     
     }  // end loop scalings
     
+    if (doReco)
+    {
+      /// label jets with highest b discr
+      for (int iJet = 0; iJet < selectedBJets.size(); iJet++)
+      {
+        tempbdiscr = selectedJetsBDiscr[bJetId[iJet]];
+        if ( tempbdiscr > bdiscrTop )
+        {
+          bdiscrTop2 = bdiscrTop;
+          bdiscrTop = tempbdiscr;
+
+          labelB2 = labelB1;
+          labelB1 = iJet;
+        }
+        else if ( tempbdiscr > bdiscrTop2 )
+        {
+          bdiscrTop2 = tempbdiscr;
+          labelB2 = iJet;
+        }
+      }
+      
+      minDeltaR = 9999.;
+      for (int kjet = 0; kjet < selectedBJets.size(); kjet++)
+      {
+        if ( selectedBJets.size() > 2 && kjet != labelB1 && kjet != labelB2 ) continue;
+        
+        deltaR = ROOT::Math::VectorUtil::DeltaR(selectedBJets[kjet], selectedLepton[0]);
+        
+        if (deltaR < minDeltaR)
+        {
+          minDeltaR = deltaR;
+          labelsReco[3] = bJetId[kjet];
+        }
+      }
+      
+      if ( labelsReco[3] == -9999 ) continue;
+      
+      if ( labelsReco[3] == bJetId[labelB1] ) labelsReco[2] = bJetId[labelB2];
+      else if ( labelsReco[3] == bJetId[labelB2] ) labelsReco[2] = bJetId[labelB1];
+      else cerr << endl << "Seems like something went wrong with the b jets..." << endl;
+      
+      for (int ijet = 0; ijet < selectedJets.size(); ijet++)
+      {
+        if ( ijet == labelsReco[2] || ijet == labelsReco[3] ) continue;
+        
+        if ( labelsReco[0] == -9999 ) labelsReco[0] = ijet;
+        else if ( labelsReco[1] == -9999 ) labelsReco[1] = ijet;
+        else cerr << endl << "Seems like there are too many jets..." << endl;
+      }
+      
+      if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
+      
+    }  // end doReco
+    
+    /// Kinematic fit
+    if (doKinFit)
+    {
+      
+      if (doReco)
+      {
+        kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
+
+        if ( kFitter->getStatus() != 0 )  // did not converge
+        {
+          if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
+          continue;
+        }
+
+        kFitChi2 = kFitter->getS();
+        if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
+
+        if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
+        nofAcceptedKFit++;
+
+        selectedJetsKF.clear();
+        selectedJetsKF = kf->getCorrectedJets();
+
+        if ( selectedJetsKF.size() == 2 ) selectedJetsKF.push_back(selectedJets[labelsReco[2]]);
+        
+        topmass_reco_orig = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
+        topmass_reco_kf = (selectedJetsKF[0] + selectedJetsKF[1] + selectedJetsKF[2]).M();
+        
+        if (calculateAverageMass)
+        {
+          txtMassRecoBKF << ievt << "  " << topmass_reco_orig << endl;
+          txtMassRecoAKF << ievt << "  " << topmass_reco_kf << endl;
+        }
+        
+      }  // end doReco
+      
+      
+      /// KF for matched jets
+      kFitterMatched = kfMatched->doFit(jetsMatched[0], jetsMatched[1], kFitVerbosity);
+
+      if ( kFitterMatched->getStatus() != 0 )  // did not converge
+      {
+        if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
+        continue;
+      }
+
+      kFitChi2Matched = kFitterMatched->getS();
+      if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2Matched << endl;
+
+      if ( applyKinFitCut && kFitChi2Matched > kinFitCutValue ) continue;
+      nofAcceptedKFitMatched++;
+
+      selectedJetsKFMatched.clear();
+      selectedJetsKFMatched = kfMatched->getCorrectedJets();
+
+      if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
+      
+      
+      topmass_reco_kf_matched = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+      
+      if (calculateAverageMass)
+        txtMassRecoAKFMatched << ievt << "  " << topmass_reco_kf_matched << endl;
+      
+      
+      if (makePlots)
+      {
+        /// Loop over different top width scalings
+        for (int s = 0; s < nScalings; s++)
+        {
+          evWeight_hadr = eventWeightCalculator(m_hadr, scaling[s]);
+          
+          histo1D[("top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf_matched, evWeight_hadr);
+          histo1D[("reduced_top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf_matched/aveTopMass[4], evWeight_hadr);
+          if (doReco)
+          {
+            histo1D[("top_mass_reco_beforeKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_orig, evWeight_hadr);
+            histo1D[("top_mass_reco_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf, evWeight_hadr);
+            histo1D[("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_orig/aveTopMass[2], evWeight_hadr);
+            histo1D[("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf/aveTopMass[3], evWeight_hadr);
+          }
+        }
+      }
+      
+      
+    }  // end doKinFit
     
     
   }  // end loop events
+  
+  if (calculateAverageMass)
+  {
+    txtMassGenPMatched.close();
+    txtMassGenJMatched.close();
+    txtMassRecoBKF.close();
+    txtMassRecoAKF.close();
+    txtMassRecoAKFMatched.close();
+  }
   
   
   cout << endl;
   cout << "Number of events passing hard selection: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
   cout << "Number of skipped events: " << nofSkippedEvents << " (" << 100*((float)nofSkippedEvents/(float)nofHardSelected) << "%)" << endl;
   cout << "Number of matched events: " << nofMatchedEvents << endl;
+  if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
+  if (doKinFit && doReco) cout << "Number of events accepted by reco kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
   
   cout << endl << "Number of events when scaling hadronic width: ";
   for (int s = 0; s < nScalings; s++)
@@ -711,9 +915,9 @@ int main(int argc, char* argv[])
   }
   cout << endl;
   
-  
   origNtuple->Close();
   
+  if (calculateAverageMass) CalculateAverageTopMass();
   
   
   if (test)
@@ -949,17 +1153,32 @@ void InitHisto1D()
   {
     histo1D[("top_mass_hadr_gen_"+scalingString[s]).c_str()] = new TH1F(("top_mass_hadr_gen_"+scalingString[s]).c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
     histo1D[("top_mass_lept_gen_"+scalingString[s]).c_str()] = new TH1F(("top_mass_lept_gen_"+scalingString[s]).c_str(), "Mass of generated top quark with leptonic decay; M_{t_{lept}} [GeV]", 4000, 120, 220);
-    histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()] = new TH1F(("bjj_mass_gen_"+scalingString[s]).c_str(), "Mass of generated bjj quarks; M_{bjj} [GeV]", 2000, 50, 300);
+    histo1D[("bjj_mass_gen_"+scalingString[s]).c_str()] = new TH1F(("bjj_mass_gen_"+scalingString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D[("bjj_mass_gen_bjj_weight_"+scalingString[s]).c_str()] = new TH1F(("bjj_mass_gen_bjj_weight_"+scalingString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_"+scalingString[s]).c_str()] = new TH1F(("blv_mass_gen_"+scalingString[s]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
     /// Matching
     histo1D[("top_mass_gen_matched_"+scalingString[s]).c_str()] = new TH1F(("top_mass_gen_matched_"+scalingString[s]).c_str(), "Generated top mass of matched events; M_{t} [GeV]", 800, 50, 300);
     histo1D[("top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_matched_"+scalingString[s]).c_str(), "Reconstructed top mass of matched events; M_{t} [GeV]", 400, 0, 400);
-    histo1D[("reduced_top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_"+scalingString[s]).c_str(), "Reduced reconstructed top mass of matched events; M_{t}/<M_{t}>", 400, 0, 2.4);
+    histo1D[("reduced_top_mass_gen_matched_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_gen_matched_"+scalingString[s]).c_str(), "Reduced reconstructed top mass (m_bqq) of matched events; M_{t}/<M_{t}>", 400, 0.8, 1.2);
+    histo1D[("reduced_top_mass_reco_matched_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_"+scalingString[s]).c_str(), "Reduced reconstructed top mass (m_bjj) of matched events; M_{t}/<M_{t}>", 400, 0, 2.4);
     
     /// SFs
     histo1D[("Width_SF_hadr_"+scalingString[s]).c_str()] = new TH1F(("Width_SF_hadr_"+scalingString[s]).c_str(), "Hadronic scale factor to change the ttbar distribution width; width SF", 5001, -0.0005, 5.0005);
     histo1D[("Width_SF_lept_"+scalingString[s]).c_str()] = new TH1F(("Width_SF_lept_"+scalingString[s]).c_str(), "Leptonic scale factor to change the ttbar distribution width; width SF", 5001, -0.0005, 5.0005);
+    
+    if (doKinFit)
+    {
+      if (doReco)
+      {
+        histo1D[("top_mass_reco_beforeKF_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_beforeKF_"+scalingString[s]).c_str(), "Mass of reconstructed top quark before applying a kinematic fit; M_{t} [GeV]", 400, 0, 400);
+        histo1D[("top_mass_reco_afterKF_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_afterKF_"+scalingString[s]).c_str(), "Mass of reconstructed top quark after applying a kinematic fit; M_{t} [GeV]", 400, 0, 400);
+        histo1D[("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark before applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
+        histo1D[("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark after applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
+      }
+      histo1D[("top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_matched_afterKF_"+scalingString[s]).c_str(), "Mass of reconstructed top quark of matched events after applying a kinematic fit; M_{t} [GeV]", 400, 0, 400);
+      histo1D[("reduced_top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_afterKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark of matched events after applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
+    }
   }
   
 }
@@ -1165,6 +1384,8 @@ void ClearTLVs()
   partons.clear();
   partonsMatched.clear();
   jetsMatched.clear();
+  selectedJetsKF.clear();
+  selectedJetsKFMatched.clear();
 }
 
 void ClearMatching()
@@ -1215,6 +1436,17 @@ void ClearVars()
   bJetId.clear();
   selectedJetsCharge.clear();
   selectedJetsBDiscr.clear();
+  bdiscrTop = -99.;
+  bdiscrTop2 = -99.;
+  tempbdiscr = -99.;
+  labelB1 = -9999;
+  labelB2 = -9999;
+  for (int i = 0; i < 4; i++)
+  {
+    labelsReco[i] = -9999;
+  }
+  deltaR = 9999.;
+  minDeltaR = 9999.;
   reco_hadWMass = -1.;
   reco_hadTopMass = -1.;
   reco_hadTopPt = -1.;
@@ -1223,6 +1455,14 @@ void ClearVars()
   reco_dRLepB = -1.;
   min_Mlb = 9999.;
   dRLepB = -1.;
+  kFitVerbosity = false;
+  kFitChi2 = 99.;
+  kFitChi2Matched = 99.;
+  Wmass_reco_orig = -1.;
+  Wmass_reco_kf = -1.;
+  topmass_reco_orig = -1.;
+  topmass_reco_kf = -1.;
+  topmass_reco_kf_matched = -1.;
 }
 
 void ClearObjects()
@@ -1243,6 +1483,62 @@ long GetNEvents(TTree* fChain, string var)
   }
   
   return varNew;
+}
+
+void CalculateAverageTopMass()
+{
+  ifstream fileIn;
+  streampos currentPosition;
+  ofstream fileOut;
+  
+  string pathInput = "averageMass/";
+  string outputFileName = pathInput+"averageMass_"+dateString+".txt";
+  fileOut.open(outputFileName.c_str());
+  string inputFiles[] = {"genp_matched", "genj_matched", "recoBKF", "recoAKF", "recoAKF_matched"};
+  int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
+  
+  char dataLine[1024];
+  int nEntries, eventId;
+  double massTop, sumTop, meanTop;
+  
+  for (int iFile = 0; iFile < nInputs; iFile++)
+  {
+    nEntries = 0; sumTop = 0.; meanTop = 0.;
+    
+    string inputFileName = pathInput+"mass_"+inputFiles[iFile]+"_"+dateString+".txt";
+    fileIn.open(inputFileName.c_str());
+    cout << "Opening " << inputFileName << "..." << endl;
+    fileIn.getline(dataLine,sizeof(dataLine));
+    currentPosition = fileIn.tellg();
+    
+    /// Loop over input file
+    while ( fileIn.good() )
+    {
+      eventId = -1; massTop = 0.;
+      
+      fileIn.seekg(currentPosition);
+      fileIn.getline(dataLine,sizeof(dataLine));
+      istringstream iss(dataLine);
+      iss >> eventId >> massTop;
+      currentPosition = fileIn.tellg();
+      
+      nEntries++;
+      sumTop += massTop;
+    }
+    
+    /// Calculate mean
+    meanTop = sumTop/((double)nEntries);
+    
+    fileOut << left << setw(18) << inputFiles[iFile];
+    cout.setf(ios::fixed,ios::floatfield);
+    fileOut << "   " << fixed << showpoint << setprecision(3) << meanTop << endl;
+    
+    /// Close input file
+    fileIn.close();
+  }
+  
+  fileOut.close();
+  cout << "Average masses can be found in " << outputFileName << endl;
 }
 
 Double_t BreitWigner2Func(Double_t *x, Double_t *scale)
