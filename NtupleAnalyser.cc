@@ -37,12 +37,13 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
-bool genOnly = true;
+bool doGenOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = true;
 bool doKinFit = true;
+bool useKinFitCut = true;
 bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -51,7 +52,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = false;
+bool applyWidthSF = true;
 double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
@@ -113,21 +114,24 @@ const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
 const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
 
 // Voigt/CB fit parameters
-//const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
+const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
 const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
 const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
 const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
 const double norm_comb = 1.; //0.956039;
-//const double gammaConv[2] = {0.0314305, 0.00763251};
+const double gammaConv[2] = {0.0314305, 0.00763251};
 //const double gammaConv[2] = {0., 1.};
-const double mu_CP = 1.002, sigma_CP = 0.0005, r_CP = 4.4, norm_CP = 0.00051;  // Voigt parametrisation with partons
-const double gammaConv[2] = {0.00189011, 0.00789034};  // Voigt parametrisation with partons
+//const double mu_CP = 1.002, sigma_CP = 0.0005, r_CP = 4.4, norm_CP = 0.00051;  // Voigt parametrisation with partons
+//const double gammaConv[2] = {0.00189011, 0.00789034};  // Voigt parametrisation with partons
 
 /// Average top mass
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CP/WP/UP cats (unlike name suggests)
 const int nofAveMasses = 16;
+//  KF chi2 < 5
 std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.261, 192.515, 189.874, 197.630, 180.982, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.326, 181.358};
+//  no KF chi2 cut
+//std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
 
 // Normal Plots (TH1F* and TH2F*)
@@ -472,11 +476,11 @@ int main(int argc, char* argv[])
     calculateLikelihood = false;
     useToys = false;
     makePlots = false;
-    genOnly = false;
+    doGenOnly = false;
   }
   if (test) makePlots = false;
   if (testHistos) makePlots = true;
-  if (genOnly)
+  if (doGenOnly)
   {
     doKinFit = false;
     useToys = false;
@@ -511,7 +515,7 @@ int main(int argc, char* argv[])
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
-  if (genOnly) cout << "Running only matching..." << endl;
+  if (doGenOnly) cout << "Running only matching..." << endl;
   
   /// xml file
   string xmlFileName ="config/topWidth.xml";
@@ -615,7 +619,7 @@ int main(int argc, char* argv[])
     
   if (makePlots)
   {
-    if (! genOnly) InitMSPlots();
+    if (! doGenOnly) InitMSPlots();
     InitHisto1D();
     InitHisto2D();
   }
@@ -1107,7 +1111,7 @@ int main(int argc, char* argv[])
       
       
       
-      if (genOnly) continue;
+      if (doGenOnly) continue;
       
       
       
@@ -1171,7 +1175,7 @@ int main(int argc, char* argv[])
         kFitChi2 = kFitter->getS();
         if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
-        if ( kFitChi2 > 5. ) continue;
+        if ( useKinFitCut && kFitChi2 > 5. ) continue;
         nofAcceptedKFit++;
         
         selectedJetsKFcorrected.clear();
@@ -1456,7 +1460,7 @@ int main(int argc, char* argv[])
     cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
     
     //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
-    if (isTTbar)
+    if (! isData && nofMatchedEvents > 0 )
     {
       cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
       cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
@@ -1466,7 +1470,7 @@ int main(int argc, char* argv[])
         cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% is correctly matched." << endl;
       
       /// Resolution functions
-      if (calculateResolutionFunctions)
+      if (isTTbar && calculateResolutionFunctions)
       {
         string rfFileName = "PlotsForResolutionFunctions.root";
         string rfFitFileName = "PlotsForResolutionFunctions_Fitted.root";
@@ -1483,7 +1487,7 @@ int main(int argc, char* argv[])
         delete foutRF;
       }
       
-    }  // end TT
+    }  // end ! isData
     
     if (calculateLikelihood)
     {
@@ -1491,7 +1495,7 @@ int main(int argc, char* argv[])
       cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
       if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
         cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
-      cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
+      if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
     }
     
     if (useToys) cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
@@ -1517,8 +1521,8 @@ int main(int argc, char* argv[])
   if (applyWidthSF) txtDebugTopMass.close();
   
   cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << 100*(double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << 100*(double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << 100*(double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
-  cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << nofCP_weighted+nofWP_weighted+nofUP_weighted << endl;
-  cout << "                               (TTbar only) CP: " << nofCP_TT << "             WP: " << nofWP_TT << "               UP: " << nofUP_TT << endl;
+  cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << (int)(nofCP_weighted+nofWP_weighted+nofUP_weighted) << endl;
+  cout << "                               (TTbar only) CP: " << nofCP_TT << "              WP: " << nofWP_TT << "              UP: " << nofUP_TT << endl;
   
   
   if (calculateLikelihood)
@@ -1534,6 +1538,7 @@ int main(int argc, char* argv[])
     /// Print output to file
     string llFileName = "output_loglikelihood_gamma.txt";
     if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth)+".txt";
+    if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth)+".txt";
     txtOutputLogLike.open(llFileName.c_str());
     txtOutputLogLike << "Widths:      ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
@@ -1548,7 +1553,7 @@ int main(int argc, char* argv[])
     txtOutputLogLike << endl << "LLikelihood: ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      if (! genOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
+      if (! doGenOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
       else txtOutputLogLike << setw(12) << right << loglike_gen_onlyGoodEvts[iWidth] << "  ";
     }
     txtOutputLogLike << endl;
@@ -1592,7 +1597,7 @@ int main(int argc, char* argv[])
   ///*****************///
   
   string rootFileName = "NtuplePlots_"+systStr+".root";
-  if (! genOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
+  if (! doGenOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
   
   cout << " - Recreate output file ..." << endl;
   TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
@@ -1601,7 +1606,7 @@ int main(int argc, char* argv[])
   ///Write histograms
   fout->cd();
   
-  if (! genOnly)
+  if (! doGenOnly)
   {
     for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
     {
@@ -1869,7 +1874,8 @@ void InitMSPlots()
   /// KinFitter
   if (doKinFit)
   {
-    MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter; #chi^{2}", 200, 0, 5);
+    MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter", 200, 0, 5, "#chi^{2}");
+    MSPlot["KF_Chi2_wide"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter ", 200, 0, 20, "#chi^{2}");
     MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
     MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
     MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
@@ -1966,6 +1972,9 @@ void InitHisto1D()
     histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
     histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
     histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_CP_wide"] = new TH1F("KF_Chi2_CP_wide", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_WP_wide"] = new TH1F("KF_Chi2_WP_wide", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_UP_wide"] = new TH1F("KF_Chi2_UP_wide", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
   }
 }
 
@@ -2517,6 +2526,7 @@ void FillCatsPlots(string catSuffix)
     if (doKinFit)
     {
       histo1D[("KF_Chi2"+catSuffix).c_str()]->Fill(kFitChi2);
+      histo1D[("KF_Chi2"+catSuffix+"_wide").c_str()]->Fill(kFitChi2);
       histo1D[("KF_top_mass_corr"+catSuffix).c_str()]->Fill(topmass_reco_kf, widthSF);
     }
   }
@@ -2537,6 +2547,7 @@ void FillMSPlots(int d)
   if (doKinFit)
   {
     MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+    MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_W_mass_orig"]->Fill(Wmass_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_mass_orig"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);

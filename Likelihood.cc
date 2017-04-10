@@ -204,8 +204,10 @@ int main (int argc, char *argv[])
     TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
     
     /// Fit minimum with parabola
-    double fitminArray[] = {0.6, 0.6, 0.6, 0.8, 1.0, 1.5, 1.8};
-    double fitmaxArray[] = {1.4, 1.5, 1.6, 1.8, 2.5, 3.0, 3.2};
+    //double fitminArray[] = {0.6, 0.6, 0.6, 0.8, 1.0, 1.5, 1.8};  // partons
+    //double fitmaxArray[] = {1.4, 1.5, 1.6, 1.8, 2.5, 3.0, 3.2};  // partons
+    double fitminArray[] = {3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4};  // jets
+    double fitmaxArray[] = {4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6};  // jets
     double fitmin = fitminArray[iWidth], fitmax = fitmaxArray[iWidth];
     TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
     g1->Fit(parabola,"R");
