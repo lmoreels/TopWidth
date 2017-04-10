@@ -149,14 +149,23 @@ int main (int argc, char *argv[])
     TF2* f2 = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f2, "b jet Et (barrel)", "RF_bjet_Et_B_fitF");
     
+    TF2* f2nb = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "nonbjet", "B");
+    DrawFunction(f2nb, "non-b jet Et (barrel)", "RF_nonbjet_Et_B_fitF");
+    
     TF1 *f1 = (TF1*) rf->getFitFunction1D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f1, "b jet Et (barrel)", "RF_bjet_Et_B_fitF_x");
     
     TF2* f2th = (TF2*) rf->getFitFunction2D(rfFileName, "theta", "bjet", "B");
     DrawFunction(f2th, "b jet theta (barrel)", "RF_bjet_theta_B_fitF");
     
+    TF2* f2thnb = (TF2*) rf->getFitFunction2D(rfFileName, "theta", "nonbjet", "B");
+    DrawFunction(f2thnb, "non-b jet theta (barrel)", "RF_nonbjet_theta_B_fitF");
+    
     TF2* f2ph = (TF2*) rf->getFitFunction2D(rfFileName, "phi", "bjet", "B");
     DrawFunction(f2ph, "b jet phi (barrel)", "RF_bjet_phi_B_fitF");
+    
+    TF2* f2phnb = (TF2*) rf->getFitFunction2D(rfFileName, "phi", "nonbjet", "B");
+    DrawFunction(f2phnb, "non-b jet phi (barrel)", "RF_nonbjet_phi_B_fitF");
     
     TF1 *f = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
     DrawFunction(f, "b jet Et (barrel)", "RF_bjet_Et_B");
