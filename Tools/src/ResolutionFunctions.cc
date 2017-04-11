@@ -768,13 +768,12 @@ void ResolutionFunctions::makeFit()
       int npFits = myfit->GetNumberFitPoints();
       if (npFits > nPar && npFits >= cut)
       {
-        int binOn = xBin + 1/2;
         for (int iPar = 0; iPar < nPar; iPar++)
         {
-          //std::cout << "histo->GetXaxis()->GetBinCenter(binOn): " << histo->GetXaxis()->GetBinCenter(binOn) << std::endl;
-          //std::cout << "myfit->GetParameter("<<ipar<<") " << myfit->GetParameter(ipar) << std::endl;
-          hlist[iPar]->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetParameter(iPar)); // fill histogram for parameter i
-          hlist[iPar]->SetBinError(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetParError(iPar));
+          //std::cout << "myfit->GetParameter("<<iPar<<") " << myfit->GetParameter(iPar) << std::endl;
+          //std::cout << "myfit->GetParError("<<iPar<<") " << myfit->GetParError(iPar) << std::endl;
+          hlist[iPar]->SetBinContent(xBin,myfit->GetParameter(iPar)); // fill histogram for parameter i
+          hlist[iPar]->SetBinError(xBin,myfit->GetParError(iPar));
         }
         //hchi2->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetChisquare()/(npfits-npar));
       }
