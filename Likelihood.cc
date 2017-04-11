@@ -23,6 +23,8 @@ using namespace std;
 
 
 bool test = true;
+bool usePartons = true;
+bool useMix = true;
 bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = false;
@@ -31,11 +33,11 @@ const int nCP = 354711;  // [0.6, 1.4]  //355056;  // [0.5, 1.5]
 const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
 const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
 
-const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
+double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
 const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
 const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
 const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
-const double gammaConv[2] = {0.0314305, 0.00763251};
+double gammaConv[2] = {0.0314305, 0.00763251};
 
 double widthArray[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
 const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
@@ -45,8 +47,11 @@ const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
 int nTot;
 double f_CP, f_WP, f_UP;
 TF1 *likelihood;
+TF1 *parabola;
 
+string dirName;
 string inputFileName;
+string outputFileName;
 ifstream fileIn;
 string var;
 double val;
@@ -79,6 +84,16 @@ int main (int argc, char *argv[])
   cout << "********************************" << endl;
   cout << "* Current time: " << dateString << "    *" << endl;
   cout << "********************************" << endl;
+  
+  if (useMix) usePartons = false;
+  if (usePartons) useMix = false;
+  
+  if (usePartons)  // Voigt parametrisation with partons
+  {
+    mu_CP = 1.002, sigma_CP = 0.0005, r_CP = 4.4, norm_CP = 0.00051;
+    gammaConv[0] = 0.00189011;
+    gammaConv[1] = 0.00789034;
+  }
   
   
   /// Check if functions are normalised
@@ -152,7 +167,11 @@ int main (int argc, char *argv[])
     ClearVars();
     
     /// Get loglikelihood values from file
-    inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/output_loglikelihood_widthx"+DotReplace(widthArray[iWidth])+".txt";
+    /*if (usePartons || useMix)*/ dirName = "likelihood/";
+    inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_";
+    if (usePartons) inputFileName += "parton_";
+    else if (useMix) inputFileName += "mistake_";
+    inputFileName += "widthx"+DotReplace(widthArray[iWidth])+".txt";
     if (! fexists(inputFileName.c_str()) )
     {
       cout << "WARNING: File " << inputFileName << " does not exist." << endl;
@@ -204,21 +223,41 @@ int main (int argc, char *argv[])
     TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
     
     /// Fit minimum with parabola
-    //double fitminArray[] = {0.6, 0.6, 0.6, 0.8, 1.0, 1.5, 1.8};  // partons
-    //double fitmaxArray[] = {1.4, 1.5, 1.6, 1.8, 2.5, 3.0, 3.2};  // partons
+    double fitminArrayP[] = {0.6, 0.6, 0.6, 0.8, 1.0, 1.5, 1.8};  // partons
+    double fitmaxArrayP[] = {1.4, 1.5, 1.6, 1.8, 2.5, 3.0, 3.2};  // partons
     double fitminArray[] = {3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4};  // jets
     double fitmaxArray[] = {4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6};  // jets
+    if (usePartons)
+    {
+      for (int i = 0; i < nWidths; i++)
+      {
+        fitminArray[i] = fitminArrayP[i];
+        fitmaxArray[i] = fitmaxArrayP[i];
+      }
+    }
+    else if (useMix)
+    {
+      for (int i = 0; i < nWidths; i++)
+      {
+        fitminArray[i] = 2.6;
+        fitmaxArray[i] = 3.6;
+      }
+    }
     double fitmin = fitminArray[iWidth], fitmax = fitmaxArray[iWidth];
-    TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+    parabola = new TF1("parabola", "pol2", fitmin, fitmax);
     g1->Fit(parabola,"R");
     
     if (test)
     {
+      outputFileName = "loglikelihoodVSwidth_";
+      if (usePartons) outputFileName += "parton_";
+      else if (useMix) outputFileName += "mistake_";
+      outputFileName += DotReplace(widthArray[iWidth])+".png";
       TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
       c1->cd();
       g1->Draw("AL");
       c1->Update();
-      c1->SaveAs(("loglikelihoodVSwidth_"+DotReplace(widthArray[iWidth])+".png").c_str());
+      c1->SaveAs(outputFileName.c_str());
       c1->Close();
 
       delete c1;
@@ -226,6 +265,11 @@ int main (int argc, char *argv[])
     
     double minimum = parabola->GetMinimumX(fitmin, fitmax);
     cout << "For " << widthArray[iWidth] << " times SM width of the top quark, the minimum can be found at " << minimum << endl;
+    
+    double lowerSigma = parabola->GetX(parabola->Eval(minimum) + 0.5, fitmin, minimum);
+    double upperSigma = parabola->GetX(parabola->Eval(minimum) + 0.5, minimum, fitmax);
+    
+    cout << "The 1 sigma interval is [" << lowerSigma << ", " << upperSigma << "], so compared to the minimum, " << minimum << ", the upper sigma is " << upperSigma - minimum << " and the lower sigma is " << minimum - lowerSigma << "." << endl;
     
     delete parabola;
     delete g1;
@@ -299,6 +343,9 @@ void ClearVars()
   val = -1.;
   widths.clear();
   LLvalues.clear();
+  dirName = "";
+  inputFileName = "";
+  outputFileName = "";
 }
 
 Double_t voigt(Double_t *x, Double_t *par) {
