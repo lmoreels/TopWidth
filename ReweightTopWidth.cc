@@ -876,6 +876,9 @@ int main(int argc, char* argv[])
             histo1D[("top_mass_reco_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf, evWeight_hadr);
             histo1D[("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_orig/aveTopMass[2], evWeight_hadr);
             histo1D[("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf/aveTopMass[3], evWeight_hadr);
+            
+            histo1D[("top_mass_reco_beforeKF_short_"+scalingString[s]).c_str()]->Fill(topmass_reco_orig, evWeight_hadr);
+            histo1D[("top_mass_reco_afterKF_short_"+scalingString[s]).c_str()]->Fill(topmass_reco_kf, evWeight_hadr);
           }
         }
       }
@@ -1175,6 +1178,9 @@ void InitHisto1D()
         histo1D[("top_mass_reco_afterKF_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_afterKF_"+scalingString[s]).c_str(), "Mass of reconstructed top quark after applying a kinematic fit; M_{t} [GeV]", 400, 0, 400);
         histo1D[("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_beforeKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark before applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
         histo1D[("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_afterKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark after applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
+        
+        histo1D[("top_mass_reco_beforeKF_short_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_beforeKF_short_"+scalingString[s]).c_str(), "Mass of reconstructed top quark before applying a kinematic fit; M_{t} [GeV]", 80, 0, 400);
+        histo1D[("top_mass_reco_afterKF_short_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_afterKF_short_"+scalingString[s]).c_str(), "Mass of reconstructed top quark after applying a kinematic fit; M_{t} [GeV]", 80, 0, 400);
       }
       histo1D[("top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()] = new TH1F(("top_mass_reco_matched_afterKF_"+scalingString[s]).c_str(), "Mass of reconstructed top quark of matched events after applying a kinematic fit; M_{t} [GeV]", 400, 0, 400);
       histo1D[("reduced_top_mass_reco_matched_afterKF_"+scalingString[s]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_afterKF_"+scalingString[s]).c_str(), "Reduced mass of reconstructed top quark of matched events after applying a kinematic fit; M_{t} [GeV]", 400, 0, 2.4);
@@ -1304,6 +1310,8 @@ void ClearMetaData()
   appliedPU = 999;
   
   nofMatchedEvents = 0;
+  nofAcceptedKFit = 0;
+  nofAcceptedKFitMatched = 0;
 }
 
 void ClearLeaves()

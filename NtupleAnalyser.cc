@@ -43,7 +43,8 @@ bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = true;
 bool doKinFit = true;
-bool useKinFitCut = true;
+bool applyKinFitCut = true;
+double kinFitCutValue = 5.;
 bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
@@ -52,7 +53,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = true;
+bool applyWidthSF = false;
 double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
@@ -369,6 +370,7 @@ vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
 vector<TLorentzVector> selectedJetsKFcorrected;
+vector<TLorentzVector> selectedJetsKFMatched;
 vector<TLorentzVector> mcParticles;
 vector<TLorentzVector> partons;
 vector<TLorentzVector> partonsMatched;
@@ -395,12 +397,13 @@ double matchedDRLepB_corr, matchedDRLepB_wrong;
 
 /// KinFitter
 TKinFitter* kFitter;
+TKinFitter* kFitterMatched;
 bool addWMassKF = true;
 bool addEqMassKF = false;
 int kFitVerbosity = 0;
-double kFitChi2 = 99.;
-int nofAcceptedKFit = 0;
-double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf;
+double kFitChi2 = 99., kFitChi2Matched = 99.;
+int nofAcceptedKFit = 0, nofAcceptedKFitMatched = 0;
+double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf, topmass_reco_kf_matched;
 double toppt_reco_orig, toppt_reco_kf;
 
 /// Likelihood
@@ -568,10 +571,11 @@ int main(int argc, char* argv[])
     if ( dataSetName.find("ZJets") != std::string::npos || dataSetName.find("DY") != std::string::npos )
     {
       datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
-      datasets[d]->SetColor(kAzure-2);
-      //datasets[d]->SetColor(kMagenta);
+      //datasets[d]->SetColor(kAzure-2);
+      datasets[d]->SetColor(kMagenta);
       datasetsMSP[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
-      datasetsMSP[d]->SetColor(kAzure-2);
+      //datasetsMSP[d]->SetColor(kAzure-2);
+      datasetsMSP[d]->SetColor(kMagenta);
     }
     if ( dataSetName.find("ST") != std::string::npos || dataSetName.find("SingleTop") != std::string::npos )
     {
@@ -616,6 +620,7 @@ int main(int argc, char* argv[])
   
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
   KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+  KinFitter *kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
     
   if (makePlots)
   {
@@ -1097,6 +1102,32 @@ int main(int argc, char* argv[])
             }  // calc like
             
             
+            /// KF for matched jets
+            if (doKinFit)
+            {
+              kFitterMatched = kfMatched->doFit(jetsMatched[0], jetsMatched[1], kFitVerbosity);
+              
+              if ( kFitterMatched->getStatus() != 0 )  // did not converge
+              {
+                if (test && verbose > 2) cout << "Event " << ievt << ": Fit for matched events did not converge..." << endl;
+                continue;
+              }
+              
+              kFitChi2Matched = kFitterMatched->getS();
+              if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2Matched << endl;
+              
+              if ( applyKinFitCut && kFitChi2Matched > kinFitCutValue ) continue;
+              nofAcceptedKFitMatched++;
+              
+              selectedJetsKFMatched.clear();
+              selectedJetsKFMatched = kfMatched->getCorrectedJets();
+              
+              if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
+              
+              topmass_reco_kf_matched = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+            }
+            
+            
             if (isTTbar && makePlots)
             {
               FillMatchingPlots();
@@ -1155,6 +1186,54 @@ int main(int argc, char* argv[])
       
       
       
+      ///////////////////////////////////
+      ///  CHECK MATCHED COMBINATION  ///
+      ///////////////////////////////////
+      
+      ///
+      // 3 possibilities:
+      // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
+      // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
+      // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
+      
+      
+      //if (isTTbar)
+      if (! isData)
+      {
+        if (hadronicTopJetsMatched)
+        {
+          /// Correct match
+          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+          {
+            isCP = true;
+            nofCorrectlyMatched++;
+          }  // end corr match
+          else  // wrong permutation
+          {
+            isWP = true;
+            nofNotCorrectlyMatched++;
+          }  // end wrong perm
+        }  // end hadrTopMatch
+        else  // no match
+        {
+          isUP = true;
+        }  // end no match
+        
+        
+        if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
+        cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
+        
+      }  // not Data
+      
+      
+      string catSuffix = "";
+      string catSuffixList[] = {"_CP", "_WP", "_UP"};
+      if (isCP) catSuffix = catSuffixList[0];
+      else if (isWP) catSuffix = catSuffixList[1];
+      else if (isUP) catSuffix = catSuffixList[2];
+      
+      
+      
       ////////////////////////////
       ///   Kinematic Fit      ///
       ////////////////////////////
@@ -1175,7 +1254,7 @@ int main(int argc, char* argv[])
         kFitChi2 = kFitter->getS();
         if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
-        if ( useKinFitCut && kFitChi2 > 5. ) continue;
+        if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
         nofAcceptedKFit++;
         
         selectedJetsKFcorrected.clear();
@@ -1225,6 +1304,28 @@ int main(int argc, char* argv[])
       tempAveMass = topmass_reco_kf/aveTopMassLL;
       if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
       if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
+      if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
+      {
+        if (isCP)
+        {
+          nofCP++;
+          nofCP_weighted += widthSF;
+          if (isTTbar) nofCP_TT++;
+        }
+        else if (isWP)
+        {
+          nofWP++;
+          nofWP_weighted += widthSF;
+          if (isTTbar) nofWP_TT++;
+        }
+        else if (isUP)
+        {
+          nofUP++;
+          nofUP_weighted += widthSF;
+          if (isTTbar) nofUP_TT++;
+        }
+      }
+      
       
       //Fill histos
       if (makePlots)
@@ -1290,79 +1391,6 @@ int main(int argc, char* argv[])
           txtLogLike << topmass_reco_kf << endl;
         }
       }
-      
-      
-      
-      ///////////////////////////////////
-      ///  CHECK MATCHED COMBINATION  ///
-      ///////////////////////////////////
-      
-      ///
-      // 3 possibilities:
-      // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
-      // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
-      // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
-      
-      
-      //if (isTTbar)
-      if (! isData)
-      {
-        if (hadronicTopJetsMatched)
-        {
-          /// Correct match
-          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
-          {
-            isCP = true;
-            nofCorrectlyMatched++;
-            
-            if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
-            {
-              nofCP++;
-              nofCP_weighted += widthSF;
-              if (isTTbar) nofCP_TT++;
-            }
-            
-          }  // end corr match
-          else  // wrong permutation
-          {
-            isWP = true;
-            nofNotCorrectlyMatched++;
-            
-            if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
-            {
-              nofWP++;
-              nofWP_weighted += widthSF;
-              if (isTTbar) nofWP_TT++;
-            }
-            
-          }  // end wrong perm
-        }  // end hadrTopMatch
-        else  // no match
-        {
-          isUP = true;
-          
-          if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
-          {
-            nofUP++;
-            nofUP_weighted += widthSF;
-            if (isTTbar) nofUP_TT++;
-          }
-          
-        }  // end no match
-        
-        
-        if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
-        cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
-        
-      }  // not Data
-      
-      
-      string catSuffix = "";
-      string catSuffixList[] = {"_CP", "_WP", "_UP"};
-      if (isCP) catSuffix = catSuffixList[0];
-      else if (isWP) catSuffix = catSuffixList[1];
-      else if (isUP) catSuffix = catSuffixList[2];
-      
       
       if (calculateAverageMass && ! isData)
       {
@@ -1468,6 +1496,7 @@ int main(int argc, char* argv[])
       cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
       if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
         cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% is correctly matched." << endl;
+      if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
       
       /// Resolution functions
       if (isTTbar && calculateResolutionFunctions)
@@ -1866,8 +1895,8 @@ void InitMSPlots()
   MSPlot["Reco_mlb"] = new MultiSamplePlot(datasetsMSP, "Reco_mlb", 80, 0, 800, "M_{lb} [GeV]");
   MSPlot["Reco_ttbar_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_ttbar_mass", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
 
-  MSPlot["Reco_dR_lep_b"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b", 25, 0, 5, "#Delta R(l,b)");
-  
+  MSPlot["Reco_dR_lep_b_min"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_min", 25, 0, 5, "#Delta R(l,b_{l})");
+  MSPlot["Reco_dR_lep_b_max"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_max", 25, 0, 5, "#Delta R(l,b_{h})");
   
   MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   
@@ -1882,6 +1911,9 @@ void InitMSPlots()
     MSPlot["KF_W_mass_corr"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 250, 0, 500, "m_{W,kf} [GeV]");
     MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf} [GeV]");
     MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf} [GeV]");
+    
+    MSPlot["KF_top_mass_orig_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_orig_short", 80, 0, 400, "m_{t} [GeV]");
+    MSPlot["KF_top_mass_corr_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_corr_short", 80, 0, 400, "m_{t,kf} [GeV]");
   }
 }
 
@@ -1975,6 +2007,9 @@ void InitHisto1D()
     histo1D["KF_Chi2_CP_wide"] = new TH1F("KF_Chi2_CP_wide", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
     histo1D["KF_Chi2_WP_wide"] = new TH1F("KF_Chi2_WP_wide", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
     histo1D["KF_Chi2_UP_wide"] = new TH1F("KF_Chi2_UP_wide", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
+    
+    histo1D["KF_top_mass_orig_match"] = new TH1F("KF_top_mass_orig_match", "Top mass before kinFitter for matched events; m_{t} [GeV]", 80, 0, 400);
+    histo1D["KF_top_mass_corr_match"] = new TH1F("KF_top_mass_corr_match", "Top mass after kinFitter for matched events; m_{t,kf} [GeV]", 80, 0, 400);
   }
 }
 
@@ -2180,6 +2215,7 @@ void ClearMetaData()
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
   nofAcceptedKFit = 0;
+  nofAcceptedKFitMatched = 0;
   
   toyMax = 1.;
 }
@@ -2263,6 +2299,7 @@ void ClearTLVs()
   selectedJets.clear();
   selectedBJets.clear();
   selectedJetsKFcorrected.clear();
+  selectedJetsKFMatched.clear();
   mcParticles.clear();
   partons.clear();
   partonsMatched.clear();
@@ -2336,10 +2373,12 @@ void ClearVars()
   isUP = false;
   kFitVerbosity = false;
   kFitChi2 = 99.;
+  kFitChi2Matched = 99.;
   Wmass_reco_orig = -1.;
   Wmass_reco_kf = -1.;
   topmass_reco_orig = -1.;
   topmass_reco_kf = -1.;
+  topmass_reco_kf_matched = -1.;
   tempAveMass = -1.;
   toy = -1.;
 }
@@ -2423,6 +2462,12 @@ void FillMatchingPlots()
     
     histo1D["mTop_div_aveMTop_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0], widthSF);
     histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1], widthSF);
+    
+    if (doKinFit)
+    {
+      histo1D["KF_top_mass_orig_match"]->Fill(matchedTopMass_reco, widthSF);
+      histo1D["KF_top_mass_corr_match"]->Fill(topmass_reco_kf_matched, widthSF);
+    }
     
     if (all4PartonsMatched && muonmatched)
     {
@@ -2541,7 +2586,8 @@ void FillMSPlots(int d)
   MSPlot["Reco_hadTop_pT"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   MSPlot["Reco_mlb"]->Fill(reco_minMlb, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   MSPlot["Reco_ttbar_mass"]->Fill(reco_ttbarMass, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
-  MSPlot["Reco_dR_lep_b"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+  MSPlot["Reco_dR_lep_b_min"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+  MSPlot["Reco_dR_lep_b_max"]->Fill(reco_dRLepB_had, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   MSPlot["Reco_mTop_div_aveMTop"]->Fill(tempAveMass, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   
   if (doKinFit)
@@ -2554,6 +2600,9 @@ void FillMSPlots(int d)
     MSPlot["KF_top_mass_corr"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_pt_orig"]->Fill(toppt_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_pt_corr"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+    
+    MSPlot["KF_top_mass_orig_short"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_corr_short"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   }
 }
 
