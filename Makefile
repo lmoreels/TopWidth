@@ -62,8 +62,8 @@ HEADERSDIC      = $(wildcard Tools/interface/*.h)
 OBJECTSDIC      = $(SOURCESDIC:.$(SrcSuf)=.$(ObjSuf))
 
 
-all: libTopWidthAna76.$(DllSuf)
-	cp libTopWidthAna76.$(DllSuf) ~/lib/
+all: libTopWidthAna80.$(DllSuf)
+	cp libTopWidthAna80.$(DllSuf) ~/lib/
 
 clean:
 	@echo "Cleaning..."
@@ -77,14 +77,14 @@ Dict.$(SrcSuf): $(HEADERSDIC) ./LinkDef.h
 	@echo "Generating dictionary Dict..."
 	@rootcint -f Dict.$(SrcSuf) -c $(DEFINES) $(HEADERSDIC) ./LinkDef.h
 
-libTopWidthAna76.$(DllSuf): $(OBJECTS) Dict.o
+libTopWidthAna80.$(DllSuf): $(OBJECTS) Dict.o
 	@echo "Building libTopWidthAna..."
 	$(LD) $(LIBS_NoTMVA) $(SOFLAGS) $(LDFLAGS) $+ -o $@
 
 ADDLIBS_MACROS = -lMLP -lTreePlayer -lXMLIO
 
-macros/%.exe: macros/%.cc $(HEADERS) libTopWidthAna76.$(DllSuf)
-	$(LD) -lTopWidthAna76 $(LIBS_NoTMVA) $(ADDLIBS_MACROS) -I`root-config --incdir` $< $(LDFLAGS) -o $@
+macros/%.exe: macros/%.cc $(HEADERS) libTopWidthAna80.$(DllSuf)
+	$(LD) -lTopWidthAna80 $(LIBS_NoTMVA) $(ADDLIBS_MACROS) -I`root-config --incdir` $< $(LDFLAGS) -o $@
 
 
 SOURCES_MACROS = $(wildcard macros/*.cc)

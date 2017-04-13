@@ -11,9 +11,9 @@ then
     ofile=`echo $ccfile |sed 's/\.cc$//g'`
     echo "compiling : " $ccfile ", executible name: " $ofile
     if [[ "$OSTYPE" == "linux-gnu" ]];
-    then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent76 -l TopTreeAna76 -l TopWidthAna76 -l MLP -l TreePlayer -l TMVA -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
+    then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent80 -l TopTreeAna80 -l TopWidthAna80 -l MLP -l TreePlayer -l TMVA -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
     elif [[ "$OSTYPE" == "darwin"* ]];
-    then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent76 -l TopTreeAna76 -l TopWidthAna76 -l MLP -l TreePlayer -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
+    then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent80 -l TopTreeAna80 -l TopWidthAna80 -l MLP -l TreePlayer -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
     fi
 
 
@@ -28,9 +28,9 @@ else
         ofile=`echo $ccfile |sed 's/\.cc$//g'`
         echo "compiling : " $ccfile ", executible name: " $ofile
         if [[ "$OSTYPE" == "linux-gnu" ]]
-        then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent76 -l TopTreeAna76 -l TopWidthAna76 -l MLP -l TreePlayer -l TMVA -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
+        then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent80 -l TopTreeAna80 -l TopWidthAna80 -l MLP -l TreePlayer -l TMVA -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
         elif [[ "$OSTYPE" == "darwin"* ]]
-        then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent76 -l TopTreeAna76 -l TopWidthAna76 -l MLP -l TreePlayer -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
+        then g++ -g -std=c++11 -L ~/lib -L . -L .. -I ./ -I ../ -l TopTreeAnaContent80 -l TopTreeAna80 -l TopWidthAna80 -l MLP -l TreePlayer -l XMLIO -I `root-config --incdir` `root-config --libs` $ccfile -o $ofile
         fi
     done
 fi
