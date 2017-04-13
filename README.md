@@ -5,11 +5,11 @@
 To get correct versions of ROOT, python, ... (You need ROOT 6)
 
 ~~~
-export SCRAM_ARCH=slc6_amd64_gcc493
+export SCRAM_ARCH=slc6_amd64_gcc530
 
-cmsrel CMSSW_7_6_5
+cmsrel CMSSW_8_0_27
 
-cd CMSSW_7_6_5/src
+cd CMSSW_8_0_27/src
 
 cmsenv
 ~~~
@@ -19,7 +19,7 @@ cmsenv
 Make sure to add the 'TopBrussels' directory. Otherwise the compilation later on will fail.
 
 ~~~
-git clone -b CMSSW_76X https://github.com/TopBrussels/TopTreeProducer TopBrussels/TopTreeProducer/
+git clone -b CMSSW_80X https://github.com/TopBrussels/TopTreeProducer TopBrussels/TopTreeProducer/
 
 cd TopBrussels/TopTreeProducer/src/
 
@@ -31,7 +31,7 @@ cd ../../..
 ## Get TopTreeAnalysisBase from git
 
 ~~~
-git clone -b CMSSW_76X https://github.com/TopBrussels/TopTreeAnalysisBase TopBrussels/TopTreeAnalysisBase/
+git clone -b CMSSW_80X https://github.com/TopBrussels/TopTreeAnalysisBase TopBrussels/TopTreeAnalysisBase/
 
 cd TopBrussels/TopTreeAnalysisBase/
 
@@ -45,7 +45,7 @@ cd ../..
 This is necessary if you want to produce TopTrees. The 'make' in 'TopTreeProducer' only compiles the TRoot* objects. For TopTree production you need the analysers as well.
 
 ~~~
-scram b -j 16
+scram b -j 4
 ~~~
 
 ## Get private code directory from git
@@ -71,7 +71,7 @@ Versions of 'TopTreeProducer' are 'tagged' when TopTrees are made, generally ind
 ~~~
 cd ../../TopBrussels/TopTreeProducer/
 
-git checkout -b CMSSW_76X_v4
+git checkout -b CMSSW_80X_v8
 
 make
 
@@ -81,7 +81,7 @@ cd ../..
 Note that you need to return to the non-tagged version to make changes. Since this branch already exists, you just need to do the following in the 'TopTreeProducer' directory.
 
 ~~~
-git checkout CMSSW_76X
+git checkout CMSSW_80X
 ~~~
 
 
