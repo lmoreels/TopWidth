@@ -36,7 +36,7 @@ Trigger::~Trigger()
   
 }
 
-void Trigger::bookTriggers(bool isData)
+void Trigger::bookTriggers(bool isDataRunH)
 {
   /// This function is called in the dataset loop
   //  Reset all quantities here
@@ -55,13 +55,12 @@ void Trigger::bookTriggers(bool isData)
   {
     if (muon)   // Triggers for data & MC are the same
     {
-//      triggerList.push_back("HLT_IsoMu18_v*");  // Not available for Run C: 254231 - 254907
-      triggerList.push_back("HLT_IsoMu20_v*");
-      triggerList.push_back("HLT_IsoTkMu20_v*");
+      triggerList.push_back("HLT_IsoMu24_v*");
+      triggerList.push_back("HLT_IsoTkMu24_v*");
     }
     if (electron)
     {
-      triggerList.push_back("HLT_Ele23_WPLoose_Gsf_v*"); 	
+      triggerList.push_back("HLT_Ele32_eta2p1_WPTight_Gsf_v*"); 	
     }
   }
   
@@ -70,22 +69,31 @@ void Trigger::bookTriggers(bool isData)
     if (muon && ! electron)
     {
       triggerList.push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*");
+      triggerList.push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*");
     }
     if (! muon && electron)
     {
-      triggerList.push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
+      triggerList.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
     }
     if (muon && electron)
     {
-      triggerList.push_back("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*");
-      triggerList.push_back("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v*");
+      // Non-DZ versions prescaled in Era 2016H
+      if (! isDataRunH)
+      {
+        triggerList.push_back("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*");
+        triggerList.push_back("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v*");
+        triggerList.push_back("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v*");
+      }
+      triggerList.push_back("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
+      triggerList.push_back("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v*");
+      triggerList.push_back("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v*");
     }
   }
   
   if (fullHadr)
   {
-    triggerList.push_back("HLT_PFHT450_SixJet40_PFBTagCSV0p72_v*");
-    triggerList.push_back("HLT_PFHT400_SixJet30_BTagCSV0p55_2PFBTagCSV0p72_v*");
+    triggerList.push_back("HLT_PFHT450_SixJet40_BTagCSV_p056_v*");
+    triggerList.push_back("HLT_PFHT400_SixJet30_DoubleBTagCSV_p056_v*");
   }
   
   for(UInt_t iTrig = 0; iTrig < triggerList.size(); iTrig++)
