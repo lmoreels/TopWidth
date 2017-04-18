@@ -24,6 +24,7 @@ Trigger/*.txt
 Trigger/Makefile
 archive/*
 averageMass/*
+config/GetSamplePaths/*.txt
 data*txt
 eqLumi.txt
 likelihood*.txt
