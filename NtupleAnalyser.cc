@@ -41,7 +41,7 @@ bool doGenOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -1899,6 +1899,7 @@ void InitMSPlots()
   MSPlot["Reco_dR_lep_b_max"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_max", 25, 0, 5, "#Delta R(l,b_{h})");
   
   MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
+  MSPlot["Reco_mTop_div_aveMTop_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass ", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
   
   /// KinFitter
   if (doKinFit)
@@ -1914,6 +1915,7 @@ void InitMSPlots()
     
     MSPlot["KF_top_mass_orig_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_orig_short", 80, 0, 400, "m_{t} [GeV]");
     MSPlot["KF_top_mass_corr_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_corr_short", 80, 0, 400, "m_{t,kf} [GeV]");
+    MSPlot["KF_top_mass_corr_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter ", 100, 90, 250, "m_{t,kf} [GeV]");
   }
 }
 
@@ -2589,6 +2591,7 @@ void FillMSPlots(int d)
   MSPlot["Reco_dR_lep_b_min"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   MSPlot["Reco_dR_lep_b_max"]->Fill(reco_dRLepB_had, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   MSPlot["Reco_mTop_div_aveMTop"]->Fill(tempAveMass, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+  MSPlot["Reco_mTop_div_aveMTop_fewerBins"]->Fill(tempAveMass, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
   
   if (doKinFit)
   {
@@ -2598,6 +2601,7 @@ void FillMSPlots(int d)
     MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_mass_orig"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_mass_corr"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_corr_fewerBins"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_pt_orig"]->Fill(toppt_reco_orig, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     MSPlot["KF_top_pt_corr"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity*scaleFactor*widthSF);
     
