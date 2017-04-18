@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# CHECK IF THESE ARE CORRECT AND ADAPT WHEN NECESSARY
 CMSSWversion="CMSSW_80X_v8"
 globalTag="TTP-CMSSW_80X_v8--GT-80X_mcRun2_asymptotic_2016_TrancheIV_v8"
 
@@ -23,33 +24,24 @@ if [ $# -eq 3 ]
 then CMSSWversion=$2; globalTag=$3
 fi
 
-#strip extension off filename to make output files
+#strip extension off filename to make output file
 inputFileName=${inputFile%.*}
-
 outputFile=$inputFileName"_output.txt"
-log=$inputFileName".log"
 pnfsPath="/pnfs/iihe/cms/store/user/fblekman/TopTree/"$CMSSWversion"/"$globalTag"/"
 
 
 #put new empty line at end of file if not already there
 sed -i $inputFile -e '$a\'
-#number of runs in input file
+#number of samples in input file
 z=($(wc $inputFile))
 nofSamples=${z[0]}
 currentSample=0
 
 #initialise output file
 echo "" > $outputFile
-#insert bracket in output file
-#sed -i '1s#^#[#' $outputFile
 
-#initialise log file
-echo "# $inputFileName" > $log
-
-
-#take run numbers from input file and make them into CASTOR directory
+#take sample names from input file and fetch directory
 while read c; do
-#c="TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/"
 
 ((currentSample++))
 #echo -ne "Looking for sample $currentSample/$nofSamples : $c"\\r;
@@ -62,6 +54,4 @@ then echo "Processed $nofSamples samples";
 fi
 
 done < $inputFile
-
-
 
