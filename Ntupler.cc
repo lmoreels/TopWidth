@@ -491,6 +491,7 @@ int main (int argc, char *argv[])
   {
     bool nlo = false;
     bool isData = false;
+    bool isTTbar = false;
     
     string dataSetName = datasets[d]->Name();
     
@@ -504,6 +505,10 @@ int main (int argc, char *argv[])
     if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
     {
       isData = true;
+    }
+    else if ( dataSetName.find("TT") != std::string::npos )
+    {
+      isTTbar = true;
     }
     
     if ( (datasets[d]->Title()).find("amc") != std::string::npos || (datasets[d]->Title()).find("AMC") != std::string::npos || (datasets[d]->Title()).find("Amc") != std::string::npos || (datasets[d]->Title()).find("aMC") != std::string::npos )
@@ -660,6 +665,20 @@ int main (int argc, char *argv[])
     Long64_t nofSelEventsRunG;
     Long64_t nofSelEventsRunH;
     
+    Long64_t nofEventsWithGenTop;
+    Long64_t nofEventsWithGenTopWithStatus22or62;
+    Long64_t nofEventsWithGenAntiTop;
+    Long64_t nofEventsWithGenAntiTopWithStatus22or62;
+    Long64_t nofTTEventsWithoutBothGenTops;
+    Long64_t nofTTEventsWithoutGenTop;
+    Long64_t nofTTEventsWithoutGenAntiTop;
+    Long64_t nofTTEventsWithoutBothGenTopsWithStatus22;
+    Long64_t nofTTEventsWithoutGenTopWithStatus22;
+    Long64_t nofTTEventsWithoutGenAntiTopWithStatus22;
+    Long64_t nofTTEventsWithoutBothGenTopsWithStatus62;
+    Long64_t nofTTEventsWithoutGenTopWithStatus62;
+    Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
+    
     // event related variables
     Int_t run_num;
     Long64_t evt_num;
@@ -688,6 +707,12 @@ int main (int argc, char *argv[])
     Bool_t isDataRunH;
     Bool_t hasPosWeight;
     Bool_t hasNegWeight;
+    Bool_t hasGenTop;
+    Bool_t hasGenTopWithStatus22;
+    Bool_t hasGenTopWithStatus62;
+    Bool_t hasGenAntiTop;
+    Bool_t hasGenAntiTopWithStatus22;
+    Bool_t hasGenAntiTopWithStatus62;
     
     Double_t nloWeight; // for amc@nlo samples
     Double_t btagSF;
@@ -793,13 +818,32 @@ int main (int argc, char *argv[])
       statTree->Branch("nofSelEventsRunG",&nofSelEventsRunG,"nofSelEventsRunG/L");
       statTree->Branch("nofSelEventsRunH",&nofSelEventsRunH,"nofSelEventsRunH/L");
     }
+    else
+    {
+      statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
+      statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
+      statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
+      statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
+      if (isTTbar)
+      {
+        statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
+        statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
+        statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
+        statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
+        statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
+        statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
+        statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
+        statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
+        statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
+      }
+    }
     if (nlo)
     {
       statTree->Branch("nofPosWeights",&nofPosWeights,"nofPosWeights/I");
       statTree->Branch("nofNegWeights",&nofNegWeights,"nofNegWeights/I");
       statTree->Branch("sumW", &sumW, "sumW/D");
-      statTree->Branch("hasPosWeight",&hasPosWeight,"hasPosWeight/O");
-      statTree->Branch("hasNegWeight",&hasNegWeight,"hasNegWeight/O");
+      myTree->Branch("hasPosWeight",&hasPosWeight,"hasPosWeight/O");
+      myTree->Branch("hasNegWeight",&hasNegWeight,"hasNegWeight/O");
     }
     
     myTree->Branch("run_num",&run_num,"run_num/I");
@@ -875,13 +919,19 @@ int main (int argc, char *argv[])
       myTree->Branch("mc_isPromptFinalState", &mc_isPromptFinalState, "mc_isPromptFinalState[nMCParticles]/O");
       myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
       myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
+      myTree->Branch("hasGenTop", &hasGenTop, "hasGenTop/O");
+      myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
+      myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
+      myTree->Branch("hasGenAntiTop", &hasGenAntiTop, "hasGenAntiTop/O");
+      myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
+      myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
     }
     
     
     /// SFs
     if (! isData)
     {
-      myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
+      if (nlo) myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
       myTree->Branch("btagSF",&btagSF,"btagSF/D");
       myTree->Branch("btagSF_up",&btagSF_up,"btagSF_up/D");
       myTree->Branch("btagSF_down",&btagSF_down,"btagSF_down/D");
@@ -957,6 +1007,19 @@ int main (int argc, char *argv[])
     nofSelEventsRunEF = 0;
     nofSelEventsRunG = 0;
     nofSelEventsRunH = 0;
+    nofEventsWithGenTop = 0;
+    nofEventsWithGenTopWithStatus22or62 = 0;
+    nofEventsWithGenAntiTop = 0;
+    nofEventsWithGenAntiTopWithStatus22or62 = 0;
+    nofTTEventsWithoutBothGenTops = 0;
+    nofTTEventsWithoutGenTop = 0;
+    nofTTEventsWithoutGenAntiTop = 0;
+    nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
+    nofTTEventsWithoutGenTopWithStatus22 = 0;
+    nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
+    nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
+    nofTTEventsWithoutGenTopWithStatus62 = 0;
+    nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
     
     for (Int_t i = 0; i < 10; i++)
       cutFlow[i] = 0;
@@ -1040,6 +1103,12 @@ int main (int argc, char *argv[])
       isDataRunH = false;
       hasPosWeight = false;
       hasNegWeight = false;
+      hasGenTop = false;
+      hasGenTopWithStatus22 = false;
+      hasGenTopWithStatus62 = false;
+      hasGenAntiTop = false;
+      hasGenAntiTopWithStatus22 = false;
+      hasGenAntiTopWithStatus62 = false;
       
       nloWeight = 1.; // for amc@nlo samples
       btagSF = 1.;
@@ -1400,6 +1469,44 @@ int main (int argc, char *argv[])
           mc_isPromptFinalState[iMC] = mcParticles[iMC]->isPromptFinalState();
           mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
           mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
+          
+          if ( mc_pdgId[iMC] == 6 )
+          {
+            hasGenTop = true;
+            nofEventsWithGenTop++;
+            if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+            {
+              nofEventsWithGenTopWithStatus22or62++;
+              if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
+              else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
+            }
+          }
+          else if ( mc_pdgId[iMC] == -6 )
+          {
+            hasGenAntiTop = true;
+            nofEventsWithGenAntiTop++;
+            if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+            {
+              nofEventsWithGenAntiTopWithStatus22or62++;
+              if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
+              else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
+            }
+          }
+        }
+        
+        if (isTTbar)
+        {
+          if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
+          else if (! hasGenTop) nofTTEventsWithoutGenTop++;
+          else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
+          
+          if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
+          else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
+          else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
+          
+          if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
+          else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
+          else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
         }
       }
       
