@@ -18,15 +18,10 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TLorentzVector.h"
-#include "TPaveText.h"
 #include "TFile.h"
 #include "TTree.h"
-#include <TMatrixDSym.h>
-#include <TMatrixDSymEigen.h>
-#include "TVectorD.h"
 #include <errno.h>
 #include "TRandom3.h"
-#include "TRandom.h"
 #include "TProfile.h"
 #include <cstdlib>
 
@@ -55,7 +50,6 @@
 #include "TopTreeAnalysisBase/Reconstruction/interface/TTreeObservables.h"
 
 // user defined
-#include "Tools/interface/ResolutionFunctions.h"
 #include "Tools/interface/Trigger.h"
 
 
@@ -118,7 +112,7 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-  string xmlFileName ="config/topWidth.xml";
+  string xmlFileName ="config/topWidth_MC.xml";
   int maxMCParticles = -1;
   
   
@@ -308,20 +302,6 @@ int main (int argc, char *argv[])
     << anaEnv.PrimaryVertexCollection << " " << anaEnv.GenJetCollection << " "
     << endl;
   
-//   anaEnv.PrimaryVertexCollection = "PrimaryVertex";
-//   anaEnv.JetCollection = "PFJets_slimmedJets";
-//   anaEnv.METCollection = "PFMET_slimmedMETs";
-//   anaEnv.MuonCollection = "Muons_slimmedMuons";
-//   anaEnv.ElectronCollection = "Electrons_slimmedElectrons";
-//   anaEnv.GenJetCollection = "GenJets_slimmedGenJets";
-//   anaEnv.MCParticlesCollection = "MCParticles";
-//   anaEnv.loadFatJetCollection = false;
-//   anaEnv.loadGenJetCollection = true;
-//   anaEnv.loadNPGenEventCollection = false;
-//   anaEnv.loadMCParticles = true;
-//   anaEnv.JetType = 2;
-//   anaEnv.METType = 2;
-  
   new ((*tcAnaEnv)[0]) AnalysisEnvironment(anaEnv);
   int verbose = anaEnv.Verbose;
 //  verbose = 2;
@@ -369,11 +349,6 @@ int main (int argc, char *argv[])
   //Global variable
   //TRootEvent* event = 0;
   TRootRun *runInfos = new TRootRun();
-  
-  //nof selected events
-  //double NEvtsData = 0;
-  //Double_t *nEvents = new Double_t[ndatasets];
-  //Double_t nloweight = 0;
   
   
   
@@ -653,6 +628,10 @@ int main (int argc, char *argv[])
     Int_t nofPosWeights;
     Int_t nofNegWeights;
     Double_t sumW;
+    Int_t cutFlow[10];
+    Int_t appliedJER;
+    Int_t appliedJES;
+    Int_t appliedPU;
     
     Long64_t nofEventsRunB;
     Long64_t nofEventsRunCD;
@@ -692,11 +671,6 @@ int main (int argc, char *argv[])
     Bool_t hasExactly4Jets;
     Bool_t hasJetLeptonCleaning;
 //    Bool_t passedMETFilter;
-    Int_t cutFlow[10];
-    
-    Int_t appliedJER;
-    Int_t appliedJES;
-    Int_t appliedPU;
     
     Bool_t isDataRunB;
     Bool_t isDataRunC;
@@ -775,6 +749,12 @@ int main (int argc, char *argv[])
     Double_t met_eta;
     Double_t met_Et;
     Double_t met_E;
+    
+    Double_t met_corr_pt;
+    Double_t met_corr_phi;
+    Double_t met_corr_eta;
+    Double_t met_corr_Et;
+    Double_t met_corr_E;
     
     /// mcparticles
     Int_t nMCParticles;
@@ -900,6 +880,12 @@ int main (int argc, char *argv[])
     myTree->Branch("met_eta", &met_eta,"met_eta/D");
     myTree->Branch("met_Et", &met_Et,"met_Et/D");
     myTree->Branch("met_E", &met_E,"met_E/D");
+    
+    myTree->Branch("met_corr_pt", &met_corr_pt, "met_corr_pt/D");
+    myTree->Branch("met_corr_phi", &met_corr_phi, "met_corr_phi/D");
+    myTree->Branch("met_corr_eta", &met_corr_eta,"met_corr_eta/D");
+    myTree->Branch("met_corr_Et", &met_corr_Et,"met_corr_Et/D");
+    myTree->Branch("met_corr_E", &met_corr_E,"met_corr_E/D");
     
     
     // mcparticles
@@ -1035,6 +1021,7 @@ int main (int argc, char *argv[])
     vector < TRootJet* > init_jets_corrected;
     vector < TRootJet* > init_jets;
     vector < TRootMET* > mets;
+    vector < TRootMET* > mets_corrected;
     vector < TRootGenJet* > genjets;
     vector < TRootMCParticle* > mcParticles;
     
@@ -1076,6 +1063,7 @@ int main (int argc, char *argv[])
       init_jets_corrected.clear();
       init_jets.clear();
       mets.clear();
+      mets_corrected.clear();
       genjets.clear();
       mcParticles.clear();
       
@@ -1179,6 +1167,12 @@ int main (int argc, char *argv[])
       met_Et = 0.;
       met_E = 0.;
       
+      met_corr_pt = 0.;
+      met_corr_phi = 0.;
+      met_corr_eta = 0.;
+      met_corr_Et = 0.;
+      met_corr_E = 0.;
+      
       /// mcparticles
       nMCParticles = -1;
       for (Int_t i = 0; i < 200; i++)
@@ -1206,6 +1200,7 @@ int main (int argc, char *argv[])
       
       TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets, mets);
       init_jets_corrected = init_jets;
+      mets_corrected = mets;
       
       datasets[d]->eventTree()->LoadTree(ievt);
       run_num = event->runId();
@@ -1277,63 +1272,26 @@ int main (int argc, char *argv[])
       
       
       
-      //////////////////////////////////////
-      ///  SCALEFACTORS AND CORRECTIONS  ///
-      //////////////////////////////////////
-      
-      if (nlo)
-      {
-        if ( event->getWeight(1001) != -9999. )
-        {
-          nloWeight = event->getWeight(1001)/abs(event->originalXWGTUP());
-          //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
-          //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
-          if ( nloWeight >= 0. ) 
-          {
-            nofPosWeights++;
-            hasPosWeight = true;
-          }
-          else
-          {
-            nofNegWeights++;
-            hasNegWeight = true;
-          }
-        }
-        if ( event->getWeight(1) != -9999. )
-        {
-          nloWeight = event->getWeight(1)/abs(event->originalXWGTUP());
-          //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
-          //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
-          if ( nloWeight >= 0. )
-          {
-            nofPosWeights++;
-            hasPosWeight = true;
-          }
-          else
-          {
-            nofNegWeights++;
-            hasNegWeight = true;
-          }
-        }
-        
-        sumW += nloWeight;
-      }
+      ////////////////////////////
+      ///  ENERGY CORRECTIONS  ///
+      ////////////////////////////
       
       jetTools->correctJets(init_jets_corrected, rho, isData);
-      jetTools->correctMETTypeOne(init_jets_corrected, mets[0], isData);
+      jetTools->correctMETTypeOne(init_jets_corrected, mets_corrected[0], isData);
       
-      if (applyJESdown)    jetTools->correctJetJESUnc(init_jets_corrected, mets[0], "minus", 1); // with or without met?
-      else if (applyJESup) jetTools->correctJetJESUnc(init_jets_corrected, mets[0], "plus", 1);
+      if (applyJESdown)
+        jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "minus", 1); // with or without met?
+      else if (applyJESup)
+        jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "plus", 1);
       
       if (! isData)
       {
-        puSF = LumiWeights.ITweight( (int)event->nTruePU() );
-        puSF_up = LumiWeights_up.ITweight( (int)event->nTruePU() );
-        puSF_down = LumiWeights_down.ITweight( (int)event->nTruePU() );
-        
-        if (applyJERdown)    jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "minus", false);
-        else if (applyJERup) jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "plus", false);
-        else                 jetTools->correctJetJER(init_jets_corrected, genjets, mets[0], "nominal", false);
+        if (applyJERdown)
+          jetTools->correctJetJER(init_jets_corrected, genjets, mets_corrected[0], "minus", false);
+        else if (applyJERup)
+          jetTools->correctJetJER(init_jets_corrected, genjets, mets_corrected[0], "plus", false);
+        else
+          jetTools->correctJetJER(init_jets_corrected, genjets, mets_corrected[0], "nominal", false);
       }
       
             
@@ -1352,7 +1310,7 @@ int main (int argc, char *argv[])
       /////////////////////////
       
       //Declare selection instance
-      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets, rho);
+      Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets_corrected, rho);
       
       bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
@@ -1412,7 +1370,83 @@ int main (int argc, char *argv[])
       }
       
       
-      /// Fill variables for tree
+      
+      
+      ////// Selection
+      cutFlow[0]++;
+      if (isTrigged)
+      {
+        cutFlow[1]++;
+        if (isGoodPV)
+        {
+          cutFlow[2]++;
+          if (selectedMuons.size() == 1)
+          {
+            cutFlow[3]++;
+            if (vetoMuons.size() == 1)
+            {
+              cutFlow[4]++;
+              if (vetoElectrons.size() == 0)
+              {
+                cutFlow[5]++;
+                if ( selectedJets.size() >= 4 )
+                {
+                  cutFlow[6]++;
+                  if ( selectedJets.size() == 4 ) hasExactly4Jets = true;
+                  
+                  if ( selectedBJets.size() > 0 )
+                  {
+                    cutFlow[7]++;
+                    if ( selectedBJets.size() > 1 )
+                    {
+                      cutFlow[8]++;
+                      isSelected = true;
+                    }  // at least 2 b-tagged jets
+                  }  // at least 1 b-tagged jet
+                  
+                }  // at least 4 jets
+              }  // no veto electrons
+            }  // no additional loose muons (tight muon is also loose muon)
+          }  // 1 good muon
+        }  // good PV
+      }  // trigged
+      
+      
+      if (! isSelected)
+      {
+        continue;
+      }
+      
+      nEventsSel++;
+      
+      if (isData)
+      {
+        if (isDataRunB) nofSelEventsRunB++;
+        else if (isDataRunC || isDataRunD) nofSelEventsRunCD++;
+        else if (isDataRunE || isDataRunF) nofSelEventsRunEF++;
+        else if (isDataRunG) nofSelEventsRunG++;
+        else if (isDataRunH) nofSelEventsRunH++;
+      }
+      
+      
+      /// B-tagging
+      if (calculateBTagSF && ! isData)
+      {
+        bTagHistoTool_M->FillMCEfficiencyHistos(selectedJets);
+        bTagHistoTool_M_up->FillMCEfficiencyHistos(selectedJets);
+        bTagHistoTool_M_down->FillMCEfficiencyHistos(selectedJets);
+        continue;
+      }
+      
+      /// The next part is not run when b-tag SFs are calculated
+      /// The tree is not written
+      
+      
+      
+      ///////////////////////////////
+      ///  Fill Object Variables  ///
+      ///////////////////////////////
+      
       nJets = selectedJets.size();
       nMuons = selectedMuons.size();
       
@@ -1449,6 +1483,13 @@ int main (int argc, char *argv[])
       met_eta = mets[0]->Eta();
       met_Et = mets[0]->Et();
       met_E = mets[0]->E();
+      
+      met_corr_pt = mets_corrected[0]->Pt();
+      met_corr_phi = mets_corrected[0]->Phi();
+      met_corr_eta = mets_corrected[0]->Eta();
+      met_corr_Et = mets_corrected[0]->Et();
+      met_corr_E = mets_corrected[0]->E();
+      
       
       if (! isData)
       {
@@ -1521,6 +1562,10 @@ int main (int argc, char *argv[])
           btagSF_down = bTagHistoTool_M_down->getMCEventWeight(selectedJets);
         }
         
+        puSF = LumiWeights.ITweight( (int)event->nTruePU() );
+        puSF_up = LumiWeights_up.ITweight( (int)event->nTruePU() );
+        puSF_down = LumiWeights_down.ITweight( (int)event->nTruePU() );
+        
         for (int iMuon = 0; iMuon < selectedMuons.size(); iMuon++)
         {
           muonIdSF_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);  // eta, pt, shiftUpDown;
@@ -1548,92 +1593,50 @@ int main (int argc, char *argv[])
           muonTrackSF_nPV[iMuon] = h_muonSFWeightTrackPV->Eval(npu);
         }
         
-      }
-      
-      
-      ////// Selection
-      cutFlow[0]++;
-      if (isTrigged)
-      {
-        cutFlow[1]++;
-        if (isGoodPV)
+        if (nlo)
         {
-          cutFlow[2]++;
-          if (selectedMuons.size() == 1)
+          if ( event->getWeight(1001) != -9999. )
           {
-            cutFlow[3]++;
-            if (vetoMuons.size() == 1)
+            nloWeight = event->getWeight(1001)/abs(event->originalXWGTUP());
+            //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
+            //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
+            if ( nloWeight >= 0. ) 
             {
-              cutFlow[4]++;
-              if (vetoElectrons.size() == 0)
-              {
-                cutFlow[5]++;
-                
-//                 /// First 4 jets need pT > 30 GeV
-//                 if (selectedJets.size() >= 4)
-//                 {
-//                   if (selectedJets[3]->Pt() < 30) selectedJets.clear();
-//                 }
-                
-                if ( selectedJets.size() >= 4 )
-                {
-                  cutFlow[6]++;
-                  if ( selectedJets.size() == 4 ) hasExactly4Jets = true;
-                  
-                  if ( selectedBJets.size() > 0 )
-                  {
-                    cutFlow[7]++;
-                    if ( selectedBJets.size() > 1 )
-                    {
-                      cutFlow[8]++;
-                      isSelected = true;
-                    }  // at least 2 b-tagged jets
-                  }  // at least 1 b-tagged jet
-                  
-                }  // at least 4 jets
-              }  // no veto electrons
-            }  // no additional loose muons (tight muon is also loose muon)
-          }  // 1 good muon
-        }  // good PV
-      }  // trigged
-      
-      
-      if (! isSelected)
-      {
-        continue;
+              nofPosWeights++;
+              hasPosWeight = true;
+            }
+            else
+            {
+              nofNegWeights++;
+              hasNegWeight = true;
+            }
+          }
+          if ( event->getWeight(1) != -9999. )
+          {
+            nloWeight = event->getWeight(1)/abs(event->originalXWGTUP());
+            //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
+            //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
+            if ( nloWeight >= 0. )
+            {
+              nofPosWeights++;
+              hasPosWeight = true;
+            }
+            else
+            {
+              nofNegWeights++;
+              hasNegWeight = true;
+            }
+          }
+          
+          sumW += nloWeight;
+        }
       }
       
-      nEventsSel++;
       
-      if (isData)
-      {
-        if (isDataRunB) nofSelEventsRunB++;
-        else if (isDataRunC || isDataRunD) nofSelEventsRunCD++;
-        else if (isDataRunE || isDataRunF) nofSelEventsRunEF++;
-        else if (isDataRunG) nofSelEventsRunG++;
-        else if (isDataRunH) nofSelEventsRunH++;
-      }
-      
-      if (!calculateBTagSF)
+      if (! calculateBTagSF)
       {
         myTree->Fill();
       }
-      
-      
-      /// B-tagging
-      if (calculateBTagSF && ! isData)
-      {
-        bTagHistoTool_M->FillMCEfficiencyHistos(selectedJets);
-        bTagHistoTool_M_up->FillMCEfficiencyHistos(selectedJets);
-        bTagHistoTool_M_down->FillMCEfficiencyHistos(selectedJets);
-      }
-      
-      
-      
-      
-      
-      
-      
       
       
     }  // end loop events
