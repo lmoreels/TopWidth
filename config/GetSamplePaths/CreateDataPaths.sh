@@ -26,7 +26,7 @@ fi
 
 #strip extension off filename to make output file
 inputFileName=${inputFile%.*}
-outputFile=$inputFileName"_output.txt"
+outputFile="Output_"$inputFileName".txt"
 pnfsPath="/pnfs/iihe/cms/store/user/fblekman/TopTree/"$CMSSWversion"/"$globalTag"/"
 
 
