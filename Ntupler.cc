@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-  string xmlFileName ="config/topWidth_MC.xml";
+  string xmlFileName ="config/topWidth_data.xml";
   int maxMCParticles = -1;
   
   
@@ -375,11 +375,11 @@ int main (int argc, char *argv[])
   if (! applyLeptonSF) { cout << "    --- At the moment these are not used in the analysis";}
   cout << endl;
   
-  MuonSFWeight* muonSFWeightID_T_BCDEF = new MuonSFWeight(pathCalLept+"ID_EfficienciesAndSF_BCDEF.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false); // (... , ... , extendRange, debug, print warning)
-  MuonSFWeight* muonSFWeightID_T_GH = new MuonSFWeight(pathCalLept+"ID_EfficienciesAndSF_GH.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false);
+  MuonSFWeight* muonSFWeightID_T_BCDEF = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_BCDEF.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false); // (... , ... , extendRange, debug, print warning)
+  MuonSFWeight* muonSFWeightID_T_GH = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_GH.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false);
   
-  MuonSFWeight* muonSFWeightIso_TT_BCDEF = new MuonSFWeight(pathCalLept+"Iso_EfficienciesAndSF_BCDEF.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
-  MuonSFWeight* muonSFWeightIso_TT_GH = new MuonSFWeight(pathCalLept+"Iso_EfficienciesAndSF_GH.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+  MuonSFWeight* muonSFWeightIso_TT_BCDEF = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_BCDEF.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+  MuonSFWeight* muonSFWeightIso_TT_GH = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_GH.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
   
   MuonSFWeight *muonSFWeightTrig_BCDEF = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_RunBtoF.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
   MuonSFWeight *muonSFWeightTrig_GH = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_GH.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
@@ -499,7 +499,7 @@ int main (int argc, char *argv[])
     }
     
     anaEnv.METCollection = "PFMET_slimmedMETs";
-    if (isData) anaEnv.METCollection = "PFMET_slimmedMETsMuEGClean";
+    //if (isData) anaEnv.METCollection = "PFMET_slimmedMETsMuEGClean";
     
     //open files and load
     cout << "Load Dataset" << endl;
@@ -586,7 +586,7 @@ int main (int argc, char *argv[])
       vCorrParam.push_back(*L2L3ResJetCorPar);
       jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_Uncertainty_AK4PFchs.txt");
     }
-    else if ( dataSetName.find("Data_Run2016H") != std::string::npos )
+    else if ( dataSetName.find("Run2016H") != std::string::npos )
     {
       JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L1FastJet_AK4PFchs.txt");
       vCorrParam.push_back(*L1JetCorPar);
@@ -733,6 +733,16 @@ int main (int argc, char *argv[])
     Double_t muon_relIso[10];
     Double_t muon_pfIso[10];
     
+    Int_t nLooseMuons;
+    Int_t muon_loose_charge[10];
+    Double_t muon_loose_pt[10];
+    Double_t muon_loose_phi[10];
+    Double_t muon_loose_eta[10];
+    Double_t muon_loose_E[10];
+    Double_t muon_loose_relIso[10];
+    Bool_t isGlobalLooseMuon[10];
+    Bool_t isTrackerLooseMuon[10];
+    
     /// Variables for jets
     Int_t nJets;
     Int_t jet_charge[20];
@@ -862,7 +872,17 @@ int main (int argc, char *argv[])
     myTree->Branch("muon_photonIso",&muon_photonIso,"muon_photonIso[nMuons]/D");
     myTree->Branch("muon_puChargedHadronIso",&muon_puChargedHadronIso,"muon_puChargedHadronIso[nMuons]/D");
     myTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
-    myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");    
+    myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");
+    
+    myTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
+    myTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/I");
+    myTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
+    myTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
+    myTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
+    myTree->Branch("muon_loose_E",&muon_loose_E,"muon_loose_E[nLooseMuons]/D");
+    myTree->Branch("muon_loose_relIso",&muon_loose_relIso,"muon_loose_relIso[nLooseMuons]/D");
+    myTree->Branch("isGlobalLooseMuon",&isGlobalLooseMuon,"isGlobalLooseMuon[nLooseMuons]/O");
+    myTree->Branch("isTrackerLooseMuon",&isTrackerLooseMuon,"isTrackerLooseMuon[nLooseMuons]/O");
     
     // jets
     myTree->Branch("nJets",&nJets,"nJets/I");
@@ -1030,6 +1050,7 @@ int main (int argc, char *argv[])
     vector < TRootPFJet* > selectedJetsBC;
     vector < TRootMuon* > selectedMuons;
     vector < TRootMuon* > vetoMuons;
+    vector < TRootMuon* > selectedLooseMuons;
     vector < TRootElectron* > selectedElectrons;
     vector < TRootElectron* > vetoElectrons;
     
@@ -1072,6 +1093,7 @@ int main (int argc, char *argv[])
       selectedJetsBC.clear();
       selectedMuons.clear();
       vetoMuons.clear();
+      selectedLooseMuons.clear();
       selectedElectrons.clear();
       vetoElectrons.clear();
       
@@ -1198,7 +1220,7 @@ int main (int argc, char *argv[])
       ///  LOAD EVENT  ///
       ////////////////////
       
-      TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets, mets);
+      TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets, mets, false);
       init_jets_corrected = init_jets;
       mets_corrected = mets;
       
@@ -1294,7 +1316,7 @@ int main (int argc, char *argv[])
           jetTools->correctJetJER(init_jets_corrected, genjets, mets_corrected[0], "nominal", false);
       }
       
-            
+      
       
       /////////////////
       ///  Trigger  ///
@@ -1319,6 +1341,7 @@ int main (int argc, char *argv[])
       selectedElectrons = selection.GetSelectedElectrons(electronPTSel, electronEtaSel, electronWP, "Spring16_80X", true, true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased, VID
       vetoMuons = selection.GetSelectedMuons(muonPTVeto, muonEtaVeto, muonRelIsoVeto, "Loose", "Summer16");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
       vetoElectrons = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring16_80X", true, true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
+      selectedLooseMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoSel, "Loose", "Summer16");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
       
       if (applyJetLeptonCleaning)
       {
@@ -1449,6 +1472,7 @@ int main (int argc, char *argv[])
       
       nJets = selectedJets.size();
       nMuons = selectedMuons.size();
+      nLooseMuons = selectedLooseMuons.size();
       
       for(Int_t iJet = 0; iJet < nJets; iJet++)
       {
@@ -1476,6 +1500,18 @@ int main (int argc, char *argv[])
         muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
         muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
         muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
+      }
+      
+      for (Int_t iMuon = 0; iMuon < nLooseMuons; iMuon++)
+      {
+        muon_loose_charge[iMuon] = selectedLooseMuons[iMuon]->charge();
+        muon_loose_pt[iMuon] = selectedLooseMuons[iMuon]->Pt();
+        muon_loose_phi[iMuon] = selectedLooseMuons[iMuon]->Phi();
+        muon_loose_eta[iMuon] = selectedLooseMuons[iMuon]->Eta();
+        muon_loose_E[iMuon] = selectedLooseMuons[iMuon]->E();
+        muon_loose_relIso[iMuon] = ( selectedLooseMuons[iMuon]->chargedHadronIso(4) + max( 0.0, selectedLooseMuons[iMuon]->neutralHadronIso(4) + selectedLooseMuons[iMuon]->photonIso(4) - 0.5*selectedLooseMuons[iMuon]->puChargedHadronIso(4) ) ) / muon_loose_pt[iMuon];  // dR = 0.4, dBeta corrected
+        isGlobalLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isGlobalMuon();
+        isTrackerLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isTrackerMuon();
       }
       
       met_pt = mets[0]->Pt();
@@ -1640,7 +1676,7 @@ int main (int argc, char *argv[])
       
       
     }  // end loop events
-    cout << "Max MCParticles: " << maxMCParticles << endl << endl;
+    if (! isData) cout << "Max MCParticles: " << maxMCParticles << endl << endl;
     
     cout << "Fill trees..." << endl;
     if (! calculateBTagSF)
