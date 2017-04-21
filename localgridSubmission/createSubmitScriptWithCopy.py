@@ -35,8 +35,7 @@ for chan in channels:
     print "\nSearching list of sample used for ", chan, " channel!"
     # getting the appropriate xml file
     if "mu" in chan:
-        tree = ET.ElementTree(file='../config/topWidth_localgrid.xml')
-#        tree = ET.ElementTree(file='../config/test.xml')
+        tree = ET.ElementTree(file='../config/topWidth_data_loc.xml')
     elif "el" in chan:
         tree = ET.ElementTree(file='../config/topWidth_el_localgrid.xml')
     else:
