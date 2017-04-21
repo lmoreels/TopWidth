@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<data>
 <datasets>
 
 <d name="data_Run2016B" title="dataSingleMuon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016B-03Feb2017_ver2-v2crab33/170418_180401/000*/*.root"/>
@@ -21,3 +22,4 @@
 
 <a type="Conditions" isMC="1" MCRound="0" Vars_ByFile="0" VarsFile="m0_100_m12_100" IntToCut="4" Verbose="2" Luminosity="999999" JES="1." nPseudoExp="0" nPseudoSession="0" runonTTrees="0" doABCD="1" doVJEstim="1" doVJEstPE="1" doTtJEstim="1" doTemplComp="0" doSystematics="0"/><!-- Luminosity in pb-1 -->
 </analysis>
+</data>
