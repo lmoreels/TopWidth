@@ -615,6 +615,7 @@ int main (int argc, char *argv[])
     
     TTree* myTree = new TTree("tree","tree");
     TTree* statTree = new TTree("stats","stats");
+    TTree* muonTree = new TTree("muonres","muonres");
     
     
     
@@ -629,6 +630,7 @@ int main (int argc, char *argv[])
     Int_t nofNegWeights;
     Double_t sumW;
     Int_t cutFlow[10];
+    Int_t cutFlow2[10];
     Int_t appliedJER;
     Int_t appliedJES;
     Int_t appliedPU;
@@ -792,6 +794,7 @@ int main (int argc, char *argv[])
     statTree->Branch("nEvents" , &nEvents, "nEvents/L");
     statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
     statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/I");
+    statTree->Branch("cutFlow2",&cutFlow2,"cutFlow2[10]/I");
     statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
     statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
     statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
@@ -874,15 +877,15 @@ int main (int argc, char *argv[])
     myTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
     myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");
     
-    myTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
-    myTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/I");
-    myTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
-    myTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
-    myTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
-    myTree->Branch("muon_loose_E",&muon_loose_E,"muon_loose_E[nLooseMuons]/D");
-    myTree->Branch("muon_loose_relIso",&muon_loose_relIso,"muon_loose_relIso[nLooseMuons]/D");
-    myTree->Branch("isGlobalLooseMuon",&isGlobalLooseMuon,"isGlobalLooseMuon[nLooseMuons]/O");
-    myTree->Branch("isTrackerLooseMuon",&isTrackerLooseMuon,"isTrackerLooseMuon[nLooseMuons]/O");
+    muonTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
+    muonTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/I");
+    muonTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
+    muonTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
+    muonTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
+    muonTree->Branch("muon_loose_E",&muon_loose_E,"muon_loose_E[nLooseMuons]/D");
+    muonTree->Branch("muon_loose_relIso",&muon_loose_relIso,"muon_loose_relIso[nLooseMuons]/D");
+    muonTree->Branch("isGlobalLooseMuon",&isGlobalLooseMuon,"isGlobalLooseMuon[nLooseMuons]/O");
+    muonTree->Branch("isTrackerLooseMuon",&isTrackerLooseMuon,"isTrackerLooseMuon[nLooseMuons]/O");
     
     // jets
     myTree->Branch("nJets",&nJets,"nJets/I");
@@ -1028,7 +1031,10 @@ int main (int argc, char *argv[])
     nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
     
     for (Int_t i = 0; i < 10; i++)
+    {
       cutFlow[i] = 0;
+      cutFlow2[i] = 0;
+    }
     
     /// Get run information
     datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
@@ -1153,6 +1159,7 @@ int main (int argc, char *argv[])
       
       
       nMuons = -1;
+      nLooseMuons = -1;
       nJets = -1;
       
       for (Int_t i = 0; i < 10; i++)
@@ -1170,6 +1177,18 @@ int main (int argc, char *argv[])
         muon_puChargedHadronIso[i] = 999.;
         muon_relIso[i] = 999.;
         muon_pfIso[i] = 999.;
+      }
+      
+      for (Int_t i = 0; i < 10; i++)
+      {
+        muon_loose_charge[i] = 0;
+        muon_loose_pt[i] = 0.;
+        muon_loose_phi[i] = 0.;
+        muon_loose_eta[i] = 0.;
+        muon_loose_E[i] = 0.;
+        muon_loose_relIso[i] = 999.;
+        isGlobalLooseMuon[i] = false;
+        isTrackerLooseMuon[i] = false;
       }
       
       for (Int_t i = 0; i < 20; i++)
@@ -1393,37 +1412,71 @@ int main (int argc, char *argv[])
       }
       
       
+      /// Fill loose muon tree before event selection
+      nLooseMuons = selectedLooseMuons.size();
+      if ( ! calculateBTagSF && nLooseMuons > 0 )
+      {
+        for (Int_t iMuon = 0; iMuon < nLooseMuons; iMuon++)
+        {
+          muon_loose_charge[iMuon] = selectedLooseMuons[iMuon]->charge();
+          muon_loose_pt[iMuon] = selectedLooseMuons[iMuon]->Pt();
+          muon_loose_phi[iMuon] = selectedLooseMuons[iMuon]->Phi();
+          muon_loose_eta[iMuon] = selectedLooseMuons[iMuon]->Eta();
+          muon_loose_E[iMuon] = selectedLooseMuons[iMuon]->E();
+          muon_loose_relIso[iMuon] = ( selectedLooseMuons[iMuon]->chargedHadronIso(4) + max( 0.0, selectedLooseMuons[iMuon]->neutralHadronIso(4) + selectedLooseMuons[iMuon]->photonIso(4) - 0.5*selectedLooseMuons[iMuon]->puChargedHadronIso(4) ) ) / muon_loose_pt[iMuon];  // dR = 0.4, dBeta corrected
+          isGlobalLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isGlobalMuon();
+          isTrackerLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isTrackerMuon();
+        }
+        muonTree->Fill();
+      }
       
       
       ////// Selection
       cutFlow[0]++;
+      cutFlow2[0]++;
       if (isTrigged)
       {
         cutFlow[1]++;
+        cutFlow2[1]++;
         if (isGoodPV)
         {
           cutFlow[2]++;
+          cutFlow2[2]++;
           if (selectedMuons.size() == 1)
           {
             cutFlow[3]++;
+            cutFlow2[3]++;
             if (vetoMuons.size() == 1)
             {
               cutFlow[4]++;
+              cutFlow2[4]++;
               if (vetoElectrons.size() == 0)
               {
                 cutFlow[5]++;
+                cutFlow2[5]++;
                 if ( selectedJets.size() >= 4 )
                 {
                   cutFlow[6]++;
-                  if ( selectedJets.size() == 4 ) hasExactly4Jets = true;
+                  cutFlow2[6]++;
+                  if ( selectedJets.size() == 4 )
+                  {
+                    cutFlow2[7]++;
+                    hasExactly4Jets = true;
+                  }
                   
                   if ( selectedBJets.size() > 0 )
                   {
                     cutFlow[7]++;
+                    if (hasExactly4Jets) cutFlow2[8]++;
                     if ( selectedBJets.size() > 1 )
                     {
                       cutFlow[8]++;
                       isSelected = true;
+                      
+                      if (hasExactly4Jets){
+                        cutFlow[9]++;
+                        cutFlow2[9]++;
+                      }
                     }  // at least 2 b-tagged jets
                   }  // at least 1 b-tagged jet
                   
@@ -1472,7 +1525,6 @@ int main (int argc, char *argv[])
       
       nJets = selectedJets.size();
       nMuons = selectedMuons.size();
-      nLooseMuons = selectedLooseMuons.size();
       
       for(Int_t iJet = 0; iJet < nJets; iJet++)
       {
@@ -1500,18 +1552,6 @@ int main (int argc, char *argv[])
         muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
         muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
         muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
-      }
-      
-      for (Int_t iMuon = 0; iMuon < nLooseMuons; iMuon++)
-      {
-        muon_loose_charge[iMuon] = selectedLooseMuons[iMuon]->charge();
-        muon_loose_pt[iMuon] = selectedLooseMuons[iMuon]->Pt();
-        muon_loose_phi[iMuon] = selectedLooseMuons[iMuon]->Phi();
-        muon_loose_eta[iMuon] = selectedLooseMuons[iMuon]->Eta();
-        muon_loose_E[iMuon] = selectedLooseMuons[iMuon]->E();
-        muon_loose_relIso[iMuon] = ( selectedLooseMuons[iMuon]->chargedHadronIso(4) + max( 0.0, selectedLooseMuons[iMuon]->neutralHadronIso(4) + selectedLooseMuons[iMuon]->photonIso(4) - 0.5*selectedLooseMuons[iMuon]->puChargedHadronIso(4) ) ) / muon_loose_pt[iMuon];  // dR = 0.4, dBeta corrected
-        isGlobalLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isGlobalMuon();
-        isTrackerLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isTrackerMuon();
       }
       
       met_pt = mets[0]->Pt();
@@ -1687,6 +1727,7 @@ int main (int argc, char *argv[])
       fout->cd();
       myTree->Write();
       statTree->Write();
+      muonTree->Write();
     }
     fout->Close();
     delete fout;
