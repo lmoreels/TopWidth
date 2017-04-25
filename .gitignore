@@ -19,6 +19,7 @@ OutputPlots/*
 Plots*/*
 ResolutionFunctions/*.txt
 ResolutionFunctions_TABLE.txt
+TGraphFits/*
 TransferFunctions_TABLE.txt
 Trigger/*.txt
 Trigger/Makefile
@@ -40,6 +41,7 @@ toys/*
 AverageMassCalculator
 GetFitParams
 Likelihood
+MakeTGraphFromHisto
 NtupleAnalyser
 NtupleAnalyser_oldReco
 NtupleAnalyser__*
