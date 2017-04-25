@@ -23,6 +23,7 @@ using namespace std;
 
 
 string inputDate = "170425_1455/";
+string suffix = "";
 map<string,TH1F*> histo;
 map<string,TGraph*> graph;
 
@@ -32,13 +33,11 @@ string MakeTimeStamp();
 bool fexists(const char *filename);
 void ClearVars();
 void DrawGraph(TH1F* h, TGraph* g, string name);
+void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent);
 
 
 int binMin, binMax;
-double tempBinCentre;
-double tempBinContent;
-vector<double> binCentre;
-vector<double> binContent;
+ofstream txtOutput;
 
 
 int main (int argc, char *argv[])
@@ -51,7 +50,7 @@ int main (int argc, char *argv[])
   cout << "********************************" << endl;
   
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+inputDate+"NtuplePlots_nominal.root";
-  string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/GraphFunctions.root";
+  string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/TGraphFits/GraphFunctions"+suffix+".root";
   
   TFile *fileIn = new TFile(inputFileName.c_str(),"read");
   TFile *fileOut = new TFile(outputFileName.c_str(),"recreate");
@@ -144,6 +143,8 @@ int main (int argc, char *argv[])
   graph["likelihood"] = new TGraph(nPoints, binCentreArray, totalBinContentArray);
   DrawGraph(histoTotal, graph["likelihood"], "Graph_likelihood");
   
+  WriteOutput(nPoints, binCentreArray, totalBinContentArray);
+  
   
   /// Close files
   fileOut->Close();
@@ -195,10 +196,6 @@ void ClearVars()
 {
   binMin = 0;
   binMax = 100;
-  tempBinCentre = 0.;
-  tempBinContent = 0.;
-  binCentre.clear();
-  binContent.clear();
 }
 
 void DrawGraph(TH1F* h, TGraph* g, string name)
@@ -214,3 +211,24 @@ void DrawGraph(TH1F* h, TGraph* g, string name)
   c->SaveAs((name+".png").c_str());
 }
 
+void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent)
+{
+  string outputTxtName = "TGraphFits/output_tgraph"+suffix+".txt";
+  txtOutput.open(outputTxtName.c_str());
+  
+  txtOutput << "BinCentres:  ";
+  for (int i = 0; i < nPoints; i++)
+  {
+    txtOutput << setw(5) << right << arrayCentre[i] << "  ";
+  }
+  txtOutput << endl;
+  txtOutput << "BinContents:  ";
+  for (int i = 0; i < nPoints; i++)
+  {
+    txtOutput << setw(5) << right << arrayContent[i] << "  ";
+  }
+  txtOutput << endl;
+  
+  txtOutput << endl;
+  txtOutput.close();
+}
