@@ -2097,15 +2097,26 @@ void InitHisto2DMatch()
 
 void InitHisto1DRedMass()
 {
+  histo1D["Red_top_mass_CP_90b"] = new TH1F("Red_top_mass_CP_90b","Reduced top mass, CP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
+  histo1D["Red_top_mass_CP_80b"] = new TH1F("Red_top_mass_CP_80b","Reduced top mass, CP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
+  histo1D["Red_top_mass_CP_75b"] = new TH1F("Red_top_mass_CP_75b","Reduced top mass, CP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
+  histo1D["Red_top_mass_CP_70b"] = new TH1F("Red_top_mass_CP_70b","Reduced top mass, CP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
   histo1D["Red_top_mass_CP_60b"] = new TH1F("Red_top_mass_CP_60b","Reduced top mass, CP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
   histo1D["Red_top_mass_CP_30b"] = new TH1F("Red_top_mass_CP_30b","Reduced top mass, CP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_15b"] = new TH1F("Red_top_mass_CP_15b","Reduced top mass, CP; M_{t}/<M_{t}>", 15, 0.5, 2.0);
+  
+  histo1D["Red_top_mass_WP_90b"] = new TH1F("Red_top_mass_WP_90b","Reduced top mass, WP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
+  histo1D["Red_top_mass_WP_80b"] = new TH1F("Red_top_mass_WP_80b","Reduced top mass, WP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
+  histo1D["Red_top_mass_WP_75b"] = new TH1F("Red_top_mass_WP_75b","Reduced top mass, WP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
+  histo1D["Red_top_mass_WP_70b"] = new TH1F("Red_top_mass_WP_70b","Reduced top mass, WP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
   histo1D["Red_top_mass_WP_60b"] = new TH1F("Red_top_mass_WP_60b","Reduced top mass, WP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
   histo1D["Red_top_mass_WP_30b"] = new TH1F("Red_top_mass_WP_30b","Reduced top mass, WP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_15b"] = new TH1F("Red_top_mass_WP_15b","Reduced top mass, WP; M_{t}/<M_{t}>", 15, 0.5, 2.0);
+  
+  histo1D["Red_top_mass_UP_90b"] = new TH1F("Red_top_mass_UP_90b","Reduced top mass, UP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
+  histo1D["Red_top_mass_UP_80b"] = new TH1F("Red_top_mass_UP_80b","Reduced top mass, UP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
+  histo1D["Red_top_mass_UP_75b"] = new TH1F("Red_top_mass_UP_75b","Reduced top mass, UP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
+  histo1D["Red_top_mass_UP_70b"] = new TH1F("Red_top_mass_UP_70b","Reduced top mass, UP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
   histo1D["Red_top_mass_UP_60b"] = new TH1F("Red_top_mass_UP_60b","Reduced top mass, UP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
   histo1D["Red_top_mass_UP_30b"] = new TH1F("Red_top_mass_UP_30b","Reduced top mass, UP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_15b"] = new TH1F("Red_top_mass_UP_15b","Reduced top mass, UP; M_{t}/<M_{t}>", 15, 0.5, 2.0);
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
@@ -2560,9 +2571,12 @@ void FillCatsPlots(string catSuffix)
     histo1D["mTop_div_aveMTop_bkgd"]->Fill(tempAveMass);
     if ( isWP || isUP ) histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(tempAveMass, widthSF);
     histo1D[("mTop_div_aveMTop_TT_reco"+catSuffix).c_str()]->Fill(tempAveMass, widthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_90b").c_str()]->Fill(tempAveMass, widthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_80b").c_str()]->Fill(tempAveMass, widthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_75b").c_str()]->Fill(tempAveMass, widthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_70b").c_str()]->Fill(tempAveMass, widthSF);
     histo1D[("Red_top_mass"+catSuffix+"_60b").c_str()]->Fill(tempAveMass, widthSF);
     histo1D[("Red_top_mass"+catSuffix+"_30b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_15b").c_str()]->Fill(tempAveMass, widthSF);
     histo1D[("minMlb_reco"+catSuffix).c_str()]->Fill(reco_minMlb, widthSF);
     histo1D[("dR_lep_b_lep_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, widthSF);
     histo1D[("dR_lep_b_had_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_had, widthSF);
