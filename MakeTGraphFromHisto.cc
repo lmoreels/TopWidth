@@ -16,6 +16,7 @@
 #include <TH1.h>
 #include <TF1.h>
 #include <TGraph.h>
+#include <TGraph2D.h>
 #include <TFile.h>
 #include <TCanvas.h>
 
@@ -26,19 +27,22 @@ bool useDifferentWidths = true;
 
 string inputDate = "170426_0952";
 string suffix = "_90b";
-pair<string,string> input[] = { pair<string,string>("0p5","170426_0949"), pair<string,string>("0p66","170426_0950"), pair<string,string>("0p75","170426_0951"), pair<string,string>("1","170426_0952"), pair<string,string>("2","170426_0956"), pair<string,string>("3","170426_0957"), pair<string,string>("4","170426_0958") };
+pair<double,string> input[] = { pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(1.,"170426_0952"), pair<double,string>(2.,"170426_0956"), pair<double,string>(3.,"170426_0957"), pair<double,string>(4.,"170426_0958") };
 
 map<string,TH1F*> histo, histoTotal;
 map<string,TGraph*> graph;
 
 /// Functions
+string ConvertDoubleToString(double Number);
+string DotReplace(double var);
 string ConvertIntToString(int Number, int pad);
 string MakeTimeStamp();
 bool fexists(const char *filename);
 void ClearVars();
 void DrawGraph(TH1F* h, TGraph* g, string name);
-void DrawLikelihoods(double nWidths, pair<string,string> *input);
-void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent);
+void DrawGraph2D(TGraph2D* g, string name);
+void DrawLikelihoods(double nWidths, pair<double,string> *input);
+void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name);
 
 
 int binMin, binMax;
@@ -59,6 +63,8 @@ int main (int argc, char *argv[])
   string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/TGraphFits/GraphFunctions.root";
   TFile *fileOut = new TFile(outputFileName.c_str(),"recreate");
   
+  TGraph2D *gLL2D = new TGraph2D();
+    
   string listCats[] = {"CP", "WP", "UP"};
   const int sizeCats = sizeof(listCats)/sizeof(listCats[0]);
   int totEvents = 0;
@@ -78,7 +84,7 @@ int main (int argc, char *argv[])
   {
     if (useDifferentWidths)
     {
-      suffix = "_widthx"+input[iWidth].first+"_90b";
+      suffix = "_widthx"+DotReplace(input[iWidth].first)+"_90b";
       inputDate = input[iWidth].second;
     }
     
@@ -176,19 +182,52 @@ int main (int argc, char *argv[])
     graph["likelihood"+suffix]->Write();
     DrawGraph(histoTotal[suffix], graph["likelihood"+suffix], "Graph_likelihood"+suffix);
     
-    WriteOutput(nPoints, binCentreArray, totalBinContentArray);
+    WriteOutput(nPoints, binCentreArray, totalBinContentArray, suffix);
+    
+    // Fill TGraph2D
+    if (useDifferentWidths)
+    {
+      for (int iCentre = 0; iCentre < nPoints; iCentre++)
+      {
+        gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth].first, totalBinContentArray[iCentre]);
+        cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth].first << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
+      }
+    }
     
     /// Close input file
     fileIn->Close();
   }  // end nWidths
   
-  if (useDifferentWidths) DrawLikelihoods(nWidths, input);
+  if (useDifferentWidths)
+  {
+    DrawLikelihoods(nWidths, input);
+    gLL2D->SetName("2D_likelihood");
+    gLL2D->SetTitle("2D_likelihood");
+    gLL2D->Write();
+    DrawGraph2D(gLL2D, "2D_likelihood");
+  }
   
   /// Close output file
   fileOut->Close();
   
   
   return 0;
+}
+
+string ConvertDoubleToString(double Number)
+{
+  ostringstream convert;
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
+  convert << Number;
+  return convert.str();
+}
+
+string DotReplace(double var)
+{
+  string str = ConvertDoubleToString(var);
+  replace(str.begin(), str.end(), '.', 'p');
+  return str;
 }
 
 string ConvertIntToString(int Number, int pad)
@@ -248,20 +287,41 @@ void DrawGraph(TH1F* h, TGraph* g, string name)
   c->Update();
   c->Write();
   c->SaveAs(("TGraphFits/"+name+".png").c_str());
+  
+  delete c;
 }
 
-void DrawLikelihoods(double nWidths, pair<string,string> *input)
+void DrawGraph2D(TGraph2D* g, string name)
+{
+  TCanvas *c = new TCanvas(name.c_str(), name.c_str());
+  c->cd();
+  g->SetName(name.c_str());
+  g->SetTitle(name.c_str());
+  gStyle->SetPalette(1);
+  g->Draw("surf1");
+  c->Update();
+  c->Write();
+  c->SaveAs(("TGraphFits/"+name+"_surf1.png").c_str());
+  g->Draw("colz");
+  c->Update();
+  c->Write();
+  c->SaveAs(("TGraphFits/"+name+"_colz.png").c_str());
+  
+  delete c;
+}
+
+void DrawLikelihoods(double nWidths, pair<double,string> *input)
 {
   Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+1, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};
   TCanvas* c2 = new TCanvas("TotalProbability", "TotalProbability");
   c2->cd();
-  graph["likelihood_widthx"+input[0].first+"_90b"]->SetLineColor(colours[0]);
-  graph["likelihood_widthx"+input[0].first+"_90b"]->Draw();
+  graph["likelihood_widthx"+DotReplace(input[0].first)+"_90b"]->SetLineColor(colours[0]);
+  graph["likelihood_widthx"+DotReplace(input[0].first)+"_90b"]->Draw();
   c2->Update();
   for (int i = 1; i < nWidths; i++)
   {
-    graph["likelihood_widthx"+input[i].first+"_90b"]->SetLineColor(colours[i%10]);
-    graph["likelihood_widthx"+input[i].first+"_90b"]->Draw("same");
+    graph["likelihood_widthx"+DotReplace(input[i].first)+"_90b"]->SetLineColor(colours[i%10]);
+    graph["likelihood_widthx"+DotReplace(input[i].first)+"_90b"]->Draw("same");
     c2->Update();
   }
   c2->Write();
@@ -271,9 +331,9 @@ void DrawLikelihoods(double nWidths, pair<string,string> *input)
   delete c2;
 }
 
-void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent)
+void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name)
 {
-  string outputTxtName = "TGraphFits/output_tgraph"+suffix+".txt";
+  string outputTxtName = "TGraphFits/output_tgraph"+name+".txt";
   txtOutput.open(outputTxtName.c_str());
   
   txtOutput << "BinCentres:  ";
