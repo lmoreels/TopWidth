@@ -190,7 +190,7 @@ int main (int argc, char *argv[])
       for (int iCentre = 0; iCentre < nPoints; iCentre++)
       {
         gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth].first, totalBinContentArray[iCentre]);
-        cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth].first << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
+        //cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth].first << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
       }
     }
     
@@ -206,6 +206,7 @@ int main (int argc, char *argv[])
     gLL2D->Write();
     DrawGraph2D(gLL2D, "2D_likelihood");
   }
+  //cout << "TGraph evaluated in (1,1): " << gLL2D->Interpolate(1,1) << " ;  (1,1.01): " << gLL2D->Interpolate(1,1.01) << " ;  (1,1.02): " << gLL2D->Interpolate(1,1.02) << " ;  (1,1.03): " << gLL2D->Interpolate(1,1.03) << " ;  (1,1.05): " << gLL2D->Interpolate(1,1.05) << endl;
   
   /// Close output file
   fileOut->Close();
@@ -298,6 +299,7 @@ void DrawGraph2D(TGraph2D* g, string name)
   g->SetName(name.c_str());
   g->SetTitle(name.c_str());
   gStyle->SetPalette(1);
+  g->SetMaxIter(500000);
   g->Draw("surf1");
   c->Update();
   c->Write();
