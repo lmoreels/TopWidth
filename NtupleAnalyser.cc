@@ -13,6 +13,8 @@
 #include "TNtuple.h"
 #include <TFile.h>
 #include <TLeaf.h>
+#include <TGraph.h>
+#include <TGraph2D.h>
 
 // used TopTreeAnalysis classes
 #include "TopTreeProducer/interface/TRootRun.h"
@@ -41,7 +43,8 @@ bool doGenOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
+bool useLLTGraph = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -54,7 +57,7 @@ bool applyBTagSF = true;
 bool applyNloSF = false;
 
 bool applyWidthSF = false;
-double scaleWidth = 0.66;
+double scaleWidth = 0.4;
 
 bool useOldNtuples = true;
 string systStr = "nominal";
@@ -171,6 +174,7 @@ string ConvertDoubleToString(double Number);
 string DotReplace(double var);
 string ConvertIntToString(int nb, bool pad);
 string MakeTimeStamp();
+bool fexists(const char *filename);
 void GetMetaData(TTree* tree, bool isData);
 void InitTree(TTree* tree, bool isData);
 void InitMSPlots();
@@ -205,6 +209,7 @@ Double_t fakeLikelihood(Double_t *x, Double_t *par);
 Double_t widthToGammaTranslation(Double_t *x);
 void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
+TGraph2D* ReadTGraphInput(string inputFileName);
 
 
 
@@ -427,6 +432,9 @@ Double_t loglike_gen[nWidthsLL] = {0};
 Double_t loglike_gen_per_evt[nWidthsLL] = {0};
 Double_t loglike_gen_onlyGoodEvts[nWidthsLL] = {0};
 
+TGraph2D* graphLogLike;
+
+
 bool isGoodLL = false, isGoodLL_gen = false;
 int nofGoodEvtsLL[10] = {0};
 int nofGoodEvtsLL_gen[10] = {0};
@@ -489,7 +497,7 @@ int main(int argc, char* argv[])
     doKinFit = false;
     useToys = false;
   }
-  
+  if (! calculateLikelihood) useLLTGraph = false;
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -517,7 +525,12 @@ int main(int argc, char* argv[])
   cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
-  if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
+  if (calculateLikelihood)
+  {
+    cout << "Calculating -loglikelihood values";
+    if (useLLTGraph) cout << " with TGraph function";
+    cout << "..." << endl;
+  }
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
   
@@ -632,8 +645,15 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
-  
   if (calculateLikelihood)
+  {
+    //cout << "Getting TGraph2d..." << endl;
+    graphLogLike = ReadTGraphInput("LogLikelihoodFunction.root");
+    //cout << "Test graph: " << graphLogLike->GetN() << endl;
+    //cout << "Test graph: " << graphLogLike->Interpolate(0.8,1.2) << endl;
+  }
+  
+  if (calculateLikelihood)  // new if, because previous function can change this
   {
     /// Define gammas
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
@@ -1070,13 +1090,15 @@ int main(int argc, char* argv[])
               txtMassGenJMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
             }
             
-            if (calculateLikelihood)
+            if (calculateLikelihood && ! useLLTGraph)  // Temporarily !
             {
               double tempRedMass = matchedTopMass_gen/aveTopMass[0];
               if ( tempRedMass > minCutRedTopMass && tempRedMass < maxCutRedTopMass )
               {
                 for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
                 {
+                  //if (useLLTGraph) loglike_gen_per_evt[iWidth] = graphLogLike->Interpolate(tempAveMass, widthArray[iWidth]);
+                  //else loglike_gen_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
                   loglike_gen_per_evt[iWidth] = fakeLikelihood(&tempRedMass, &gammaArray[iWidth]);
                   if (! isData) loglike_gen[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
                 }
@@ -1348,9 +1370,10 @@ int main(int argc, char* argv[])
         {
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
-            loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+            if (useLLTGraph) loglike_per_evt[iWidth] = graphLogLike->Interpolate(tempAveMass, widthArray[iWidth]);
+            else loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+            
             if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
-            else loglike_data[iWidth] += loglike_per_evt[iWidth];
           }
           
           // make loglikelihood only with events that have minimum
@@ -1421,10 +1444,11 @@ int main(int argc, char* argv[])
       }  // end makePlots
       
       
-      if ( isCP && calculateLikelihood )
+      if ( isCP && calculateLikelihood && ! useLLTGraph)  // Temporarily !
       {
         for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
         {
+          //if (useLLTGraph) ...;
           fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
           fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
           if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
@@ -1463,18 +1487,17 @@ int main(int argc, char* argv[])
             histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
           }
         }
-        
       }  // end isCP && likelihood
-
+      
       /// write debug file
       if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
            || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
            || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
       {
         txtLogLikeTest << setw(8) << right << ievt;
-        if (isCP) cout << "  CP  ";
-        else if (isWP) cout << "  WP  ";
-        else if (isUP) cout << "  UP  ";
+        if (isCP) txtLogLikeTest << "  CP  ";
+        else if (isWP) txtLogLikeTest << "  WP  ";
+        else if (isUP) txtLogLikeTest << "  UP  ";
         txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
       }
       
@@ -1761,6 +1784,11 @@ string MakeTimeStamp()
   return date_str;
 }
 
+bool fexists(const char *filename)
+{
+  ifstream ifile(filename);
+  return ifile.good();
+}
 
 void GetMetaData(TTree* tree, bool isData)
 {
@@ -2908,4 +2936,15 @@ void PrintKFDebug(int ievt)
   //}
 }
 
+TGraph2D* ReadTGraphInput(string inputFileName)
+{
+  TGraph2D* graph = 0;
+  
+  TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
+  inputFileLL->GetObject("LogLikelihoodFunction", graph);
+  graph->GetHistogram();
+  graph->SetMaxIter(500000000);
+  
+  return graph;
+}
 
