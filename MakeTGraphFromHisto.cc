@@ -14,6 +14,7 @@
 #include <array>
 #include <vector>
 #include <TH1.h>
+#include <TH2.h>
 #include <TF1.h>
 #include <TGraph.h>
 #include <TGraph2D.h>
@@ -27,7 +28,7 @@ bool useDifferentWidths = true;
 
 string inputDate = "170426_0952";
 string suffix = "_90b";
-pair<double,string> input[] = { pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(1.,"170426_0952"), pair<double,string>(2.,"170426_0956"), pair<double,string>(3.,"170426_0957"), pair<double,string>(4.,"170426_0958") };
+pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
 
 map<string,TH1F*> histo, histoTotal;
 map<string,TGraph*> graph;
@@ -43,6 +44,7 @@ void DrawGraph(TH1F* h, TGraph* g, string name);
 void DrawGraph2D(TGraph2D* g, string name);
 void DrawLikelihoods(double nWidths, pair<double,string> *input);
 void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name);
+void WriteToFile(TGraph2D* g, string name);
 
 
 int binMin, binMax;
@@ -119,7 +121,7 @@ int main (int argc, char *argv[])
       }
       
       binMin = histo[histoName]->FindBin(0.6);
-      binMax = histo[histoName]->FindBin(1.4);
+      binMax = histo[histoName]->FindBin(1.4)+1;
       for (int iBin = binMin; iBin < binMax+1; iBin++) { nEvents[iCat] += histo[histoName]->GetBinContent(iBin);}
       totEvents += nEvents[iCat];
       
@@ -160,6 +162,8 @@ int main (int argc, char *argv[])
       histoName = listCats[iCat]+suffix;
       
       graph[histoName] = new TGraph(nPoints, binCentreArray, binContentArray[iCat]);
+      graph[histoName]->SetName(histoName.c_str());
+      graph[histoName]->SetTitle(histoName.c_str());
       graph[histoName]->Write();
       DrawGraph(histo[histoName], graph[histoName], "Graph_Red_top_mass_"+histoName);
 
@@ -175,10 +179,18 @@ int main (int argc, char *argv[])
       else histoTotal[suffix]->Add(histo[histoName]);
     }
     
-    cout << "The integral of the weighted likelihood histogram is " << histoTotal[suffix]->Integral(binMin, binMax) << endl;
+    cout << "The integral of the weighted probability histogram is " << histoTotal[suffix]->Integral(binMin, binMax) << endl;
+    
+    double likelihoodArray[nPoints] = {0.};
+    for (int i = 0; i < nPoints; i++)
+    {
+      likelihoodArray[i] = -TMath::Log(totalBinContentArray[i]); 
+    }
     
     /// Make likelihood function
-    graph["likelihood"+suffix] = new TGraph(nPoints, binCentreArray, totalBinContentArray);
+    graph["likelihood"+suffix] = new TGraph(nPoints, binCentreArray, likelihoodArray);
+    graph["likelihood"+suffix]->SetName(("likelihood"+suffix).c_str());
+    graph["likelihood"+suffix]->SetTitle(("likelihood"+suffix).c_str());
     graph["likelihood"+suffix]->Write();
     DrawGraph(histoTotal[suffix], graph["likelihood"+suffix], "Graph_likelihood"+suffix);
     
@@ -189,7 +201,7 @@ int main (int argc, char *argv[])
     {
       for (int iCentre = 0; iCentre < nPoints; iCentre++)
       {
-        gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth].first, totalBinContentArray[iCentre]);
+        gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth].first, likelihoodArray[iCentre]);
         //cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth].first << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
       }
     }
@@ -200,6 +212,9 @@ int main (int argc, char *argv[])
   
   if (useDifferentWidths)
   {
+    WriteToFile(gLL2D, "LogLikelihoodFunction");
+    
+    fileOut->cd();
     DrawLikelihoods(nWidths, input);
     gLL2D->SetName("2D_likelihood");
     gLL2D->SetTitle("2D_likelihood");
@@ -296,10 +311,12 @@ void DrawGraph2D(TGraph2D* g, string name)
 {
   TCanvas *c = new TCanvas(name.c_str(), name.c_str());
   c->cd();
-  g->SetName(name.c_str());
-  g->SetTitle(name.c_str());
   gStyle->SetPalette(1);
   g->SetMaxIter(500000);
+  g->SetName(name.c_str());
+  g->SetTitle((name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
+  //g->GetHistogram("empty")->GetXaxis()->SetTitleOffset(1.5);  // Does not work
+  //g->GetHistogram("empty")->GetYaxis()->SetTitleOffset(1.5);  // Does not work
   g->Draw("surf1");
   c->Update();
   c->Write();
@@ -308,6 +325,11 @@ void DrawGraph2D(TGraph2D* g, string name)
   c->Update();
   c->Write();
   c->SaveAs(("TGraphFits/"+name+"_colz.png").c_str());
+  g->SetMarkerSize(0.5);
+  g->Draw("tri1 p0");
+  c->Update();
+  c->Write();
+  c->SaveAs(("TGraphFits/"+name+"_tri1p0.png").c_str());
   
   delete c;
 }
@@ -353,4 +375,17 @@ void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string 
   
   txtOutput << endl;
   txtOutput.close();
+}
+
+void WriteToFile(TGraph2D* g, string name)
+{
+  TFile *file2DGraph = new TFile((name+".root").c_str(),"recreate");
+  file2DGraph->cd();
+  g->Write();
+  g->SetName(name.c_str());
+  g->SetTitle((name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
+  g->Write();
+  file2DGraph->Close();
+  
+  delete file2DGraph;
 }
