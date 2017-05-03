@@ -27,7 +27,7 @@ using namespace std;
 bool useDifferentWidths = true;
 
 string inputDate = "170426_0952";
-string suffix = "_90b";
+string suffix = "";
 pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
 
 map<string,TH1F*> histo, histoTotal;
@@ -86,7 +86,7 @@ int main (int argc, char *argv[])
   {
     if (useDifferentWidths)
     {
-      suffix = "_widthx"+DotReplace(input[iWidth].first)+"_90b";
+      suffix = "_widthx"+DotReplace(input[iWidth].first);
       inputDate = input[iWidth].second;
     }
     
@@ -181,6 +181,12 @@ int main (int argc, char *argv[])
     
     cout << "The integral of the weighted probability histogram is " << histoTotal[suffix]->Integral(binMin, binMax) << endl;
     
+    graph["TotalProbability"+suffix] = new TGraph(nPoints, binCentreArray, totalBinContentArray);
+    graph["TotalProbability"+suffix]->SetName(("TotalProbability"+suffix).c_str());
+    graph["TotalProbability"+suffix]->SetTitle(("TotalProbability"+suffix).c_str());
+    graph["TotalProbability"+suffix]->Write();
+    DrawGraph(histoTotal[suffix], graph["TotalProbability"+suffix], "Graph_totalProbability"+suffix);
+    
     double likelihoodArray[nPoints] = {0.};
     for (int i = 0; i < nPoints; i++)
     {
@@ -192,9 +198,8 @@ int main (int argc, char *argv[])
     graph["likelihood"+suffix]->SetName(("likelihood"+suffix).c_str());
     graph["likelihood"+suffix]->SetTitle(("likelihood"+suffix).c_str());
     graph["likelihood"+suffix]->Write();
-    DrawGraph(histoTotal[suffix], graph["likelihood"+suffix], "Graph_likelihood"+suffix);
     
-    WriteOutput(nPoints, binCentreArray, totalBinContentArray, suffix);
+    WriteOutput(nPoints, binCentreArray, likelihoodArray, suffix);
     
     // Fill TGraph2D
     if (useDifferentWidths)
@@ -337,20 +342,24 @@ void DrawGraph2D(TGraph2D* g, string name)
 void DrawLikelihoods(double nWidths, pair<double,string> *input)
 {
   Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+1, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};
-  TCanvas* c2 = new TCanvas("TotalProbability", "TotalProbability");
+  TCanvas* c2 = new TCanvas("-log(likelihood)", "-log(likelihood)");
   c2->cd();
-  graph["likelihood_widthx"+DotReplace(input[0].first)+"_90b"]->SetLineColor(colours[0]);
-  graph["likelihood_widthx"+DotReplace(input[0].first)+"_90b"]->Draw();
+  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetLineColor(colours[0]);
+  graph["likelihood_widthx"+DotReplace(input[0].first)]->Draw();
+  string temp = graph["likelihood_widthx"+DotReplace(input[0].first)]->GetTitle();
+  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetTitle("LogLikelihood");
   c2->Update();
   for (int i = 1; i < nWidths; i++)
   {
-    graph["likelihood_widthx"+DotReplace(input[i].first)+"_90b"]->SetLineColor(colours[i%10]);
-    graph["likelihood_widthx"+DotReplace(input[i].first)+"_90b"]->Draw("same");
+    graph["likelihood_widthx"+DotReplace(input[i].first)]->SetLineColor(colours[i%10]);
+    graph["likelihood_widthx"+DotReplace(input[i].first)]->Draw("same");
     c2->Update();
   }
   c2->Write();
-  c2->SaveAs("TGraphFits/Probabilities_90b.png");
+  c2->SaveAs("TGraphFits/LogLikelihood_multi.png");
   c2->Close();
+  
+  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetTitle(temp.c_str());
   
   delete c2;
 }
