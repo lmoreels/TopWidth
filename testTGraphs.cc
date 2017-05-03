@@ -38,9 +38,27 @@ using namespace std;
 // using namespace TopTree;
 
 bool test = false;
-bool testFit = false;
-bool testRead = true;
+bool getGraph = true;
 
+Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
+const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
+
+
+string ConvertDoubleToString(double Number)
+{
+  ostringstream convert;
+  convert.clear();  // clear bits
+  convert.str(std::string());  // clear content
+  convert << Number;
+  return convert.str();
+}
+
+string DotReplace(double var)
+{
+  string str = ConvertDoubleToString(var);
+  replace(str.begin(), str.end(), '.', 'p');
+  return str;
+}
 
 string ConvertIntToString(int Number, int pad)
 {
@@ -89,24 +107,27 @@ int main (int argc, char *argv[])
   clock_t start = clock();
   
   
-  TGraph2D* graph = 0;
-  
-  string inputFileName = "LogLikelihoodFunction.root";  
-  TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
-  inputFileLL->GetObject("LogLikelihoodFunction", graph);
-  //graph = (TGraph2D*) inputFileLL->Get("LogLikelihoodFunction");
-  
-  graph->GetHistogram();
-  graph->SetMaxIter(500000000);
-  
-  cout << "N points: " << graph->GetN() << endl;
-  cout << "Value in (0.8,1.2): " << graph->Interpolate(1.4,1.2) << endl;
-  
-  TCanvas *c = new TCanvas("c", "c");
-  c->cd();
-  graph->Draw("colz");
-  c->SaveAs("testTGraphs.png");
-  delete c;
+  if (getGraph)
+  {
+    TGraph2D* graph = 0;
+    
+    string inputFileName = "LogLikelihoodFunction.root";  
+    TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
+    inputFileLL->GetObject("LogLikelihoodFunction", graph);
+    //graph = (TGraph2D*) inputFileLL->Get("LogLikelihoodFunction");
+    
+    graph->GetHistogram();
+    graph->SetMaxIter(500000000);
+    
+    cout << "N points: " << graph->GetN() << endl;
+    cout << "Value in (0.8,1.2): " << graph->Interpolate(1.4,1.2) << endl;
+    
+    TCanvas *c = new TCanvas("c", "c");
+    c->cd();
+    graph->Draw("colz");
+    c->SaveAs("testTGraphs.png");
+    delete c;
+  }
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
