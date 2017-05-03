@@ -26,9 +26,10 @@ using namespace std;
 
 bool useDifferentWidths = true;
 
-string inputDate = "170426_0952";
+string inputDate = "170503_1539/";
 string suffix = "";
-pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
+//pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
+double input[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 
 map<string,TH1F*> histo, histoTotal;
 map<string,TGraph*> graph;
@@ -42,7 +43,7 @@ bool fexists(const char *filename);
 void ClearVars();
 void DrawGraph(TH1F* h, TGraph* g, string name);
 void DrawGraph2D(TGraph2D* g, string name);
-void DrawLikelihoods(double nWidths, pair<double,string> *input);
+void DrawLikelihoods(double nWidths, double *input);
 void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name);
 void WriteToFile(TGraph2D* g, string name);
 
@@ -61,9 +62,12 @@ int main (int argc, char *argv[])
   cout << "* Current time: " << dateString << "    *" << endl;
   cout << "********************************" << endl;
   
-  
+  string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/MassPlots/"+inputDate+"MassPlots_nominal.root";
   string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/TGraphFits/GraphFunctions.root";
+  
+  TFile *fileIn = new TFile(inputFileName.c_str(),"read");
   TFile *fileOut = new TFile(outputFileName.c_str(),"recreate");
+  fileOut->cd();
   
   TGraph2D *gLL2D = new TGraph2D();
     
@@ -86,14 +90,8 @@ int main (int argc, char *argv[])
   {
     if (useDifferentWidths)
     {
-      suffix = "_widthx"+DotReplace(input[iWidth].first);
-      inputDate = input[iWidth].second;
+      suffix = "_widthx"+DotReplace(input[iWidth]);
     }
-    
-    string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/"+inputDate+"/NtuplePlots_nominal.root";
-    TFile *fileIn = new TFile(inputFileName.c_str(),"read");
-    
-    fileOut->cd();
     
     totEvents = 0;
     for (int i = 0; i < sizeCats; i++)
@@ -111,7 +109,7 @@ int main (int argc, char *argv[])
       
       histoName = listCats[iCat]+suffix;
       
-      histo[histoName] = (TH1F*) fileIn->Get(("1D_histograms/Red_top_mass_"+listCats[iCat]+"_90b").c_str());
+      histo[histoName] = (TH1F*) fileIn->Get(("1D_histograms/Red_top_mass_"+histoName+"_90b").c_str());
       histo[histoName]->Smooth();
       nBins[iCat] = histo[histoName]->GetNbinsX();
       if ( iCat > 0 && nBins[iCat] != nBins[iCat-1] )
@@ -206,13 +204,11 @@ int main (int argc, char *argv[])
     {
       for (int iCentre = 0; iCentre < nPoints; iCentre++)
       {
-        gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth].first, likelihoodArray[iCentre]);
-        //cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth].first << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
+        gLL2D->SetPoint(gLL2D->GetN(), binCentreArray[iCentre], input[iWidth], likelihoodArray[iCentre]);
+        //cout << setw(5) << gLL2D->GetN() << "  Width: " << setw(5) << input[iWidth] << "   Bin Centre: " << setw(10) << binCentreArray[iCentre] << "   Bin Content: " << totalBinContentArray[iCentre] << endl;
       }
     }
     
-    /// Close input file
-    fileIn->Close();
   }  // end nWidths
   
   if (useDifferentWidths)
@@ -228,9 +224,9 @@ int main (int argc, char *argv[])
   }
   //cout << "TGraph evaluated in (1,1): " << gLL2D->Interpolate(1,1) << " ;  (1,1.01): " << gLL2D->Interpolate(1,1.01) << " ;  (1,1.02): " << gLL2D->Interpolate(1,1.02) << " ;  (1,1.03): " << gLL2D->Interpolate(1,1.03) << " ;  (1,1.05): " << gLL2D->Interpolate(1,1.05) << endl;
   
-  /// Close output file
+  /// Close files
   fileOut->Close();
-  
+  fileIn->Close();
   
   return 0;
 }
@@ -339,27 +335,27 @@ void DrawGraph2D(TGraph2D* g, string name)
   delete c;
 }
 
-void DrawLikelihoods(double nWidths, pair<double,string> *input)
+void DrawLikelihoods(double nWidths, double *input)
 {
   Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+1, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};
   TCanvas* c2 = new TCanvas("-log(likelihood)", "-log(likelihood)");
   c2->cd();
-  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetLineColor(colours[0]);
-  graph["likelihood_widthx"+DotReplace(input[0].first)]->Draw();
-  string temp = graph["likelihood_widthx"+DotReplace(input[0].first)]->GetTitle();
-  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetTitle("LogLikelihood");
+  graph["likelihood_widthx"+DotReplace(input[0])]->SetLineColor(colours[0]);
+  graph["likelihood_widthx"+DotReplace(input[0])]->Draw();
+  string temp = graph["likelihood_widthx"+DotReplace(input[0])]->GetTitle();
+  graph["likelihood_widthx"+DotReplace(input[0])]->SetTitle("LogLikelihood");
   c2->Update();
   for (int i = 1; i < nWidths; i++)
   {
-    graph["likelihood_widthx"+DotReplace(input[i].first)]->SetLineColor(colours[i%10]);
-    graph["likelihood_widthx"+DotReplace(input[i].first)]->Draw("same");
+    graph["likelihood_widthx"+DotReplace(input[i])]->SetLineColor(colours[i%10]);
+    graph["likelihood_widthx"+DotReplace(input[i])]->Draw("same");
     c2->Update();
   }
   c2->Write();
   c2->SaveAs("TGraphFits/LogLikelihood_multi.png");
   c2->Close();
   
-  graph["likelihood_widthx"+DotReplace(input[0].first)]->SetTitle(temp.c_str());
+  graph["likelihood_widthx"+DotReplace(input[0])]->SetTitle(temp.c_str());
   
   delete c2;
 }
