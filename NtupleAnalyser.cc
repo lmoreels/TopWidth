@@ -415,7 +415,8 @@ double toppt_reco_orig, toppt_reco_kf;
 /// Likelihood
 int nTot = 0;
 Double_t f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
-Double_t widthArray[] = {0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.5, 2.55, 2.60, 2.65, 2.70, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8.};
+//Double_t widthArray[] = {0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.5, 2.55, 2.60, 2.65, 2.70, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8.};
+Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
 Double_t gammaArray[nWidthsLL];
 
@@ -2846,10 +2847,10 @@ void PrintMtmLikelihood()
   cout << endl << "likelihood values (all MC) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
-    cout << loglike[iWidth]/(1e+4);
+    cout << loglike[iWidth]/(1e+2);
     if ( iWidth != nWidthsLL-1 ) cout << ", ";
   }
-  cout << "} *10^4;" << endl << "likelihood values (data-only) : {";
+  cout << "} *10^2;" << endl << "likelihood values (data-only) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
     cout << loglike_data[iWidth];
@@ -2870,10 +2871,10 @@ void PrintMtmLikelihood()
   cout << "};" << endl << "fake likelihood values (CP) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
-    cout << fakelike_CP[iWidth]/(1e+6);
+    cout << fakelike_CP[iWidth]/(1e+4);
     if ( iWidth != nWidthsLL-1 ) cout << ", ";
   }
-  cout << "} *10^6;" << endl << "fake likelihood values (CP - only good events) : {";
+  cout << "} *10^4;" << endl << "fake likelihood values (CP - only good events) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
     cout << fakelike_onlyGoodEvts[iWidth]/(1e+4);
@@ -2943,7 +2944,7 @@ TGraph2D* ReadTGraphInput(string inputFileName)
   TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
   inputFileLL->GetObject("LogLikelihoodFunction", graph);
   graph->GetHistogram();
-  graph->SetMaxIter(500000000);
+  graph->SetMaxIter(5000000);
   
   return graph;
 }
