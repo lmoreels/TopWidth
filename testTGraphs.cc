@@ -38,7 +38,11 @@ using namespace std;
 // using namespace TopTree;
 
 bool test = false;
-bool getGraph = true;
+bool getGraphFromFile = false;
+bool constructGraph = true;
+bool constructGraph2D = false;
+
+map<string,TGraph*> graph;
 
 Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
@@ -101,26 +105,38 @@ int main (int argc, char *argv[])
   cout << "***         Beginning of program          ***" << endl;
   cout << "*********************************************" << endl;
   cout << "*********************************************" << endl;
-  cout << "* Current time: " << dateString << "               *" << endl;
+  cout << "*   Current time: " << dateString << "               *" << endl;
   cout << "*********************************************" << endl;
   
   clock_t start = clock();
   
+  string inputFileName;
+  pair<double, double> input[] = {pair<double, double>(1.,2.), pair<double, double>(1.,0.3), pair<double, double>(1.,0.4), pair<double, double>(1.,0.5), pair<double, double>(1.,0.6), pair<double, double>(1.,1.)};
   
-  if (getGraph)
+  if (getGraphFromFile)
   {
     TGraph2D* graph = 0;
+    TH2 *h = 0;
     
-    string inputFileName = "LogLikelihoodFunction.root";  
+    inputFileName = "LogLikelihoodFunction.root";
+    cout << "Reading TGraph2D from file " << inputFileName << endl;
+    
     TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
     inputFileLL->GetObject("LogLikelihoodFunction", graph);
+    inputFileLL->GetObject("hLogLikelihoodFunction", h);
     //graph = (TGraph2D*) inputFileLL->Get("LogLikelihoodFunction");
+    //h = (TH2D*) inputFileLL->Get("hLogLikelihoodFunction");
     
-    graph->GetHistogram();
-    graph->SetMaxIter(500000000);
+    h->SetDirectory(0);
+    //graph->SetHistogram(h);
+    //graph->GetHistogram();
+    //graph->SetHistogram(h); // SOMETHING WRONG HERE: SEG FAULT
+    //graph->SetMaxIter(500000000);
     
     cout << "N points: " << graph->GetN() << endl;
-    cout << "Value in (0.8,1.2): " << graph->Interpolate(1.4,1.2) << endl;
+    for (int i = 0; i < sizeof(input)/sizeof(input[0]); i++)
+      cout << "Value in (" << input[i].first << "," << input[i].second << "): " << setw(5) << graph->Interpolate(input[i].first,input[i].second) << endl;
+    
     
     TCanvas *c = new TCanvas("c", "c");
     c->cd();
@@ -128,6 +144,44 @@ int main (int argc, char *argv[])
     c->SaveAs("testTGraphs.png");
     delete c;
   }
+  
+  if (constructGraph2D)
+  {
+    inputFileName = "TGraphFits/output_tgraph2d_total.txt";
+    cout << "Constructing TGraph2D from file " << inputFileName << endl;
+    
+    TGraph2D *g = new TGraph2D(inputFileName.c_str());
+    g->GetHistogram("");
+    g->SetMaxIter(500000000);
+    
+    cout << "N points: " << g->GetN() << endl;
+    for (int i = 0; i < sizeof(input)/sizeof(input[0]); i++)
+      cout << "Value in (" << input[i].first << "," << input[i].second << "): " << g->Interpolate(input[i].first,input[i].second) << endl;
+    
+    TCanvas *c = new TCanvas("c", "c");
+    c->cd();
+    g->Draw("tri1 p0");
+    c->SaveAs("testTGraphs.png");
+    delete c;
+    
+  }
+  
+  if (constructGraph)
+  {
+    cout << "Constructing TGraphs for each width" << endl;
+    string suffix;
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    {
+      suffix = "widthx"+DotReplace(widthArray[iWidth]);
+      inputFileName = "TGraphFits/output_tgraph1d_"+suffix+".txt";
+      graph[suffix] = new TGraph(inputFileName.c_str());
+    }
+    
+    for (int i = 0; i < sizeof(input)/sizeof(input[0]); i++)
+      cout << "Value in (" << input[i].first << "," << input[i].second << "): " << graph["widthx"+DotReplace(input[i].second)]->Eval(input[i].first) << endl;
+    
+  }
+  
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
