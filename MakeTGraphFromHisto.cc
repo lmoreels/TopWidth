@@ -26,7 +26,8 @@ using namespace std;
 
 bool useDifferentWidths = true;
 
-string inputDate = "170503_1539/";
+//string inputDate = "170503_1539/";  // with event scaling in reweighting
+string inputDate = "170504_1544/";  // without event scaling in reweighting
 string suffix = "";
 //pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
 double input[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
@@ -44,7 +45,8 @@ void ClearVars();
 void DrawGraph(TH1F* h, TGraph* g, string name);
 void DrawGraph2D(TGraph2D* g, string name);
 void DrawLikelihoods(double nWidths, double *input);
-void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name);
+void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, string name, int dim = 2);
+void CombineOutput(double nWidths);
 void WriteToFile(TGraph2D* g, string name);
 
 
@@ -197,7 +199,8 @@ int main (int argc, char *argv[])
     graph["likelihood"+suffix]->SetTitle(("likelihood"+suffix).c_str());
     graph["likelihood"+suffix]->Write();
     
-    WriteOutput(nPoints, binCentreArray, likelihoodArray, suffix);
+    WriteOutput(nPoints, input[iWidth], binCentreArray, likelihoodArray, suffix, 1);  // for TGraph
+    WriteOutput(nPoints, input[iWidth], binCentreArray, likelihoodArray, suffix, 2);  // for TGraph2D
     
     // Fill TGraph2D
     if (useDifferentWidths)
@@ -213,6 +216,7 @@ int main (int argc, char *argv[])
   
   if (useDifferentWidths)
   {
+    CombineOutput(nWidths);
     WriteToFile(gLL2D, "LogLikelihoodFunction");
     
     fileOut->cd();
@@ -360,26 +364,34 @@ void DrawLikelihoods(double nWidths, double *input)
   delete c2;
 }
 
-void WriteOutput(int nPoints, double *arrayCentre, double *arrayContent, string name)
+void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, string name, int dim)
 {
-  string outputTxtName = "TGraphFits/output_tgraph"+name+".txt";
+  string dimension = "";
+  if ( dim == 1 ) dimension = "1d";
+  else if ( dim == 2 ) dimension = "2d";
+  string outputTxtName = "TGraphFits/output_tgraph"+dimension+name+".txt";
   txtOutput.open(outputTxtName.c_str());
   
-  txtOutput << "BinCentres:  ";
   for (int i = 0; i < nPoints; i++)
   {
-    txtOutput << setw(5) << right << arrayCentre[i] << "  ";
+    txtOutput << setw(8) << right << arrayCentre[i];
+    if ( dim == 2 ) txtOutput << "   " << setw(5) << right << width;
+    txtOutput << "  " << setw(8) << right << arrayContent[i] << endl;
   }
-  txtOutput << endl;
-  txtOutput << "BinContents:  ";
-  for (int i = 0; i < nPoints; i++)
-  {
-    txtOutput << setw(5) << right << arrayContent[i] << "  ";
-  }
-  txtOutput << endl;
-  
-  txtOutput << endl;
   txtOutput.close();
+}
+
+void CombineOutput(double nWidths)
+{
+  ofstream combFile("TGraphFits/output_tgraph2d_total.txt");
+  for (int iWidth = 0; iWidth < nWidths; iWidth++)
+  {
+    string inFileName = "TGraphFits/output_tgraph2d_widthx"+DotReplace(input[iWidth])+".txt";
+    ifstream infile(inFileName.c_str());
+    combFile << infile.rdbuf();
+    infile.close();
+  }
+  combFile.close();
 }
 
 void WriteToFile(TGraph2D* g, string name)
@@ -389,7 +401,12 @@ void WriteToFile(TGraph2D* g, string name)
   g->Write();
   g->SetName(name.c_str());
   g->SetTitle((name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
-  g->Write();
+  g->Write(); cout << "Graph written to file" << endl;
+  TH2D *h = (TH2D*) g->GetHistogram();
+  g->SetHistogram(h);
+  h->SetName(("h"+name).c_str());
+  h->SetTitle(("h"+name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
+  h->Write();
   file2DGraph->Close();
   
   delete file2DGraph;

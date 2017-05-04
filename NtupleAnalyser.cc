@@ -56,8 +56,8 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = false;
-double scaleWidth = 0.4;
+bool applyWidthSF = true;
+double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
 string systStr = "nominal";
@@ -104,7 +104,8 @@ double CSVv2Tight = 0.935;
 /// Top width
 double genTopWidth = 1.31; // gen  //1.363; // from fit
 double genTopMass = 172.5; // gen  //172.3; // from fit
-double corr[2] = {0.0080432, 0.99195679};
+//double corr[2] = {0.0080432, 0.99195679};
+double corr[2] = {0., 1.};  // no correction for different number of events when reweighting
 
 // Temporarily, until calculated from TTbar sample
 double chi2WMass = 80.385;
@@ -142,6 +143,7 @@ std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.261, 192.51
 map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
 map<string,MultiSamplePlot*> MSPlot;
+map<string,TGraph*> graph;
 
 map<string,TFile*> tFileMap;
 
@@ -209,7 +211,7 @@ Double_t fakeLikelihood(Double_t *x, Double_t *par);
 Double_t widthToGammaTranslation(Double_t *x);
 void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
-TGraph2D* ReadTGraphInput(string inputFileName);
+void ConstructTGraphs(int nWidthsLL, double *widthArray);
 
 
 
@@ -433,8 +435,6 @@ Double_t loglike_gen[nWidthsLL] = {0};
 Double_t loglike_gen_per_evt[nWidthsLL] = {0};
 Double_t loglike_gen_onlyGoodEvts[nWidthsLL] = {0};
 
-TGraph2D* graphLogLike;
-
 
 bool isGoodLL = false, isGoodLL_gen = false;
 int nofGoodEvtsLL[10] = {0};
@@ -646,12 +646,11 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
-  if (calculateLikelihood)
+  if (calculateLikelihood && useLLTGraph )
   {
     //cout << "Getting TGraph2d..." << endl;
-    graphLogLike = ReadTGraphInput("LogLikelihoodFunction.root");
-    //cout << "Test graph: " << graphLogLike->GetN() << endl;
-    //cout << "Test graph: " << graphLogLike->Interpolate(0.8,1.2) << endl;
+    //graphLogLike = ReadTGraphInput("LogLikelihoodFunction.root");
+    ConstructTGraphs(nWidthsLL, widthArray);
   }
   
   if (calculateLikelihood)  // new if, because previous function can change this
@@ -1098,8 +1097,9 @@ int main(int argc, char* argv[])
               {
                 for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
                 {
-                  //if (useLLTGraph) loglike_gen_per_evt[iWidth] = graphLogLike->Interpolate(tempAveMass, widthArray[iWidth]);
-                  //else loglike_gen_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+                  //if (useLLTGraph)
+                  //  loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
+                  //else
                   loglike_gen_per_evt[iWidth] = fakeLikelihood(&tempRedMass, &gammaArray[iWidth]);
                   if (! isData) loglike_gen[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
                 }
@@ -1371,8 +1371,10 @@ int main(int argc, char* argv[])
         {
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
-            if (useLLTGraph) loglike_per_evt[iWidth] = graphLogLike->Interpolate(tempAveMass, widthArray[iWidth]);
-            else loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+            if (useLLTGraph)
+              loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
+            else
+              loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
             
             if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
           }
@@ -1599,12 +1601,23 @@ int main(int argc, char* argv[])
     {
       txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
     }
-    txtOutputLogLike << endl << "Gammas:      ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    if (! useLLTGraph)
     {
-      txtOutputLogLike << setw(5) << right << gammaArray[iWidth] << "  ";
+      txtOutputLogLike << endl << "Gammas:      ";
+      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+      {
+        txtOutputLogLike << setw(5) << right << gammaArray[iWidth] << "  ";
+      }
     }
     txtOutputLogLike << endl << "LLikelihood: ";
+    if (useLLTGraph)
+    {
+      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+      {
+        txtOutputLogLike << setw(12) << right << loglike[iWidth] << "  ";
+      }
+      txtOutputLogLike << endl << "GoodLLikelihood: ";
+    }
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       if (! doGenOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
@@ -2937,15 +2950,23 @@ void PrintKFDebug(int ievt)
   //}
 }
 
-TGraph2D* ReadTGraphInput(string inputFileName)
+void ConstructTGraphs(int nWidthsLL, double *widthArray)
 {
-  TGraph2D* graph = 0;
-  
-  TFile *inputFileLL = new TFile(inputFileName.c_str(), "read");
-  inputFileLL->GetObject("LogLikelihoodFunction", graph);
-  graph->GetHistogram();
-  graph->SetMaxIter(5000000);
-  
-  return graph;
+  string inputFileName, suffix;
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    suffix = "widthx"+DotReplace(widthArray[iWidth]);
+    inputFileName = "TGraphFits/output_tgraph1d_"+suffix+".txt";
+    if ( ! fexists(inputFileName.c_str()) )
+    {
+      cerr << "ERROR::ConstructTGraphs : File " << inputFileName << " not found!!" << endl;
+      cerr << "                          Aborting the likelihood calculation..." << endl;
+      calculateLikelihood = false;
+      break;
+    }
+    graph[suffix] = new TGraph(inputFileName.c_str());
+  }
+  if (calculateLikelihood)
+    cout << "constructed TGraphs for likelihood measurements (using " << nWidthsLL << " widths)" << endl;
 }
 

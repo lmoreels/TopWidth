@@ -93,7 +93,8 @@ double CSVv2Tight = 0.935;
 /// Top width
 double genTopWidth = 1.31; // gen  //1.363; // from fit
 double genTopMass = 172.5; // gen  //172.3; // from fit
-double corr[2] = {0.0080432, 0.99195679};
+//double corr[2] = {0.0080432, 0.99195679};
+double corr[2] = {0., 1.};  // no correction for different number of events when reweighting
 
 // Temporarily, until calculated from TTbar sample
 double chi2WMass = 80.385;

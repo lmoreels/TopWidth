@@ -23,8 +23,8 @@ using namespace std;
 
 
 bool test = true;
-bool usePartons = true;
-bool useMix = true;
+bool usePartons = false;
+bool useMix = false;
 bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = false;
@@ -56,7 +56,7 @@ ifstream fileIn;
 string var;
 double val;
 vector<double> widths;
-vector<double> LLvalues;
+vector<double> LLvalues, LLgoodvalues;
 
 /// Define functions
 string ConvertDoubleToString(double Number);
@@ -167,7 +167,7 @@ int main (int argc, char *argv[])
     ClearVars();
     
     /// Get loglikelihood values from file
-    /*if (usePartons || useMix)*/ dirName = "likelihood/";
+    if (usePartons || useMix) dirName = "likelihood/";
     inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_";
     if (usePartons) inputFileName += "parton_";
     else if (useMix) inputFileName += "mistake_";
@@ -192,7 +192,15 @@ int main (int argc, char *argv[])
           widths.push_back(val);
         }
       }
-      if ( line.find("LL") == 0 )
+      if ( line.find("GoodLL") == 0 )
+      {
+        iss >> var;
+        while ( iss >> val )
+        {
+          LLgoodvalues.push_back(val);
+        }
+      }
+      else if ( line.find("LL") == 0 )
       {
         iss >> var;
         while ( iss >> val )
@@ -213,20 +221,24 @@ int main (int argc, char *argv[])
     
     /// Make TGraph
     const int nPoints = widths.size();
-    double widthArr[nPoints], LLArr[nPoints];
+    double widthArr[nPoints], LLArr[nPoints], LLgoodArr[nPoints];
     for (int i = 0; i < nPoints; i++)
     {
       widthArr[i] = widths[i];
-      LLArr[i] = LLvalues[i];
+      if ( LLvalues.size() > 0 ) LLArr[i] = LLvalues[i];
+      if ( LLgoodvalues.size() > 0 ) LLgoodArr[i] = LLgoodvalues[i];
     }
     
-    TGraph *g1 = new TGraph(widths.size(), widthArr, LLArr);
+    TGraph *g1;
+    if ( LLvalues.size() > 0 ) g1 = new TGraph(widths.size(), widthArr, LLArr);
     
     /// Fit minimum with parabola
     double fitminArrayP[] = {0.6, 0.6, 0.6, 0.8, 1.0, 1.5, 1.8};  // partons
     double fitmaxArrayP[] = {1.4, 1.5, 1.6, 1.8, 2.5, 3.0, 3.2};  // partons
-    double fitminArray[] = {3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4};  // jets
-    double fitmaxArray[] = {4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6};  // jets
+    //double fitminArray[] = {3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4};  // jets
+    //double fitmaxArray[] = {4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6};  // jets
+    double fitminArray[] = {0.2, 0.2, 0.2, 0.2, 0.5, 1., 1., 2.};
+    double fitmaxArray[] = {1., 1., 1.5, 2., 3., 4., 5.};
     if (usePartons)
     {
       for (int i = 0; i < nWidths; i++)
