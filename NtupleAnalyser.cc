@@ -40,7 +40,7 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateLikelihood = true;
@@ -48,7 +48,7 @@ bool useLLTGraph = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
-bool useToys = false;
+bool useToys = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
@@ -56,7 +56,7 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 bool applyNloSF = false;
 
-bool applyWidthSF = true;
+bool applyWidthSF = false;
 double scaleWidth = 0.66;
 
 bool useOldNtuples = true;
@@ -452,6 +452,7 @@ TRandom3 random3;
 double toy; // = random3.Uniform(0,1);
 double toyMax;
 int nToys[10] = {0}, nDataEvts;
+bool replaceToy = false;
 
 /// Meta
 string strSyst = "";
@@ -794,7 +795,13 @@ int main(int argc, char* argv[])
       cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
       if (test)
         cout << "      Lumi : " << Luminosity << "; eqLumi: " << (double)datasets[d]->EquivalentLumi() << "; " << eqLumi << endl;
-      cout << "TOYS::Lumi/eqLumi = " << toyMax << endl;
+      cout << "TOYS::Lumi/eqLumi = " << toyMax;
+      if (! isData)
+      {
+        toyMax *= 0.88;  // small overshoot in MC --> scale down
+        cout << " x 0.88 = " << toyMax;
+      }
+      cout << endl;
     }
     
     
@@ -835,8 +842,9 @@ int main(int argc, char* argv[])
       if (useToys)
       {
         toy = random3.Rndm();
-        if ( toy > toyMax ) continue;
-        (nToys[d])++;
+        if (! replaceToy && toy > toyMax ) continue;
+        if (replaceToy) replaceToy = false;
+        else (nToys[d])++;
       }
       
       
@@ -999,6 +1007,7 @@ int main(int argc, char* argv[])
         {
           txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
           txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
+          if (useToys) replaceToy = true;
           continue;
         }
         
@@ -1595,6 +1604,7 @@ int main(int argc, char* argv[])
     string llFileName = "output_loglikelihood_gamma.txt";
     if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth)+".txt";
     if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth)+".txt";
+    if (useToys) llFileName = "output_loglikelihood_toys.txt";
     txtOutputLogLike.open(llFileName.c_str());
     txtOutputLogLike << "Widths:      ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
