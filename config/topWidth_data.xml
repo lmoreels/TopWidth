@@ -2,7 +2,7 @@
 
 <datasets>
 
-<d name="data_Run2016B" title="dataSingleMuon" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016B-03Feb2017_ver2-v2crab33/170418_180401/000*/*.root"/>
+<d name="data_Run2016B" title="dataSingleMuonRun2016B" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016B-03Feb2017_ver2-v2crab33/170418_180401/000*/*.root"/>
 <d name="data_Run2016C" title="dataSingleMuonRun2016C" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016C-03Feb2017-v1crab34/170418_180447/000*/*.root"/>
 <d name="data_Run2016D" title="dataSingleMuonRun2016D" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016D-03Feb2017-v1crab35/170418_180530/000*/*.root"/>
 <d name="data_Run2016E" title="dataSingleMuonRun2016E" add="1" color="1" ls="1" lw="2" normf="1" EqLumi="1" xsection="1" PreselEff="0.0" filenames="/pnfs/iihe/cms/store/user/fblekman/TopTree/CMSSW_80X_v9/TTP-CMSSW_80X_v9--GT-80X_dataRun2_2016SeptRepro_v7/SingleMuon/crab_SingleMuon-Run2016E-03Feb2017-v1crab36/170418_180619/000*/*.root"/>
