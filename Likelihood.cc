@@ -26,6 +26,8 @@ bool test = true;
 bool usePartons = false;
 bool useMix = false;
 bool useToys = true;
+bool useAdHocInput = true;
+
 bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = false;
@@ -43,6 +45,9 @@ double gammaConv[2] = {0.0314305, 0.00763251};
 double widthArray[] = {0.5, 0.66, 0.75, 1., 2., 3., 4.};
 const int nWidths = sizeof(widthArray)/sizeof(widthArray[0]);
 
+string adHocName = "data";
+vector<double> adHocWidths = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8.};
+vector<double> adHocLLvalues = {22666.8, 22666.4, 22666.1, 22665.9, 22665.7, 22665.4, 22665.1, 22664.9, 22664.7, 22664.5, 22664.4, 22664.4, 22664.3, 22664.3, 22664.4, 22664.5, 22664.6, 22664.8, 22664.9, 22665.1, 22665.4, 22665.7, 22666.1, 22666.5, 22668.7, 22671.8, 22675.7, 22680.2, 22685.2, 22690.6, 22696.5, 22703.1, 22710, 22717.3, 22725};
 
 /// Define vars
 int nTot;
@@ -163,7 +168,7 @@ int main (int argc, char *argv[])
   }
   
   int nW = nWidths;
-  if (useToys) nW = 1;
+  if (useToys || useAdHocInput) nW = 1;
   for (int iWidth = 0; iWidth < nW; iWidth++)
   {
     ClearVars();
@@ -180,7 +185,16 @@ int main (int argc, char *argv[])
       inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_toys.txt";
     }
     
-    ReadLLValues(inputFileName);
+    if (! useAdHocInput) ReadLLValues(inputFileName);
+    else
+    {
+      widths.clear(); LLvalues.clear();
+      for (int i = 0; i < adHocWidths.size(); i++)
+      {
+        widths.push_back(adHocWidths[i]);
+        LLvalues.push_back(adHocLLvalues[i]);
+      }
+    }
     
     if (test)
     {
@@ -230,17 +244,19 @@ int main (int argc, char *argv[])
       fitminArray[0] = 0.2;
       fitmaxArray[0] = 1.7;
     }
+    if (useAdHocInput) fitmaxArray[0] = 2.2;
     double fitmin = fitminArray[iWidth], fitmax = fitmaxArray[iWidth];
     parabola = new TF1("parabola", "pol2", fitmin, fitmax);
     g1->Fit(parabola,"R");
     
     if (test)
     {
-      outputFileName = "loglikelihoodVSwidth_";
-      if (usePartons) outputFileName += "parton_";
-      else if (useMix) outputFileName += "mistake_";
-      else if (useToys) outputFileName += "toys";
-      if (! useToys) outputFileName += DotReplace(widthArray[iWidth]);
+      outputFileName = "loglikelihoodVSwidth";
+      if (usePartons) outputFileName += "_parton";
+      else if (useMix) outputFileName += "_mistake";
+      else if (useToys) outputFileName += "_toys";
+      if (useAdHocInput) outputFileName += "_"+adHocName;
+      if (! useToys || ! useAdHocInput) outputFileName += "_"+DotReplace(widthArray[iWidth]);
       outputFileName += ".png";
       TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
       c1->cd();
