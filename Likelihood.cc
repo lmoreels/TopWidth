@@ -25,6 +25,7 @@ using namespace std;
 bool test = true;
 bool usePartons = false;
 bool useMix = false;
+bool useToys = true;
 bool runLocally = false;
 bool checkNormFunctions = false;
 bool printFractions = false;
@@ -71,6 +72,7 @@ Double_t crysBall_UP(Double_t *x, Double_t *par);
 Double_t combinedProb(Double_t *x, Double_t *par);
 Double_t logLikelihood(Double_t *x, Double_t *par);
 Double_t widthToGammaTranslation(Double_t *x);
+void ReadLLValues(string inputFileName);
 void DrawFunction(TF1* function, string name, double width, bool writeToFile);
 void DrawFunction(TF1* function, string name, std::vector<double> widths, double min, double max, bool writeToFile);
 void DrawLikelihood(float width);
@@ -160,9 +162,9 @@ int main (int argc, char *argv[])
     delete foutNorm;
   }
   
-  
-  
-  for (int iWidth = 0; iWidth < nWidths; iWidth++)
+  int nW = nWidths;
+  if (useToys) nW = 1;
+  for (int iWidth = 0; iWidth < nW; iWidth++)
   {
     ClearVars();
     
@@ -172,45 +174,13 @@ int main (int argc, char *argv[])
     if (usePartons) inputFileName += "parton_";
     else if (useMix) inputFileName += "mistake_";
     inputFileName += "widthx"+DotReplace(widthArray[iWidth])+".txt";
-    if (! fexists(inputFileName.c_str()) )
+    if (useToys)
     {
-      cout << "WARNING: File " << inputFileName << " does not exist." << endl;
-      exit(1);
-    }
-    fileIn.open(inputFileName.c_str());
-    cout << "Opening " << inputFileName << "..." << endl;
-    
-    string line;
-    while( getline(fileIn, line) )
-    {
-      istringstream iss(line);
-      if ( line.find("Width") == 0 )
-      {
-        iss >> var;
-        while ( iss >> val )
-        {
-          widths.push_back(val);
-        }
-      }
-      if ( line.find("GoodLL") == 0 )
-      {
-        iss >> var;
-        while ( iss >> val )
-        {
-          LLgoodvalues.push_back(val);
-        }
-      }
-      else if ( line.find("LL") == 0 )
-      {
-        iss >> var;
-        while ( iss >> val )
-        {
-          LLvalues.push_back(val);
-        }
-      }
+      dirName = "";
+      inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_toys.txt";
     }
     
-    fileIn.close();
+    ReadLLValues(inputFileName);
     
     if (test)
     {
@@ -255,6 +225,11 @@ int main (int argc, char *argv[])
         fitmaxArray[i] = 3.6;
       }
     }
+    else if (useToys)
+    {
+      fitminArray[0] = 0.2;
+      fitmaxArray[0] = 1.7;
+    }
     double fitmin = fitminArray[iWidth], fitmax = fitmaxArray[iWidth];
     parabola = new TF1("parabola", "pol2", fitmin, fitmax);
     g1->Fit(parabola,"R");
@@ -264,7 +239,9 @@ int main (int argc, char *argv[])
       outputFileName = "loglikelihoodVSwidth_";
       if (usePartons) outputFileName += "parton_";
       else if (useMix) outputFileName += "mistake_";
-      outputFileName += DotReplace(widthArray[iWidth])+".png";
+      else if (useToys) outputFileName += "toys";
+      if (! useToys) outputFileName += DotReplace(widthArray[iWidth]);
+      outputFileName += ".png";
       TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
       c1->cd();
       g1->Draw("AL");
@@ -276,7 +253,9 @@ int main (int argc, char *argv[])
     }
     
     double minimum = parabola->GetMinimumX(fitmin, fitmax);
-    cout << "For " << widthArray[iWidth] << " times SM width of the top quark, the minimum can be found at " << minimum << endl;
+    if (! useToys) cout << "For " << widthArray[iWidth] << " times SM width of the top quark, t";
+    else cout << "T";
+    cout << "he minimum can be found at " << minimum << endl;
     
     double lowerSigma = parabola->GetX(parabola->Eval(minimum) + 0.5, fitmin, minimum);
     double upperSigma = parabola->GetX(parabola->Eval(minimum) + 0.5, minimum, fitmax);
@@ -441,6 +420,49 @@ Double_t logLikelihood(Double_t *x, Double_t *par) {
 
 Double_t widthToGammaTranslation(Double_t *x) {
   return gammaConv[0] + gammaConv[1] * x[0];
+}
+
+void ReadLLValues(string inputFileName)
+{
+  if (! fexists(inputFileName.c_str()) )
+  {
+    cout << "WARNING: File " << inputFileName << " does not exist." << endl;
+    exit(1);
+  }
+  fileIn.open(inputFileName.c_str());
+  cout << "Opening " << inputFileName << "..." << endl;
+  
+  string line;
+  while( getline(fileIn, line) )
+  {
+    istringstream iss(line);
+    if ( line.find("Width") == 0 )
+    {
+      iss >> var;
+      while ( iss >> val )
+      {
+        widths.push_back(val);
+      }
+    }
+    if ( line.find("GoodLL") == 0 )
+    {
+      iss >> var;
+      while ( iss >> val )
+      {
+        LLgoodvalues.push_back(val);
+      }
+    }
+    else if ( line.find("LL") == 0 )
+    {
+      iss >> var;
+      while ( iss >> val )
+      {
+        LLvalues.push_back(val);
+      }
+    }
+  }
+  
+  fileIn.close();
 }
 
 void DrawFunction(TF1* function, string name, double width, bool writeToFile)
