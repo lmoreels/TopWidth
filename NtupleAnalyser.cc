@@ -1386,6 +1386,7 @@ int main(int argc, char* argv[])
               loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
             
             if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
+            else loglike_data[iWidth] += loglike_per_evt[iWidth];
           }
           
           // make loglikelihood only with events that have minimum
