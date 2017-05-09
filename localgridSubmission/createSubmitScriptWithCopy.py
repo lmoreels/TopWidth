@@ -25,17 +25,21 @@ mn = str(now.minute).zfill(2)
 date = yy+mm+dd+"_"+hh+mn
 
 #channels = ["mu","el"] 
-channels = ["mu"] 
-fillBhisto = 0; 
-JES = 0; 
-JER = 0; 
+channels = ["mu"]
+fillBhisto = 0;
+JES = 0;
+JER = 0;
+isData = False
 
 # loop over channels
 for chan in channels:
     print "\nSearching list of sample used for ", chan, " channel!"
     # getting the appropriate xml file
     if "mu" in chan:
-        tree = ET.ElementTree(file='../config/topWidth_data_loc.xml')
+        if isData:
+            tree = ET.ElementTree(file='../config/topWidth_data_loc.xml')
+        else:
+            tree = ET.ElementTree(file='../config/topWidth_MC_loc.xml')
     elif "el" in chan:
         tree = ET.ElementTree(file='../config/topWidth_el_localgrid.xml')
     else:
@@ -91,7 +95,8 @@ for chan in channels:
             elif "ST" in str(d.attrib['name']):
                 FilePerJob=5
             else:
-                FilePerJob=10
+#                FilePerJob=10
+                FilePerJob=5
 
             # create a test job for each dataset
             # create a file for this job                                                                                                                                        
