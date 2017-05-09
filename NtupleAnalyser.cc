@@ -43,44 +43,42 @@ bool doGenOnly = false;
 bool makePlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool useLLTGraph = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
-bool useToys = true;
+bool useToys = false;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyJER = true;
 bool applyJEC = true;
 bool applyBTagSF = true;
-bool applyNloSF = false;
 
 bool applyWidthSF = false;
 double scaleWidth = 0.66;
 
-bool useOldNtuples = true;
 string systStr = "nominal";
-string whichDate(string syst)
+pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    if (useOldNtuples) return "160812";
-    //else return "170216";  // WRONG JETS
-    else return "170327";  // All jets have pT > 30 GeV
+    return pair<string,string>("170508","170506");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return "170316";  // WRONG JETS
-  else if ( syst.find("JECdown") != std::string::npos ) return "170317";  // WRONG JETS
+  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170506");
+  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170506");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return "160812";
+    return pair<string,string>("170508","170506");
   }
 }
-string ntupleDate = whichDate(systStr);
+pair<string,string> ntupleDate = whichDate(systStr);
 int verbose = 2;
 
 string pathNtuples = "";
+string pathNtuplesMC = "";
+string pathNtuplesData = "";
 bool isData = false;
 bool isTTbar = false;
 
@@ -225,7 +223,13 @@ Double_t        rho;
 Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
-Int_t           nLeptons;
+Bool_t          isDataRunB;
+Bool_t          isDataRunC;
+Bool_t          isDataRunD;
+Bool_t          isDataRunE;
+Bool_t          isDataRunF;
+Bool_t          isDataRunG;
+Bool_t          isDataRunH;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
 Double_t        muon_pt[1];   //[nMuons]
@@ -241,6 +245,8 @@ Double_t        muon_puChargedHadronIso[1];   //[nMuons]
 Double_t        muon_relIso[1];   //[nMuons]
 Double_t        muon_pfIso[1];   //[nMuons]
 Int_t           nJets;
+Int_t           jet_nConstituents[20];   //[nJets]
+Int_t           jet_nChConstituents[20];   //[nJets]
 Int_t           jet_charge[20];   //[nJets]
 Double_t        jet_pt[20];   //[nJets]
 Double_t        jet_phi[20];   //[nJets]
@@ -253,6 +259,11 @@ Double_t        met_phi;
 Double_t        met_eta;
 Double_t        met_Et;
 Double_t        met_E;
+Double_t        met_corr_pt;
+Double_t        met_corr_phi;
+Double_t        met_corr_eta;
+Double_t        met_corr_Et;
+Double_t        met_corr_E;
 Int_t           nMCParticles;
 Int_t           mc_status[200];   //[nMCParticles]
 Int_t           mc_pdgId[200];   //[nMCParticles]
@@ -267,24 +278,70 @@ Bool_t          mc_isLastCopy[200];   //[nMCParticles]
 Bool_t          mc_isPromptFinalState[200];   //[nMCParticles]
 Bool_t          mc_isHardProcess[200];   //[nMCParticles]
 Bool_t          mc_fromHardProcessFinalState[200];   //[nMCParticles]
-Double_t        nloWeight;
-Double_t        puSF;
+Bool_t          hasGenTop;
+Bool_t          hasGenTopWithStatus22;
+Bool_t          hasGenTopWithStatus62;
+Bool_t          hasGenAntiTop;
+Bool_t          hasGenAntiTopWithStatus22;
+Bool_t          hasGenAntiTopWithStatus62;
 Double_t        btagSF;
-Double_t        muonIdSF[1];   //[nMuons]
-Double_t        muonIsoSF[1];   //[nMuons]
-Double_t        muonTrigSFv2[1];   //[nMuons]
-Double_t        muonTrigSFv3[1];   //[nMuons]
+Double_t        btagSF_up;
+Double_t        btagSF_down;
+Double_t        puSF;
+Double_t        puSF_up;
+Double_t        puSF_down;
+Double_t        muonIdSF_BCDEF[1];   //[nMuons]
+Double_t        muonIdSF_GH[1];   //[nMuons]
+Double_t        muonIdSF_up_BCDEF[1];   //[nMuons]
+Double_t        muonIdSF_up_GH[1];   //[nMuons]
+Double_t        muonIdSF_down_BCDEF[1];   //[nMuons]
+Double_t        muonIdSF_down_GH[1];   //[nMuons]
+Double_t        muonIsoSF_BCDEF[1];   //[nMuons]
+Double_t        muonIsoSF_GH[1];   //[nMuons]
+Double_t        muonIsoSF_up_BCDEF[1];   //[nMuons]
+Double_t        muonIsoSF_up_GH[1];   //[nMuons]
+Double_t        muonIsoSF_down_BCDEF[1];   //[nMuons]
+Double_t        muonIsoSF_down_GH[1];   //[nMuons]
+Double_t        muonTrigSF_BCDEF[1];   //[nMuons]
+Double_t        muonTrigSF_GH[1];   //[nMuons]
+Double_t        muonTrigSF_up_BCDEF[1];   //[nMuons]
+Double_t        muonTrigSF_up_GH[1];   //[nMuons]
+Double_t        muonTrigSF_down_BCDEF[1];   //[nMuons]
+Double_t        muonTrigSF_down_GH[1];   //[nMuons]
+Double_t        muonTrackSF_eta[1];   //[nMuons]
+Double_t        muonTrackSF_aeta[1];   //[nMuons]
+Double_t        muonTrackSF_nPV[1];   //[nMuons]
 
 Long64_t        nEvents;
 Long64_t        nEventsSel;
 Int_t           cutFlow[10];
+Int_t           cutFlow2[10];
 Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
-Long64_t        nofEventsHLTv2;
-Long64_t        nofEventsHLTv3;
-Long64_t        nofSelEventsHLTv2;
-Long64_t        nofSelEventsHLTv3;
+Long64_t        nofEventsRunB;
+Long64_t        nofEventsRunCD;
+Long64_t        nofEventsRunEF;
+Long64_t        nofEventsRunG;
+Long64_t        nofEventsRunH;
+Long64_t        nofSelEventsRunB;
+Long64_t        nofSelEventsRunCD;
+Long64_t        nofSelEventsRunEF;
+Long64_t        nofSelEventsRunG;
+Long64_t        nofSelEventsRunH;
+Long64_t        nofEventsWithGenTop;
+Long64_t        nofEventsWithGenTopWithStatus22or62;
+Long64_t        nofEventsWithGenAntiTop;
+Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
+Long64_t        nofTTEventsWithoutBothGenTops;
+Long64_t        nofTTEventsWithoutGenTop;
+Long64_t        nofTTEventsWithoutGenAntiTop;
+Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
+Long64_t        nofTTEventsWithoutGenTopWithStatus22;
+Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
+Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
+Long64_t        nofTTEventsWithoutGenTopWithStatus62;
+Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
 
 // List of branches
 TBranch        *b_run_num;   //!
@@ -296,7 +353,13 @@ TBranch        *b_rho;   //!
 TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
-TBranch        *b_nLeptons;   //!
+TBranch        *b_isDataRunB;   //!
+TBranch        *b_isDataRunC;   //!
+TBranch        *b_isDataRunD;   //!
+TBranch        *b_isDataRunE;   //!
+TBranch        *b_isDataRunF;   //!
+TBranch        *b_isDataRunG;   //!
+TBranch        *b_isDataRunH;   //!
 TBranch        *b_nMuons;   //!
 TBranch        *b_muon_charge;   //!
 TBranch        *b_muon_pt;   //!
@@ -312,6 +375,8 @@ TBranch        *b_muon_puChargedHadronIso;   //!
 TBranch        *b_muon_relIso;   //!
 TBranch        *b_muon_pfIso;   //!
 TBranch        *b_nJets;   //!
+TBranch        *b_jet_nConstituents;   //!
+TBranch        *b_jet_nChConstituents;   //!
 TBranch        *b_jet_charge;   //!
 TBranch        *b_jet_pt;   //!
 TBranch        *b_jet_phi;   //!
@@ -324,6 +389,11 @@ TBranch        *b_met_phi;   //!
 TBranch        *b_met_eta;   //!
 TBranch        *b_met_Et;   //!
 TBranch        *b_met_E;   //!
+TBranch        *b_met_corr_pt;   //!
+TBranch        *b_met_corr_phi;   //!
+TBranch        *b_met_corr_eta;   //!
+TBranch        *b_met_corr_Et;   //!
+TBranch        *b_met_corr_E;   //!
 TBranch        *b_nMCParticles;   //!
 TBranch        *b_mc_status;   //!
 TBranch        *b_mc_pdgId;   //!
@@ -338,24 +408,71 @@ TBranch        *b_mc_isLastCopy;   //!
 TBranch        *b_mc_isPromptFinalState;   //!
 TBranch        *b_mc_isHardProcess;   //!
 TBranch        *b_mc_fromHardProcessFinalState;   //!
-TBranch        *b_nloWeight;   //!
-TBranch        *b_puSF;   //!
+TBranch        *b_hasGenTop;   //!
+TBranch        *b_hasGenTopWithStatus22;   //!
+TBranch        *b_hasGenTopWithStatus62;   //!
+TBranch        *b_hasGenAntiTop;   //!
+TBranch        *b_hasGenAntiTopWithStatus22;   //!
+TBranch        *b_hasGenAntiTopWithStatus62;   //!
 TBranch        *b_btagSF;   //!
-TBranch        *b_muonIdSF;   //!
-TBranch        *b_muonIsoSF;   //!
-TBranch        *b_muonTrigSFv2;   //!
-TBranch        *b_muonTrigSFv3;   //!
+TBranch        *b_btagSF_up;   //!
+TBranch        *b_btagSF_down;   //!
+TBranch        *b_puSF;   //!
+TBranch        *b_puSF_up;   //!
+TBranch        *b_puSF_down;   //!
+TBranch        *b_muonIdSF_BCDEF;   //!
+TBranch        *b_muonIdSF_GH;   //!
+TBranch        *b_muonIdSF_up_BCDEF;   //!
+TBranch        *b_muonIdSF_up_GH;   //!
+TBranch        *b_muonIdSF_down_BCDEF;   //!
+TBranch        *b_muonIdSF_down_GH;   //!
+TBranch        *b_muonIsoSF_BCDEF;   //!
+TBranch        *b_muonIsoSF_GH;   //!
+TBranch        *b_muonIsoSF_up_BCDEF;   //!
+TBranch        *b_muonIsoSF_up_GH;   //!
+TBranch        *b_muonIsoSF_down_BCDEF;   //!
+TBranch        *b_muonIsoSF_down_GH;   //!
+TBranch        *b_muonTrigSF_BCDEF;   //!
+TBranch        *b_muonTrigSF_GH;   //!
+TBranch        *b_muonTrigSF_up_BCDEF;   //!
+TBranch        *b_muonTrigSF_up_GH;   //!
+TBranch        *b_muonTrigSF_down_BCDEF;   //!
+TBranch        *b_muonTrigSF_down_GH;   //!
+TBranch        *b_muonTrackSF_eta;   //!
+TBranch        *b_muonTrackSF_aeta;   //!
+TBranch        *b_muonTrackSF_nPV;   //!
 
 TBranch        *b_nEvents;   //!
 TBranch        *b_nEventsSel;   //!
 TBranch        *b_cutFlow;   //!
+TBranch        *b_cutFlow2;   //!
 TBranch        *b_appliedJER;   //!
 TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
-TBranch        *b_nofEventsHLTv2;   //!
-TBranch        *b_nofEventsHLTv3;   //!
-TBranch        *b_nofSelEventsHLTv2;   //!
-TBranch        *b_nofSelEventsHLTv3;   //
+TBranch        *b_nofEventsRunB;   //!
+TBranch        *b_nofEventsRunCD;   //!
+TBranch        *b_nofEventsRunEF;   //!
+TBranch        *b_nofEventsRunG;   //!
+TBranch        *b_nofEventsRunH;   //!
+TBranch        *b_nofSelEventsRunB;   //!
+TBranch        *b_nofSelEventsRunCD;   //!
+TBranch        *b_nofSelEventsRunEF;   //!
+TBranch        *b_nofSelEventsRunG;   //!
+TBranch        *b_nofSelEventsRunH;   //!
+TBranch        *b_nofEventsWithGenTop;   //!
+TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
+TBranch        *b_nofEventsWithGenAntiTop;   //!
+TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
+TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
+TBranch        *b_nofTTEventsWithoutGenTop;   //!
+TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
+TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
+TBranch        *b_nofTTEventsWithoutGenTopWithStatus22;   //!
+TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
+TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
+TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
+TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
+
 
 double scaleFactor, widthSF;
 vector<unsigned int> bJetId;
@@ -523,8 +640,9 @@ int main(int argc, char* argv[])
     mkdir(pathOutput.c_str(),0777);
   }
   
-  pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate+"/";
-  cout << "Using Ntuples from " << ntupleDate << ". This corresponds to systematics: " << systStr << endl;
+  pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
+  pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
+  cout << "Using Ntuples from " << ntupleDate.first << "for MC and " << ntupleDate.second << "for data. This corresponds to systematics: " << systStr << endl;
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood)
@@ -722,8 +840,8 @@ int main(int argc, char* argv[])
   double timePerDataSet[datasets.size()];
   
   int nEntries;
-  double fracHLT[2] = {-1};
-  GetHLTFraction(fracHLT);
+  double fracHLT[2] = {1.};
+  //GetHLTFraction(fracHLT);
   if ( fracHLT[0] == -1 || fracHLT[1] == -1 )
   {
     cout << "Something went wrong with the fraction calculation for trigger SFs!" << endl;
@@ -750,11 +868,17 @@ int main(int argc, char* argv[])
     if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
     {
       isData = true;
+      pathNtuples = pathNtuplesData;
     }
     else if ( dataSetName.find("TT") != std::string::npos )
     {
       isTTbar = true;
       hasFoundTTbar = true;
+    }
+    
+    if (! isData)
+    {
+      pathNtuples = pathNtuplesMC;
     }
     
     if (testTTbarOnly && ! isTTbar ) continue;
@@ -851,10 +975,9 @@ int main(int argc, char* argv[])
       /// Scale factors
       if (! isData)
       {
-        if (applyLeptonSF) { scaleFactor *= muonIdSF[0] * muonIsoSF[0] * (fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0]);}
+        //if (applyLeptonSF) { scaleFactor *= muonIdSF[0] * muonIsoSF[0] * (fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0]);}
         if (applyPU) { scaleFactor *= puSF;}
         if (applyBTagSF) { scaleFactor *= btagSF;}
-        //if (applyNloSF) { scaleFactor *= nloWeight;}  // additional SF due to number of events with neg weight!!
         //cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << muonIdSF[0] << "  muonIso: " << setw(6) << muonIsoSF[0] << "  muonTrig: " << setw(6) << fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0] << endl;
       }
       
@@ -1829,10 +1952,32 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
   if (isData)
   {
-   tree->SetBranchAddress("nofEventsHLTv2", &nofEventsHLTv2, &b_nofEventsHLTv2);
-   tree->SetBranchAddress("nofEventsHLTv3", &nofEventsHLTv3, &b_nofEventsHLTv3);
-   tree->SetBranchAddress("nofSelEventsHLTv2", &nofSelEventsHLTv2, &b_nofSelEventsHLTv2);
-   tree->SetBranchAddress("nofSelEventsHLTv3", &nofSelEventsHLTv3, &b_nofSelEventsHLTv3);
+   tree->SetBranchAddress("nofEventsRunB", &nofEventsRunB, &b_nofEventsRunB);
+   tree->SetBranchAddress("nofEventsRunCD", &nofEventsRunCD, &b_nofEventsRunCD);
+   tree->SetBranchAddress("nofEventsRunEF", &nofEventsRunEF, &b_nofEventsRunEF);
+   tree->SetBranchAddress("nofEventsRunG", &nofEventsRunG, &b_nofEventsRunG);
+   tree->SetBranchAddress("nofEventsRunH", &nofEventsRunH, &b_nofEventsRunH);
+   tree->SetBranchAddress("nofSelEventsRunB", &nofSelEventsRunB, &b_nofEventsRunB);
+   tree->SetBranchAddress("nofSelEventsRunCD", &nofSelEventsRunCD, &b_nofSelEventsRunCD);
+   tree->SetBranchAddress("nofSelEventsRunEF", &nofSelEventsRunEF, &b_nofSelEventsRunEF);
+   tree->SetBranchAddress("nofSelEventsRunG", &nofSelEventsRunG, &b_nofSelEventsRunG);
+   tree->SetBranchAddress("nofSelEventsRunH", &nofSelEventsRunH, &b_nofSelEventsRunH);
+  }
+  else
+  {
+   tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
+   tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
+   tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
+   tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
+   tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+   tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
+   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
+   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
+   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
+   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
+   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
+   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
+   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
   }
 }
 
@@ -1851,7 +1996,6 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("isTrigged", &isTrigged, &b_isTrigged);
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
-  tree->SetBranchAddress("nLeptons", &nLeptons, &b_nLeptons);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -1867,6 +2011,8 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("muon_relIso", muon_relIso, &b_muon_relIso);
   tree->SetBranchAddress("muon_pfIso", muon_pfIso, &b_muon_pfIso);
   tree->SetBranchAddress("nJets", &nJets, &b_nJets);
+  tree->SetBranchAddress("jet_nConstituents", jet_nConstituents, &b_jet_nConstituents);
+  tree->SetBranchAddress("jet_nChConstituents", jet_nChConstituents, &b_jet_nChConstituents);
   tree->SetBranchAddress("jet_charge", jet_charge, &b_jet_charge);
   tree->SetBranchAddress("jet_pt", jet_pt, &b_jet_pt);
   tree->SetBranchAddress("jet_phi", jet_phi, &b_jet_phi);
@@ -1879,6 +2025,11 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("met_eta", &met_eta, &b_met_eta);
   tree->SetBranchAddress("met_Et", &met_Et, &b_met_Et);
   tree->SetBranchAddress("met_E", &met_E, &b_met_E);
+  tree->SetBranchAddress("met_corr_pt", &met_corr_pt, &b_met_corr_pt);
+  tree->SetBranchAddress("met_corr_phi", &met_corr_phi, &b_met_corr_phi);
+  tree->SetBranchAddress("met_corr_eta", &met_corr_eta, &b_met_corr_eta);
+  tree->SetBranchAddress("met_corr_Et", &met_corr_Et, &b_met_corr_Et);
+  tree->SetBranchAddress("met_corr_E", &met_corr_E, &b_met_corr_E);
   if (! isData)
   {
     tree->SetBranchAddress("nMCParticles", &nMCParticles, &b_nMCParticles);
@@ -1891,22 +2042,54 @@ void InitTree(TTree* tree, bool isData)
     tree->SetBranchAddress("mc_eta", mc_eta, &b_mc_eta);
     tree->SetBranchAddress("mc_E", mc_E, &b_mc_E);
     tree->SetBranchAddress("mc_M", mc_M, &b_mc_M);
-    if (! useOldNtuples)
-    {
-      tree->SetBranchAddress("mc_isLastCopy", mc_isLastCopy, &b_mc_isLastCopy);
-      tree->SetBranchAddress("mc_isPromptFinalState", mc_isPromptFinalState, &b_mc_isPromptFinalState);
-      tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
-      tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
-    }
-    tree->SetBranchAddress("nloWeight", &nloWeight, &b_nloWeight);
-    tree->SetBranchAddress("puSF", &puSF, &b_puSF);
+    tree->SetBranchAddress("mc_isLastCopy", mc_isLastCopy, &b_mc_isLastCopy);
+    tree->SetBranchAddress("mc_isPromptFinalState", mc_isPromptFinalState, &b_mc_isPromptFinalState);
+    tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
+    tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
+    tree->SetBranchAddress("hasGenTop", &hasGenTop, &b_hasGenTop);
+    tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
+    tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
+    tree->SetBranchAddress("hasGenAntiTop", &hasGenAntiTop, &b_hasGenAntiTop);
+    tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
+    tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
     tree->SetBranchAddress("btagSF", &btagSF, &b_btagSF);
-    tree->SetBranchAddress("muonIdSF", muonIdSF, &b_muonIdSF);
-    tree->SetBranchAddress("muonIsoSF", muonIsoSF, &b_muonIsoSF);
-    tree->SetBranchAddress("muonTrigSFv2", muonTrigSFv2, &b_muonTrigSFv2);
-    tree->SetBranchAddress("muonTrigSFv3", muonTrigSFv3, &b_muonTrigSFv3);
+    tree->SetBranchAddress("btagSF_up", &btagSF_up, &b_btagSF_up);
+    tree->SetBranchAddress("btagSF_down", &btagSF_down, &b_btagSF_down);
+    tree->SetBranchAddress("puSF", &puSF, &b_puSF);
+    tree->SetBranchAddress("puSF_up", &puSF_up, &b_puSF_up);
+    tree->SetBranchAddress("puSF_down", &puSF_down, &b_puSF_down);
+    tree->SetBranchAddress("muonIdSF_BCDEF", muonIdSF_BCDEF, &b_muonIdSF_BCDEF);
+    tree->SetBranchAddress("muonIdSF_GH", muonIdSF_GH, &b_muonIdSF_GH);
+    tree->SetBranchAddress("muonIdSF_up_BCDEF", muonIdSF_up_BCDEF, &b_muonIdSF_up_BCDEF);
+    tree->SetBranchAddress("muonIdSF_up_GH", muonIdSF_up_GH, &b_muonIdSF_up_GH);
+    tree->SetBranchAddress("muonIdSF_down_BCDEF", muonIdSF_down_BCDEF, &b_muonIdSF_down_BCDEF);
+    tree->SetBranchAddress("muonIdSF_down_GH", muonIdSF_down_GH, &b_muonIdSF_down_GH);
+    tree->SetBranchAddress("muonIsoSF_BCDEF", muonIsoSF_BCDEF, &b_muonIsoSF_BCDEF);
+    tree->SetBranchAddress("muonIsoSF_GH", muonIsoSF_GH, &b_muonIsoSF_GH);
+    tree->SetBranchAddress("muonIsoSF_up_BCDEF", muonIsoSF_up_BCDEF, &b_muonIsoSF_up_BCDEF);
+    tree->SetBranchAddress("muonIsoSF_up_GH", muonIsoSF_up_GH, &b_muonIsoSF_up_GH);
+    tree->SetBranchAddress("muonIsoSF_down_BCDEF", muonIsoSF_down_BCDEF, &b_muonIsoSF_down_BCDEF);
+    tree->SetBranchAddress("muonIsoSF_down_GH", muonIsoSF_down_GH, &b_muonIsoSF_down_GH);
+    tree->SetBranchAddress("muonTrigSF_BCDEF", muonTrigSF_BCDEF, &b_muonTrigSF_BCDEF);
+    tree->SetBranchAddress("muonTrigSF_GH", muonTrigSF_GH, &b_muonTrigSF_GH);
+    tree->SetBranchAddress("muonTrigSF_up_BCDEF", muonTrigSF_up_BCDEF, &b_muonTrigSF_up_BCDEF);
+    tree->SetBranchAddress("muonTrigSF_up_GH", muonTrigSF_up_GH, &b_muonTrigSF_up_GH);
+    tree->SetBranchAddress("muonTrigSF_down_BCDEF", muonTrigSF_down_BCDEF, &b_muonTrigSF_down_BCDEF);
+    tree->SetBranchAddress("muonTrigSF_down_GH", muonTrigSF_down_GH, &b_muonTrigSF_down_GH);
+    tree->SetBranchAddress("muonTrackSF_eta", muonTrackSF_eta, &b_muonTrackSF_eta);
+    tree->SetBranchAddress("muonTrackSF_aeta", muonTrackSF_aeta, &b_muonTrackSF_aeta);
+    tree->SetBranchAddress("muonTrackSF_nPV", muonTrackSF_nPV, &b_muonTrackSF_nPV);
   }
-  
+  else
+  {
+    tree->SetBranchAddress("isDataRunB", &isDataRunB, &b_isDataRunB);
+    tree->SetBranchAddress("isDataRunC", &isDataRunC, &b_isDataRunC);
+    tree->SetBranchAddress("isDataRunD", &isDataRunD, &b_isDataRunD);
+    tree->SetBranchAddress("isDataRunE", &isDataRunE, &b_isDataRunE);
+    tree->SetBranchAddress("isDataRunF", &isDataRunF, &b_isDataRunF);
+    tree->SetBranchAddress("isDataRunG", &isDataRunG, &b_isDataRunG);
+    tree->SetBranchAddress("isDataRunH", &isDataRunH, &b_isDataRunH);
+  }
 }
 
 void InitMSPlots()
@@ -2275,16 +2458,39 @@ void ClearMetaData()
   for (int i = 0; i < 10; i++)
   {
     cutFlow[i] = 0;
+    cutFlow2[i] = 0;
   }
   appliedJER = 999;
   appliedJES = 999;
   appliedPU = 999;
   if (isData)
   {
-    nofEventsHLTv2 = 0;
-    nofEventsHLTv3 = 0;
-    nofSelEventsHLTv2 = 0;
-    nofSelEventsHLTv3 = 0;
+    nofEventsRunB = 0;
+    nofEventsRunCD = 0;
+    nofEventsRunEF = 0;
+    nofEventsRunG = 0;
+    nofEventsRunH = 0;
+    nofSelEventsRunB = 0;
+    nofSelEventsRunCD = 0;
+    nofSelEventsRunEF = 0;
+    nofSelEventsRunG = 0;
+    nofSelEventsRunH = 0;
+  }
+  else
+  {
+    nofEventsWithGenTop = 0;
+    nofEventsWithGenTopWithStatus22or62 = 0;
+    nofEventsWithGenAntiTop = 0;
+    nofEventsWithGenAntiTopWithStatus22or62 = 0;
+    nofTTEventsWithoutBothGenTops = 0;
+    nofTTEventsWithoutGenTop = 0;
+    nofTTEventsWithoutGenAntiTop = 0;
+    nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
+    nofTTEventsWithoutGenTopWithStatus22 = 0;
+    nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
+    nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
+    nofTTEventsWithoutGenTopWithStatus62 = 0;
+    nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
   }
   
   strSyst = "";
@@ -2314,7 +2520,6 @@ void ClearLeaves()
     cutFlow[i] = 0;
   hasExactly4Jets = false;
   hasJetLeptonCleaning = false;
-  nLeptons = -1;
   nMuons = -1;
   muon_charge[0] = 0;
   muon_pt[0] = 0.;
@@ -2333,6 +2538,8 @@ void ClearLeaves()
   for (Int_t i = 0; i < 20; i++)
   {
     jet_charge[i] = 0;
+    jet_nConstituents[i] = -1;
+    jet_nChConstituents[i] = -1;
     jet_pt[i] = 0.;
     jet_phi[i] = 0.;
     jet_eta[i] = 0.;
@@ -2345,6 +2552,11 @@ void ClearLeaves()
   met_eta = 0.;
   met_Et = 0.;
   met_E = 0.;
+  met_corr_pt = 0.;
+  met_corr_phi = 0.;
+  met_corr_eta = 0.;
+  met_corr_Et = 0.;
+  met_corr_E = 0.;
   if (! isData)
   {
     nMCParticles = -1;
@@ -2360,14 +2572,51 @@ void ClearLeaves()
       mc_E[i] = 0.;
       mc_M[i] = 0.;
     }
+    hasGenTop = false;
+    hasGenTopWithStatus22 = false;
+    hasGenTopWithStatus62 = false;
+    hasGenAntiTop = false;
+    hasGenAntiTopWithStatus22 = false;
+    hasGenAntiTopWithStatus62 = false;
+    
+    btagSF = 1.;
+    btagSF_up = 1.;
+    btagSF_down = 1.;
+    puSF = 1.;
+    puSF_up = 1.;
+    puSF_down = 1.;
+    muonIdSF_BCDEF[0] = 1.;
+    muonIdSF_GH[0] = 1.;
+    muonIdSF_up_BCDEF[0] = 1.;
+    muonIdSF_up_GH[0] = 1.;
+    muonIdSF_down_BCDEF[0] = 1.;
+    muonIdSF_down_GH[0] = 1.;
+    muonIsoSF_BCDEF[0] = 1.;
+    muonIsoSF_GH[0] = 1.;
+    muonIsoSF_up_BCDEF[0] = 1.;
+    muonIsoSF_up_GH[0] = 1.;
+    muonIsoSF_down_BCDEF[0] = 1.;
+    muonIsoSF_down_GH[0] = 1.;
+    muonTrigSF_BCDEF[0] = 1.;
+    muonTrigSF_GH[0] = 1.;
+    muonTrigSF_up_BCDEF[0] = 1.;
+    muonTrigSF_up_GH[0] = 1.;
+    muonTrigSF_down_BCDEF[0] = 1.;
+    muonTrigSF_down_GH[0] = 1.;
+    muonTrackSF_eta[0] = 1.;
+    muonTrackSF_aeta[0] = 1.;
+    muonTrackSF_nPV[0] = 1.;
   }
-  nloWeight = 1.;
-  puSF = 1.;
-  btagSF = 1.;
-  muonIdSF[0] = 1.;
-  muonIsoSF[0] = 1.;
-  muonTrigSFv2[0] = 1.;
-  muonTrigSFv3[0] = 1.;
+  else
+  {
+    isDataRunB = false;
+    isDataRunC = false;
+    isDataRunD = false;
+    isDataRunE = false;
+    isDataRunF = false;
+    isDataRunG = false;
+    isDataRunH = false;
+  }
 }
 
 void ClearTLVs()
