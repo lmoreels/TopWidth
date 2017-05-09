@@ -16,10 +16,11 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170327"
+date = "170508"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
+isData = False
 
 for chan in channels:
     
@@ -32,7 +33,10 @@ for chan in channels:
     
     # get filenames from the xml!!!    
     if "mu" in chan:
-        tree = ET.ElementTree(file='config/topWidth_localgrid.xml')
+        if isData:
+            tree = ET.ElementTree(file='config/topWidth_data_loc.xml')
+        else:
+            tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
     elif "el" in chan:
         tree = ET.ElementTree(file='config/topWidth_el_localgrid.xml')
     else:
