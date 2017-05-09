@@ -111,22 +111,6 @@ double sigmaChi2WMass = 10;
 double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
 double sigmaChi2TopMass = 40;
 
-/// Likelihood function
-const int nCP = 354711;  // [0.6, 1.4]  //355056;  // [0.5, 1.5]
-const int nWP = 114878;  // [0.6, 1.4]  //123818;  // [0.5, 1.5]
-const int nUP = 244934;  // [0.6, 1.4]  //253221;  // [0.5, 1.5] tt only!
-
-// Voigt/CB fit parameters
-const double mu_CP = 1.01, sigma_CP = 0.0665, r_CP = 2.0222, norm_CP = 0.002556;
-const double alpha_WP = -0.39, n_WP = 12.95, sigma_WP = 0.185, mu_WP = 0.889, norm_WP = 0.003414;
-const double alpha_UP = -1.001, n_UP = 2.4094, sigma_UP = 0.1977, mu_UP = 0.97, norm_UP = 0.004225;
-const double alpha_WPUP = -0.8595, n_WPUP = 3.044, sigma_WPUP = 0.2128, mu_WPUP = 0.97, norm_WPUP = 0.003862;
-const double norm_comb = 1.; //0.956039;
-const double gammaConv[2] = {0.0314305, 0.00763251};
-//const double gammaConv[2] = {0., 1.};
-//const double mu_CP = 1.002, sigma_CP = 0.0005, r_CP = 4.4, norm_CP = 0.00051;  // Voigt parametrisation with partons
-//const double gammaConv[2] = {0.00189011, 0.00789034};  // Voigt parametrisation with partons
-
 /// Average top mass
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CP/WP/UP cats (unlike name suggests)
@@ -200,13 +184,6 @@ void GetHLTFraction(double* fractions);
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
 double BreitWigner(double topPT, double scale);
 double eventWeightCalculator(double topPT, double scale);
-Double_t voigt(Double_t *x, Double_t *par);
-Double_t crysBall_WP(Double_t *x);
-Double_t crysBall_UP(Double_t *x);
-Double_t crysBall_WPUP(Double_t *x);
-Double_t logLikelihood(Double_t *x, Double_t *par);
-Double_t fakeLikelihood(Double_t *x, Double_t *par);
-Double_t widthToGammaTranslation(Double_t *x);
 void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
 void ConstructTGraphs(int nWidthsLL, double *widthArray);
@@ -532,12 +509,9 @@ double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf, topma
 double toppt_reco_orig, toppt_reco_kf;
 
 /// Likelihood
-int nTot = 0;
-Double_t f_CP = 1./3., f_WP = 1./3., f_UP = 1./3.;
 //Double_t widthArray[] = {0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.5, 2.55, 2.60, 2.65, 2.70, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8.};
 Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
-Double_t gammaArray[nWidthsLL];
 
 Double_t loglike[nWidthsLL] = {0};
 Double_t loglike_data[nWidthsLL] = {0};
@@ -554,9 +528,9 @@ Double_t loglike_gen_onlyGoodEvts[nWidthsLL] = {0};
 
 
 bool isGoodLL = false, isGoodLL_gen = false;
-int nofGoodEvtsLL[10] = {0};
-int nofGoodEvtsLL_gen[10] = {0};
-int nofBadEvtsLL[10] = {0};
+int nofGoodEvtsLL[20] = {0};
+int nofGoodEvtsLL_gen[20] = {0};
+int nofBadEvtsLL[20] = {0};
 Double_t aveTopMassLL = aveTopMass[2];
 Double_t tempAveMass = -1.;
 Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
@@ -568,7 +542,7 @@ ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass;
 TRandom3 random3;
 double toy; // = random3.Uniform(0,1);
 double toyMax;
-int nToys[10] = {0}, nDataEvts;
+int nToys[20] = {0}, nDataEvts;
 bool replaceToy = false;
 
 /// Meta
@@ -774,11 +748,6 @@ int main(int argc, char* argv[])
   
   if (calculateLikelihood)  // new if, because previous function can change this
   {
-    /// Define gammas
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      gammaArray[iWidth] = widthToGammaTranslation(&widthArray[iWidth]);
-    }
     txtLogLike.open(("likelihood_per_event_"+dateString+".txt").c_str());
     txtLogLike << "## -Log(likelihood) values per event" << endl;
     txtLogLike << "#  Widths : ";
@@ -787,29 +756,17 @@ int main(int argc, char* argv[])
       txtLogLike << widthArray[iWidth] << "  ";
     }
     txtLogLike << endl;
-    txtLogLike << "#  Gammas : ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtLogLike << gammaArray[iWidth] << "  ";
-    }
-    txtLogLike << endl;
     
     if (test)
     {
       txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
       txtLogLikeTest << "## ievt      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
-      txtLogLikeTest << "#  Gammas : ";
+      txtLogLikeTest << "#  Widths : ";
       for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
       {
-        txtLogLikeTest << gammaArray[iWidth] << "  ";
+        txtLogLikeTest << widthArray[iWidth] << "  ";
       }
     }
-    
-    /// Fraction of events that is CP, WP and UP
-    nTot = nCP + nWP + nUP;
-    f_CP = (double)nCP/(double)nTot;
-    f_WP = (double)nWP/(double)nTot;
-    f_UP = (double)nUP/(double)nTot;
   }
   
   if (calculateAverageMass)
@@ -1222,40 +1179,40 @@ int main(int argc, char* argv[])
               txtMassGenJMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
             }
             
-            if (calculateLikelihood && ! useLLTGraph)  // Temporarily !
-            {
-              double tempRedMass = matchedTopMass_gen/aveTopMass[0];
-              if ( tempRedMass > minCutRedTopMass && tempRedMass < maxCutRedTopMass )
-              {
-                for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-                {
-                  //if (useLLTGraph)
-                  //  loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
-                  //else
-                  loglike_gen_per_evt[iWidth] = fakeLikelihood(&tempRedMass, &gammaArray[iWidth]);
-                  if (! isData) loglike_gen[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
-                }
-
-                // make loglikelihood only with events that have minimum
-                isGoodLL_gen = false;
-                for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-                {
-                  if ( loglike_gen_per_evt[0] > loglike_gen_per_evt[iWidth] && loglike_gen_per_evt[iWidth] < loglike_gen_per_evt[nWidthsLL-1] )
-                  {
-                    isGoodLL_gen = true;
-                    break;
-                  }
-                }
-                if (isGoodLL_gen)
-                {
-                  nofGoodEvtsLL_gen[d]++;
-                  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-                  {
-                    if (! isData) loglike_gen_onlyGoodEvts[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
-                  }
-                }
-              }
-            }  // calc like
+//             if (calculateLikelihood && ! useLLTGraph)  // CHANGE TO TGRAPH !!  ("fake" likelihood, only CP)
+//             {
+//               double tempRedMass = matchedTopMass_gen/aveTopMass[0];
+//               if ( tempRedMass > minCutRedTopMass && tempRedMass < maxCutRedTopMass )
+//               {
+//                 for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//                 {
+//                   //if (useLLTGraph)
+//                   //  loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
+//                   //else
+//                   loglike_gen_per_evt[iWidth] = fakeLikelihood(&tempRedMass, &gammaArray[iWidth]);
+//                   if (! isData) loglike_gen[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
+//                 }
+// 
+//                 // make loglikelihood only with events that have minimum
+//                 isGoodLL_gen = false;
+//                 for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
+//                 {
+//                   if ( loglike_gen_per_evt[0] > loglike_gen_per_evt[iWidth] && loglike_gen_per_evt[iWidth] < loglike_gen_per_evt[nWidthsLL-1] )
+//                   {
+//                     isGoodLL_gen = true;
+//                     break;
+//                   }
+//                 }
+//                 if (isGoodLL_gen)
+//                 {
+//                   nofGoodEvtsLL_gen[d]++;
+//                   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//                   {
+//                     if (! isData) loglike_gen_onlyGoodEvts[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
+//                   }
+//                 }
+//               }
+//             }  // calc like
             
             
             /// KF for matched jets
@@ -1503,10 +1460,7 @@ int main(int argc, char* argv[])
         {
           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
           {
-            if (useLLTGraph)
-              loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
-            else
-              loglike_per_evt[iWidth] = logLikelihood(&tempAveMass, &gammaArray[iWidth]);
+            loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
             
             if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
             else loglike_data[iWidth] += loglike_per_evt[iWidth];
@@ -1580,50 +1534,50 @@ int main(int argc, char* argv[])
       }  // end makePlots
       
       
-      if ( isCP && calculateLikelihood && ! useLLTGraph)  // Temporarily !
-      {
-        for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-        {
-          //if (useLLTGraph) ...;
-          fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
-          fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
-          if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
-            fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
-        }
-        
-        /// make loglikelihood only with events that have minimum
-        isGoodLL = false;
-        for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-        {
-          if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
-          {
-            isGoodLL = true;
-            break;
-          }
-        }
-        if (isGoodLL)
-        {
-          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-          {
-            fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
-          }
-        }
-        
-        /// write debug file
-        if ( ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-             || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-             || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-        {
-          if (makePlots)
-          {
-            histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
-            histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
-            histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
-            histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
-            histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
-          }
-        }
-      }  // end isCP && likelihood
+//       if ( isCP && calculateLikelihood && ! useLLTGraph)  // CHANGE TO TGRAPH !!  ("fake" likelihood, only CP)
+//       {
+//         for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//         {
+//           //if (useLLTGraph) ...;
+//           fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
+//           fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
+//           if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
+//             fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
+//         }
+//         
+//         /// make loglikelihood only with events that have minimum
+//         isGoodLL = false;
+//         for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
+//         {
+//           if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
+//           {
+//             isGoodLL = true;
+//             break;
+//           }
+//         }
+//         if (isGoodLL)
+//         {
+//           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//           {
+//             fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
+//           }
+//         }
+//         
+//         /// write debug file
+//         if ( ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
+//              || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
+//              || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
+//         {
+//           if (makePlots)
+//           {
+//             histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
+//             histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
+//             histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
+//             histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
+//             histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
+//           }
+//         }
+//       }  // end isCP && likelihood
       
       /// write debug file
       if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
@@ -1735,23 +1689,12 @@ int main(int argc, char* argv[])
     {
       txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
     }
-    if (! useLLTGraph)
-    {
-      txtOutputLogLike << endl << "Gammas:      ";
-      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-      {
-        txtOutputLogLike << setw(5) << right << gammaArray[iWidth] << "  ";
-      }
-    }
     txtOutputLogLike << endl << "LLikelihood: ";
-    if (useLLTGraph)
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
-      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-      {
-        txtOutputLogLike << setw(12) << right << loglike[iWidth] << "  ";
-      }
-      txtOutputLogLike << endl << "GoodLLikelihood: ";
+      txtOutputLogLike << setw(12) << right << loglike[iWidth] << "  ";
     }
+    txtOutputLogLike << endl << "GoodLLikelihood: ";
     for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
     {
       if (! doGenOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
@@ -2516,8 +2459,6 @@ void ClearLeaves()
   npu = -1;
   rho = -999.;
   isTrigged = false;
-  for (Int_t i = 0; i < 10; i++)
-    cutFlow[i] = 0;
   hasExactly4Jets = false;
   hasJetLeptonCleaning = false;
   nMuons = -1;
@@ -3039,82 +2980,6 @@ double eventWeightCalculator(double topMass, double scale)
   return corrNEvts * BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
 }
 
-Double_t voigt(Double_t *x, Double_t *par) {
-  // Computation of Voigt function (normalised).
-  // Voigt is a convolution of
-  // gauss(xx) = 1/(sqrt(2*pi)*sigma) * exp(xx*xx/(2*sigma*sigma)
-  // and
-  // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + g*g/4)
-  // functions.
-  //
-  // To calculate the Faddeeva function with relative error less than 10^(-r).
-  // r can be set by the the user subject to the constraints 2 <= r <= 5.
-  
-  /// Voigt(x-mu, sigma, lg, r)
-  return TMath::Voigt(x[0]-mu_CP, sigma_CP, par[0], r_CP)*norm_CP;
-}
-
-Double_t crysBall_WP(Double_t *x) {
-  // params: alpha, n, sigma, mu
-  if ( sigma_WP <= 0. ) return 0.;
-  Double_t alpha = fabs(alpha_WP);
-  Double_t A = pow( n_WP/alpha , n_WP) * exp(-alpha*alpha/2.);
-  Double_t B = n_WP/alpha - alpha;
-  
-  Double_t ref = (x[0] - mu_WP)/sigma_WP;  // (x-mean)/sigma
-  if ( alpha_WP < 0. ) ref = -ref;
-  Double_t fitfunc = 1.;
-  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WP);
-  return fitfunc*norm_WP;
-}
-
-Double_t crysBall_UP(Double_t *x) {
-  // params: alpha, n, sigma, mu
-  if ( sigma_UP <= 0. ) return 0.;
-  Double_t alpha = fabs(alpha_UP);
-  Double_t A = pow( n_UP/alpha , n_UP) * exp(-alpha*alpha/2.);
-  Double_t B = n_UP/alpha - alpha;
-  
-  Double_t ref = (x[0] - mu_UP)/sigma_UP;  // (x-mean)/sigma
-  if ( alpha_UP < 0. ) ref = -ref;
-  Double_t fitfunc = 1.;
-  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_UP);
-  return fitfunc*norm_UP;
-}
-
-Double_t crysBall_WPUP(Double_t *x) {
-  // params: alpha, n, sigma, mu
-  if ( sigma_WPUP <= 0. ) return 0.;
-  Double_t alpha = fabs(alpha_WPUP);
-  Double_t A = pow( n_WPUP/alpha , n_WPUP) * exp(-alpha*alpha/2.);
-  Double_t B = n_WPUP/alpha - alpha;
-  
-  Double_t ref = (x[0] - mu_WPUP)/sigma_WPUP;  // (x-mean)/sigma
-  if ( alpha_WPUP < 0. ) ref = -ref;
-  Double_t fitfunc = 1.;
-  if ( ref > -alpha ) fitfunc = fitfunc * exp(-ref*ref/2.);
-  else if (ref <= -alpha ) fitfunc = fitfunc * A * pow ( B - ref , -n_WPUP);
-  return fitfunc*norm_WPUP;
-}
-
-Double_t logLikelihood(Double_t *x, Double_t *par) {
-  return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + f_WP*crysBall_WP(x) + f_UP*crysBall_UP(x) ) );
-}
-
-Double_t logLikelihood2(Double_t *x, Double_t *par) {
-  return -TMath::Log( norm_comb*( f_CP*voigt(x, par) + (f_WP+f_UP)*crysBall_WPUP(x) ) );
-}
-
-Double_t fakeLikelihood(Double_t *x, Double_t *par) {
-  return -TMath::Log( voigt(x, par) );
-}
-
-Double_t widthToGammaTranslation(Double_t *x) {
-  return gammaConv[0] + gammaConv[1] * x[0];
-}
-
 void PrintMtmLikelihood()
 {
   cout << endl << "likelihood values (all MC) : {";
@@ -3163,12 +3028,6 @@ void PrintMtmLikelihood()
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
     cout << widthArray[iWidth];
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << endl << "gammas: ";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << gammaArray[iWidth];
     if ( iWidth != nWidthsLL-1 ) cout << ", ";
   }
   cout << endl << "PARTON likelihood values (all matched MC) : {";
