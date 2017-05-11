@@ -116,7 +116,8 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-  string xmlFileName ="config/topWidth_MC.xml";
+  string xmlFileName ="config/topWidth_data.xml";
+//  string xmlFileName ="config/topWidth_MC.xml";
   int maxMCParticles = -1;
   
   
@@ -836,7 +837,7 @@ int main (int argc, char *argv[])
       statTree->Branch("nofEventsRunEF",&nofEventsRunEF,"nofEventsRunEF/L");
       statTree->Branch("nofEventsRunG",&nofEventsRunG,"nofEventsRunG/L");
       statTree->Branch("nofEventsRunH",&nofEventsRunH,"nofEventsRunH/L");
-      statTree->Branch("nofSelEventsRunB",&nofSelEventsRunB,"nofEventsRunB/L");
+      statTree->Branch("nofSelEventsRunB",&nofSelEventsRunB,"nofSelEventsRunB/L");
       statTree->Branch("nofSelEventsRunCD",&nofSelEventsRunCD,"nofSelEventsRunCD/L");
       statTree->Branch("nofSelEventsRunEF",&nofSelEventsRunEF,"nofSelEventsRunEF/L");
       statTree->Branch("nofSelEventsRunG",&nofSelEventsRunG,"nofSelEventsRunG/L");
