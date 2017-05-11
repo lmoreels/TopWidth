@@ -10,7 +10,7 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "170405_1136";  // Should be >= 170331_1024 !
+string inputDate = "170405_1136";  // Should be >= 170511_1314 !
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
 string inputFiles[] = {"mass_genp_matched_"+dataSetNames[0]+"_"+inputDate, "mass_genj_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
@@ -22,14 +22,14 @@ string thisDataSet;
 /// Define functions
 bool fexists(const char *filename);	// check if file exists
 void ClearVars(bool isNewDataset);
-void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, double meanTop);
+void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanTop);
 
 /// Define vars
 char dataLine[1024];
 int nEntries, nEntriesAllMC, nEntriesAllSamples, eventId;
-double massW, massTop, widthSF;
-double sumW, sumTop, sumWAllMC, sumTopAllMC, sumWAllSamples, sumTopAllSamples;
-double meanW, meanTop;
+double massTop;
+double sumTop, sumTopAllMC, sumTopAllSamples;
+double meanTop;
 
 ifstream fileIn;
 streampos currentPosition;
@@ -40,13 +40,11 @@ int main()
   string outputFileName = pathInput+"averageMass_"+inputDate+".txt";
   fileOut.open(outputFileName.c_str());
   cout << "Creating output file " << outputFileName << "..." << endl;
-  fileOut << "# Dataset                     meanW    meanTop" << endl;
+  fileOut << "# Dataset                     meanTop" << endl;
   
   nEntriesAllMC = 0;
-  sumWAllMC = 0.;
   sumTopAllMC = 0.;
   nEntriesAllSamples = 0;
-  sumWAllSamples = 0.;
   sumTopAllSamples = 0.;
   
   for (int iFile = 0; iFile < nInputs; iFile++)
@@ -73,35 +71,30 @@ int main()
       fileIn.seekg(currentPosition);
       fileIn.getline(dataLine,sizeof(dataLine));
       istringstream iss(dataLine);
-      iss >> eventId >> massW >> massTop >> widthSF;
+      iss >> eventId >> massTop;
       currentPosition = fileIn.tellg();
       
       nEntries++;
-      sumW += massW;
-      sumTop += massTop*widthSF;
+      sumTop += massTop;
       
       if ( iFile > 5 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
-        sumWAllMC += massW*widthSF;
-        sumTopAllMC += massTop*widthSF;
+        sumTopAllMC += massTop;
         
         nEntriesAllSamples++;
-        sumWAllSamples += massW*widthSF;
-        sumTopAllSamples += massTop*widthSF;
+        sumTopAllSamples += massTop;
       }
       else if ( iFile == nInputs-1 ) // data
       {
         nEntriesAllSamples++;
-        sumWAllSamples += massW*widthSF;
-        sumTopAllSamples += massTop*widthSF;
+        sumTopAllSamples += massTop;
       }
       
     }  // end while
     
     
     /// Calculate mean
-    meanW = sumW/((double)nEntries);
     meanTop = sumTop/((double)nEntries);
     
     
@@ -139,7 +132,7 @@ int main()
       thisDataSet = dataSetNames[0]+"_reco";
     }
     
-    WriteToFile(fileOut, thisDataSet, meanW, meanTop);
+    WriteToFile(fileOut, thisDataSet, meanTop);
     
     
     /// Close input file
@@ -149,17 +142,15 @@ int main()
   
   /// Calculate mean reco all MC
   ClearVars(true);
-  meanW = sumWAllMC/((double)nEntriesAllMC);
   meanTop = sumTopAllMC/((double)nEntriesAllMC);
   
-  WriteToFile(fileOut, "Reco All MC", meanW, meanTop);
+  WriteToFile(fileOut, "Reco All MC", meanTop);
   
   /// Calculate mean reco all samples
   ClearVars(true);
-  meanW = sumWAllSamples/((double)nEntriesAllSamples);
   meanTop = sumTopAllSamples/((double)nEntriesAllSamples);
   
-  WriteToFile(fileOut, "Reco All Samples", meanW, meanTop);
+  WriteToFile(fileOut, "Reco All Samples", meanTop);
   
   
   /// Close output file
@@ -173,33 +164,28 @@ int main()
 bool fexists(const char *filename)
 {
   ifstream ifile(filename);
-  return ifile;
+  return ifile.good();
 }
 
 void ClearVars(bool isNewDataset)
 {
   eventId = -1;
-  massW = 0.;
   massTop = 0.;
-  widthSF = 1.;
   
   if (isNewDataset)
   {
     thisDataSet = "";
     inputFileName = "";
     nEntries = 0;
-    sumW = 0.;
     sumTop = 0.;
-    meanW = 0.;
     meanTop = 0.;
   }
 }
 
-void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanW, double meanTop)
+void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanTop)
 {
   fout << left << setw(27) << thisDataSet;
   cout.setf(ios::fixed,ios::floatfield);  // Add zero to obtain the asked number of digits
   //cout.precision(3);  // setprecision(3) --> set maximum number of meaningful digits to 3. When 'fixed' or 'scientific', only count after decimal point.
-  fout << "   " << fixed << showpoint << setprecision(3) << meanW;  // showpoint --> also when decimal part is zero
-  fout << "   " << fixed << showpoint << setprecision(3) << meanTop << endl;
+  fout << "   " << fixed << showpoint << setprecision(3) << meanTop << endl;  // showpoint --> also when decimal part is zero
 }
