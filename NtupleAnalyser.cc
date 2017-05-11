@@ -41,8 +41,9 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
+bool makePlotsTGraph = false;
 bool calculateResolutionFunctions = false;
-bool calculateAverageMass = false;
+bool calculateAverageMass = true;
 bool calculateLikelihood = false;
 bool useLLTGraph = true;
 bool doKinFit = true;
@@ -50,7 +51,7 @@ bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
 bool useToys = false;
 bool applyLeptonSF = true;
-bool applyPU = true;
+bool applyPU = false;
 bool applyJER = true;
 bool applyJEC = true;
 bool applyBTagSF = true;
@@ -63,14 +64,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170508","170506");
+    return pair<string,string>("170508","170509");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170506");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170506");
+  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170509");
+  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170509");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170508","170506");
+    return pair<string,string>("170508","170509");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -92,7 +93,9 @@ int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
 double nofCP_weighted = 0, nofWP_weighted = 0, nofUP_weighted = 0;
 double Luminosity = 9999.;
 
-
+/// Lumi per data era
+double lumi_runBCDEF = 19.67550334113;
+double lumi_runGH = 16.146177597883;
 
 ///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
 double CSVv2Loose =  0.460;
@@ -166,7 +169,7 @@ void InitHisto1D();
 void InitHisto2D();
 void InitHisto1DMatch();
 void InitHisto2DMatch();
-void InitHisto1DRedMass();
+void InitHisto1DTGraph();
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation);
 void ClearMetaData();
 void ClearLeaves();
@@ -178,15 +181,17 @@ void FillGeneralPlots(vector<Dataset *> datasets, int d);
 void FillMatchingPlots();
 void FillKinFitPlots();
 void FillCatsPlots(string catSuffix);
+void FillTGraphCatsPlots(string catSuffix);
 void FillMSPlots(int d);
 long GetNEvents(TTree* fChain, string var, bool isData);
-void GetHLTFraction(double* fractions);
+void GetEraFraction(double* fractions);
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
 double BreitWigner(double topPT, double scale);
 double eventWeightCalculator(double topPT, double scale);
 void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
-void ConstructTGraphs(int nWidthsLL, double *widthArray);
+void MakePlotsTGraphs();
+void ConstructTGraphs(int nWidthsLL, double *widthArray, string name = "");
 
 
 
@@ -510,6 +515,7 @@ double toppt_reco_orig, toppt_reco_kf;
 //Double_t widthArray[] = {0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.5, 2.55, 2.60, 2.65, 2.70, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8.};
 Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
+string stringWidthArray[nWidthsLL];
 
 Double_t loglike[nWidthsLL] = {0};
 Double_t loglike_data[nWidthsLL] = {0};
@@ -534,7 +540,7 @@ Double_t tempAveMass = -1.;
 Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
 Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
 
-ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass;
+ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass, txtDebugPUSF;
 
 /// Toys
 TRandom3 random3;
@@ -569,7 +575,7 @@ int main(int argc, char* argv[])
   clock_t start = clock();
   
   string channel;
-  if ( argc == 1) channel = "mu";
+  if ( argc == 1 ) channel = "mu";
   //else if ( CharSearch(argv[1], "mu") || CharSearch(argv[1], "Mu") || CharSearch(argv[1], "MU") || CharSearch(argv[1], "m") ) channel = "mu";
   //else if ( CharSearch(argv[1], "el") || CharSearch(argv[1], "El") || CharSearch(argv[1], "EL") || CharSearch(argv[1], "e") ) channel = "el";
   //else if ( (argv[1]).find("all") != std::string::npos || (argv[1]).find("All") != std::string::npos || (argv[1]).find("ALL") != std::string::npos ) channel = "all";
@@ -581,11 +587,20 @@ int main(int argc, char* argv[])
     makePlots = false;
     doGenOnly = false;
   }
+  if (calculateResolutionFunctions)
+  {
+    testTTbarOnly = true;
+    doGenOnly = true;
+    makePlots = false;
+    calculateAverageMass = false;
+    calculateLikelihood = false;
+    doKinFit = false;
+    useToys = false;
+  }
   if (test) makePlots = false;
   if (testHistos) makePlots = true;
   if (doGenOnly)
   {
-    doKinFit = false;
     useToys = false;
   }
   if (! calculateLikelihood) useLLTGraph = false;
@@ -614,8 +629,7 @@ int main(int argc, char* argv[])
   
   pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
   pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
-  cout << "Using Ntuples from " << ntupleDate.first << "for MC and " << ntupleDate.second << "for data. This corresponds to systematics: " << systStr << endl;
-  if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
+  cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood)
   {
@@ -625,6 +639,7 @@ int main(int argc, char* argv[])
   }
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
+  if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   
   /// xml file
   string xmlFileName ="config/topWidth.xml";
@@ -725,9 +740,14 @@ int main(int argc, char* argv[])
   ////////////////////////
   
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
-  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
-  KinFitter *kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
-    
+  KinFitter *kf;
+  KinFitter *kfMatched;
+  if (! calculateResolutionFunctions)
+  {
+    kf = new KinFitter("PlotsForResolutionFunctions_Fitted.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("PlotsForResolutionFunctions_Fitted.root", addWMassKF, addEqMassKF);
+  }
+  
   if (makePlots)
   {
     if (! doGenOnly) InitMSPlots();
@@ -739,9 +759,13 @@ int main(int argc, char* argv[])
   
   if (calculateLikelihood && useLLTGraph )
   {
-    //cout << "Getting TGraph2d..." << endl;
-    //graphLogLike = ReadTGraphInput("LogLikelihoodFunction.root");
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    {
+      stringWidthArray[iWidth] = DotReplace(widthArray[iWidth]);
+    }
+    
     ConstructTGraphs(nWidthsLL, widthArray);
+    ConstructTGraphs(nWidthsLL, widthArray, "CP_");
   }
   
   if (calculateLikelihood)  // new if, because previous function can change this
@@ -769,6 +793,7 @@ int main(int argc, char* argv[])
   
   if (calculateAverageMass)
   {
+    mkdir("averageMass/",0777);
     txtMassGenPMatched.open(("averageMass/mass_genp_matched_TT_"+dateString+".txt").c_str());
     txtMassGenJMatched.open(("averageMass/mass_genj_matched_TT_"+dateString+".txt").c_str());
     txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
@@ -785,6 +810,10 @@ int main(int argc, char* argv[])
     txtDebugTopMass << "#  If lepton charge < 0 : hadronically decaying top, leptonically decaying antitop" << endl;
   }
   
+  txtDebugPUSF.open("debug_pu_sf.txt");
+  txtDebugPUSF << "## PU SF = 0" << endl;
+  txtDebugPUSF << "#  nVtx    nTruePU" << endl;
+  
   
   
   ////////////////////////////////////
@@ -795,14 +824,16 @@ int main(int argc, char* argv[])
   double timePerDataSet[datasets.size()];
   
   int nEntries;
-  double fracHLT[2] = {1.};
-  //GetHLTFraction(fracHLT);
-  if ( fracHLT[0] == -1 || fracHLT[1] == -1 )
+  double fracDataEras[2] = {-1.};
+  //GetEraFraction(fracDataEras);
+  fracDataEras[0] = lumi_runBCDEF/(lumi_runBCDEF + lumi_runGH);
+  fracDataEras[1] = lumi_runGH/(lumi_runBCDEF + lumi_runGH);
+  if ( fracDataEras[0] == -1. || fracDataEras[1] == -1. )
   {
-    cout << "Something went wrong with the fraction calculation for trigger SFs!" << endl;
+    cerr << "Something went wrong with the fraction calculation for muon SFs!" << endl;
     exit(1);
   }
-  cout << "The muon trigger scale factors will be scaled by " << fracHLT[0] << " for HLTv2 and " << fracHLT[1] << " for HLTv3." << endl;
+  cout << "The muon scale factors will be scaled by " << fracDataEras[0] << " for eras B-F and " << fracDataEras[1] << " for eras G-H." << endl;
   
   
   bool hasFoundTTbar = false;
@@ -836,8 +867,11 @@ int main(int argc, char* argv[])
       pathNtuples = pathNtuplesMC;
     }
     
-    if (testTTbarOnly && ! isTTbar ) continue;
-    
+    if (testTTbarOnly && ! isTTbar)
+    {
+      cout << "Skipping dataset..." << endl;
+      continue;
+    }
     
     if (calculateAverageMass)
     {
@@ -866,26 +900,23 @@ int main(int argc, char* argv[])
     vPU.push_back(appliedPU);
     
     /// eqLumi calculation
-    if (isData)
-    {
-      nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
-      eqLumi = 1.;
-    }
+    if (isData) eqLumi = 1.;
     else eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();
     
-    if (useToys)  // CHECK DATA/MC AGREEMENT
+    if (useToys)
     {
       if (! isData) toyMax = Luminosity/eqLumi;
-      
+      else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
       cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
+      
       if (test)
-        cout << "      Lumi : " << Luminosity << "; eqLumi: " << (double)datasets[d]->EquivalentLumi() << "; " << eqLumi << endl;
+        cout << "      Lumi : " << Luminosity << "; eqLumi: " << eqLumi << endl;
       cout << "TOYS::Lumi/eqLumi = " << toyMax;
-      if (! isData)
-      {
-        toyMax *= 0.88;  // small overshoot in MC --> scale down
-        cout << " x 0.88 = " << toyMax;
-      }
+//       if (! isData)  // CHECK DATA/MC AGREEMENT
+//       {
+//         toyMax *= 0.88;  // small overshoot in MC --> scale down
+//         cout << " x 0.88 = " << toyMax;
+//       }
       cout << endl;
     }
     
@@ -936,13 +967,14 @@ int main(int argc, char* argv[])
       /// Scale factors
       if (! isData)
       {
-        //if (applyLeptonSF) { scaleFactor *= muonIdSF[0] * muonIsoSF[0] * (fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0]);}
+        if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
         if (applyPU) { scaleFactor *= puSF;}
         if (applyBTagSF) { scaleFactor *= btagSF;}
-        //cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << muonIdSF[0] << "  muonIso: " << setw(6) << muonIsoSF[0] << "  muonTrig: " << setw(6) << fracHLT[0]*muonTrigSFv2[0] + fracHLT[1]*muonTrigSFv3[0] << endl;
+//        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
+        if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
       }
       
-      if (useToys) scaleFactor *= eqLumi;  // undo automatic scaling by eqLumi in MSPlots
+      if (useToys) scaleFactor *= eqLumi;  // undo eqLumi scaling in MSPlots
       
       
       
@@ -1112,7 +1144,7 @@ int main(int argc, char* argv[])
         {
           TruthMatching(partons, selectedJets, MCPermutation);
           
-          if (all4PartonsMatched && test && verbose > 3)
+          if (test && verbose > 3 && all4PartonsMatched)
           {
             for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
             {
@@ -1161,8 +1193,8 @@ int main(int argc, char* argv[])
             
             if (calculateAverageMass)
             {
-              txtMassGenPMatched << ievt << "  " << matchedWMass_gen << "  " << matchedTopMass_gen << "  " << widthSF << endl;
-              txtMassGenJMatched << ievt << "  " << matchedWMass_reco << "  " << matchedTopMass_reco << "  " << widthSF << endl;
+              txtMassGenPMatched << ievt << "  " << matchedTopMass_gen << endl;
+              txtMassGenJMatched << ievt << "  " << matchedTopMass_reco << endl;
             }
             
 //             if (calculateLikelihood && ! useLLTGraph)  // CHANGE TO TGRAPH !!  ("fake" likelihood, only CP)
@@ -1397,7 +1429,7 @@ int main(int argc, char* argv[])
       
       
       /// Average mass
-      if (calculateAverageMass) txtMassReco << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+      if (calculateAverageMass) txtMassReco << ievt << "  " << topmass_reco_kf << endl;
       
       
       tempAveMass = topmass_reco_kf/aveTopMassLL;
@@ -1494,14 +1526,14 @@ int main(int argc, char* argv[])
       
       if (calculateAverageMass && ! isData)
       {
-        if (isCP) txtMassRecoCP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+        if (isCP) txtMassRecoCP << ievt << "  " << topmass_reco_kf << endl;
         else
         {
-          txtMassRecoWPUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+          txtMassRecoWPUP << ievt << "  " << topmass_reco_kf << endl;
           if (isWP)
-            txtMassRecoWP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+            txtMassRecoWP << ievt << "  " << topmass_reco_kf << endl;
           else if (isUP)
-            txtMassRecoUP << ievt << "  " << Wmass_reco_kf << "  " << topmass_reco_kf << "  " << widthSF << endl;
+            txtMassRecoUP << ievt << "  " << topmass_reco_kf << endl;
         }
       }  // end aveMassCalc
       
@@ -1585,17 +1617,20 @@ int main(int argc, char* argv[])
     
     cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
     cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
-    cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
+    if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
     
     //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
     if (! isData && nofMatchedEvents > 0 )
     {
       cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
       cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
-      cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
-      cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
-      if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
-        cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% is correctly matched." << endl;
+      if (! doGenOnly)
+      {
+        cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
+        cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
+        if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
+          cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% is correctly matched." << endl;
+      }
       if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
       
       /// Resolution functions
@@ -1649,9 +1684,12 @@ int main(int argc, char* argv[])
   
   if (applyWidthSF) txtDebugTopMass.close();
   
-  cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << 100*(double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << 100*(double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << 100*(double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
-  cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << (int)(nofCP_weighted+nofWP_weighted+nofUP_weighted) << endl;
-  cout << "                               (TTbar only) CP: " << nofCP_TT << "              WP: " << nofWP_TT << "              UP: " << nofUP_TT << endl;
+  if (! doGenOnly && ! testTTbarOnly)
+  {
+    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << 100*(double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << 100*(double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << 100*(double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
+    cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << (int)(nofCP_weighted+nofWP_weighted+nofUP_weighted) << endl;
+    cout << "                               (TTbar only) CP: " << nofCP_TT << "              WP: " << nofWP_TT << "              UP: " << nofUP_TT << endl;
+  }
   
   
   if (calculateLikelihood)
@@ -1688,6 +1726,21 @@ int main(int argc, char* argv[])
     }
     txtOutputLogLike << endl;
     txtOutputLogLike.close();
+    
+    /// Separate file for data (blind)
+    txtOutputLogLike.open(llFileName.c_str());
+    txtOutputLogLike << "Widths:      ";
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    {
+      txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
+    }
+    txtOutputLogLike << endl << "LLikelihood: ";
+    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+    {
+      txtOutputLogLike << setw(12) << right << loglike_data[iWidth] << "  ";
+    }
+    txtOutputLogLike << endl;
+    txtOutputLogLike.close();
   }
   
   cout << "Processing time per dataset: " << endl;
@@ -1707,7 +1760,7 @@ int main(int argc, char* argv[])
   
   
   ///  Check Shape Changing Systematics
-  CheckSystematics(vJER, vJES, vPU);
+  if (! testTTbarOnly) CheckSystematics(vJER, vJES, vPU);
   
   
   if (test)
@@ -1892,7 +1945,7 @@ void GetMetaData(TTree* tree, bool isData)
    tree->SetBranchAddress("nofSelEventsRunG", &nofSelEventsRunG, &b_nofSelEventsRunG);
    tree->SetBranchAddress("nofSelEventsRunH", &nofSelEventsRunH, &b_nofSelEventsRunH);
   }
-  else
+  else if (isTTbar)
   {
    tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
    tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
@@ -2071,6 +2124,7 @@ void InitMSPlots()
   if (doKinFit)
   {
     MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter", 200, 0, 5, "#chi^{2}");
+    MSPlot["KF_Chi2_narrow"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter  ", 200, 0, 2, "#chi^{2}");
     MSPlot["KF_Chi2_wide"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter ", 200, 0, 20, "#chi^{2}");
     MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
     MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
@@ -2090,7 +2144,7 @@ void InitHisto1D()
   TH1::SetDefaultSumw2();
   
   InitHisto1DMatch();
-  InitHisto1DRedMass();
+  if (makePlotsTGraph) InitHisto1DTGraph();
   
   /// SFs
   histo1D["Width_SF"] = new TH1F("Width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
@@ -2260,28 +2314,25 @@ void InitHisto2DMatch()
   histo2D["mlb_dR_lep_b_wrong_matched"] = new TH2F("mlb_dR_lep_b_wrong_matched","dR(l,b) vs. M_{lb}, both wrongly matched; M_{lb_{had}}; #Delta R(l,b_{had})", 80, 0, 800, 25, 0, 5);
 }
 
-void InitHisto1DRedMass()
+void InitHisto1DTGraph()
 {
-  histo1D["Red_top_mass_CP_90b"] = new TH1F("Red_top_mass_CP_90b","Reduced top mass, CP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_80b"] = new TH1F("Red_top_mass_CP_80b","Reduced top mass, CP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_75b"] = new TH1F("Red_top_mass_CP_75b","Reduced top mass, CP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_70b"] = new TH1F("Red_top_mass_CP_70b","Reduced top mass, CP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_60b"] = new TH1F("Red_top_mass_CP_60b","Reduced top mass, CP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
-  histo1D["Red_top_mass_CP_30b"] = new TH1F("Red_top_mass_CP_30b","Reduced top mass, CP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
-  
-  histo1D["Red_top_mass_WP_90b"] = new TH1F("Red_top_mass_WP_90b","Reduced top mass, WP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_80b"] = new TH1F("Red_top_mass_WP_80b","Reduced top mass, WP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_75b"] = new TH1F("Red_top_mass_WP_75b","Reduced top mass, WP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_70b"] = new TH1F("Red_top_mass_WP_70b","Reduced top mass, WP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_60b"] = new TH1F("Red_top_mass_WP_60b","Reduced top mass, WP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
-  histo1D["Red_top_mass_WP_30b"] = new TH1F("Red_top_mass_WP_30b","Reduced top mass, WP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
-  
-  histo1D["Red_top_mass_UP_90b"] = new TH1F("Red_top_mass_UP_90b","Reduced top mass, UP; M_{t}/<M_{t}>", 90, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_80b"] = new TH1F("Red_top_mass_UP_80b","Reduced top mass, UP; M_{t}/<M_{t}>", 80, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_75b"] = new TH1F("Red_top_mass_UP_75b","Reduced top mass, UP; M_{t}/<M_{t}>", 75, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_70b"] = new TH1F("Red_top_mass_UP_70b","Reduced top mass, UP; M_{t}/<M_{t}>", 70, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_60b"] = new TH1F("Red_top_mass_UP_60b","Reduced top mass, UP; M_{t}/<M_{t}>", 60, 0.5, 2.0);
-  histo1D["Red_top_mass_UP_30b"] = new TH1F("Red_top_mass_UP_30b","Reduced top mass, UP; M_{t}/<M_{t}>", 30, 0.5, 2.0);
+  string thisWidth;
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    thisWidth = stringWidthArray[iWidth];
+    
+    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+    
+    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+    
+    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+  }
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
@@ -2798,12 +2849,6 @@ void FillCatsPlots(string catSuffix)
     histo1D["mTop_div_aveMTop_bkgd"]->Fill(tempAveMass);
     if ( isWP || isUP ) histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(tempAveMass, widthSF);
     histo1D[("mTop_div_aveMTop_TT_reco"+catSuffix).c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_90b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_80b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_75b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_70b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_60b").c_str()]->Fill(tempAveMass, widthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_30b").c_str()]->Fill(tempAveMass, widthSF);
     histo1D[("minMlb_reco"+catSuffix).c_str()]->Fill(reco_minMlb, widthSF);
     histo1D[("dR_lep_b_lep_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, widthSF);
     histo1D[("dR_lep_b_had_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_had, widthSF);
@@ -2835,6 +2880,23 @@ void FillCatsPlots(string catSuffix)
       histo1D[("KF_Chi2"+catSuffix+"_wide").c_str()]->Fill(kFitChi2);
       histo1D[("KF_top_mass_corr"+catSuffix).c_str()]->Fill(topmass_reco_kf, widthSF);
     }
+    if (makePlotsTGraph) FillTGraphCatsPlots(catSuffix);
+  }
+}
+
+void FillTGraphCatsPlots(string catSuffix)
+{
+  string thisWidth;
+  double thisWidthSF;
+  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+  {
+    thisWidth = stringWidthArray[iWidth];
+    if (isTTbar) thisWidthSF = eventWeightCalculator(massForWidth, widthArray[iWidth]);
+    else thisWidthSF = 1.;
+    
+    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_90b").c_str()]->Fill(tempAveMass, thisWidthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_100b").c_str()]->Fill(tempAveMass, thisWidthSF);
+    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_120b").c_str()]->Fill(tempAveMass, thisWidthSF);
   }
 }
 
@@ -2854,7 +2916,12 @@ void FillMSPlots(int d)
   
   if (doKinFit)
   {
-    MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    if ( kFitChi2 < 5 )
+    {
+      MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+      if ( kFitChi2 < 2 )
+        MSPlot["KF_Chi2_narrow"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    }
     MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_W_mass_orig"]->Fill(Wmass_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
@@ -2882,21 +2949,21 @@ long GetNEvents(TTree* fChain, string var, bool isData)
   return varNew;
 }
 
-void GetHLTFraction(double* fractions)
+void GetEraFraction(double* fractions)
 {
-  TFile* fileHLT = new TFile((pathNtuples+"Ntuples_data.root").c_str(),"READ");
-  TTree* fChain = (TTree*) fileHLT->Get("stats");
+  TFile* file = new TFile((pathNtuplesData+"Ntuples_data.root").c_str(),"READ");
+  TTree* fChain = (TTree*) file->Get("stats");
   
   //fChain->SetBranchAddress("nofEventsHLTv2", &nofEventsHLTv2, &b_nofEventsHLTv2);
   //fChain->SetBranchAddress("nofEventsHLTv3", &nofEventsHLTv3, &b_nofEventsHLTv3);
   
-  long nv2 = GetNEvents(fChain, "nofEventsHLTv2", 1);
-  long nv3 = GetNEvents(fChain, "nofEventsHLTv3", 1);
+  long nBCDEF = GetNEvents(fChain, "nofEventsRunB", 1) + GetNEvents(fChain, "nofEventsRunCD", 1) + GetNEvents(fChain, "nofEventsRunEF", 1);
+  long nGH = GetNEvents(fChain, "nofEventsRunG", 1) + GetNEvents(fChain, "nofEventsRunH", 1);
   
-  fractions[0] = ((double)nv2) / ((double)nv2 + (double)nv3);
-  fractions[1] = ((double)nv3) / ((double)nv2 + (double)nv3);
+  fractions[0] = ((double)nBCDEF) / ((double)nBCDEF + (double)nGH);
+  fractions[1] = ((double)nGH) / ((double)nBCDEF + (double)nGH);
   
-  fileHLT->Close();
+  file->Close();
   ClearMetaData();
 }
 
@@ -2929,13 +2996,13 @@ void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)
     if ( sumPU > 0 ) { strSyst = "PUup";}
     else if ( sumPU < 0 ) { strSyst = "PUdown";}
   }
-  else if (! testTTbarOnly)
+  else
   {
     cerr << "Shape changing systematics not consistent accross datasets or multiple applied at once" << endl;
     cerr << "Exiting...." << endl;
     exit(1);
   }
-  if (! testTTbarOnly) cout << " - Systematics confirmed to be " << strSyst << endl;
+  cout << " - Systematics confirmed to be " << strSyst << endl;
 }
 
 double BreitWignerNonRel(double topMass, double scale)
@@ -2972,25 +3039,29 @@ void PrintMtmLikelihood()
     cout << loglike[iWidth]/(1e+2);
     if ( iWidth != nWidthsLL-1 ) cout << ", ";
   }
-  cout << "} *10^2;" << endl << "likelihood values (data-only) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike_data[iWidth];
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "};" << endl << "likelihood values (only good MC events) : {";
+  cout << "} *10^2;" << endl;
+//   cout << "likelihood values (data-only) : {";
+//   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//   {
+//     cout << loglike_data[iWidth];
+//     if ( iWidth != nWidthsLL-1 ) cout << ", ";
+//   }
+//   cout << "};" << endl;
+  cout << "likelihood values (only good MC events) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
     cout << loglike_onlyGoodEvts[iWidth]/(1e+2);
     if ( iWidth != nWidthsLL-1 ) cout << ", ";
   }
-  cout << "} *10^2;" << endl << "likelihood values (only good data events) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike_onlyGoodEvts_data[iWidth];
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "};" << endl << "fake likelihood values (CP) : {";
+  cout << "} *10^2;" << endl;
+//   cout << "likelihood values (only good data events) : {";
+//   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
+//   {
+//     cout << loglike_onlyGoodEvts_data[iWidth];
+//     if ( iWidth != nWidthsLL-1 ) cout << ", ";
+//   }
+//   cout << "};" << endl;
+  cout << "fake likelihood values (CP) : {";
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
     cout << fakelike_CP[iWidth]/(1e+4);
@@ -3053,13 +3124,18 @@ void PrintKFDebug(int ievt)
   //}
 }
 
-void ConstructTGraphs(int nWidthsLL, double *widthArray)
+void MakePlotsTGraphs()
+{
+  
+}
+
+void ConstructTGraphs(int nWidthsLL, double *widthArray, string name)
 {
   string inputFileName, suffix;
   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
   {
-    suffix = "widthx"+DotReplace(widthArray[iWidth]);
-    inputFileName = "TGraphFits/output_tgraph1d_"+suffix+".txt";
+    suffix = name+"widthx"+DotReplace(widthArray[iWidth]);
+    inputFileName = "TGraphTemplates/output_tgraph1d_"+suffix+".txt";
     if ( ! fexists(inputFileName.c_str()) )
     {
       cerr << "ERROR::ConstructTGraphs : File " << inputFileName << " not found!!" << endl;
@@ -3070,6 +3146,6 @@ void ConstructTGraphs(int nWidthsLL, double *widthArray)
     graph[suffix] = new TGraph(inputFileName.c_str());
   }
   if (calculateLikelihood)
-    cout << "constructed TGraphs for likelihood measurements (using " << nWidthsLL << " widths)" << endl;
+    cout << "Constructed TGraphs for likelihood measurements (using " << nWidthsLL << " widths)" << endl;
 }
 

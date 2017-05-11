@@ -29,6 +29,7 @@ bool useDifferentWidths = true;
 //string inputDate = "170503_1539/";  // with event scaling in reweighting
 string inputDate = "170504_1544/";  // without event scaling in reweighting
 string suffix = "";
+string outputDir = "TGraphTemplates/";
 //pair<double,string> input[] = { pair<double,string>(0.2,"170502_1755"), pair<double,string>(0.3,"170502_1756"), pair<double,string>(0.4,"170502_1757"), pair<double,string>(0.5,"170426_0949"), pair<double,string>(0.66,"170426_0950"), pair<double,string>(0.75,"170426_0951"), pair<double,string>(0.8,"170502_1131"), pair<double,string>(0.9,"170502_1132"), pair<double,string>(1.,"170426_0952"), pair<double,string>(1.2,"170502_1254"), pair<double,string>(1.5,"170502_1133"), pair<double,string>(2.,"170426_0956"), pair<double,string>(2.5,"170502_1134"), pair<double,string>(3.,"170426_0957"), pair<double,string>(3.5,"170502_1135"), pair<double,string>(4.,"170426_0958"), pair<double,string>(4.5,"170502_1152"), pair<double,string>(5.,"170502_1153"), pair<double,string>(5.5,"170502_1154"), pair<double,string>(6.,"170502_1155"), pair<double,string>(6.5,"170502_1156"),pair<double,string>(7.,"170502_1251"), pair<double,string>(7.5,"170502_1252"),pair<double,string>(8.,"170502_1253") };
 double input[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
 
@@ -64,8 +65,10 @@ int main (int argc, char *argv[])
   cout << "* Current time: " << dateString << "    *" << endl;
   cout << "********************************" << endl;
   
+  mkdir(outputDir.c_str(),0777);
+  
   string inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/OutputPlots/mu/MassPlots/"+inputDate+"MassPlots_nominal.root";
-  string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/TGraphFits/GraphFunctions.root";
+  string outputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+outputDir+"GraphFunctions.root";
   
   TFile *fileIn = new TFile(inputFileName.c_str(),"read");
   TFile *fileOut = new TFile(outputFileName.c_str(),"recreate");
@@ -166,6 +169,8 @@ int main (int argc, char *argv[])
       graph[histoName]->SetTitle(histoName.c_str());
       graph[histoName]->Write();
       DrawGraph(histo[histoName], graph[histoName], "Graph_Red_top_mass_"+histoName);
+      if ( iCat == 0 )  //CP
+        WriteOutput(nPoints, iWidth, binCentreArray, binContentArray[iCat], "_CPLikelihood", 1);
 
       fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents;
       for (int i = 0; i < nPoints; i++) totalBinContentArray[i] += fracCats[iCat]*binContentArray[iCat][i];
@@ -307,7 +312,7 @@ void DrawGraph(TH1F* h, TGraph* g, string name)
   g->Draw("same");
   c->Update();
   c->Write();
-  c->SaveAs(("TGraphFits/"+name+".png").c_str());
+  c->SaveAs((outputDir+name+".png").c_str());
   
   delete c;
 }
@@ -325,16 +330,16 @@ void DrawGraph2D(TGraph2D* g, string name)
   g->Draw("surf1");
   c->Update();
   c->Write();
-  c->SaveAs(("TGraphFits/"+name+"_surf1.png").c_str());
+  c->SaveAs((outputDir+name+"_surf1.png").c_str());
   g->Draw("colz");
   c->Update();
   c->Write();
-  c->SaveAs(("TGraphFits/"+name+"_colz.png").c_str());
+  c->SaveAs((outputDir+name+"_colz.png").c_str());
   g->SetMarkerSize(0.5);
   g->Draw("tri1 p0");
   c->Update();
   c->Write();
-  c->SaveAs(("TGraphFits/"+name+"_tri1p0.png").c_str());
+  c->SaveAs((outputDir+name+"_tri1p0.png").c_str());
   
   delete c;
 }

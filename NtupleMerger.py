@@ -16,11 +16,11 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170509"
+date = "170511"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
-isData = True
+isData = False
 
 for chan in channels:
     
@@ -100,7 +100,7 @@ for chan in channels:
     
     
     # Further merging of data if there are multiple data collections
-    mergeData=True
+    mergeData=False
     
     if (mergeData):
     # combining all the Data in one
