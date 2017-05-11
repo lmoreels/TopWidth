@@ -780,7 +780,7 @@ void ResolutionFunctions::makeFit()
       hp->Write();
       myfit->Write();
       
-      if (verbose) std::cout << "Integral of the fit is " << myfit->Integral(-100,100,0) << std::endl;
+      if (verbose) std::cout << "Integral of the fit is " << myfit->Integral(-100,100) << std::endl;
       
       delete hp;
       delete myfit;
@@ -990,16 +990,18 @@ void ResolutionFunctions::writeTable(std::string inputFileName)
       myResolutionFunctions<<"\\caption{Parameters of the resolution function for the " << histoDescription[f]  << "}" << std::endl;
       myResolutionFunctions<<"\\label{tab:}" << std::endl;
       myResolutionFunctions<<"\\centering" << std::endl;
-      myResolutionFunctions<<"\\begin{tabular}{c|ccc}" << std::endl;
+      //myResolutionFunctions<<"\\begin{tabular}{c|ccc}" << std::endl;
+      myResolutionFunctions<<"\\begin{tabular}{c|cc}" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
-      myResolutionFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($\\sqrt{E}$) & $a_{i2}$ ($E$)" << "\\\\" << std::endl;
+      //myResolutionFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($\\sqrt{E}$) & $a_{i2}$ ($E$)" << "\\\\" << std::endl;
+      myResolutionFunctions << "Type	& $a_{i0}$ & $a_{i1}$ ($E$)" << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
-      myResolutionFunctions << "Mean narrow gaussian & $a_{10}$ = " << TF_par1->GetParameter(0) << "$\\pm$" << TF_par1->GetParError(0) << " & $a_{11}$ = " << TF_par1->GetParameter(1) << "$\\pm$" << TF_par1->GetParError(1) << " & $a_{12}$ = " << TF_par1->GetParameter(2) << "$\\pm$" << TF_par1->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width narrow gaussian & $a_{20}$ = " << TF_par2->GetParameter(0) << "$\\pm$" << TF_par2->GetParError(0) << " & $a_{21}$ = " << TF_par2->GetParameter(1) << "$\\pm$" << TF_par2->GetParError(1) << " & $a_{22}$ = " << TF_par2->GetParameter(2) << "$\\pm$" << TF_par2->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Scale factor gaussians & $a_{30}$ = " << TF_par3->GetParameter(0) << "$\\pm$" << TF_par3->GetParError(0) << " & $a_{31}$ = " << TF_par3->GetParameter(1) << "$\\pm$" << TF_par3->GetParError(1) << " & $a_{32}$ = " << TF_par3->GetParameter(2) << "$\\pm$" << TF_par3->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Mean broad gaussian & $a_{40}$ = " << TF_par4->GetParameter(0) << "$\\pm$" << TF_par4->GetParError(0) << " & $a_{41}$ = " << TF_par4->GetParameter(1) << "$\\pm$" << TF_par4->GetParError(1) << " & $a_{42}$ = " << TF_par4->GetParameter(2) << "$\\pm$" << TF_par4->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Width broad gaussian & $a_{50}$ = " << TF_par5->GetParameter(0) << "$\\pm$" << TF_par5->GetParError(0) << " & $a_{51}$ = " << TF_par5->GetParameter(1) << "$\\pm$" << TF_par5->GetParError(1) << " & $a_{52}$ = " << TF_par5->GetParameter(2) << "$\\pm$" << TF_par5->GetParError(2) << "\\\\" << std::endl;
-      myResolutionFunctions << "Amplitude & $a_{60}$ = " << TF_par6->GetParameter(0) << "$\\pm$" << TF_par6->GetParError(0) << " & $a_{61}$ = " << TF_par6->GetParameter(1) << "$\\pm$" << TF_par6->GetParError(1) << " & $a_{62}$ = " << TF_par6->GetParameter(2) << "$\\pm$" << TF_par6->GetParError(2) << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean narrow gaussian & $a_{10}$ = " << TF_par1->GetParameter(0) << "$\\pm$" << TF_par1->GetParError(0) << " & $a_{11}$ = " << TF_par1->GetParameter(1) << "$\\pm$" << TF_par1->GetParError(1) /*<< " & $a_{12}$ = " << TF_par1->GetParameter(2) << "$\\pm$" << TF_par1->GetParError(2)*/ << "\\\\" << std::endl;
+      myResolutionFunctions << "Width narrow gaussian & $a_{20}$ = " << TF_par2->GetParameter(0) << "$\\pm$" << TF_par2->GetParError(0) << " & $a_{21}$ = " << TF_par2->GetParameter(1) << "$\\pm$" << TF_par2->GetParError(1) /*<< " & $a_{22}$ = " << TF_par2->GetParameter(2) << "$\\pm$" << TF_par2->GetParError(2)*/ << "\\\\" << std::endl;
+      myResolutionFunctions << "Scale factor gaussians & $a_{30}$ = " << TF_par3->GetParameter(0) << "$\\pm$" << TF_par3->GetParError(0) << " & $a_{31}$ = " << TF_par3->GetParameter(1) << "$\\pm$" << TF_par3->GetParError(1) /*<< " & $a_{32}$ = " << TF_par3->GetParameter(2) << "$\\pm$" << TF_par3->GetParError(2)*/ << "\\\\" << std::endl;
+      myResolutionFunctions << "Mean broad gaussian & $a_{40}$ = " << TF_par4->GetParameter(0) << "$\\pm$" << TF_par4->GetParError(0) << " & $a_{41}$ = " << TF_par4->GetParameter(1) << "$\\pm$" << TF_par4->GetParError(1) /*<< " & $a_{42}$ = " << TF_par4->GetParameter(2) << "$\\pm$" << TF_par4->GetParError(2)*/ << "\\\\" << std::endl;
+      myResolutionFunctions << "Width broad gaussian & $a_{50}$ = " << TF_par5->GetParameter(0) << "$\\pm$" << TF_par5->GetParError(0) << " & $a_{51}$ = " << TF_par5->GetParameter(1) << "$\\pm$" << TF_par5->GetParError(1) /*<< " & $a_{52}$ = " << TF_par5->GetParameter(2) << "$\\pm$" << TF_par5->GetParError(2)*/ << "\\\\" << std::endl;
+      myResolutionFunctions << "Amplitude & $a_{60}$ = " << TF_par6->GetParameter(0) << "$\\pm$" << TF_par6->GetParError(0) << " & $a_{61}$ = " << TF_par6->GetParameter(1) << "$\\pm$" << TF_par6->GetParError(1) /*<< " & $a_{62}$ = " << TF_par6->GetParameter(2) << "$\\pm$" << TF_par6->GetParError(2)*/ << "\\\\" << std::endl;
       myResolutionFunctions<<"\\hline" << std::endl;
       myResolutionFunctions<<"\\end{tabular}"<< std::endl;
       myResolutionFunctions<<"\\end{table}"<<std::endl;
