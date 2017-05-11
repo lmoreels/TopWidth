@@ -29,7 +29,7 @@ channels = ["mu"]
 fillBhisto = 0;
 JES = 0;
 JER = 0;
-isData = True
+isData = False
 
 # loop over channels
 for chan in channels:
