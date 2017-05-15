@@ -16,6 +16,12 @@ const std::string ResolutionFunctions::histoNames[] = {"Etparton_vs_Etparton-Etb
 
 const std::string ResolutionFunctions::histoDescription[] = {"b jet Et barrel", "b jet Et overlap area", "b jet Et endcap", "b jet theta barrel", "b jet theta overlap area", "b jet theta endcap", "b jet phi barrel", "b jet phi overlap area", "b jet phi endcap", "non-b jet Et barrel", "non-b jet Et overlap area", "non-b jet Et endcap", "non-b jet theta barrel", "non-b jet theta overlap area", "non-b jet theta endcap", "non-b jet phi barrel", "non-b jet phi overlap area", "non-b jet phi endcap"};
 
+Double_t ResolutionFunctions::sGaus(Double_t *x, Double_t *par)
+{
+  Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[0] - par[0])/par[1] , 2) /2. )/(par[1]*sqrt(2*TMath::Pi()));
+  return par[2] * narrowGaus + par[3];
+}
+
 Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
 {
   Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par[5]/TMath::Sqrt( pow(par[1], 2) + par[2]*pow(par[4], 2) );
@@ -571,7 +577,7 @@ void ResolutionFunctions::writeHistograms()
 void ResolutionFunctions::makeFit()
 {
   if (verbose) std::cout << "                             - Starting fit procedure... " << std::endl;
-  
+  if (verbose) std::cout << "Single Gaussian? " << useSingleG << std::endl;
   
   for (int f = 0; f < nHistos; f++)
   {
@@ -599,7 +605,7 @@ void ResolutionFunctions::makeFit()
     
     int nBins = histo->GetXaxis()->GetNbins();
     if (verbose) std::cout << "nbins: " << nBins << std::endl;
-    const int nPar = 6;
+    int nPar = 6;
     //int nPar = 5;
     
     /// Create one histogram for each function parameter -> 6 histograms for each 2D plot
@@ -641,19 +647,41 @@ void ResolutionFunctions::makeFit()
       
       //TF1 *myfit2 = new TF1("myfit", "([5]/([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0])/[1],2)/2.) + [2]*TMath::Exp(-TMath::Power((x-[3])/[4],2)/2.) )/sqrt(2.*TMath::Pi())");  // FOUT: norm factor, zie dblGaus
       
+      double maxX = 0.;
       double fitEdge = 100.;  // largest for Et
       if ( fitTheta ) fitEdge = 0.12;
       else if ( fitPhi ) fitEdge = 0.2;
       
-      TF1 *myfit = new TF1("myfit", dblGaus, -fitEdge, fitEdge, nPar);
+      if (useSingleG)
+      {
+        maxX = hp->GetXaxis()->GetBinCenter(hp->GetMaximumBin());
+        //maxX = hp->GetMean();
+        fitEdge = 0.8*(hp->GetStdDev());
+        if ( xBin > 3 ) fitEdge = 1.*(hp->GetStdDev());
+        if ( fitEt )
+        {
+          if (histoNames[f].find("_E") != std::string::npos) fitEdge = 0.9*(hp->GetStdDev());
+          if ( xBin > 3 ) fitEdge = 1.5*(hp->GetStdDev());
+        }
+      }
+      if (useSingleG /*&& ! fitEt*/) nPar = 4;
+      
+      TF1 *myfit;
+      if (useSingleG /*&& ! fitEt*/) myfit = new TF1("myfit", sGaus, maxX - fitEdge, maxX + fitEdge, nPar);
+      else myfit = new TF1("myfit", dblGaus, -fitEdge, fitEdge, nPar);
       
       //  Give names to the parameters
       myfit->SetParName(0,"a1");  // central value of first, narrow gaussian
       myfit->SetParName(1,"a2");  // sigma value of first, narrow gaussian
       myfit->SetParName(2,"a3");  // relative scale factor gaussians
+                                  // sGaus: amplitude
       myfit->SetParName(3,"a4");  // central value of second, broad gaussian
-      myfit->SetParName(4,"a5");  // sigma value of second, broad gaussian
-      myfit->SetParName(5,"a6");  // amplitude
+                                  // sGaus: shift up/down (because of second, non-fitted gaus)
+      if (! useSingleG /*|| fitEt*/)
+      {
+        myfit->SetParName(4,"a5");  // sigma value of second, broad gaussian
+        myfit->SetParName(5,"a6");  // amplitude
+      }
       //  Set initial values
       //if ( f == 0 || f == 1 || f == 2 || f == 6 || f == 7 || f == 8 || f == 24 || f == 25 || f == 26 || f == 27 || f == 28 || f == 29)  // energy, Et, pt of (non-)b jet, with & without eta bins
       if ( fitEt )  // Et of (non-)b jet (BOE)
@@ -661,29 +689,33 @@ void ResolutionFunctions::makeFit()
         // Mean around zero
         //myfit->SetParLimits(0,-10,10);
         myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/1.5, hp->GetMean() + hp->GetRMS()/1.5);
-        myfit->SetParLimits(3, -35., 35.);
+        if (! useSingleG) myfit->SetParLimits(3, -35., 35.);
         // Restrict sigma to be positive
         myfit->SetParLimits(1, 2., 30.);
-        myfit->SetParLimits(4, 8., 110.);
+        if (! useSingleG) myfit->SetParLimits(4, 8., 110.);
         
         if ( xBin == 1 )
         {
-          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, 2., 8., 1.);
+          if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 1., 0.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, 2., 8., 1.);
           myfit->SetParLimits(4, 6.5, 110.);
         }
         else if ( xBin == 2 )
         {
-          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.3, 2., 14.4, 1.);
+          if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.3, 2., 14.4, 1.);
         }
         else if ( xBin == 3 || xBin == 4 )
         {
-          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.9, 4.4, 30.0, 1.);
-          myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
+          if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.9, 4.4, 30.0, 1.);
+          if (! useSingleG) myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
         }
         else if ( xBin > 4 )
         {
-          myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 2., 6.6, 50., 1.);
-          myfit->SetParLimits(4, 25., 125.);
+          if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 2., 6.6, 50., 1.);
+          if (! useSingleG) myfit->SetParLimits(4, 25., 125.);
           //if ( f > 6 )  // Et, pt of non-b jet
             //fix such that small gaussian has smallest width
         }
@@ -694,33 +726,40 @@ void ResolutionFunctions::makeFit()
       {
         // Mean around zero
         myfit->SetParLimits(0,-0.005,0.005);
-        myfit->SetParLimits(3,-0.06,0.06);
         // Restrict sigma to be positive
         myfit->SetParLimits(1,2e-3,25e-3);
-        myfit->SetParLimits(4,1e-2,3e-1);
         if (fitPhi) myfit->SetParLimits(1,5e-3,25e-3);
         
-        myfit->SetParLimits(2,0.06,0.6);
+        if (! useSingleG)
+        {
+          myfit->SetParLimits(2,0.06,0.6);
+          myfit->SetParLimits(3,-0.06,0.06);  // mean around zero
+          myfit->SetParLimits(4,1e-2,3e-1);   // sigma positive
+        }
         
-        myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, hp->GetMean(), hp->GetRMS()*2., 0.03);
+        if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 1., 0.);
+        else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, hp->GetMean(), hp->GetRMS()*2., 0.03);
         
         if ( xBin == 1 )
         {
-          myfit->SetParLimits(4,1e-2,6e-1);
+          if (! useSingleG) myfit->SetParLimits(4,1e-2,6e-1);
         }
         else if ( xBin > 1 && xBin < 4 )
         {
-          myfit->SetParameter(2, 0.2);
-          if ( fitPhi && xBin == 2 ) myfit->SetParLimits(4,1e-2,6e-1);
+          if (! useSingleG) myfit->SetParameter(2, 0.2);
+          if ( fitPhi && xBin == 2 && ! useSingleG ) myfit->SetParLimits(4,1e-2,6e-1);
         }
         else
         {
-          myfit->SetParameter(2, 0.1);
           myfit->SetParLimits(1, 2e-3, 1e-2);
           if (fitPhi) myfit->SetParLimits(1,3e-3,2e-2);
-          myfit->SetParLimits(2,0.06,0.45);
-          myfit->SetParLimits(4,7e-3,3e-1);
-          if (fitPhi) myfit->SetParLimits(4,15e-3,3e-1);
+          if (! useSingleG)
+          {
+            myfit->SetParameter(2, 0.1);
+            myfit->SetParLimits(2,0.06,0.45);
+            myfit->SetParLimits(4,7e-3,3e-1);
+            if (fitPhi) myfit->SetParLimits(4,15e-3,3e-1);
+          }
         }
       }
 /*      else if ( f == 12 )  // energy of muon
@@ -792,7 +831,14 @@ void ResolutionFunctions::makeFit()
     //  ai = ai0 + ai1*Ep + ai2*sqrt(Ep)
     //  Its range depends on the parton energy range (hence, the X-axis)
     //TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x+[2]*sqrt(x)", histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
-    TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x", histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
+    double minfit2 = histo->GetXaxis()->GetXmin();
+    double maxfit2 = histo->GetXaxis()->GetXmax();
+    if ( fitEt && histoNames[f].find("_B") == std::string::npos )
+      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
+    else if ( fitPhi && histoNames[f].find("_E") != std::string::npos )
+      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
+    
+    TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
     // Give names to the parameters
     myfit2->SetParName(0,"ai0");
     myfit2->SetParName(1,"ai1");
@@ -802,7 +848,7 @@ void ResolutionFunctions::makeFit()
       int paramname = iPar+1;
       std::string func_title2 = std::string(histo->GetName())+"_a"+toStr(paramname)+"_Fitted";
       myfit2->SetName(func_title2.c_str());
-      hlist[iPar]->Fit(myfit2);
+      hlist[iPar]->Fit(myfit2,"R");
       hlist[iPar]->Write();
       myfit2->Write();
     }
@@ -818,8 +864,14 @@ void ResolutionFunctions::makeFit()
 
 void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName)
 {
+  makeFit(inputFileName, outputFileName, false);
+}
+
+void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName, bool simplify)
+{
   if (verbose) std::cout << "ResolutionFunctions::makeFit - Getting histograms from file  " << inputFileName << std::endl;
   getHistos = true;
+  useSingleG = simplify;
   
   TFile *fin = new TFile(inputFileName.c_str(),"read");
   fin->cd();
@@ -889,7 +941,9 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   TFile* rf = new TFile(inputFileName.c_str(),"READ");
   rf->cd();
   
-  const int nParams = 6;
+  int nParams = ((TF1*) rf->Get((histoNames[f]+"_sliceXbin1_Fitted").c_str()))->GetNpar();
+  if (verbose) std::cout << "ResolutionFunctions::Number of parameters: " << nParams << std::endl;
+  
   std::vector<std::array<double, 2> > params;
   params.clear();
   for (int iPar = 0; iPar < nParams; iPar++)
@@ -907,6 +961,12 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
 TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string binName)
 {
   std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, binName);
+  
+  if ( params.size() < 6 )
+  {
+    std::cout << "ResolutionFunctions::Using simplified fit. Cannot reconstruct accurate fit function..." << std::endl;
+    return NULL;
+  }
   
   double funcMin = -80., funcMax = 80.;
   if ( varName.std::string::find("theta") != std::string::npos ) { funcMin = -0.1; funcMax = 0.1; }
@@ -927,6 +987,7 @@ TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::strin
 TF1* ResolutionFunctions::getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string binName)
 {
   TF2* f2 = this->getFitFunction2D(inputFileName, varName, objName, binName);
+  if ( f2 == NULL ) return NULL;
   
   // Make projection on x axis (remove depency on reco/gen difference)
   TF12 *f2x = new TF12("f2x", f2, 0, "x");

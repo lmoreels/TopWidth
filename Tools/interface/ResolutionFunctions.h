@@ -46,6 +46,7 @@ class ResolutionFunctions{
     void writeHistograms();
     void makeFit();
     void makeFit(std::string inputFileName, std::string outputFileName);
+    void makeFit(std::string inputFileName, std::string outputFileName, bool simplify);
     TF2* getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string binName);
     TF1* getFitFunction1D(std::string inputFileName, std::string varName, std::string objName, std::string binName);
     TF1* getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string binName);
@@ -58,6 +59,7 @@ class ResolutionFunctions{
     bool muon;
     bool electron;
     bool getHistos;
+    bool useSingleG;
     std::map<std::string,TH2F*> histoRes2D;
     std::map<std::string,TH2F*> fitHisto2D;
     //std::map<std::string,std::vector<std::array<double, 2> > > fitParams;
@@ -65,6 +67,7 @@ class ResolutionFunctions{
     int nHistos;
     static const std::string histoNames[];
     static const std::string histoDescription[];
+    static Double_t sGaus(Double_t *x, Double_t *par);
     static Double_t dblGaus(Double_t *x, Double_t *par);
     static Double_t dblGausParFill(Double_t *x, Double_t *par);
     std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName);

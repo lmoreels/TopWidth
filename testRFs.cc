@@ -75,8 +75,10 @@ string MakeTimeStamp()
   return date_str;
 }
 
-void DrawFunction(TF2* f, string varName, string saveName)
+int DrawFunction(TF2* f, string varName, string saveName)
 {
+  if ( f == NULL ) return 1;
+  
   TCanvas *c1 = new TCanvas("c1",("Resolution function for "+varName).c_str(),10,200,900,700);
   
   f->SetContour(48);
@@ -96,10 +98,14 @@ void DrawFunction(TF2* f, string varName, string saveName)
   c1->SaveAs((saveName+".png").c_str());
   
   delete c1;
+  
+  return 0;
 }
 
-void DrawFunction(TF1* f, string varName, string saveName)
+int DrawFunction(TF1* f, string varName, string saveName)
 {
+  if ( f == NULL ) return 1;
+  
   TCanvas *c1 = new TCanvas("c1",("Projection of resolution function for "+varName).c_str(),10,200,900,700);
   
   if ( saveName.std::string::find("_x") == std::string::npos )
@@ -113,6 +119,8 @@ void DrawFunction(TF1* f, string varName, string saveName)
   c1->SaveAs((saveName+".png").c_str());
   
   delete c1;
+  
+  return 0;
 }
 
 int main (int argc, char *argv[])
@@ -133,7 +141,7 @@ int main (int argc, char *argv[])
   
   string inputFileName = "PlotsForResolutionFunctions.root";
   
-  string rfFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root";
+  string rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root";
   //TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
   //foutRF->cd();
   //TDirectory* rootDir = foutRF->mkdir(dateString.c_str());
@@ -141,7 +149,7 @@ int main (int argc, char *argv[])
   
   if (testFit)
   {
-    rf->makeFit(inputFileName, rfFileName);
+    rf->makeFit(inputFileName, rfFileName, true);
   }
   
   if (testRead)
