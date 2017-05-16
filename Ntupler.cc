@@ -116,8 +116,8 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-  string xmlFileName ="config/topWidth_data.xml";
-//  string xmlFileName ="config/topWidth_MC.xml";
+//  string xmlFileName ="config/topWidth_data.xml";
+  string xmlFileName ="config/topWidth_MC.xml";
   int maxMCParticles = -1;
   
   
@@ -639,7 +639,7 @@ int main (int argc, char *argv[])
     ///  Define variables for trees  ///
     ////////////////////////////////////
     
-    // stats of dataset
+    /// stats of dataset
     Long64_t nEvents;
     Long64_t nEventsSel;
     Int_t nofPosWeights;
@@ -676,7 +676,7 @@ int main (int argc, char *argv[])
     Long64_t nofTTEventsWithoutGenTopWithStatus62;
     Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
     
-    // event related variables
+    /// event related variables
     Int_t run_num;
     Long64_t evt_num;
     Int_t lumi_num;
@@ -689,7 +689,18 @@ int main (int argc, char *argv[])
     Bool_t hasExactly4Jets;
     Bool_t hasJetLeptonCleaning;
     Bool_t hasLooseJetLeptonCleaning;
-//    Bool_t passedMETFilter;
+    Bool_t hasErasedBadOrCloneMuon;
+    Bool_t hasErasedBadOrCloneLooseMuon;
+    
+    // filters
+    Bool_t filterHBHENoise;
+    Bool_t filterHBHEIso;
+    Bool_t filterCSCTightHalo;
+    Bool_t filterEcalDeadCell;
+    Bool_t filterEEBadSc;  // recommended for data-only
+    Bool_t filterBadChCand;
+    Bool_t filterBadMuon;
+    Bool_t passedMETFilter;
     
     Bool_t isDataRunB;
     Bool_t isDataRunC;
@@ -880,12 +891,23 @@ int main (int argc, char *argv[])
     myTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
     myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
     myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
-//    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
+    myTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
     if (fillLooseTree)
     {
       looseTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
       looseTree->Branch("hasLooseJetLeptonCleaning",&hasLooseJetLeptonCleaning,"hasLooseJetLeptonCleaning/O");
+      looseTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
+      looseTree->Branch("hasErasedBadOrCloneLooseMuon",&hasErasedBadOrCloneLooseMuon,"hasErasedBadOrCloneLooseMuon/O");
     }
+    
+    myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
+    myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
+    myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
+    myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
+    myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
+    myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
+    myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
+    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
     
     if (isData)
     {
@@ -1075,6 +1097,15 @@ int main (int argc, char *argv[])
     
     
     
+    /////////////////////////
+    ///  Define internal variables
+    /////////////////////////
+    
+    bool isGoodPV;
+    bool isBadMuon, isCloneMuon;
+    bool toBeErased;
+    
+    
     ////////////////////////////////////
     ///  Loop on events
     ////////////////////////////////////
@@ -1135,8 +1166,10 @@ int main (int argc, char *argv[])
     vector < TRootPFJet* > selectedLooseJets;
     vector < TRootPFJet* > selectedLooseJetsBC;
     vector < TRootMuon* > selectedMuons;
+    vector < TRootMuon* > selectedMuonsBC;
     vector < TRootMuon* > vetoMuons;
     vector < TRootMuon* > selectedLooseMuons;
+    vector < TRootMuon* > selectedLooseMuonsBC;
     vector < TRootElectron* > selectedElectrons;
     vector < TRootElectron* > vetoElectrons;
     vector < TRootElectron* > selectedLooseElectrons;
@@ -1164,6 +1197,7 @@ int main (int argc, char *argv[])
       if (ievt%100000 == 0)
         cout << "Processing event " << ievt << "..." << endl;
       
+      
       /// Clear objects
       vertex.clear();
       init_muons.clear();
@@ -1181,8 +1215,10 @@ int main (int argc, char *argv[])
       selectedLooseJets.clear();
       selectedLooseJetsBC.clear();
       selectedMuons.clear();
+      selectedMuonsBC.clear();
       vetoMuons.clear();
       selectedLooseMuons.clear();
+      selectedLooseMuonsBC.clear();
       selectedElectrons.clear();
       vetoElectrons.clear();
       selectedLooseElectrons.clear();
@@ -1192,7 +1228,18 @@ int main (int argc, char *argv[])
       isSelected = false;
       hasExactly4Jets = false;
       hasJetLeptonCleaning = false;
-      //passedMETFilter = false;
+      hasLooseJetLeptonCleaning = false;
+      hasErasedBadOrCloneMuon = false;
+      hasErasedBadOrCloneLooseMuon = false;
+      
+      filterHBHENoise = false;
+      filterHBHEIso = false;
+      filterCSCTightHalo = false;
+      filterEcalDeadCell = false;
+      filterEEBadSc = false;  // recommended for data-only
+      filterBadChCand = false;
+      filterBadMuon = false;
+      passedMETFilter = false;
       
       isDataRunB = false;
       isDataRunC = false;
@@ -1335,6 +1382,12 @@ int main (int argc, char *argv[])
         mc_fromHardProcessFinalState[i] = false;
       }
       
+      /// Clear vars
+      isGoodPV = false;
+      isBadMuon = false;
+      isCloneMuon = false;
+      toBeErased = false;
+      
       
       
       ////////////////////
@@ -1452,10 +1505,10 @@ int main (int argc, char *argv[])
       ///  EVENT SELECTION  ///
       /////////////////////////
       
-      //Declare selection instance
+      /// Declare selection instance
       Run2Selection selection(init_jets_corrected, init_muons, init_electrons, mets_corrected, rho);
       
-      bool isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
+      isGoodPV = selection.isPVSelected(vertex, 4, 24., 2.);
       
       selectedJets = selection.GetSelectedJets(jetPT, jetEta, true, "Tight");  // PtThr, EtaThr, applyJetID, TightLoose
       selectedLooseJets = selection.GetSelectedJets(jetPT, jetEta, true, "Loose");
@@ -1465,6 +1518,32 @@ int main (int argc, char *argv[])
       vetoElectrons = selection.GetSelectedElectrons(electronPTVeto, electronEtaVeto, "Veto", "Spring16_80X", true, true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased
       selectedLooseMuons = selection.GetSelectedMuons(muonPTSel, muonEtaSel, muonRelIsoVeto, "Loose", "Summer16");  // PtThr, etaThr, relIso, WorkingPoint, ProductionCampaign
       selectedLooseElectrons = selection.GetSelectedElectrons(electronPTSel, electronEtaSel, "Loose", "Spring16_80X", true, true);  // PtThr, etaThr, WorkingPoint, ProductionCampaign, CutsBased, VID
+      
+      /// Reject bad muons
+      isBadMuon = false, isCloneMuon = false;
+      selectedMuonsBC.clear();
+      selectedMuonsBC = selectedMuons;
+      selectedMuons.clear();
+      for (int iOrigMuon = 0; iOrigMuon < selectedMuonsBC.size(); iOrigMuon++)
+      {
+        isBadMuon = selectedMuonsBC[iOrigMuon]->isBad80X();
+        isCloneMuon = selectedMuonsBC[iOrigMuon]->isClone80X();
+        if (! isBadMuon && ! isCloneMuon) selectedMuons.push_back(selectedMuonsBC[iOrigMuon]);
+        else hasErasedBadOrCloneMuon = true;
+      }
+      
+      isBadMuon = false; isCloneMuon = false;
+      selectedLooseMuonsBC.clear();
+      selectedLooseMuonsBC = selectedLooseMuons;
+      selectedLooseMuons.clear();
+      for (int iOrigMuon = 0; iOrigMuon < selectedLooseMuonsBC.size(); iOrigMuon++)
+      {
+        isBadMuon = selectedLooseMuonsBC[iOrigMuon]->isBad80X();
+        isCloneMuon = selectedLooseMuonsBC[iOrigMuon]->isClone80X();
+        if (! isBadMuon && ! isCloneMuon) selectedLooseMuons.push_back(selectedLooseMuonsBC[iOrigMuon]);
+        else hasErasedBadOrCloneLooseMuon = true;
+      }
+      
       
       if (applyJetLeptonCleaning)
       {
@@ -1476,7 +1555,7 @@ int main (int argc, char *argv[])
         
         for (int iOrigJet = 0; iOrigJet < selectedJetsBC.size(); iOrigJet++)
         {
-          bool toBeErased = false;
+          toBeErased = false;
           for (int iMuon = 0; iMuon < selectedLooseMuons.size(); iMuon++)
           {
             if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedLooseMuons[iMuon]) < 0.4 )
@@ -1734,6 +1813,16 @@ int main (int argc, char *argv[])
       met_corr_Et = mets_corrected[0]->Et();
       met_corr_E = mets_corrected[0]->E();
       
+      filterHBHENoise = event->getHBHENoiseFilter();
+      filterHBHEIso = event->getHBHENoiseIsoFilter();
+      filterCSCTightHalo = event->getglobalTightHalo2016Filter();
+      filterEcalDeadCell = event->getEcalDeadCellTriggerPrimitiveFilter();
+      if (isData) filterEEBadSc = event->getEEBadScFilter();  // recommended for data-only
+      else filterEEBadSc = true;
+      filterBadChCand = event->getBadChCandFilter();
+      filterBadMuon = event->getBadPFMuonFilter();
+      
+      if ( isGoodPV && filterHBHENoise && filterHBHEIso && filterCSCTightHalo && filterEcalDeadCell && filterEEBadSc && filterBadChCand && filterBadMuon ) passedMETFilter = true;
       
       if (! isData)
       {
