@@ -40,10 +40,10 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = false;
+bool makePlots = true;
 bool makePlotsTGraph = false;
 bool calculateResolutionFunctions = false;
-bool calculateAverageMass = true;
+bool calculateAverageMass = false;
 bool calculateLikelihood = false;
 bool useLLTGraph = true;
 bool doKinFit = true;
@@ -51,7 +51,7 @@ bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
 bool useToys = false;
 bool applyLeptonSF = true;
-bool applyPU = false;
+bool applyPU = true;
 bool applyJER = true;
 bool applyJEC = true;
 bool applyBTagSF = true;
@@ -91,16 +91,16 @@ int nofNotCorrectlyMatched = 0;
 int nofCP = 0, nofWP = 0, nofUP = 0;
 int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
 double nofCP_weighted = 0, nofWP_weighted = 0, nofUP_weighted = 0;
-double Luminosity = 9999.;
 
 /// Lumi per data era
-double lumi_runBCDEF = 19.67550334113;
-double lumi_runGH = 16.146177597883;
+double lumi_runBCDEF = 19.67550334113;  // 1/fb
+double lumi_runGH = 16.146177597883;  // 1/fb
+double Luminosity = (lumi_runBCDEF + lumi_runGH)*1000;  // 1/pb
 
-///  Working points for b tagging  // Updated 04/03/16, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
-double CSVv2Loose =  0.460;
-double CSVv2Medium = 0.800;
-double CSVv2Tight = 0.935;
+///  Working points for b tagging  // Updated 13/04/17, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+double CSVv2Loose  = 0.5426;
+double CSVv2Medium = 0.8484;
+double CSVv2Tight  = 0.9535;
 
 /// Top width
 double genTopWidth = 1.31; // gen  //1.363; // from fit
@@ -119,7 +119,7 @@ double sigmaChi2TopMass = 40;
 // also background in CP/WP/UP cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.261, 192.515, 189.874, 197.630, 180.982, 249.629, 249.039, 227.992, 224.213, 221.995, 213.278, 184.884, 181.326, 181.358};
+std::array<double, nofAveMasses> aveTopMass = {171.825, 169.751, 167.558, 193.812, 191.823, 198.213, 182.175, 252.030, 252.837, 233.056, 230.495, 214.340, 212.065, 185.199, 182.561, 182.876};
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
@@ -192,6 +192,7 @@ void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
 void MakePlotsTGraphs();
 void ConstructTGraphs(int nWidthsLL, double *widthArray, string name = "");
+int CalculateOutputWidth(double *evalWidths, double *LLvalues, string inputType);
 
 
 
@@ -663,8 +664,8 @@ int main(int argc, char* argv[])
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
     string dataSetName = datasets[d]->Name();
-    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
-      Luminosity = datasets[d]->EquivalentLumi();
+//    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
+//      Luminosity = datasets[d]->EquivalentLumi();
     
     if ( dataSetName.find("QCD") != std::string::npos )
     {
@@ -885,6 +886,11 @@ int main(int argc, char* argv[])
     }
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
+    
+    
+    /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
+    if (isTTbar) dataSetName = "TT";
+    
     tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
     
     string tTreeName = "tree";
@@ -900,8 +906,8 @@ int main(int argc, char* argv[])
     vPU.push_back(appliedPU);
     
     /// eqLumi calculation
-    if (isData) eqLumi = 1.;
-    else eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();
+    if (isData) eqLumi = Luminosity;
+    else eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
     
     if (useToys)
     {
@@ -910,7 +916,7 @@ int main(int argc, char* argv[])
       cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
       
       if (test)
-        cout << "      Lumi : " << Luminosity << "; eqLumi: " << eqLumi << endl;
+        cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
       cout << "TOYS::Lumi/eqLumi = " << toyMax;
 //       if (! isData)  // CHECK DATA/MC AGREEMENT
 //       {
@@ -925,7 +931,8 @@ int main(int argc, char* argv[])
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
     nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
     cout << "                nEntries: " << nEntries << endl;
-    
+    if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
+    else cout << "                eqLumi  : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
     
     // Set branch addresses and branch pointers
     InitTree(tTree[dataSetName.c_str()], isData);
@@ -3147,5 +3154,34 @@ void ConstructTGraphs(int nWidthsLL, double *widthArray, string name)
   }
   if (calculateLikelihood)
     cout << "Constructed TGraphs for likelihood measurements (using " << nWidthsLL << " widths)" << endl;
+}
+
+int CalculateOutputWidth(double *evalWidths, double *LLvalues, string inputType)
+{
+  if ( sizeof(evalWidths)/sizeof(evalWidths[0]) != sizeof(LLvalues)/sizeof(LLvalues[0]) )
+  {
+    cerr << "Likelihood array has not the same size as widths array. Will not calculate output width..." << endl;
+    return 1;
+  }
+  int N = sizeof(evalWidths)/sizeof(evalWidths[0]);
+  if ( N == 0 )
+  {
+    cerr << "Arrays are empty. Will not calculate output width..." << endl;
+    return 1;
+  }
+  TGraph *g = new TGraph(N, evalWidths, LLvalues);
+  
+  double centreVal = TMath::LocMin(N, g->GetY());
+  double fitmin = centreVal - 0.8;
+  double fitmax = centreVal + 0.8;
+  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+  
+  g->Fit(parabola,"R");
+  
+  double outputWidth = parabola->GetMinimumX(fitmin, fitmax);
+  double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin, outputWidth);
+  double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax);
+  
+  return 0;
 }
 

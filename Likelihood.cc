@@ -175,14 +175,14 @@ int main (int argc, char *argv[])
     
     /// Get loglikelihood values from file
     if (usePartons || useMix) dirName = "likelihood/";
-    inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_";
+    inputFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_";
     if (usePartons) inputFileName += "parton_";
     else if (useMix) inputFileName += "mistake_";
     inputFileName += "widthx"+DotReplace(widthArray[iWidth])+".txt";
     if (useToys)
     {
       dirName = "";
-      inputFileName = "/user/lmoreels/CMSSW_7_6_5/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_toys.txt";
+      inputFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/"+dirName+"output_loglikelihood_toys.txt";
     }
     
     if (! useAdHocInput) ReadLLValues(inputFileName);
