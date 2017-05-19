@@ -55,9 +55,10 @@ VoigtFitter
 VoigtFitter_gen
 testAnalyser
 testAnalyserTTbarOnly
+testGenJets
+testLikelihood
 testMatching
 testMCParts_ntuples
-testGenJets
 testSkims
 testRFs
 testTGraphs

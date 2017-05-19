@@ -260,7 +260,7 @@ int main (int argc, char *argv[])
       outputFileName += ".png";
       TCanvas* c1 = new TCanvas("c1", "LLike vs. width");
       c1->cd();
-      g1->Draw("AL");
+      g1->Draw("ALP");
       c1->Update();
       c1->SaveAs(outputFileName.c_str());
       c1->Close();
