@@ -154,7 +154,7 @@ for chan in channels:
 
 
 
-                    print >> outfile, commandString, files_str, " ", JES, " " , JER, " " , fillBhisto, " ", chan , " " , str(N_job+1) , " 0" , " 5000000" 
+                    print >> outfile, commandString, files_str, " ", JES, " " , JER, " " , fillBhisto, " ", chan , " " , str(N_job+1) , " 0" , " 50000000"
 
                     # cleaning
                     listOfFiles=[]

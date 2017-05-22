@@ -116,8 +116,8 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-//  string xmlFileName ="config/topWidth_data.xml";
-  string xmlFileName ="config/topWidth_MC.xml";
+  string xmlFileName ="config/topWidth_data.xml";
+//  string xmlFileName ="config/topWidth_MC.xml";
   int maxMCParticles = -1;
   
   
@@ -357,7 +357,7 @@ int main (int argc, char *argv[])
   
   
   //Global variable
-  //TRootEvent* event = 0;
+  TRootEvent* event = 0;
   TRootRun *runInfos = new TRootRun();
   
   
@@ -799,12 +799,16 @@ int main (int argc, char *argv[])
     Double_t jet_loose_bdiscr[30];
     
     /// met
+    Double_t met_px;
+    Double_t met_py;
     Double_t met_pt;
     Double_t met_phi;
     Double_t met_eta;
     Double_t met_Et;
     Double_t met_E;
     
+    Double_t met_corr_px;
+    Double_t met_corr_py;
     Double_t met_corr_pt;
     Double_t met_corr_phi;
     Double_t met_corr_eta;
@@ -997,12 +1001,16 @@ int main (int argc, char *argv[])
     }
     
     // met
+    myTree->Branch("met_px", &met_px, "met_px/D");
+    myTree->Branch("met_py", &met_py, "met_py/D");
     myTree->Branch("met_pt", &met_pt, "met_pt/D");
     myTree->Branch("met_phi", &met_phi, "met_phi/D");
     myTree->Branch("met_eta", &met_eta,"met_eta/D");
     myTree->Branch("met_Et", &met_Et,"met_Et/D");
     myTree->Branch("met_E", &met_E,"met_E/D");
     
+    myTree->Branch("met_corr_px", &met_corr_px, "met_corr_px/D");
+    myTree->Branch("met_corr_py", &met_corr_py, "met_corr_py/D");
     myTree->Branch("met_corr_pt", &met_corr_pt, "met_corr_pt/D");
     myTree->Branch("met_corr_phi", &met_corr_phi, "met_corr_phi/D");
     myTree->Branch("met_corr_eta", &met_corr_eta,"met_corr_eta/D");
@@ -1351,12 +1359,16 @@ int main (int argc, char *argv[])
         jet_loose_bdiscr[i] = 0.;
       }
       
+      met_px = 0.;
+      met_py = 0.;
       met_pt = 0.;
       met_phi = 0.;
       met_eta = 0.;
       met_Et = 0.;
       met_E = 0.;
       
+      met_corr_px = 0.;
+      met_corr_py = 0.;
       met_corr_pt = 0.;
       met_corr_phi = 0.;
       met_corr_eta = 0.;
@@ -1394,7 +1406,7 @@ int main (int argc, char *argv[])
       ///  LOAD EVENT  ///
       ////////////////////
       
-      TRootEvent* event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets, mets, false);
+      event = treeLoader.LoadEvent(ievt, vertex, init_muons, init_electrons, init_jets, mets, false);
       init_jets_corrected = init_jets;
       mets_corrected = mets;
       
@@ -1801,13 +1813,17 @@ int main (int argc, char *argv[])
       ///////////////////////////////
       
       
-      met_pt = mets[0]->Pt();
+      met_px = mets[0]->Px();
+      met_py = mets[0]->Py();
+      met_pt = sqrt(met_px*met_px + met_py*met_py);
       met_phi = mets[0]->Phi();
       met_eta = mets[0]->Eta();
       met_Et = mets[0]->Et();
       met_E = mets[0]->E();
       
-      met_corr_pt = mets_corrected[0]->Pt();
+      met_corr_px = mets_corrected[0]->Px();
+      met_corr_py = mets_corrected[0]->Py();
+      met_corr_pt = sqrt(met_corr_px*met_corr_px + met_corr_py*met_corr_py);
       met_corr_phi = mets_corrected[0]->Phi();
       met_corr_eta = mets_corrected[0]->Eta();
       met_corr_Et = mets_corrected[0]->Et();

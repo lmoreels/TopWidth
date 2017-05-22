@@ -30,6 +30,8 @@
 // user defined
 #include "Tools/interface/ResolutionFunctions.h"
 #include "Tools/interface/KinFitter.h"
+#include "Tools/interface/EventReweighting.h"
+#include "Tools/interface/Likelihood.h"
 
 
 using namespace std;
@@ -41,11 +43,10 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = true;
-bool makePlotsTGraph = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
+bool makeTGraphs = false;
 bool calculateLikelihood = false;
-bool useLLTGraph = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -57,21 +58,21 @@ bool applyJEC = true;
 bool applyBTagSF = true;
 
 bool applyWidthSF = false;
-double scaleWidth = 0.66;
+double scaleWidth = 1.;
 
 string systStr = "nominal";
 pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170508","170509");
+    return pair<string,string>("170517","170522");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170509");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170509");
+  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170522");
+  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170522");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170508","170509");
+    return pair<string,string>("170517","170522");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -80,10 +81,14 @@ int verbose = 2;
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
+string outputDirLL = "LikelihoodTemplates/";
+string inputDirLL = "";
+string inputDateLL = "170519_1140/";
 bool isData = false;
 bool isTTbar = false;
 
 int nofHardSelected = 0;
+int nofMETCleaned = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofCorrectlyMatched = 0;
@@ -101,18 +106,6 @@ double Luminosity = (lumi_runBCDEF + lumi_runGH)*1000;  // 1/pb
 double CSVv2Loose  = 0.5426;
 double CSVv2Medium = 0.8484;
 double CSVv2Tight  = 0.9535;
-
-/// Top width
-double genTopWidth = 1.31; // gen  //1.363; // from fit
-double genTopMass = 172.5; // gen  //172.3; // from fit
-//double corr[2] = {0.0080432, 0.99195679};
-double corr[2] = {0., 1.};  // no correction for different number of events when reweighting
-
-// Temporarily, until calculated from TTbar sample
-double chi2WMass = 80.385;
-double sigmaChi2WMass = 10;
-double chi2TopMass = 172.5; //180.0; //from mtop mass plot: 167.0
-double sigmaChi2TopMass = 40;
 
 /// Average top mass
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
@@ -169,7 +162,6 @@ void InitHisto1D();
 void InitHisto2D();
 void InitHisto1DMatch();
 void InitHisto2DMatch();
-void InitHisto1DTGraph();
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation);
 void ClearMetaData();
 void ClearLeaves();
@@ -181,18 +173,11 @@ void FillGeneralPlots(vector<Dataset *> datasets, int d);
 void FillMatchingPlots();
 void FillKinFitPlots();
 void FillCatsPlots(string catSuffix);
-void FillTGraphCatsPlots(string catSuffix);
 void FillMSPlots(int d);
 long GetNEvents(TTree* fChain, string var, bool isData);
 void GetEraFraction(double* fractions);
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
-double BreitWigner(double topPT, double scale);
-double eventWeightCalculator(double topPT, double scale);
-void PrintMtmLikelihood();
 void PrintKFDebug(int ievt);
-void MakePlotsTGraphs();
-void ConstructTGraphs(int nWidthsLL, double *widthArray, string name = "");
-int CalculateOutputWidth(double *evalWidths, double *LLvalues, string inputType);
 
 
 
@@ -206,6 +191,15 @@ Double_t        rho;
 Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
+Bool_t          hasErasedBadOrCloneMuon;
+Bool_t          filterHBHENoise;
+Bool_t          filterHBHEIso;
+Bool_t          filterCSCTightHalo;
+Bool_t          filterEcalDeadCell;
+Bool_t          filterEEBadSc;
+Bool_t          filterBadChCand;
+Bool_t          filterBadMuon;
+Bool_t          passedMETFilter;
 Bool_t          isDataRunB;
 Bool_t          isDataRunC;
 Bool_t          isDataRunD;
@@ -336,6 +330,15 @@ TBranch        *b_rho;   //!
 TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
+TBranch        *b_hasErasedBadOrCloneMuon;   //!
+TBranch        *b_filterHBHENoise;   //!
+TBranch        *b_filterHBHEIso;   //!
+TBranch        *b_filterCSCTightHalo;   //!
+TBranch        *b_filterEcalDeadCell;   //!
+TBranch        *b_filterEEBadSc;   //!
+TBranch        *b_filterBadChCand;   //!
+TBranch        *b_filterBadMuon;   //!
+TBranch        *b_passedMETFilter;   //!
 TBranch        *b_isDataRunB;   //!
 TBranch        *b_isDataRunC;   //!
 TBranch        *b_isDataRunD;   //!
@@ -458,6 +461,7 @@ TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 
 
 double scaleFactor, widthSF;
+double topPtRewSF, topPtSF, antiTopPtSF;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
@@ -466,6 +470,9 @@ double reco_minMlb, reco_minMl_nonb, reco_ttbarMass, reco_dRLepB_lep, reco_dRLep
 double min_Mlb, dRLepB;
 int labelMlb, labelMl_nonb;
 double massForWidth;
+
+string catSuffix = "";
+string catSuffixList[] = {"_CP", "_WP", "_UP"};
 bool isCP, isWP, isUP;
 
 
@@ -518,30 +525,17 @@ Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1
 const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
 string stringWidthArray[nWidthsLL];
 
-Double_t loglike[nWidthsLL] = {0};
-Double_t loglike_data[nWidthsLL] = {0};
-Double_t loglike_per_evt[nWidthsLL] = {0};
-Double_t loglike_onlyGoodEvts[nWidthsLL] = {0};
-Double_t loglike_onlyGoodEvts_data[nWidthsLL] = {0};
-Double_t fakelike_CP[nWidthsLL] = {0};
-Double_t fakelike_CP_per_evt[nWidthsLL] = {0};
-Double_t fakelike_onlyGoodEvts[nWidthsLL] = {0};
-Double_t fakelike_CP_Res[nWidthsLL] = {0};
-Double_t loglike_gen[nWidthsLL] = {0};
-Double_t loglike_gen_per_evt[nWidthsLL] = {0};
-Double_t loglike_gen_onlyGoodEvts[nWidthsLL] = {0};
 
-
-bool isGoodLL = false, isGoodLL_gen = false;
-int nofGoodEvtsLL[20] = {0};
-int nofGoodEvtsLL_gen[20] = {0};
-int nofBadEvtsLL[20] = {0};
+//bool isGoodLL = false, isGoodLL_gen = false;
+//int nofGoodEvtsLL[20] = {0};
+//int nofGoodEvtsLL_gen[20] = {0};
+//int nofBadEvtsLL[20] = {0};
 Double_t aveTopMassLL = aveTopMass[2];
-Double_t tempAveMass = -1.;
-Double_t maxMtDivAveMt = 0., minMtDivAveMt = 9999.;
+Double_t redTopMass = -1.;
+Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
 Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
 
-ofstream txtLogLike, txtLogLikeTest, txtOutputLogLike, txtDebugTopMass, txtDebugPUSF;
+ofstream txtDebugTopMass, txtDebugPUSF;
 
 /// Toys
 TRandom3 random3;
@@ -604,7 +598,8 @@ int main(int argc, char* argv[])
   {
     useToys = false;
   }
-  if (! calculateLikelihood) useLLTGraph = false;
+  if (makeTGraphs) calculateLikelihood = false;
+  if (calculateLikelihood) makeTGraphs = false;
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -628,19 +623,26 @@ int main(int argc, char* argv[])
     mkdir(pathOutput.c_str(),0777);
   }
   
+  if (makeTGraphs)
+  {
+    mkdir(outputDirLL.c_str(),0777);
+    outputDirLL += dateString+"/";
+    mkdir(outputDirLL.c_str(),0777);
+  }
+  else if (calculateLikelihood)
+  {
+    inputDirLL = outputDirLL+inputDateLL;
+  }
+  
   pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
   pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
-  if (calculateLikelihood)
-  {
-    cout << "Calculating -loglikelihood values";
-    if (useLLTGraph) cout << " with TGraph function";
-    cout << "..." << endl;
-  }
+  if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
+  else scaleWidth = 1.;
   
   /// xml file
   string xmlFileName ="config/topWidth.xml";
@@ -740,13 +742,27 @@ int main(int argc, char* argv[])
   ///  Initialise ...  ///
   ////////////////////////
   
+  EventReweighting *rew = new EventReweighting(false);  // no correction for number of events
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
   KinFitter *kf;
   KinFitter *kfMatched;
+  Likelihood *like;
+  
   if (! calculateResolutionFunctions)
   {
-    kf = new KinFitter("PlotsForResolutionFunctions_Fitted.root", addWMassKF, addEqMassKF);
-    kfMatched = new KinFitter("PlotsForResolutionFunctions_Fitted.root", addWMassKF, addEqMassKF);
+    kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+  }
+  
+  if (makeTGraphs)
+  {
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
+  }
+  if (calculateLikelihood)
+  {
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, makeTGraphs, true, false);  // calculateGoodEvtLL, verbose
+    calculateLikelihood = like->ConstructTGraphsFromFile();
+    calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
   }
   
   if (makePlots)
@@ -758,39 +774,6 @@ int main(int argc, char* argv[])
   
   vJER.clear(); vJES.clear(); vPU.clear();
   
-  if (calculateLikelihood && useLLTGraph )
-  {
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      stringWidthArray[iWidth] = DotReplace(widthArray[iWidth]);
-    }
-    
-    ConstructTGraphs(nWidthsLL, widthArray);
-    ConstructTGraphs(nWidthsLL, widthArray, "CP_");
-  }
-  
-  if (calculateLikelihood)  // new if, because previous function can change this
-  {
-    txtLogLike.open(("likelihood_per_event_"+dateString+".txt").c_str());
-    txtLogLike << "## -Log(likelihood) values per event" << endl;
-    txtLogLike << "#  Widths : ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtLogLike << widthArray[iWidth] << "  ";
-    }
-    txtLogLike << endl;
-    
-    if (test)
-    {
-      txtLogLikeTest.open(("likelihood_per_event_test_"+dateString+".txt").c_str());
-      txtLogLikeTest << "## ievt      recoTopMass     M_lb    dR(b,lep)    dR(b_h,lep)" << endl;
-      txtLogLikeTest << "#  Widths : ";
-      for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-      {
-        txtLogLikeTest << widthArray[iWidth] << "  ";
-      }
-    }
-  }
   
   if (calculateAverageMass)
   {
@@ -803,13 +786,10 @@ int main(int argc, char* argv[])
     txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
   }
   
-  if (applyWidthSF)
-  {
-    txtDebugTopMass.open("debug_missing_topQ.txt");
-    txtDebugTopMass << "## Events where top quark(s) not found in genParticle collection" << endl;
-    txtDebugTopMass << "#  If lepton charge > 0 : leptonically decaying top, hadronically decaying antitop" << endl;
-    txtDebugTopMass << "#  If lepton charge < 0 : hadronically decaying top, leptonically decaying antitop" << endl;
-  }
+  txtDebugTopMass.open("debug_missing_topQ.txt");
+  txtDebugTopMass << "## Events where top quark(s) not found in genParticle collection" << endl;
+  txtDebugTopMass << "#  If lepton charge > 0 : leptonically decaying top, hadronically decaying antitop" << endl;
+  txtDebugTopMass << "#  If lepton charge < 0 : hadronically decaying top, leptonically decaying antitop" << endl;
   
   txtDebugPUSF.open("debug_pu_sf.txt");
   txtDebugPUSF << "## PU SF = 0" << endl;
@@ -879,11 +859,6 @@ int main(int argc, char* argv[])
       txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
     }
     
-    if (calculateLikelihood)
-    {
-      txtLogLike << endl << "#  Dataset: " << dataSetName << endl;
-      if (test) txtLogLikeTest << endl << "#  Dataset: " << dataSetName << endl;
-    }
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
     
@@ -933,6 +908,16 @@ int main(int argc, char* argv[])
     cout << "                nEntries: " << nEntries << endl;
     if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
     else cout << "                eqLumi  : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+    
+    if (isData)
+    {
+      cout << "NEvents data:   " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << endl;
+      cout << "NEvents Run B:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunB", isData) << endl;
+      cout << "NEvents Run CD: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunCD", isData) << endl;
+      cout << "NEvents Run EF: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunEF", isData) << endl;
+      cout << "NEvents Run G:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunG", isData) << endl;
+      cout << "NEvents Run H:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunH", isData) << endl;
+    }
     
     // Set branch addresses and branch pointers
     InitTree(tTree[dataSetName.c_str()], isData);
@@ -1002,6 +987,9 @@ int main(int argc, char* argv[])
       if ( selectedJets.size() > 4 ) continue;
       nofHardSelected++;
       
+      if (! passedMETFilter) continue;
+      nofMETCleaned++;
+      
       for (int iJet = 0; iJet < selectedJets.size(); iJet++)
       {
         if ( jet_bdiscr[iJet] > CSVv2Medium )
@@ -1069,6 +1057,17 @@ int main(int argc, char* argv[])
             if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
           }
           
+          if ( mc_pdgId[i] == pdgID_top && mc_status[i] == 62 )  // top
+          {
+            if ( mcParticles[i]->Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i]->Pt());
+            else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+          }
+          else if ( mc_pdgId[i] == -pdgID_top && mc_status[i] == 62 )  // antitop
+          {
+            if ( mcParticles[i]->Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i]->Pt());
+            else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+          }
+          
           
           /// Status restriction: Final state particle or particle from hardest process
           if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
@@ -1117,18 +1116,21 @@ int main(int argc, char* argv[])
           continue;
         }
         
+        if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
+        else topPtRewSF = 1.;
+        
         
         
         /////////////////////////////////////////
         ///  Scale factor ttbar sample width  ///
         /////////////////////////////////////////
         
+        if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
+        else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
+        
         if ( applyWidthSF && isTTbar )
         {
-          if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
-          else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
-          
-          widthSF = eventWeightCalculator(massForWidth, scaleWidth);
+          widthSF = rew->EventWeightCalculator(massForWidth, scaleWidth);
           
           if ( widthSF != widthSF )  // widthSF = NaN
           {
@@ -1204,41 +1206,6 @@ int main(int argc, char* argv[])
               txtMassGenJMatched << ievt << "  " << matchedTopMass_reco << endl;
             }
             
-//             if (calculateLikelihood && ! useLLTGraph)  // CHANGE TO TGRAPH !!  ("fake" likelihood, only CP)
-//             {
-//               double tempRedMass = matchedTopMass_gen/aveTopMass[0];
-//               if ( tempRedMass > minCutRedTopMass && tempRedMass < maxCutRedTopMass )
-//               {
-//                 for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//                 {
-//                   //if (useLLTGraph)
-//                   //  loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
-//                   //else
-//                   loglike_gen_per_evt[iWidth] = fakeLikelihood(&tempRedMass, &gammaArray[iWidth]);
-//                   if (! isData) loglike_gen[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
-//                 }
-// 
-//                 // make loglikelihood only with events that have minimum
-//                 isGoodLL_gen = false;
-//                 for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-//                 {
-//                   if ( loglike_gen_per_evt[0] > loglike_gen_per_evt[iWidth] && loglike_gen_per_evt[iWidth] < loglike_gen_per_evt[nWidthsLL-1] )
-//                   {
-//                     isGoodLL_gen = true;
-//                     break;
-//                   }
-//                 }
-//                 if (isGoodLL_gen)
-//                 {
-//                   nofGoodEvtsLL_gen[d]++;
-//                   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//                   {
-//                     if (! isData) loglike_gen_onlyGoodEvts[iWidth] += loglike_gen_per_evt[iWidth]*widthSF;
-//                   }
-//                 }
-//               }
-//             }  // calc like
-            
             
             /// KF for matched jets
             if (doKinFit)
@@ -1263,6 +1230,12 @@ int main(int argc, char* argv[])
               if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
               
               topmass_reco_kf_matched = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+              
+              if (calculateLikelihood)
+              {
+                double temp = topmass_reco_kf_matched/aveTopMassLL;
+                like->CalculateGenLikelihood(temp, massForWidth, scaleWidth, isTTbar, isData);
+              }
             }
             
             
@@ -1335,7 +1308,6 @@ int main(int argc, char* argv[])
       // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
       
       
-      //if (isTTbar)
       if (! isData)
       {
         if (hadronicTopJetsMatched)
@@ -1345,27 +1317,25 @@ int main(int argc, char* argv[])
           {
             isCP = true;
             nofCorrectlyMatched++;
-          }  // end corr match
+          }
           else  // wrong permutation
           {
             isWP = true;
             nofNotCorrectlyMatched++;
-          }  // end wrong perm
+          }
         }  // end hadrTopMatch
         else  // no match
         {
           isUP = true;
-        }  // end no match
+        }
         
         
         if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
-        cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
+          cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
         
       }  // not Data
       
       
-      string catSuffix = "";
-      string catSuffixList[] = {"_CP", "_WP", "_UP"};
       if (isCP) catSuffix = catSuffixList[0];
       else if (isWP) catSuffix = catSuffixList[1];
       else if (isUP) catSuffix = catSuffixList[2];
@@ -1422,6 +1392,8 @@ int main(int argc, char* argv[])
       if ( topmass_reco_kf < 0. )
         PrintKFDebug(ievt);
       
+      if (calculateAverageMass) txtMassReco << ievt << "  " << topmass_reco_kf << endl;
+      
       if ( doKinFit && makePlots )
         FillKinFitPlots();
       
@@ -1435,14 +1407,18 @@ int main(int argc, char* argv[])
       reco_ttbarMass = reco_minMlb + topmass_reco_kf;
       
       
-      /// Average mass
-      if (calculateAverageMass) txtMassReco << ievt << "  " << topmass_reco_kf << endl;
+      /// Reduced top mass
+      redTopMass = topmass_reco_kf/aveTopMassLL;
+      if (makeTGraphs) like->FillHistograms(redTopMass, massForWidth, isTTbar, isData, catSuffix);
+      if (calculateLikelihood)
+      {
+        like->CalculateLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+        if (! isData) like->CalculateCPLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+      }
       
-      
-      tempAveMass = topmass_reco_kf/aveTopMassLL;
-      if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
-      if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
-      if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
+      if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
+      if ( redTopMass < minRedTopMass ) minRedTopMass = redTopMass;
+      if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
       {
         if (isCP)
         {
@@ -1464,73 +1440,6 @@ int main(int argc, char* argv[])
         }
       }
       
-      
-      //Fill histos
-      if (makePlots)
-      {
-        histo1D[("mTop_div_aveMTop_"+dataSetName).c_str()]->Fill(tempAveMass);
-        if (isTTbar)
-        {
-          histo1D["Reco_W_mass_reco"]->Fill(Wmass_reco_kf, widthSF);
-          histo1D["Reco_top_mass_reco"]->Fill(topmass_reco_kf, widthSF);
-          histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
-        }
-      }  // end make plots
-      
-      
-      /// Likelihood
-      if (calculateLikelihood)
-      {
-        if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
-        {
-          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-          {
-            loglike_per_evt[iWidth] = graph["widthx"+DotReplace(widthArray[iWidth])]->Eval(tempAveMass);
-            
-            if (! isData) loglike[iWidth] += loglike_per_evt[iWidth]*widthSF;
-            else loglike_data[iWidth] += loglike_per_evt[iWidth];
-          }
-          
-          // make loglikelihood only with events that have minimum
-          isGoodLL = false;
-          for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-          {
-            if ( loglike_per_evt[0] > loglike_per_evt[iWidth] && loglike_per_evt[iWidth] < loglike_per_evt[nWidthsLL-1] )
-            {
-              isGoodLL = true;
-              break;
-            }
-          }
-          if (isGoodLL)
-          {
-            nofGoodEvtsLL[d]++;
-            for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-            {
-              if (! isData) loglike_onlyGoodEvts[iWidth] += loglike_per_evt[iWidth]*widthSF;
-              else loglike_onlyGoodEvts_data[iWidth] += loglike_per_evt[iWidth];
-            }
-          }
-          else
-          {
-            nofBadEvtsLL[d]++;
-          }
-        }  // end cut on reduced top mass
-        
-        /// write debug file
-        if ( ( isData && ievt%1000 == 0 )
-             || ( isTTbar && ievt%100000 == 0 )
-             || ( ! isData && ! isTTbar && ievt%100 == 0 ) )
-        {
-          txtLogLike << ievt << "  ";
-          for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-          {
-            txtLogLike << loglike_per_evt[iWidth] << ",  ";
-
-          }
-          txtLogLike << topmass_reco_kf << endl;
-        }
-      }
-      
       if (calculateAverageMass && ! isData)
       {
         if (isCP) txtMassRecoCP << ievt << "  " << topmass_reco_kf << endl;
@@ -1545,8 +1454,17 @@ int main(int argc, char* argv[])
       }  // end aveMassCalc
       
       
+      //Fill histos
       if (makePlots)
       {
+        histo1D[("Reduced_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
+        if (isTTbar)
+        {
+          histo1D["Reco_W_mass_reco"]->Fill(Wmass_reco_kf, widthSF);
+          histo1D["Reco_top_mass_reco"]->Fill(topmass_reco_kf, widthSF);
+          histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
+        }
+        
         FillCatsPlots(catSuffix);
         
         int dMSP = d;
@@ -1559,64 +1477,6 @@ int main(int argc, char* argv[])
       }  // end makePlots
       
       
-//       if ( isCP && calculateLikelihood && ! useLLTGraph)  // CHANGE TO TGRAPH !!  ("fake" likelihood, only CP)
-//       {
-//         for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//         {
-//           //if (useLLTGraph) ...;
-//           fakelike_CP_per_evt[iWidth] = fakeLikelihood(&tempAveMass, &gammaArray[iWidth]);
-//           fakelike_CP[iWidth] += fakelike_CP_per_evt[iWidth];
-//           if ( fabs(selectedJetsKFcorrected[2].Et()-mcParticles[partonId[MCPermutation[2].second]].Et()) < 0.005 * selectedJetsKFcorrected[2].Et() )
-//             fakelike_CP_Res[iWidth] += fakelike_CP_per_evt[iWidth];
-//         }
-//         
-//         /// make loglikelihood only with events that have minimum
-//         isGoodLL = false;
-//         for (int iWidth = 1; iWidth < nWidthsLL-1; iWidth++)
-//         {
-//           if ( fakelike_CP_per_evt[0] > fakelike_CP_per_evt[iWidth] && fakelike_CP_per_evt[iWidth] < fakelike_CP_per_evt[nWidthsLL-1] )
-//           {
-//             isGoodLL = true;
-//             break;
-//           }
-//         }
-//         if (isGoodLL)
-//         {
-//           for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//           {
-//             fakelike_onlyGoodEvts[iWidth] += fakelike_CP_per_evt[iWidth];
-//           }
-//         }
-//         
-//         /// write debug file
-//         if ( ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-//              || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-//              || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-//         {
-//           if (makePlots)
-//           {
-//             histo1D["debugLL_hadr_top_mass_reco"]->Fill(topmass_reco_kf);
-//             histo1D["debugLL_minMlb_reco"]->Fill(reco_minMlb);
-//             histo1D["debugLL_ttbar_mass_reco"]->Fill(reco_ttbarMass);
-//             histo1D["debugLL_dR_lep_b_lep_reco"]->Fill(reco_dRLepB_lep);
-//             histo1D["debugLL_dR_lep_b_had_reco"]->Fill(reco_dRLepB_had);
-//           }
-//         }
-//       }  // end isCP && likelihood
-      
-      /// write debug file
-      if ( test && calculateLikelihood && ! isGoodLL /*&& ( ( isData && nofGoodEvtsLL[d]%500 == 0 )
-           || ( isTTbar && nofGoodEvtsLL[d]%50000 == 0 )
-           || ( ! isData && ! isTTbar && nofGoodEvtsLL[d]%50 == 0 ) )*/ )
-      {
-        txtLogLikeTest << setw(8) << right << ievt;
-        if (isCP) txtLogLikeTest << "  CP  ";
-        else if (isWP) txtLogLikeTest << "  WP  ";
-        else if (isUP) txtLogLikeTest << "  UP  ";
-        txtLogLikeTest << topmass_reco_kf << "  " << reco_minMlb << "  " << reco_dRLepB_lep << "  " << reco_dRLepB_had << endl;
-      }
-      
-      
       
       
     }  // end loop events
@@ -1624,7 +1484,8 @@ int main(int argc, char* argv[])
     
     cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
     cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
-    if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofHardSelected) << "%)" << endl;
+    cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
+    if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
     
     //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
     if (! isData && nofMatchedEvents > 0 )
@@ -1660,14 +1521,14 @@ int main(int argc, char* argv[])
       
     }  // end ! isData
     
-    if (calculateLikelihood)
-    {
-      cout << "Number of events with min in likelihood    " << setw(8) << right << nofGoodEvtsLL[d] << endl;
-      cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
-      if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
-        cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
-      if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
-    }
+//     if (calculateLikelihood)
+//     {
+//       cout << "Number of events with min in likelihood    " << setw(8) << right << nofGoodEvtsLL[d] << endl;
+//       cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
+//       if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
+//         cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
+//       if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
+//     }
     
     if (useToys) cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
     
@@ -1701,54 +1562,31 @@ int main(int argc, char* argv[])
   
   if (calculateLikelihood)
   {
-    txtLogLike.close();
-    if (test) txtLogLikeTest.close();
-    
-    cout << "Minimum top mass divided by average top mass: " << minMtDivAveMt << endl;
-    cout << "Maximum top mass divided by average top mass: " << maxMtDivAveMt << endl;
-    
-    PrintMtmLikelihood();
+    cout << "Minimum reduced top mass: " << minRedTopMass << endl;
+    cout << "Maximum reduced top mass: " << maxRedTopMass << endl;
     
     /// Print output to file
-    string llFileName = "output_loglikelihood_gamma.txt";
-    if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth)+".txt";
-    if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth)+".txt";
-    if (useToys) llFileName = "output_loglikelihood_toys.txt";
-    txtOutputLogLike.open(llFileName.c_str());
-    txtOutputLogLike << "Widths:      ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
-    }
-    txtOutputLogLike << endl << "LLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtOutputLogLike << setw(12) << right << loglike[iWidth] << "  ";
-    }
-    txtOutputLogLike << endl << "GoodLLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      if (! doGenOnly) txtOutputLogLike << setw(12) << right << loglike_onlyGoodEvts[iWidth] << "  ";
-      else txtOutputLogLike << setw(12) << right << loglike_gen_onlyGoodEvts[iWidth] << "  ";
-    }
-    txtOutputLogLike << endl;
-    txtOutputLogLike.close();
+    string llFileName = "output_loglikelihood_widthx1";
+    if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth);
+    if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth);
+    if (useToys) llFileName = "output_loglikelihood_toys";
+    like->PrintLikelihoodOutput(llFileName+".txt");
+    //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
+    like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
     
-    /// Separate file for data (blind)
-    txtOutputLogLike.open(llFileName.c_str());
-    txtOutputLogLike << "Widths:      ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtOutputLogLike << setw(5) << right << widthArray[iWidth] << "  ";
-    }
-    txtOutputLogLike << endl << "LLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-    {
-      txtOutputLogLike << setw(12) << right << loglike_data[iWidth] << "  ";
-    }
-    txtOutputLogLike << endl;
-    txtOutputLogLike.close();
+    /// Calculate output width
+    like->GetOutputWidth(scaleWidth);
+    like->GetOutputWidth(scaleWidth, "CP");
+    like->GetOutputWidth(scaleWidth, "gen");
+    like->GetOutputWidth(llFileName+".txt", scaleWidth);
   }
+  
+  if (makeTGraphs)
+  {
+    like->WriteHistograms("ReducedTopMassPlots.root");
+    like->ConstructTGraphsFromHisto("TGraphFunctions.root");
+  }
+  
   
   cout << "Processing time per dataset: " << endl;
   for (unsigned int d = 0; d < datasets.size(); d++)
@@ -1936,6 +1774,7 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nEvents", &nEvents, &b_nEvents);
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
   tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
+  tree->SetBranchAddress("cutFlow2", cutFlow2, &b_cutFlow2);
   tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
@@ -1985,6 +1824,15 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("isTrigged", &isTrigged, &b_isTrigged);
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
+  tree->SetBranchAddress("hasErasedBadOrCloneMuon", &hasErasedBadOrCloneMuon, &b_hasErasedBadOrCloneMuon);
+  tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
+  tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
+  tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
+  tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
+  tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
+  tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
+  tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
+  tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -2093,11 +1941,14 @@ void InitMSPlots()
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
-  MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "Eta");
-  MSPlot["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "Phi");
+  MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
+  MSPlot["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+  MSPlot["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
+  MSPlot["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
   
-  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M [GeV]");
+  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3} [GeV]");
 
   MSPlot["nJets"] = new MultiSamplePlot(datasetsMSP, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasetsMSP, "nBJets", 9, -0.5, 8.5, "# b jets");
@@ -2124,8 +1975,8 @@ void InitMSPlots()
   MSPlot["Reco_dR_lep_b_min"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_min", 25, 0, 5, "#Delta R(l,b_{l})");
   MSPlot["Reco_dR_lep_b_max"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_max", 25, 0, 5, "#Delta R(l,b_{h})");
   
-  MSPlot["Reco_mTop_div_aveMTop"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-  MSPlot["Reco_mTop_div_aveMTop_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by average top mass ", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
+  MSPlot["Reco_Red_top_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
+  MSPlot["Reco_Red_top_mass_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass ", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
   
   /// KinFitter
   if (doKinFit)
@@ -2151,7 +2002,7 @@ void InitHisto1D()
   TH1::SetDefaultSumw2();
   
   InitHisto1DMatch();
-  if (makePlotsTGraph) InitHisto1DTGraph();
+//  if (makePlotsTGraph) InitHisto1DTGraph();
   
   /// SFs
   histo1D["Width_SF"] = new TH1F("Width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
@@ -2161,20 +2012,20 @@ void InitHisto1D()
   histo1D["Reco_top_mass_reco"] = new TH1F("Reco_top_mass_reco","Reconstructed top mass; M_{t} [GeV]", 80, 0, 800);
     
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_reco_CP"] = new TH1F("mTop_div_aveMTop_TT_reco_CP","Top mass divided by average top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WPUP"] = new TH1F("mTop_div_aveMTop_TT_reco_WPUP","Top mass divided by average top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_UP"] = new TH1F("mTop_div_aveMTop_TT_reco_UP","Top mass divided by average top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WP"] = new TH1F("mTop_div_aveMTop_TT_reco_WP","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_CP"] = new TH1F("Reduced_top_mass_TT_reco_CP","Reduced top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_WPUP"] = new TH1F("Reduced_top_mass_TT_reco_WPUP","Reduced top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_UP"] = new TH1F("Reduced_top_mass_TT_reco_UP","Reduced top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_WP"] = new TH1F("Reduced_top_mass_TT_reco_WP","Reduced top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
-  histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_ST_tW_top"] = new TH1F("mTop_div_aveMTop_ST_tW_top","Top mass divided by average top mass for ST tW top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_ST_tW_antitop"] = new TH1F("mTop_div_aveMTop_ST_tW_antitop","Top mass divided by average top mass for ST tW antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_ST_t_top"] = new TH1F("mTop_div_aveMTop_ST_t_top","Top mass divided by average top mass for ST t top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_ST_t_antitop"] = new TH1F("mTop_div_aveMTop_ST_t_antitop","Top mass divided by average top mass for ST t antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_DYJets"] = new TH1F("mTop_div_aveMTop_DYJets","Top mass divided by average top mass for DY+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_WJets"] = new TH1F("mTop_div_aveMTop_WJets","Top mass divided by average top mass for W+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_data"] = new TH1F("mTop_div_aveMTop_data","Top mass divided by average top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_bkgd"] = new TH1F("Reduced_top_mass_bkgd","Reduced top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT"] = new TH1F("Reduced_top_mass_TT","Reduced top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_ST_tW_top"] = new TH1F("Reduced_top_mass_ST_tW_top","Reduced top mass for ST tW top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_ST_tW_antitop"] = new TH1F("Reduced_top_mass_ST_tW_antitop","Reduced top mass for ST tW antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_ST_t_top"] = new TH1F("Reduced_top_mass_ST_t_top","Reduced top mass for ST t top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_ST_t_antitop"] = new TH1F("Reduced_top_mass_ST_t_antitop","Reduced top mass for ST t antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_DYJets"] = new TH1F("Reduced_top_mass_DYJets","Reduced top mass for DY+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_WJets"] = new TH1F("Reduced_top_mass_WJets","Reduced top mass for W+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_data"] = new TH1F("Reduced_top_mass_data","Reduced top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   /// mlb
   histo1D["minMlb_reco_CP"]  = new TH1F("minMlb_reco_CP","Minimal reconstructed M_{lb} mass using events that have correct hadronic top match (CP); min(M_{lb}) [GeV]", 400, 0, 800);
@@ -2198,11 +2049,11 @@ void InitHisto1D()
   histo1D["ttbar_mass_reco_UP"] = new TH1F("ttbar_mass_reco_UP","Reconstructed mass of the top quark pair (reco, no match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
   
   // debug
-  histo1D["debugLL_hadr_top_mass_reco"] = new TH1F("debugLL_hadr_top_mass_reco","Reconstructed mass of the hadronic top quark; M_{t} [GeV]", 400, 0, 800);
-  histo1D["debugLL_minMlb_reco"]  = new TH1F("debugLL_minMlb_reco","Minimal reconstructed M_{lb} mass; min(M_{lb}) [GeV]", 400, 0, 800);
-  histo1D["debugLL_ttbar_mass_reco"] = new TH1F("debugLL_ttbar_mass_reco","Reconstructed mass of the top quark pair; M_{t#bar{t}} [GeV]", 500, 0, 1000);
-  histo1D["debugLL_dR_lep_b_lep_reco"]  = new TH1F("debugLL_dR_lep_b_lep_reco","Minimal delta R between the lepton and the leptonic b jet; #Delta R(l,b_{l})", 25, 0, 5);
-  histo1D["debugLL_dR_lep_b_had_reco"]  = new TH1F("debugLL_dR_lep_b_had_reco","Minimal delta R between the lepton and the hadronic b jet; #Delta R(l,b_{h})", 25, 0, 5);
+//  histo1D["debugLL_hadr_top_mass_reco"] = new TH1F("debugLL_hadr_top_mass_reco","Reconstructed mass of the hadronic top quark; M_{t} [GeV]", 400, 0, 800);
+//  histo1D["debugLL_minMlb_reco"]  = new TH1F("debugLL_minMlb_reco","Minimal reconstructed M_{lb} mass; min(M_{lb}) [GeV]", 400, 0, 800);
+//  histo1D["debugLL_ttbar_mass_reco"] = new TH1F("debugLL_ttbar_mass_reco","Reconstructed mass of the top quark pair; M_{t#bar{t}} [GeV]", 500, 0, 1000);
+//  histo1D["debugLL_dR_lep_b_lep_reco"]  = new TH1F("debugLL_dR_lep_b_lep_reco","Minimal delta R between the lepton and the leptonic b jet; #Delta R(l,b_{l})", 25, 0, 5);
+//  histo1D["debugLL_dR_lep_b_had_reco"]  = new TH1F("debugLL_dR_lep_b_had_reco","Minimal delta R between the lepton and the hadronic b jet; #Delta R(l,b_{h})", 25, 0, 5);
   
   /// KinFitter
   if (doKinFit)
@@ -2299,8 +2150,8 @@ void InitHisto1DMatch()
   histo1D["top_mass_reco_matched"] = new TH1F("top_mass_reco_matched","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
   histo1D["top_mass_gen_matched"] = new TH1F("top_mass_gen_matched","Generated top mass of matched events; M_{t} [GeV]", 1200, 150, 190);
   
-  histo1D["mTop_div_aveMTop_TT_matched_partons"] = new TH1F("mTop_div_aveMTop_TT_matched_partons","Top mass divided by average top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 800, 0.8, 1.2);
-  histo1D["mTop_div_aveMTop_TT_matched_jets"] = new TH1F("mTop_div_aveMTop_TT_matched_jets","Top mass divided by average top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_matched_partons"] = new TH1F("Reduced_top_mass_TT_matched_partons","Reduced top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 800, 0.8, 1.2);
+  histo1D["Reduced_top_mass_TT_matched_jets"] = new TH1F("Reduced_top_mass_TT_matched_jets","Reduced top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   histo1D["mlb_matched_corr"]  = new TH1F("mlb_matched_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["mlb_matched_wrong"] = new TH1F("mlb_matched_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
@@ -2319,27 +2170,6 @@ void InitHisto2DMatch()
   histo2D["dR_lep_b_corr_dR_lep_b_wrong_matched"] = new TH2F("dR_lep_b_corr_dR_lep_b_wrong_matched","Wrongly constructed dR(l,b) vs. correctly constructed dR(l,b); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
   histo2D["mlb_dR_lep_b_corr_matched"] = new TH2F("mlb_dR_lep_b_corr_matched","dR(l,b) vs. M_{lb}; M_{lb_{lep}}; #Delta R(l,b_{lep})", 80, 0, 800, 25, 0, 5);
   histo2D["mlb_dR_lep_b_wrong_matched"] = new TH2F("mlb_dR_lep_b_wrong_matched","dR(l,b) vs. M_{lb}, both wrongly matched; M_{lb_{had}}; #Delta R(l,b_{had})", 80, 0, 800, 25, 0, 5);
-}
-
-void InitHisto1DTGraph()
-{
-  string thisWidth;
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    thisWidth = stringWidthArray[iWidth];
-    
-    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo1D[("Red_top_mass_CP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_CP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", CP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
-    
-    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo1D[("Red_top_mass_WP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_WP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", WP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
-    
-    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_90b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_90b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_100b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_100b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo1D[("Red_top_mass_UP_widthx"+thisWidth+"_120b").c_str()] = new TH1F(("Red_top_mass_UP_widthx"+thisWidth+"_120b").c_str(),("Reduced top mass for width "+thisWidth+", UP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
-  }
 }
 
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
@@ -2484,6 +2314,7 @@ void ClearMetaData()
   eqLumi = 1.;
   
   nofHardSelected = 0;
+  nofMETCleaned = 0;
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofCorrectlyMatched = 0;
@@ -2661,6 +2492,9 @@ void ClearVars()
   
   scaleFactor = 1.;
   widthSF = 1.;
+  topPtRewSF = 1.;
+  topPtSF = 1.;
+  antiTopPtSF = 1.;
   bJetId.clear();
   bdiscrTop = -99.;
   bdiscrTop2 = -99.;
@@ -2681,6 +2515,7 @@ void ClearVars()
   labelMlb = -9999;
   labelMl_nonb = -9999;
   massForWidth = 0.01;
+  catSuffix = "";
   isCP = false;
   isWP = false;
   isUP = false;
@@ -2692,7 +2527,7 @@ void ClearVars()
   topmass_reco_orig = -1.;
   topmass_reco_kf = -1.;
   topmass_reco_kf_matched = -1.;
-  tempAveMass = -1.;
+  redTopMass = -1.;
   toy = -1.;
 }
 
@@ -2733,6 +2568,9 @@ void FillGeneralPlots(vector<Dataset *> datasets, int d)
   MSPlot["met_pT"]->Fill(met_pt, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   MSPlot["met_eta"]->Fill(met_eta, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   MSPlot["met_phi"]->Fill(met_phi, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["met_corr_pT"]->Fill(met_corr_pt, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["met_corr_eta"]->Fill(met_corr_eta, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["met_corr_phi"]->Fill(met_corr_phi, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   
   MSPlot["M3"]->Fill(M3, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   MSPlot["min_Mlb"]->Fill(min_Mlb, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
@@ -2773,8 +2611,8 @@ void FillMatchingPlots()
     histo1D["top_mass_reco_matched"]->Fill(matchedTopMass_reco, widthSF);
     histo1D["top_mass_gen_matched"]->Fill(matchedTopMass_gen, widthSF);
     
-    histo1D["mTop_div_aveMTop_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0], widthSF);
-    histo1D["mTop_div_aveMTop_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1], widthSF);
+    histo1D["Reduced_top_mass_TT_matched_partons"]->Fill(matchedTopMass_gen/aveTopMass[0], widthSF);
+    histo1D["Reduced_top_mass_TT_matched_jets"]->Fill(matchedTopMass_reco/aveTopMass[1], widthSF);
     
     if (doKinFit)
     {
@@ -2853,9 +2691,9 @@ void FillCatsPlots(string catSuffix)
 {
   if (! isData)
   {
-    histo1D["mTop_div_aveMTop_bkgd"]->Fill(tempAveMass);
-    if ( isWP || isUP ) histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(tempAveMass, widthSF);
-    histo1D[("mTop_div_aveMTop_TT_reco"+catSuffix).c_str()]->Fill(tempAveMass, widthSF);
+    histo1D["Reduced_top_mass_bkgd"]->Fill(redTopMass);
+    if ( isWP || isUP ) histo1D["Reduced_top_mass_TT_reco_WPUP"]->Fill(redTopMass, widthSF);
+    histo1D[("Reduced_top_mass_TT_reco"+catSuffix).c_str()]->Fill(redTopMass, widthSF);
     histo1D[("minMlb_reco"+catSuffix).c_str()]->Fill(reco_minMlb, widthSF);
     histo1D[("dR_lep_b_lep_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, widthSF);
     histo1D[("dR_lep_b_had_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_had, widthSF);
@@ -2887,23 +2725,6 @@ void FillCatsPlots(string catSuffix)
       histo1D[("KF_Chi2"+catSuffix+"_wide").c_str()]->Fill(kFitChi2);
       histo1D[("KF_top_mass_corr"+catSuffix).c_str()]->Fill(topmass_reco_kf, widthSF);
     }
-    if (makePlotsTGraph) FillTGraphCatsPlots(catSuffix);
-  }
-}
-
-void FillTGraphCatsPlots(string catSuffix)
-{
-  string thisWidth;
-  double thisWidthSF;
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    thisWidth = stringWidthArray[iWidth];
-    if (isTTbar) thisWidthSF = eventWeightCalculator(massForWidth, widthArray[iWidth]);
-    else thisWidthSF = 1.;
-    
-    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_90b").c_str()]->Fill(tempAveMass, thisWidthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_100b").c_str()]->Fill(tempAveMass, thisWidthSF);
-    histo1D[("Red_top_mass"+catSuffix+"_widthx"+thisWidth+"_120b").c_str()]->Fill(tempAveMass, thisWidthSF);
   }
 }
 
@@ -2918,8 +2739,11 @@ void FillMSPlots(int d)
   MSPlot["Reco_ttbar_mass"]->Fill(reco_ttbarMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   MSPlot["Reco_dR_lep_b_min"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
   MSPlot["Reco_dR_lep_b_max"]->Fill(reco_dRLepB_had, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_mTop_div_aveMTop"]->Fill(tempAveMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_mTop_div_aveMTop_fewerBins"]->Fill(tempAveMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  if ( redTopMass < 2.4 )
+  {
+    MSPlot["Reco_Red_top_mass"]->Fill(redTopMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    MSPlot["Reco_Red_top_mass_fewerBins"]->Fill(redTopMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  }
   
   if (doKinFit)
   {
@@ -2934,7 +2758,8 @@ void FillMSPlots(int d)
     MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_top_mass_orig"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_top_mass_corr"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_mass_corr_fewerBins"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    if ( topmass_reco_kf < 250 && topmass_reco_kf > 90 )
+      MSPlot["KF_top_mass_corr_fewerBins"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_top_pt_orig"]->Fill(toppt_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     MSPlot["KF_top_pt_corr"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
     
@@ -3012,101 +2837,6 @@ void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)
   cout << " - Systematics confirmed to be " << strSyst << endl;
 }
 
-double BreitWignerNonRel(double topMass, double scale)
-{
-  double BWmass = genTopMass;
-  double BWgamma = scale*genTopWidth/2.;
-  double bw = BWgamma/( pow(topMass - BWmass, 2) + pow(BWgamma, 2) );
-  
-  return bw/(TMath::Pi());
-}
-
-double BreitWigner(double topMass, double scale)
-{
-  double BWmass = genTopMass;
-  double BWgamma = scale*genTopWidth;
-  double gammaterm = sqrt( pow(BWmass, 4) + pow(BWmass*BWgamma, 2) );
-  double numerator = 2.*sqrt(2.)*BWmass*BWgamma*gammaterm/( TMath::Pi()*sqrt( pow(BWmass, 2) + gammaterm ) );
-  double denominator = pow(pow(topMass, 2) - pow(BWmass, 2), 2) + pow(topMass, 4)*pow(BWgamma/BWmass, 2);
-  
-  return numerator/denominator;
-}
-
-double eventWeightCalculator(double topMass, double scale)
-{
-  Double_t corrNEvts = 1./(corr[0]*scale+corr[1]);
-  return corrNEvts * BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
-}
-
-void PrintMtmLikelihood()
-{
-  cout << endl << "likelihood values (all MC) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike[iWidth]/(1e+2);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "} *10^2;" << endl;
-//   cout << "likelihood values (data-only) : {";
-//   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//   {
-//     cout << loglike_data[iWidth];
-//     if ( iWidth != nWidthsLL-1 ) cout << ", ";
-//   }
-//   cout << "};" << endl;
-  cout << "likelihood values (only good MC events) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike_onlyGoodEvts[iWidth]/(1e+2);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "} *10^2;" << endl;
-//   cout << "likelihood values (only good data events) : {";
-//   for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-//   {
-//     cout << loglike_onlyGoodEvts_data[iWidth];
-//     if ( iWidth != nWidthsLL-1 ) cout << ", ";
-//   }
-//   cout << "};" << endl;
-  cout << "fake likelihood values (CP) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << fakelike_CP[iWidth]/(1e+4);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "} *10^4;" << endl << "fake likelihood values (CP - only good events) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << fakelike_onlyGoodEvts[iWidth]/(1e+4);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "} *10^4;" << endl << "fake likelihood values (CP) with E_t,jet - E_t,q < 0.005*E_t,jet : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << fakelike_CP_Res[iWidth];
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "};" << endl << "widths: ";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << widthArray[iWidth];
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << endl << "PARTON likelihood values (all matched MC) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike_gen[iWidth]/(1e+4);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "};" << endl << "PARTON likelihood values (only good matched events) : {";
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    cout << loglike_gen_onlyGoodEvts[iWidth]/(1e+2);
-    if ( iWidth != nWidthsLL-1 ) cout << ", ";
-  }
-  cout << "} *10^2;" << endl << endl;
-}
-
 void PrintKFDebug(int ievt)
 {
   cout << endl <<"Event " << setw(5) << right << ievt << "   ";
@@ -3129,59 +2859,5 @@ void PrintKFDebug(int ievt)
     cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
     cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
   //}
-}
-
-void MakePlotsTGraphs()
-{
-  
-}
-
-void ConstructTGraphs(int nWidthsLL, double *widthArray, string name)
-{
-  string inputFileName, suffix;
-  for (int iWidth = 0; iWidth < nWidthsLL; iWidth++)
-  {
-    suffix = name+"widthx"+DotReplace(widthArray[iWidth]);
-    inputFileName = "TGraphTemplates/output_tgraph1d_"+suffix+".txt";
-    if ( ! fexists(inputFileName.c_str()) )
-    {
-      cerr << "ERROR::ConstructTGraphs : File " << inputFileName << " not found!!" << endl;
-      cerr << "                          Aborting the likelihood calculation..." << endl;
-      calculateLikelihood = false;
-      break;
-    }
-    graph[suffix] = new TGraph(inputFileName.c_str());
-  }
-  if (calculateLikelihood)
-    cout << "Constructed TGraphs for likelihood measurements (using " << nWidthsLL << " widths)" << endl;
-}
-
-int CalculateOutputWidth(double *evalWidths, double *LLvalues, string inputType)
-{
-  if ( sizeof(evalWidths)/sizeof(evalWidths[0]) != sizeof(LLvalues)/sizeof(LLvalues[0]) )
-  {
-    cerr << "Likelihood array has not the same size as widths array. Will not calculate output width..." << endl;
-    return 1;
-  }
-  int N = sizeof(evalWidths)/sizeof(evalWidths[0]);
-  if ( N == 0 )
-  {
-    cerr << "Arrays are empty. Will not calculate output width..." << endl;
-    return 1;
-  }
-  TGraph *g = new TGraph(N, evalWidths, LLvalues);
-  
-  double centreVal = TMath::LocMin(N, g->GetY());
-  double fitmin = centreVal - 0.8;
-  double fitmax = centreVal + 0.8;
-  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
-  
-  g->Fit(parabola,"R");
-  
-  double outputWidth = parabola->GetMinimumX(fitmin, fitmax);
-  double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin, outputWidth);
-  double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax);
-  
-  return 0;
 }
 
