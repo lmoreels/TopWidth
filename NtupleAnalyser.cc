@@ -51,11 +51,21 @@ bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
 bool useToys = false;
+
+bool doMETCleaning = true;
 bool applyLeptonSF = true;
+bool applyLeptonSFup = false;
+bool applyLeptonSFdown = false;
 bool applyPU = true;
-bool applyJER = true;
-bool applyJEC = true;
+bool applyPUup = false;
+bool applyPUdown = false;
 bool applyBTagSF = true;
+bool applyBTagSFup = false;
+bool applyBTagSFdown = false;
+bool applyTopPtReweighting = false;
+//bool applyJER = true;
+//bool applyJEC = true;
+
 
 bool applyWidthSF = false;
 double scaleWidth = 1.;
@@ -566,6 +576,34 @@ int main(int argc, char* argv[])
   cout << "*********************************************" << endl;
   cout << "* Current time: " << dateString << "                 *" << endl;
   cout << "*********************************************" << endl;
+  cout << "* The following corrections are applied:    *" << endl;
+  cout << "*   - Jet Energy Corrections                *" << endl;
+  if ( systStr.find("JECdown") != std::string::npos )
+    cout << "*   - Jet Energy Scale: scale down          *" << endl;
+  else if ( systStr.find("JECup") != std::string::npos )
+    cout << "*   - Jet Energy Scale: scale up            *" << endl;
+  cout << "*   - Jet Energy Resolution: ";
+  if ( systStr.find("JERdown") != std::string::npos )    cout << "scale down     *" << endl;
+  else if ( systStr.find("JERup") != std::string::npos ) cout << "scale up       *" << endl;
+  else                                                 cout << "nominal        *" << endl;
+  cout << "*   - Jet/lepton Cleaning                   *" << endl;
+  if (doMETCleaning) cout << "*   - MET Cleaning                          *" << endl;
+  cout << "*********************************************" << endl;
+  cout << "* The following scale factors are applied:  *" << endl;
+  cout << "*   - Lepton scale factors: " << endl;
+  if (applyLeptonSF)          cout << "nominal         *" << endl;
+  else if (applyLeptonSFup)   cout << "scale down      *" << endl;
+  else if (applyLeptonSFdown) cout << "scale up        *" << endl;
+  cout << "*   - Pile up: " << endl;
+  if (applyPU)          cout << "nominal                      *" << endl;
+  else if (applyPUup)   cout << "scale up                     *" << endl;
+  else if (applyPUdown) cout << "scale down                   *" << endl;
+  cout << "*   - B tag scale factors: " << endl;
+  if (applyBTagSF)     cout << "nominal          *" << endl;
+  if (applyBTagSFup)   cout << "scale down       *" << endl;
+  if (applyBTagSFdown) cout << "scale up         *" << endl;
+  if (applyTopPtReweighting) cout << "*   - Top pT reweighting                    *" << endl;
+  cout << "*********************************************" << endl;
   
   clock_t start = clock();
   
@@ -960,8 +998,14 @@ int main(int argc, char* argv[])
       if (! isData)
       {
         if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
+        else if (applyLeptonSFup) { scaleFactor *= muonTrackSF_eta[0]*1.01 * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}  // CHECK syst muon track SF
+        else if (applyLeptonSFdown) { scaleFactor *= muonTrackSF_eta[0]*0.99 * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}  // CHECK syst muon track SF
         if (applyPU) { scaleFactor *= puSF;}
+        else if (applyPUup) { scaleFactor *= puSF_up;}
+        else if (applyPUdown) { scaleFactor *= puSF_down;}
         if (applyBTagSF) { scaleFactor *= btagSF;}
+        else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
+        else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
 //        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
         if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
       }
@@ -1059,12 +1103,12 @@ int main(int argc, char* argv[])
           
           if ( mc_pdgId[i] == pdgID_top && mc_status[i] == 62 )  // top
           {
-            if ( mcParticles[i]->Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i]->Pt());
+            if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
             else topPtSF = TMath::Exp(0.0615-0.0005*400.);
           }
           else if ( mc_pdgId[i] == -pdgID_top && mc_status[i] == 62 )  // antitop
           {
-            if ( mcParticles[i]->Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i]->Pt());
+            if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
             else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
           }
           
@@ -1118,6 +1162,7 @@ int main(int argc, char* argv[])
         
         if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
         else topPtRewSF = 1.;
+        if (applyTopPtReweighting) scaleFactor *= topPtRewSF;
         
         
         
