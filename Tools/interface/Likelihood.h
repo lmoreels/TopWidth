@@ -26,25 +26,35 @@
 
 // user defined
 #include "EventReweighting.h"
+#include "HelperTools.h"
 
 
 class Likelihood{
   public:
     Likelihood(double min, double max, std::string outputDirName, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
+    /// Make TGraphs
     void BookHistograms();
     void FillHistograms(double redMass, double massForWidthSF, bool isTTbar, bool isData, std::string catSuffix);
     void WriteHistograms(std::string histoFileName);
     void ConstructTGraphsFromHisto(std::string name);
+    /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
+    /// Calculate likelihood
     void CalculateLikelihood(double redMass, bool isData);
     void CalculateLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateCPLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    /// Get output width
     void GetOutputWidth(double inputWidth);
     void GetOutputWidth(double inputWidth, std::string type);
     void GetOutputWidth(std::string inputFileName, double inputWidth);
+    /// Use pseudo experiments
+    void InitPull(int nPsExp);
+    void AddPsExp(int thisPsExp, bool isData);
+    void CalculatePull(double inputWidth);
+    /// Write output from likelihood calculation to file
     void PrintLikelihoodOutput(std::string llFileName);
     void PrintLikelihoodOutputData(std::string llFileName);
     void PrintMtmLikelihoodOutput(std::string llFileName);
@@ -54,18 +64,22 @@ class Likelihood{
     std::string outputDirName_;
     std::string dirNameTGraphTxt_;
     std::string dirNameLLTxt_;
+    std::string dirNamePull_;
     std::string inputFileName_;
     std::string suffix_;
     std::string histoName_;
     double minRedMass_;
     double maxRedMass_;
     
+    HelperTools *tls_;
+    EventReweighting *rew_;
+    
     static const double widthArray_[];
     static const std::string listCats_[];
+    static std::string stringWidthArray_[];
     
     static const int nWidths_;
     static const int nCats_;
-    std::vector<std::string> vecWidthStr_;
     
     std::string thisWidth_;
     double thisWidthSF_;
@@ -73,7 +87,6 @@ class Likelihood{
     TFile *fileTGraphs_;
     TGraph2D *gLL2D_;
     std::ofstream txtOutput_;
-    EventReweighting *rew;
     
     std::map<std::string,TH1D*> histo_;
     std::map<std::string,TH1D*> histoSm_;
@@ -95,6 +108,9 @@ class Likelihood{
     static double loglike_gen_per_evt_[];
     static double loglike_gen_good_evts_[];
     
+    static double loglike_pull_[][1000];
+    static double loglike_pull_single_[];
+    
     bool calledLLCalculation_;
     bool calledCPLLCalculation_;
     bool calledGenLLCalculation_;
@@ -105,21 +121,31 @@ class Likelihood{
     std::vector<double> vecGoodLLValsFromFile_;
     std::pair<double,double> output_;
     
-    bool fexists(const char *filename);
-    std::string ConvertDoubleToString(double Number);
-    std::string DotReplace(double var);
+    static const double calCurvePar_[2];
+    
+    int nPsExp_;
+    
     int LocMinArray(int n, double* array);
+    /// Get output width for pseudo experiments
+    std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
+    /// Calculate output width (used in getters)
+    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string plotName);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile);
+    /// Calibration curve
+    std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
+    /// Draw functions
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);
     void DrawLikelihoods();
+    void DrawOutputLogLikelihood(TGraph* g, TF1* f, double maxX, double maxY, std::string name, bool writeToFile);
+    /// Read file
+    void ReadLLValuesFromFile(std::string inputFileName);
+    /// Write file
     void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim);
     void CombineOutput();
-    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string plotName);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName);
-    void DrawOutputLogLikelihood(TGraph* g, TF1* f, double maxX, double maxY, std::string name);
-    void ReadLLValuesFromFile(std::string inputFileName);
-    
 };
 
 

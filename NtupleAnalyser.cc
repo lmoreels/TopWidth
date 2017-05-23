@@ -46,11 +46,11 @@ bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
+bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
-bool useToys = false;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
@@ -547,12 +547,12 @@ Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
 
 ofstream txtDebugTopMass, txtDebugPUSF;
 
-/// Toys
+/// Pseudo experiments
 TRandom3 random3;
-double toy; // = random3.Uniform(0,1);
+double toyValue; // = random3.Uniform(0,1);
 double toyMax;
-int nToys[20] = {0}, nDataEvts;
-bool replaceToy = false;
+const int nPseudoExps = 500;
+int nEvtsInPseudoExp[nPseudoExps][15] = {0}, nDataEvts;
 
 /// Meta
 string strSyst = "";
@@ -616,7 +616,7 @@ int main(int argc, char* argv[])
   if (calculateAverageMass)
   {
     calculateLikelihood = false;
-    useToys = false;
+    doPseudoExps = false;
     makePlots = false;
     doGenOnly = false;
   }
@@ -627,17 +627,19 @@ int main(int argc, char* argv[])
     makePlots = false;
     calculateAverageMass = false;
     calculateLikelihood = false;
+    doPseudoExps = false;
     doKinFit = false;
-    useToys = false;
   }
   if (test) makePlots = false;
   if (testHistos) makePlots = true;
   if (doGenOnly)
   {
-    useToys = false;
+    doPseudoExps = false;
   }
   if (makeTGraphs) calculateLikelihood = false;
   if (calculateLikelihood) makeTGraphs = false;
+  else doPseudoExps = false;
+  if (doPseudoExps) makePlots = false;
   //string pathOutput = "test/";
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
@@ -646,9 +648,9 @@ int main(int argc, char* argv[])
     // Add channel to output path
     pathOutput += channel+"/";
     mkdir(pathOutput.c_str(),0777);
-    if (useToys)
+    if (doPseudoExps)
     {
-      pathOutput+= "toys/";
+      pathOutput+= "PseudoExp/";
       mkdir(pathOutput.c_str(),0777);
     }
     if (testHistos)
@@ -677,6 +679,7 @@ int main(int argc, char* argv[])
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
+  if (doPseudoExps)       cout << "              for pseudo experiments" << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
@@ -802,6 +805,10 @@ int main(int argc, char* argv[])
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
   }
+  if (doPseudoExps)
+  {
+    like->InitPull(nPseudoExps);
+  }
   
   if (makePlots)
   {
@@ -922,21 +929,15 @@ int main(int argc, char* argv[])
     if (isData) eqLumi = Luminosity;
     else eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
     
-    if (useToys)
+    if (doPseudoExps)
     {
-      if (! isData) toyMax = Luminosity/eqLumi;
+      if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
       else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
-      cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
+      cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
       
       if (test)
         cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
-      cout << "TOYS::Lumi/eqLumi = " << toyMax;
-//       if (! isData)  // CHECK DATA/MC AGREEMENT
-//       {
-//         toyMax *= 0.88;  // small overshoot in MC --> scale down
-//         cout << " x 0.88 = " << toyMax;
-//       }
-      cout << endl;
+      cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax << endl;
     }
     
     
@@ -984,16 +985,6 @@ int main(int argc, char* argv[])
       tTree[(dataSetName).c_str()]->GetEntry(ievt);
       
       
-      /// Toys
-      if (useToys)
-      {
-        toy = random3.Rndm();
-        if (! replaceToy && toy > toyMax ) continue;
-        if (replaceToy) replaceToy = false;
-        else (nToys[d])++;
-      }
-      
-      
       /// Scale factors
       if (! isData)
       {
@@ -1010,7 +1001,7 @@ int main(int argc, char* argv[])
         if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
       }
       
-      if (useToys) scaleFactor *= eqLumi;  // undo eqLumi scaling in MSPlots
+      //if (useToys) scaleFactor *= eqLumi;  // undo eqLumi scaling in MSPlots
       
       
       
@@ -1156,7 +1147,6 @@ int main(int argc, char* argv[])
         {
           txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
           txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
-          if (useToys) replaceToy = true;
           continue;
         }
         
@@ -1253,7 +1243,7 @@ int main(int argc, char* argv[])
             
             
             /// KF for matched jets
-            if (doKinFit)
+            if (doKinFit && ! doPseudoExps)
             {
               kFitterMatched = kfMatched->doFit(jetsMatched[0], jetsMatched[1], kFitVerbosity);
               
@@ -1281,7 +1271,7 @@ int main(int argc, char* argv[])
                 double temp = topmass_reco_kf_matched/aveTopMassLL;
                 like->CalculateGenLikelihood(temp, massForWidth, scaleWidth, isTTbar, isData);
               }
-            }
+            }  // end KF
             
             
             if (isTTbar && makePlots)
@@ -1458,7 +1448,8 @@ int main(int argc, char* argv[])
       if (calculateLikelihood)
       {
         like->CalculateLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
-        if (! isData) like->CalculateCPLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+        if (! isData && ! doPseudoExps)
+          like->CalculateCPLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
       }
       
       if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
@@ -1498,6 +1489,18 @@ int main(int argc, char* argv[])
         }
       }  // end aveMassCalc
       
+      
+      /// Pseudo experiments
+      if (doPseudoExps && ! isData)
+      {
+        for (int iPsExp = 0; iPsExp < nPseudoExps; iPsExp++)
+        {
+          toyValue = random3.Rndm();
+          if ( toyValue > toyMax ) continue;
+          (nEvtsInPseudoExp[iPsExp][d])++;
+          like->AddPsExp(iPsExp, isData);
+        }
+      }
       
       //Fill histos
       if (makePlots)
@@ -1575,7 +1578,6 @@ int main(int argc, char* argv[])
 //       if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
 //     }
     
-    if (useToys) cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
     
     if (calculateAverageMass) txtMassReco.close();
     
@@ -1584,6 +1586,7 @@ int main(int argc, char* argv[])
     timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
     
   }  // end loop datasets
+  
   
   if (calculateAverageMass)
   {
@@ -1605,6 +1608,12 @@ int main(int argc, char* argv[])
   }
   
   
+  if (makeTGraphs)
+  {
+    like->WriteHistograms("ReducedTopMassPlots.root");
+    like->ConstructTGraphsFromHisto("TGraphFunctions.root");
+  }
+  
   if (calculateLikelihood)
   {
     cout << "Minimum reduced top mass: " << minRedTopMass << endl;
@@ -1614,7 +1623,7 @@ int main(int argc, char* argv[])
     string llFileName = "output_loglikelihood_widthx1";
     if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth);
     if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth);
-    if (useToys) llFileName = "output_loglikelihood_toys";
+    //if (useToys) llFileName = "output_loglikelihood_toys";
     like->PrintLikelihoodOutput(llFileName+".txt");
     //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
     like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
@@ -1626,10 +1635,9 @@ int main(int argc, char* argv[])
     like->GetOutputWidth(llFileName+".txt", scaleWidth);
   }
   
-  if (makeTGraphs)
+  if (doPseudoExps)
   {
-    like->WriteHistograms("ReducedTopMassPlots.root");
-    like->ConstructTGraphsFromHisto("TGraphFunctions.root");
+    like->CalculatePull(scaleWidth);
   }
   
   
@@ -1639,12 +1647,16 @@ int main(int argc, char* argv[])
     cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
   }
   
-  if (useToys)
+  if (doPseudoExps)
   {
-    cout << "TOYS::Number of selected data events: " << nDataEvts << endl;
-    for (unsigned int d = 0; d < datasets.size(); d++)
+    cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
+    for (int i = 0; i < 1; i++)
     {
-      cout << "TOYS::" << datasets[d]->Name() << ": " << nToys[d] << endl;
+      cout << "PseudoExperiment " << std::setw(3) << std::right << i;
+      for (unsigned int d = 0; d < datasets.size(); d++)
+      {
+        cout << "                      " << datasets[d]->Name() << ": " << nEvtsInPseudoExp[i][d] << endl;
+      }
     }
   }
   
@@ -2573,7 +2585,7 @@ void ClearVars()
   topmass_reco_kf = -1.;
   topmass_reco_kf_matched = -1.;
   redTopMass = -1.;
-  toy = -1.;
+  toyValue = -1.;
 }
 
 void ClearObjects()
