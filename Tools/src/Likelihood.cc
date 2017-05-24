@@ -25,6 +25,7 @@ double Likelihood::loglike_pull_[nWidths_][1000] = {0};
 double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
+const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -44,8 +45,8 @@ int Likelihood::LocMinArray(int n, double* array)
   return locmin;
 }
 
-Likelihood::Likelihood(double min, double max, std::string outputDirName, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
-verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCPLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
+Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
+verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCPLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
@@ -63,9 +64,14 @@ verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"
   loglike_gen_[nWidths_] = {0};
   loglike_gen_good_evts_[nWidths_] = {0};
   
-  //mkdir(outputDirName_.c_str(),0777);
   
-  if (makeHistograms) this->BookHistograms();
+  if (makeHistograms)
+  {
+    mkdir(outputDirName_.c_str(),0777);
+    mkdir((outputDirName_+dirNameTGraphTxt_).c_str(),0777);
+    this->BookHistograms();
+  }
+  else mkdir(dirNameLLTxt_.c_str(),0777);
 }
 
 Likelihood::~Likelihood()
@@ -500,7 +506,6 @@ void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth)
 
 std::pair<double,double> Likelihood::GetOutputWidth(double inputWidth, int thisPsExp)
 {
-  mkdir((dirNameLLTxt_+dirNamePull_).c_str(),0777);
   std::string loglikePlotName = dirNamePull_+"loglikelihood_vs_width_psExp_"+tls_->ConvertIntToString(thisPsExp)+"_widthx"+tls_->DotReplace(inputWidth);
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -583,18 +588,25 @@ std::pair<double,double> Likelihood::ApplyCalibrationCurve(double thisOutputWidt
   //  thisOutputWidth = Par_[0] + Par_[1] * thisInputWidth
 
   double thisInputWidth = (thisOutputWidth - calCurvePar_[0])/calCurvePar_[1];
-  double thisInputWidthSigma = TMath::Sqrt( thisOutputWidthSigma*thisOutputWidthSigma + calCurvePar_[0]*calCurvePar_[0] + calCurvePar_[1]*calCurvePar_[1]*thisInputWidth*thisInputWidth )/calCurvePar_[1];
+  double thisInputWidthSigma = TMath::Sqrt( thisOutputWidthSigma*thisOutputWidthSigma + calCurveParUnc_[0]*calCurveParUnc_[0] + calCurveParUnc_[1]*calCurveParUnc_[1]*thisInputWidth*thisInputWidth )/calCurvePar_[1];
   
   return std::pair<double,double>(thisInputWidth,thisInputWidthSigma);
   
 }
 
-void Likelihood::InitPull(int nPsExp)
+int Likelihood::InitPull(int nPsExp)
 {
-  nPsExp_ = nPsExp;
+  mkdir((dirNameLLTxt_+dirNamePull_).c_str(),0777);
   
-  if ( nPsExp > 1000 ) std::cout << "Likelihood::Pull: Warning: Only 1000 pseudo experiments will be performed" << std::endl;
+  nPsExp_ = nPsExp;
+  if ( nPsExp > 1000 )
+  {
+    std::cout << "Likelihood::Pull: Warning: Only 1000 pseudo experiments will be performed" << std::endl;
+    return 1000;
+  }
   else if (verbose_) std::cout << "Likelihood::Pull: Performing " << nPsExp << " pseudo experiments" << std::endl;
+  
+  return nPsExp;
 }
 
 void Likelihood::AddPsExp(int thisPsExp, bool isData)
@@ -614,13 +626,12 @@ void Likelihood::CalculatePull(double inputWidth)
 {
   std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+".root";
   TFile *filePull = new TFile(fileName.c_str(),"RECREATE");
-  filePull->cd();
   
   /// Calculate output width for all pseudo experiments
   //  Transform to input width via calibration curve & calculate average input width
   std::pair<double,double> thisOutputWidth[nPsExp_] = {std::pair<double,double>(-1.,-1.)};
   std::pair<double,double> thisInputWidth[nPsExp_] = {std::pair<double,double>(-1.,-1.)};
-  double aveInputWidth = 0;
+  double aveInputWidth = 0.;
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
@@ -629,10 +640,14 @@ void Likelihood::CalculatePull(double inputWidth)
     aveInputWidth += thisInputWidth[iPsExp].first;
   }
   aveInputWidth = aveInputWidth/nPsExp_;
+  std::cout << "Output width : " << thisOutputWidth[0].first << " ;   sigma : " << thisOutputWidth[0].second << std::endl;
+  std::cout << "Input width  : " << thisInputWidth[0].first << " ;   sigma : " << thisInputWidth[0].second << std::endl;
+  std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
   
   /// Fill histogram with (Gamma_j - <Gamma>)/sigma_j
   double fillValue;
-  TH1D *hPull = new TH1D("hPull", "", 21, -10.5, 10.5);
+  filePull->cd();
+  TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 50, -5., 5.);
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
@@ -656,7 +671,8 @@ void Likelihood::CalculatePull(double inputWidth)
   std::cout << "The pseudo experiment distribution is fitted with a Gaussian function with parameters ";
   for (int iPar = 0; iPar < gaus->GetNpar(); iPar++)
   {
-    std::cout << gaus->GetParameter(iPar) << "+-" << gaus->GetParError(iPar) << " ,  ";
+    std::cout << gaus->GetParameter(iPar) << "+-" << gaus->GetParError(iPar);
+    if ( iPar != gaus->GetNpar()-1) std::cout << " ,  ";
   }
   std::cout << std::endl;
   
@@ -664,7 +680,6 @@ void Likelihood::CalculatePull(double inputWidth)
   filePull->Close();
   
   delete gaus;
-  delete hPull;
   delete filePull;
 }
 
@@ -690,10 +705,11 @@ void Likelihood::DrawGraph(TGraph2D* g, std::string name)
   c->cd();
   gStyle->SetPalette(1);
   g->SetMaxIter(500000);
+  g->Draw();
   g->SetName(name.c_str());
   g->SetTitle((name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
-  //g->GetHistogram("empty")->GetXaxis()->SetTitleOffset(1.5);  // Does not work
-  //g->GetHistogram("empty")->GetYaxis()->SetTitleOffset(1.5);  // Does not work
+  g->GetXaxis()->SetTitleOffset(1.5);
+  g->GetYaxis()->SetTitleOffset(1.5);
   g->Draw("surf1");
   c->Update();
   c->Write();
@@ -748,6 +764,7 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double maxX, double 
   g->GetYaxis()->SetTitle("-Log(likelihood)");
   g->SetMarkerStyle(2);  //kPlus
   g->Draw("AP");
+  //if (writeToFile) g->Write();
   c1->Update();
   f->Draw("same");
   c1->Modified();
@@ -819,7 +836,6 @@ void Likelihood::ReadLLValuesFromFile(std::string inputFileName)
 
 void Likelihood::WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim)
 {
-  mkdir((outputDirName_+dirNameTGraphTxt_).c_str(),0777);
   std::string dimension = "";
   if ( dim == 1 ) dimension = "1d";
   else if ( dim == 2 ) dimension = "2d";
@@ -850,7 +866,6 @@ void Likelihood::CombineOutput()
 
 void Likelihood::PrintLikelihoodOutput(std::string llFileName)
 {
-  mkdir((dirNameLLTxt_).c_str(),0777);
   std::ofstream txtOutputLogLike((dirNameLLTxt_+llFileName).c_str());
   txtOutputLogLike << "Widths:      ";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -876,7 +891,6 @@ void Likelihood::PrintLikelihoodOutput(std::string llFileName)
 
 void Likelihood::PrintLikelihoodOutputData(std::string llFileName)
 {
-  mkdir((dirNameLLTxt_).c_str(),0777);
   std::ofstream txtOutputLogLike((dirNameLLTxt_+llFileName).c_str());
   txtOutputLogLike << "Widths:      ";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -902,7 +916,6 @@ void Likelihood::PrintLikelihoodOutputData(std::string llFileName)
 
 void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
 {
-  mkdir((dirNameLLTxt_).c_str(),0777);
   std::ofstream txtOutputLogLike((dirNameLLTxt_+llFileName).c_str());
   txtOutputLogLike << "likelihood values (all MC) : {";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)

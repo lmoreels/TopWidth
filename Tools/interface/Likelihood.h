@@ -31,7 +31,7 @@
 
 class Likelihood{
   public:
-    Likelihood(double min, double max, std::string outputDirName, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
+    Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
     /// Make TGraphs
     void BookHistograms();
@@ -51,7 +51,7 @@ class Likelihood{
     void GetOutputWidth(double inputWidth, std::string type);
     void GetOutputWidth(std::string inputFileName, double inputWidth);
     /// Use pseudo experiments
-    void InitPull(int nPsExp);
+    int InitPull(int nPsExp);
     void AddPsExp(int thisPsExp, bool isData);
     void CalculatePull(double inputWidth);
     /// Write output from likelihood calculation to file
@@ -122,6 +122,7 @@ class Likelihood{
     std::pair<double,double> output_;
     
     static const double calCurvePar_[2];
+    static const double calCurveParUnc_[2];
     
     int nPsExp_;
     
