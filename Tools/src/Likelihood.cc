@@ -1,6 +1,6 @@
 #include "../interface/Likelihood.h"
 
-const double Likelihood::widthArray_[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
+const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10.};
 
 const std::string Likelihood::listCats_[] = {"CP", "WP", "UP"};
 
@@ -24,8 +24,10 @@ double Likelihood::loglike_gen_good_evts_[nWidths_] = {0};
 double Likelihood::loglike_pull_[nWidths_][1000] = {0};
 double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
-const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
-const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
+//const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
+//const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
+const double Likelihood::calCurvePar_[2] = {0.0335704, 0.973947};
+const double Likelihood::calCurveParUnc_[2] = {0.00753509, 0.00382561};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -56,14 +58,17 @@ verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"
     stringWidthArray_[iWidth] = tls_->DotReplace(widthArray_[iWidth]);
   }
   
-  loglike_[nWidths_] = {0};
-  loglike_data_[nWidths_] = {0};
-  loglike_good_evts_[nWidths_] = {0};
-  loglike_CP_[nWidths_] = {0};
-  loglike_CP_per_evt_[nWidths_] = {0};
-  loglike_gen_[nWidths_] = {0};
-  loglike_gen_good_evts_[nWidths_] = {0};
-  
+  for (int i = 0; i < nWidths_; i++)
+  {
+    loglike_[i] = 0.;
+    loglike_data_[i] = 0.;
+    loglike_good_evts_[i] = 0.;
+    loglike_good_evts_data_[i] = 0.;
+    loglike_CP_[i] = 0.;
+    loglike_CP_good_evts_[i] = 0.;
+    loglike_gen_[i] = 0.;
+    loglike_gen_good_evts_[i] = 0.;
+  }
   
   if (makeHistograms)
   {

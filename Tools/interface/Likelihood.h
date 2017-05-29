@@ -76,10 +76,26 @@ class Likelihood{
     
     static const double widthArray_[];
     static const std::string listCats_[];
-    static std::string stringWidthArray_[];
     
     static const int nWidths_;
     static const int nCats_;
+    
+    static std::string stringWidthArray_[];
+    
+    static double loglike_[];
+    static double loglike_data_[];
+    static double loglike_per_evt_[];
+    static double loglike_good_evts_[];
+    static double loglike_good_evts_data_[];
+    static double loglike_CP_[];
+    static double loglike_CP_per_evt_[];
+    static double loglike_CP_good_evts_[];
+    static double loglike_gen_[];
+    static double loglike_gen_per_evt_[];
+    static double loglike_gen_good_evts_[];
+    
+    static double loglike_pull_[][1000];
+    static double loglike_pull_single_[];
     
     std::string thisWidth_;
     double thisWidthSF_;
@@ -96,21 +112,6 @@ class Likelihood{
     std::map<std::string,std::vector<double>> vecBinContents_;
     
     bool calculateGoodEvtLL_;
-    static double loglike_[];
-    static double loglike_data_[];
-    static double loglike_per_evt_[];
-    static double loglike_good_evts_[];
-    static double loglike_good_evts_data_[];
-    static double loglike_CP_[];
-    static double loglike_CP_per_evt_[];
-    static double loglike_CP_good_evts_[];
-    static double loglike_gen_[];
-    static double loglike_gen_per_evt_[];
-    static double loglike_gen_good_evts_[];
-    
-    static double loglike_pull_[][1000];
-    static double loglike_pull_single_[];
-    
     bool calledLLCalculation_;
     bool calledCPLLCalculation_;
     bool calledGenLLCalculation_;
