@@ -45,9 +45,9 @@ bool doGenOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool makeTGraphs = false;
-bool calculateLikelihood = true;
-bool doPseudoExps = true;
+bool makeTGraphs = true;
+bool calculateLikelihood = false;
+bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -75,14 +75,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170517","170522");
+    return pair<string,string>("170526","170522");
   }
   else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("","170522");
   else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("","170522");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170517","170522");
+    return pair<string,string>("170526","170522");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -93,7 +93,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170519_1140/";
+string inputDateLL = "170529_1431/";
 bool isData = false;
 bool isTTbar = false;
 
@@ -183,6 +183,7 @@ void ClearMatching();
 void ClearVars();
 void ClearObjects();
 void FillGeneralPlots(vector<Dataset *> datasets, int d);
+void FillGeneralPlots(vector<Dataset *> datasets, int d, string suffix);
 void FillMatchingPlots();
 void FillKinFitPlots();
 void FillCatsPlots(string catSuffix);
@@ -244,11 +245,15 @@ Double_t        jet_eta[20];   //[nJets]
 Double_t        jet_E[20];   //[nJets]
 Double_t        jet_M[20];   //[nJets]
 Double_t        jet_bdiscr[20];   //[nJets]
+Double_t        met_px;
+Double_t        met_py;
 Double_t        met_pt;
 Double_t        met_phi;
 Double_t        met_eta;
 Double_t        met_Et;
 Double_t        met_E;
+Double_t        met_corr_px;
+Double_t        met_corr_py;
 Double_t        met_corr_pt;
 Double_t        met_corr_phi;
 Double_t        met_corr_eta;
@@ -383,11 +388,15 @@ TBranch        *b_jet_eta;   //!
 TBranch        *b_jet_E;   //!
 TBranch        *b_jet_M;   //!
 TBranch        *b_jet_bdiscr;   //!
+TBranch        *b_met_px;   //!
+TBranch        *b_met_py;   //!
 TBranch        *b_met_pt;   //!
 TBranch        *b_met_phi;   //!
 TBranch        *b_met_eta;   //!
 TBranch        *b_met_Et;   //!
 TBranch        *b_met_E;   //!
+TBranch        *b_met_corr_px;   //!
+TBranch        *b_met_corr_py;   //!
 TBranch        *b_met_corr_pt;   //!
 TBranch        *b_met_corr_phi;   //!
 TBranch        *b_met_corr_eta;   //!
@@ -473,7 +482,7 @@ TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
 TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 
 
-double scaleFactor, widthSF;
+double lumiWeight, scaleFactor, widthSF;
 double topPtRewSF, topPtSF, antiTopPtSF;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
@@ -635,7 +644,12 @@ int main(int argc, char* argv[])
     doKinFit = false;
   }
   if (test) makePlots = false;
-  if (testHistos) makePlots = true;
+  if (testHistos)
+  {
+    makePlots = true;
+    doGenOnly = false;
+    makeTGraphs = false;
+  }
   if (doGenOnly)
   {
     doPseudoExps = false;
@@ -730,7 +744,7 @@ int main(int argc, char* argv[])
       dTT = d;
     }
     //if ( dataSetName.find("TTbarJets_Other") != std::string::npos ) datasets[d]->SetColor(kRed-7);
-    if ( dataSetName.find("WJets") != std::string::npos )
+    if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
     {
       datasets[d]->SetTitle("W#rightarrowl#nu");
       datasets[d]->SetColor(kGreen-3);
@@ -819,6 +833,15 @@ int main(int argc, char* argv[])
     if (! doGenOnly) InitMSPlots();
     InitHisto1D();
     InitHisto2D();
+    MSPlot["nPVs_beforePU_"] =  new MultiSamplePlot(datasets, "nPVs_beforePU_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_up_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_down_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
+    MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T} [GeV]");
+    MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T} [GeV]");
+    MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T} [GeV]");
+    MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T} [GeV]");
   }
   
   vJER.clear(); vJES.clear(); vPU.clear();
@@ -930,11 +953,17 @@ int main(int argc, char* argv[])
     vPU.push_back(appliedPU);
     
     /// eqLumi calculation
-    if (isData) eqLumi = Luminosity;
-    else eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
+    if (isData) lumiWeight = 1.;
+    else
+    {
+      eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
+      lumiWeight = Luminosity/eqLumi;
+    }
     
     if (doPseudoExps)
     {
+      lumiWeight = 1.;
+      
       if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
       //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
       else nDataEvts = nEventsAKF[d];
@@ -1002,17 +1031,34 @@ int main(int argc, char* argv[])
         if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
         else if (applyLeptonSFup) { scaleFactor *= muonTrackSF_eta[0]*1.01 * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}  // CHECK syst muon track SF
         else if (applyLeptonSFdown) { scaleFactor *= muonTrackSF_eta[0]*0.99 * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}  // CHECK syst muon track SF
-        if (applyPU) { scaleFactor *= puSF;}
-        else if (applyPUup) { scaleFactor *= puSF_up;}
-        else if (applyPUdown) { scaleFactor *= puSF_down;}
         if (applyBTagSF) { scaleFactor *= btagSF;}
         else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
         else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
+      
+        if (passedMETFilter)
+        {
+          MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor);
+          MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF);
+          MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
+          MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
+        }
+        
+        if (applyPU) { scaleFactor *= puSF;}
+        else if (applyPUup) { scaleFactor *= puSF_up;}
+        else if (applyPUdown) { scaleFactor *= puSF_down;}
+        
+        MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
+        MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
 //        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
         if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
       }
-      
-      //if (useToys) scaleFactor *= eqLumi;  // undo eqLumi scaling in MSPlots
+      else if (passedMETFilter)
+      {
+        MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+        MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+        MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+        MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+      }
       
       
       
@@ -1029,6 +1075,8 @@ int main(int argc, char* argv[])
         jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
         selectedJets.push_back(jet);
       }
+      
+      if (passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
       
       if ( selectedJets.size() > 4 ) continue;
       nofHardSelected++;
@@ -1386,6 +1434,21 @@ int main(int argc, char* argv[])
       else if (isWP) catSuffix = catSuffixList[1];
       else if (isUP) catSuffix = catSuffixList[2];
       
+      if (makePlots)
+      {
+        int dMSP = d;
+        if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+        else if (isTTbar && isWP) dMSP = d+1;
+        else if (isTTbar && isUP) dMSP = d+2;
+        FillGeneralPlots(datasetsMSP, dMSP);
+        
+        MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+        for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+        {
+          MSPlot["jet_pT_allJets_"]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+        }
+      }
+      
       
       
       ////////////////////////////
@@ -1512,19 +1575,36 @@ int main(int argc, char* argv[])
           if ( toyValues[iPsExp] > toyMax ) continue;
           (nEvtsInPseudoExp[iPsExp][d])++;
           like->AddPsExp(iPsExp, isData);
+          
+          /// Fill plots only for first pseudo experiment
+          if ( makePlots && iPsExp == 0 )
+          {
+            /// Combine DY & W+jets
+            if ( dataSetName.find("DY") != std::string::npos ) histo1D["Reduced_top_mass_DYJets"]->Fill(redTopMass);
+            else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
+              histo1D["Reduced_top_mass_WJets"]->Fill(redTopMass);
+            else histo1D[("Reduced_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
+            
+            FillCatsPlots(catSuffix);
+            
+            int dMSP = d;
+            if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+            else if (isTTbar && isWP) dMSP = d+1;
+            else if (isTTbar && isUP) dMSP = d+2;
+            
+            FillMSPlots(dMSP);
+          }
         }
       }
       
       //Fill histos
-      if (makePlots)
+      if ( makePlots && (! doPseudoExps || isData) )
       {
-        histo1D[("Reduced_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
-        if (isTTbar)
-        {
-          histo1D["Reco_W_mass_reco"]->Fill(Wmass_reco_kf, widthSF);
-          histo1D["Reco_top_mass_reco"]->Fill(topmass_reco_kf, widthSF);
-          histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
-        }
+        /// Combine DY & W+jets
+        if ( dataSetName.find("DY") != std::string::npos ) histo1D["Reduced_top_mass_DYJets"]->Fill(redTopMass);
+        else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
+          histo1D["Reduced_top_mass_WJets"]->Fill(redTopMass);
+        else histo1D[("Reduced_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
         
         FillCatsPlots(catSuffix);
         
@@ -1534,6 +1614,12 @@ int main(int argc, char* argv[])
         else if (isTTbar && isUP) dMSP = d+2;
         
         FillMSPlots(dMSP);
+        
+        MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+        for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+        {
+          MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+        }
         
       }  // end makePlots
       
@@ -1549,7 +1635,7 @@ int main(int argc, char* argv[])
     if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
     
     //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
-    if (! isData && nofMatchedEvents > 0 )
+    if (! isData && nofHadrMatchedEvents > 0 )
     {
       cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
       cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
@@ -1648,11 +1734,11 @@ int main(int argc, char* argv[])
     {
       cout << "Output width for correctly matched events (using likelihood with only CP template): " << endl;
       like->GetOutputWidth(scaleWidth, "CP");
-      cout << "Output width for generated evetns (using likelihood with only CP template): " << endl;
+      cout << "Output width for generated events (using likelihood with only CP template): " << endl;
       like->GetOutputWidth(scaleWidth, "gen");
     }
-    cout << "Output width from file (standard calculation): " << endl;
-    like->GetOutputWidth(llFileName+".txt", scaleWidth);
+    //cout << "Output width from file (standard calculation): " << endl;
+    //like->GetOutputWidth(llFileName+".txt", scaleWidth);
   }
   
   if (doPseudoExps)
@@ -1938,11 +2024,15 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("jet_E", jet_E, &b_jet_E);
   tree->SetBranchAddress("jet_M", jet_M, &b_jet_M);
   tree->SetBranchAddress("jet_bdiscr", jet_bdiscr, &b_jet_bdiscr);
+  tree->SetBranchAddress("met_px", &met_px, &b_met_px);
+  tree->SetBranchAddress("met_py", &met_py, &b_met_py);
   tree->SetBranchAddress("met_pt", &met_pt, &b_met_pt);
   tree->SetBranchAddress("met_phi", &met_phi, &b_met_phi);
   tree->SetBranchAddress("met_eta", &met_eta, &b_met_eta);
   tree->SetBranchAddress("met_Et", &met_Et, &b_met_Et);
   tree->SetBranchAddress("met_E", &met_E, &b_met_E);
+  tree->SetBranchAddress("met_corr_px", &met_corr_px, &b_met_corr_px);
+  tree->SetBranchAddress("met_corr_py", &met_corr_py, &b_met_corr_py);
   tree->SetBranchAddress("met_corr_pt", &met_corr_pt, &b_met_corr_pt);
   tree->SetBranchAddress("met_corr_phi", &met_corr_phi, &b_met_corr_phi);
   tree->SetBranchAddress("met_corr_eta", &met_corr_eta, &b_met_corr_eta);
@@ -2016,11 +2106,12 @@ void InitMSPlots()
   MSPlot["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
   MSPlot["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
-  MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 50, 0, 0.03, "d_{0}");
+  MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 50, 0, 0.01, "d_{0}");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
   MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
   MSPlot["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
@@ -2029,7 +2120,24 @@ void InitMSPlots()
   MSPlot["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
   MSPlot["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
   
-  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3} [GeV]");
+  MSPlot["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
+  MSPlot["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
+  MSPlot["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
+  MSPlot["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 50, 0, 0.01, "d_{0}");
+  MSPlot["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T} [GeV]");
+  MSPlot["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T} [GeV]");
+  MSPlot["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T} [GeV]");
+  MSPlot["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
+  MSPlot["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+  MSPlot["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
+  MSPlot["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+  
 
   MSPlot["nJets"] = new MultiSamplePlot(datasetsMSP, "nJets", 13, -0.5, 12.5, "# jets");
   MSPlot["nBJets"] = new MultiSamplePlot(datasetsMSP, "nBJets", 9, -0.5, 8.5, "# b jets");
@@ -2041,9 +2149,23 @@ void InitMSPlots()
   MSPlot["CSVv2Discr_highest"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
   MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
   
+  MSPlot["nJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nJets_aKF", 13, -0.5, 12.5, "# jets");
+  MSPlot["nBJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nBJets_aKF", 9, -0.5, 8.5, "# b jets");
+  MSPlot["CSVv2Discr_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_allJets_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_leadingJet_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_leadingJet_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+  MSPlot["CSVv2Discr_jet2_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet2_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+  MSPlot["CSVv2Discr_jet3_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet3_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+  MSPlot["CSVv2Discr_jet4_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet4_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+  MSPlot["CSVv2Discr_highest_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest_aKF", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
+  MSPlot["CSVv2Discr_jetNb_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb_aKF", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
+  
+  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3} [GeV]");
   MSPlot["min_Mlb"] = new MultiSamplePlot(datasetsMSP, "min_Mlb", 40, 0, 400, "M_{lb} [GeV]");
   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
   
+  MSPlot["M3_aKF"] = new MultiSamplePlot(datasetsMSP, "M3_aKF", 40, 60, 460, "M_{3} [GeV]");
+  MSPlot["min_Mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "min_Mlb_aKF", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["dR_Lep_B_aKF"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B_aKF", 25, 0, 5, "#Delta R(l,b)");
   
   /// Reco
   MSPlot["Reco_W_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_W_mass", 100, 0, 400, "M_{W} [GeV]");
@@ -2393,6 +2515,7 @@ void ClearMetaData()
   
   strSyst = "";
   eqLumi = 1.;
+  lumiWeight = 1.;
   
   nofHardSelected = 0;
   nofMETCleaned = 0;
@@ -2444,11 +2567,15 @@ void ClearLeaves()
     jet_M[i] = 0.;
     jet_bdiscr[i] = -1.;
   }
+  met_px = 0.;
+  met_py = 0.;
   met_pt = 0.;
   met_phi = 0.;
   met_eta = 0.;
   met_Et = 0.;
   met_E = 0.;
+  met_corr_px = 0.;
+  met_corr_py = 0.;
   met_corr_pt = 0.;
   met_corr_phi = 0.;
   met_corr_eta = 0.;
@@ -2625,6 +2752,11 @@ void ClearObjects()
 
 void FillGeneralPlots(vector<Dataset *> datasets, int d)
 {
+  FillGeneralPlots(datasets, d, "");
+}
+
+void FillGeneralPlots(vector<Dataset *> datasets, int d, string suffix)
+{
   double M3 = (selectedJets[0] + selectedJets[1] + selectedJets[2]).M();
   double Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
   
@@ -2639,49 +2771,49 @@ void FillGeneralPlots(vector<Dataset *> datasets, int d)
     }
   }
   
+  MSPlot["muon_pT"+suffix]->Fill(selectedLepton[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["muon_eta"+suffix]->Fill(selectedLepton[0].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["muon_phi"+suffix]->Fill(selectedLepton[0].Phi(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["muon_relIso"+suffix]->Fill(muon_relIso[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["muon_d0"+suffix]->Fill(muon_d0[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["leadingJet_pT"+suffix]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["jet2_pT"+suffix]->Fill(selectedJets[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_pT"+suffix]->Fill(met_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_eta"+suffix]->Fill(met_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_phi"+suffix]->Fill(met_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_corr_pT"+suffix]->Fill(met_corr_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_corr_eta"+suffix]->Fill(met_corr_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["met_corr_phi"+suffix]->Fill(met_corr_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["muon_pT"]->Fill(selectedLepton[0].Pt(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["muon_eta"]->Fill(selectedLepton[0].Eta(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["muon_phi"]->Fill(selectedLepton[0].Phi(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["muon_relIso"]->Fill(muon_relIso[0], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["muon_d0"]->Fill(muon_d0[0], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["leadingJet_pT"]->Fill(selectedJets[0].Pt(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["jet2_pT"]->Fill(selectedJets[1].Pt(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["jet3_pT"]->Fill(selectedJets[2].Pt(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["jet4_pT"]->Fill(selectedJets[3].Pt(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Ht_4leadingJets"]->Fill(Ht, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_pT"]->Fill(met_pt, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_eta"]->Fill(met_eta, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_phi"]->Fill(met_phi, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_corr_pT"]->Fill(met_corr_pt, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_corr_eta"]->Fill(met_corr_eta, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["met_corr_phi"]->Fill(met_corr_phi, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["min_Mlb"+suffix]->Fill(min_Mlb, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["dR_Lep_B"+suffix]->Fill(dRLepB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["M3"]->Fill(M3, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["min_Mlb"]->Fill(min_Mlb, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["dR_Lep_B"]->Fill(dRLepB, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["nJets"+suffix]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["nBJets"+suffix]->Fill(selectedBJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["nJets"]->Fill(selectedJets.size(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["nBJets"]->Fill(selectedBJets.size(), datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  
-  MSPlot["CSVv2Discr_leadingJet"]->Fill(jet_bdiscr[0], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet2"]->Fill(jet_bdiscr[1], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet3"]->Fill(jet_bdiscr[2], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet4"]->Fill(jet_bdiscr[3], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_leadingJet"+suffix]->Fill(jet_bdiscr[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_jet2"+suffix]->Fill(jet_bdiscr[1], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_jet3"+suffix]->Fill(jet_bdiscr[2], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_jet4"+suffix]->Fill(jet_bdiscr[3], datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
   int labelB = -1;
   double highestBDiscr = -999.;
   for (int iJet = 0; iJet < selectedJets.size(); iJet++)
   {
-    MSPlot["CSVv2Discr_allJets"]->Fill(jet_bdiscr[iJet], datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    MSPlot["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["CSVv2Discr_allJets"+suffix]->Fill(jet_bdiscr[iJet], datasets[d], true, lumiWeight*scaleFactor*widthSF);
     if ( jet_bdiscr[iJet] > highestBDiscr )
     {
       highestBDiscr = jet_bdiscr[iJet];
       labelB = iJet;
     }
   }
-  MSPlot["CSVv2Discr_highest"]->Fill(highestBDiscr, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jetNb"]->Fill(labelB, datasets[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_highest"+suffix]->Fill(highestBDiscr, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["CSVv2Discr_jetNb"+suffix]->Fill(labelB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
 }
 
 void FillMatchingPlots()
@@ -2776,6 +2908,12 @@ void FillCatsPlots(string catSuffix)
 {
   if (! isData)
   {
+    if (isTTbar)
+    {
+      histo1D["Reco_W_mass_reco"]->Fill(Wmass_reco_kf, widthSF);
+      histo1D["Reco_top_mass_reco"]->Fill(topmass_reco_kf, widthSF);
+      histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
+    }
     histo1D["Reduced_top_mass_bkgd"]->Fill(redTopMass);
     if ( isWP || isUP ) histo1D["Reduced_top_mass_TT_reco_WPUP"]->Fill(redTopMass, widthSF);
     histo1D[("Reduced_top_mass_TT_reco"+catSuffix).c_str()]->Fill(redTopMass, widthSF);
@@ -2815,41 +2953,41 @@ void FillCatsPlots(string catSuffix)
 
 void FillMSPlots(int d)
 {
-  FillGeneralPlots(datasetsMSP, d);
+  FillGeneralPlots(datasetsMSP, d, "_aKF");
   
-  MSPlot["Reco_W_mass"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_hadTop_mass"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_hadTop_pT"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_mlb"]->Fill(reco_minMlb, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_ttbar_mass"]->Fill(reco_ttbarMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_dR_lep_b_min"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-  MSPlot["Reco_dR_lep_b_max"]->Fill(reco_dRLepB_had, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+  MSPlot["Reco_W_mass"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_hadTop_mass"]->Fill(topmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_hadTop_pT"]->Fill(toppt_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_mlb"]->Fill(reco_minMlb, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_ttbar_mass"]->Fill(reco_ttbarMass, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_dR_lep_b_min"]->Fill(reco_dRLepB_lep, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlot["Reco_dR_lep_b_max"]->Fill(reco_dRLepB_had, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
   if ( redTopMass < 2.4 )
   {
-    MSPlot["Reco_Red_top_mass"]->Fill(redTopMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["Reco_Red_top_mass_fewerBins"]->Fill(redTopMass, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    MSPlot["Reco_Red_top_mass"]->Fill(redTopMass, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["Reco_Red_top_mass_fewerBins"]->Fill(redTopMass, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
   }
   
   if (doKinFit)
   {
     if ( kFitChi2 < 5 )
     {
-      MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+      MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
       if ( kFitChi2 < 2 )
-        MSPlot["KF_Chi2_narrow"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+        MSPlot["KF_Chi2_narrow"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     }
-    MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_W_mass_orig"]->Fill(Wmass_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_mass_orig"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_mass_corr"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_W_mass_orig"]->Fill(Wmass_reco_orig, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_W_mass_corr"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_orig"]->Fill(topmass_reco_orig, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_corr"]->Fill(topmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( topmass_reco_kf < 250 && topmass_reco_kf > 90 )
-      MSPlot["KF_top_mass_corr_fewerBins"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_pt_orig"]->Fill(toppt_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_pt_corr"]->Fill(toppt_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+      MSPlot["KF_top_mass_corr_fewerBins"]->Fill(topmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_top_pt_orig"]->Fill(toppt_reco_orig, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_top_pt_corr"]->Fill(toppt_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     
-    MSPlot["KF_top_mass_orig_short"]->Fill(topmass_reco_orig, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
-    MSPlot["KF_top_mass_corr_short"]->Fill(topmass_reco_kf, datasetsMSP[d], true, Luminosity/eqLumi*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_orig_short"]->Fill(topmass_reco_orig, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["KF_top_mass_corr_short"]->Fill(topmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
   }
 }
 
