@@ -39,13 +39,13 @@ using namespace TopTree;
 
 
 bool test = false;
-bool testHistos = false;
+bool testHistos = true;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool makeTGraphs = true;
+bool makeTGraphs = false;
 bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
@@ -93,7 +93,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170529_1431/";
+string inputDateLL = "170529_1844/";
 bool isData = false;
 bool isTTbar = false;
 
@@ -484,6 +484,7 @@ TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 
 double lumiWeight, scaleFactor, widthSF;
 double topPtRewSF, topPtSF, antiTopPtSF;
+bool foundTop62, foundAntiTop62;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
@@ -838,10 +839,10 @@ int main(int argc, char* argv[])
     MSPlot["nPVs_afterPU_up_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nPVs_afterPU_down_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
-    MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T} [GeV]");
-    MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T} [GeV]");
-    MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T} [GeV]");
-    MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T} [GeV]");
+    MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
+    MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
+    MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
+    MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
   }
   
   vJER.clear(); vJES.clear(); vPU.clear();
@@ -1035,7 +1036,7 @@ int main(int argc, char* argv[])
         else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
         else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
       
-        if (passedMETFilter)
+        if (makePlots && passedMETFilter)
         {
           MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor);
           MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF);
@@ -1047,12 +1048,10 @@ int main(int argc, char* argv[])
         else if (applyPUup) { scaleFactor *= puSF_up;}
         else if (applyPUdown) { scaleFactor *= puSF_down;}
         
-        MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
-        MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
 //        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
         if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
       }
-      else if (passedMETFilter)
+      else if (makePlots && passedMETFilter)
       {
         MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
         MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
@@ -1076,7 +1075,7 @@ int main(int argc, char* argv[])
         selectedJets.push_back(jet);
       }
       
-      if (passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
+      if (makePlots && passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
       
       if ( selectedJets.size() > 4 ) continue;
       nofHardSelected++;
@@ -1133,7 +1132,7 @@ int main(int argc, char* argv[])
           mcParticles.push_back(mcpart);
         }
         
-        
+        foundTop62 = false; foundAntiTop62 = false;
         for (unsigned int i = 0; i < mcParticles.size(); i++)
         {
           if ( test && verbose > 4 )
@@ -1151,15 +1150,33 @@ int main(int argc, char* argv[])
             if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
           }
           
-          if ( mc_pdgId[i] == pdgID_top && mc_status[i] == 62 )  // top
+          if ( mc_pdgId[i] == pdgID_top )  // top
           {
-            if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-            else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+            if ( mc_status[i] == 62 )
+            {
+              foundTop62 = true;
+              if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+            }
+            else if (! foundTop62 )
+            {
+              if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+            }
           }
-          else if ( mc_pdgId[i] == -pdgID_top && mc_status[i] == 62 )  // antitop
+          else if ( mc_pdgId[i] == -pdgID_top )  // antitop
           {
-            if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-            else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+            if ( mc_status[i] == 62 )
+            {
+              foundAntiTop62 = true;
+              if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+            }
+            else if (! foundAntiTop62)
+            {
+              if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+            }
           }
           
           
@@ -1644,9 +1661,11 @@ int main(int argc, char* argv[])
         cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
         cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
         if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
-          cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% is correctly matched." << endl;
+          cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
+        if (doKinFit) cout << "                        " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofAcceptedKFit) << "% of all events accepted by kinfitter is correctly matched." << endl;
+        else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofMETCleaned) << "% of all events is correctly matched." << endl;
       }
-      if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
+      if (doKinFit) cout << "Number of generated matched events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
       
       /// Resolution functions
       if (isTTbar && calculateResolutionFunctions)
@@ -2106,7 +2125,7 @@ void InitMSPlots()
   MSPlot["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
   MSPlot["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
-  MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 50, 0, 0.01, "d_{0}");
+  MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
   MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
   MSPlot["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T} [GeV]");
@@ -2124,7 +2143,7 @@ void InitMSPlots()
   MSPlot["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
   MSPlot["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
-  MSPlot["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 50, 0, 0.01, "d_{0}");
+  MSPlot["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
   MSPlot["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T} [GeV]");
   MSPlot["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
   MSPlot["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
