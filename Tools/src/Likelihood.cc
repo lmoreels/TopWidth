@@ -26,8 +26,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {0.0335704, 0.973947};
-const double Likelihood::calCurveParUnc_[2] = {0.00753509, 0.00382561};
+const double Likelihood::calCurvePar_[2] = {0.028244, 0.974992};
+const double Likelihood::calCurveParUnc_[2] = {0.00620311, 0.00200199};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -558,8 +558,9 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   int locMin = LocMinArray(nn, LLvalues);
   //std::cout << "Index of minimum LL value is " << locMin << std::endl;
   double centreVal = evalWidths[locMin];
-  double fitmin = centreVal - 0.8;
   double fitmax = centreVal + 0.8;
+  double fitmin = centreVal - 0.8;
+  if ( fitmin < 0. ) fitmin = 0.;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   
@@ -578,7 +579,9 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   TGraph *g2 = new TGraph(nn, evalWidths, LLreduced);
   g2->Fit(parabola,"R");
   
-  this->DrawOutputLogLikelihood(g2, parabola, outputWidth+3., 1.5*g2->Eval(outputWidth+3.), plotName, writeToFile);
+  
+  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-3., outputWidth+3., 1.5*g2->Eval(outputWidth+3.), plotName, writeToFile);
+  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-3.*sigma, outputWidth+3.*sigma, std::max(g2->Eval(outputWidth-3.*sigma),g2->Eval(outputWidth+3.*sigma)), plotName+"_zoom", writeToFile);
   
   delete g2;
   delete g;
@@ -663,13 +666,12 @@ void Likelihood::CalculatePull(double inputWidth)
   
   /// Fit distribution with Gaussian function
   //  Should have mean = 0 and sigma = 1
-  gStyle->SetOptFit(0111);
-  
   double fitMin = hPull->GetXaxis()->GetXmin();
   double fitMax = hPull->GetXaxis()->GetXmax();
   
   TF1 *gaus = new TF1("gaus", "gaus", fitMin, fitMax);
   hPull->Fit(gaus,"R");
+  gStyle->SetOptFit(0111);
   hPull->Write();
   gaus->Write();
   
@@ -757,14 +759,14 @@ void Likelihood::DrawLikelihoods()
   delete c2;
 }
 
-void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double maxX, double maxY, std::string name, bool writeToFile)
+void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double maxX, double maxY, std::string name, bool writeToFile)
 {
   std::string outputFileName = dirNameLLTxt_+name+".png";
   TCanvas* c1 = new TCanvas(name.c_str(), "-LogLikelihood vs. width");
   c1->cd();
   g->Draw("AP");
-  g->GetXaxis()->SetRangeUser(0,maxX);
-  g->GetYaxis()->SetRangeUser(-100,maxY);
+  g->GetXaxis()->SetRangeUser(minX,maxX);
+  g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
   g->GetXaxis()->SetTitle("#Gamma/#Gamma_{SM}");
   g->GetYaxis()->SetTitle("-Log(likelihood)");
   g->SetMarkerStyle(2);  //kPlus

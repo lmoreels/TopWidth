@@ -142,7 +142,7 @@ class Likelihood{
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);
     void DrawLikelihoods();
-    void DrawOutputLogLikelihood(TGraph* g, TF1* f, double maxX, double maxY, std::string name, bool writeToFile);
+    void DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double maxX, double maxY, std::string name, bool writeToFile);
     /// Read file
     void ReadLLValuesFromFile(std::string inputFileName);
     /// Write file
