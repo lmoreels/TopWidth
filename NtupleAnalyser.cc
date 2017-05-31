@@ -39,7 +39,7 @@ using namespace TopTree;
 
 
 bool test = false;
-bool testHistos = true;
+bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = true;
@@ -1810,59 +1810,62 @@ int main(int argc, char* argv[])
   ///   Write plots   ///
   ///*****************///
   
-  string rootFileName = "NtuplePlots_"+systStr+".root";
-  if (! doGenOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
-  
-  cout << " - Recreate output file ..." << endl;
-  TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
-  cout << "   Output file is " << pathOutput+rootFileName << endl;
-  
-  ///Write histograms
-  fout->cd();
-  
-  if (! doGenOnly)
+  if (makePlots)
   {
-    for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+    string rootFileName = "NtuplePlots_"+systStr+".root";
+    if (! doGenOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
+    
+    cout << " - Recreate output file ..." << endl;
+    TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
+    cout << "   Output file is " << pathOutput+rootFileName << endl;
+    
+    ///Write histograms
+    fout->cd();
+    
+    if (! doGenOnly)
     {
-      //cout << "MSPlot: " << it->first << endl;
-      MultiSamplePlot *temp = it->second;
-      string name = it->first;
-      temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
-      temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+      for (map<string,MultiSamplePlot*>::const_iterator it = MSPlot.begin(); it != MSPlot.end(); it++)
+      {
+        //cout << "MSPlot: " << it->first << endl;
+        MultiSamplePlot *temp = it->second;
+        string name = it->first;
+        temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+        temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+      }
     }
+    
+    // 1D
+    TDirectory* th1dir = fout->mkdir("1D_histograms");
+    th1dir->cd();
+    gStyle->SetOptStat(1111);
+    for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
+    {
+      TH1F *temp = it->second;
+      int N = temp->GetNbinsX();
+      temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
+      temp->SetBinContent(N+1,0);
+      temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
+      temp->Write();
+      TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
+      tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+    }
+    
+    // 2D
+    TDirectory* th2dir = fout->mkdir("2D_histograms");
+    th2dir->cd();
+    gStyle->SetPalette(55);
+    for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
+    {
+      TH2F *temp = it->second;
+      temp->Write();
+      TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
+      tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
+    }
+    
+    fout->Close();
+    
+    delete fout;
   }
-  
-  // 1D
-  TDirectory* th1dir = fout->mkdir("1D_histograms");
-  th1dir->cd();
-  gStyle->SetOptStat(1111);
-  for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
-  {
-    TH1F *temp = it->second;
-    int N = temp->GetNbinsX();
-    temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
-    temp->SetBinContent(N+1,0);
-    temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
-    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
-  }
-  
-  // 2D
-  TDirectory* th2dir = fout->mkdir("2D_histograms");
-  th2dir->cd();
-  gStyle->SetPalette(55);
-  for(std::map<std::string,TH2F*>::const_iterator it = histo2D.begin(); it != histo2D.end(); it++)
-  {
-    TH2F *temp = it->second;
-    temp->Write();
-    TCanvas* tempCanvas = TCanvasCreator(temp, it->first, "colz");
-    tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
-  }
-  
-  fout->Close();
-  
-  delete fout;
   
   
   
@@ -2121,39 +2124,39 @@ void InitTree(TTree* tree, bool isData)
 
 void InitMSPlots()
 {
-  MSPlot["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 22, 0, 440, "p_{T}", "GeV");
   MSPlot["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
   MSPlot["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
   MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
-  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T} [GeV]");
-  MSPlot["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T} [GeV]");
-  MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T}", "GeV");
+  MSPlot["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T}", "GeV");
+  MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
   MSPlot["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
   MSPlot["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  MSPlot["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
   MSPlot["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
   MSPlot["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
   
-  MSPlot["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T} [GeV]");
+  MSPlot["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T}", "GeV");
   MSPlot["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
   MSPlot["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
   MSPlot["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
   MSPlot["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
-  MSPlot["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T} [GeV]");
-  MSPlot["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T} [GeV]");
-  MSPlot["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T} [GeV]");
-  MSPlot["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T}", "GeV");
+  MSPlot["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T}", "GeV");
+  MSPlot["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T}", "GeV");
+  MSPlot["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
   MSPlot["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
   MSPlot["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  MSPlot["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T} [GeV]");
+  MSPlot["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
   MSPlot["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
   MSPlot["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
   
@@ -2178,21 +2181,21 @@ void InitMSPlots()
   MSPlot["CSVv2Discr_highest_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest_aKF", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
   MSPlot["CSVv2Discr_jetNb_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb_aKF", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
   
-  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3} [GeV]");
-  MSPlot["min_Mlb"] = new MultiSamplePlot(datasetsMSP, "min_Mlb", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3}", "GeV");
+  MSPlot["min_Mlb"] = new MultiSamplePlot(datasetsMSP, "min_Mlb", 40, 0, 400, "M_{lb}", "GeV");
   MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
   
-  MSPlot["M3_aKF"] = new MultiSamplePlot(datasetsMSP, "M3_aKF", 40, 60, 460, "M_{3} [GeV]");
-  MSPlot["min_Mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "min_Mlb_aKF", 40, 0, 400, "M_{lb} [GeV]");
+  MSPlot["M3_aKF"] = new MultiSamplePlot(datasetsMSP, "M3_aKF", 40, 60, 460, "M_{3}", "GeV");
+  MSPlot["min_Mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "min_Mlb_aKF", 40, 0, 400, "M_{lb}", "GeV");
   MSPlot["dR_Lep_B_aKF"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B_aKF", 25, 0, 5, "#Delta R(l,b)");
   
   /// Reco
-  MSPlot["Reco_W_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_W_mass", 100, 0, 400, "M_{W} [GeV]");
-  MSPlot["Reco_hadTop_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_hadTop_mass", 80, 0, 800, "M_{t} [GeV]");
-  MSPlot["Reco_hadTop_pT"] = new MultiSamplePlot(datasetsMSP, "Reco_hadTop_pT", 80, 0, 800, "p_{T} [GeV]");
+  MSPlot["Reco_W_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_W_mass", 100, 0, 400, "M_{W}", "GeV");
+  MSPlot["Reco_hadTop_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_hadTop_mass", 80, 0, 800, "M_{t}", "GeV");
+  MSPlot["Reco_hadTop_pT"] = new MultiSamplePlot(datasetsMSP, "Reco_hadTop_pT", 80, 0, 800, "p_{T}", "GeV");
   
-  MSPlot["Reco_mlb"] = new MultiSamplePlot(datasetsMSP, "Reco_mlb", 80, 0, 800, "M_{lb} [GeV]");
-  MSPlot["Reco_ttbar_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_ttbar_mass", 50, 0, 1000, "M_{t#bar{t}} [GeV]");
+  MSPlot["Reco_mlb"] = new MultiSamplePlot(datasetsMSP, "Reco_mlb", 80, 0, 800, "M_{lb}", "GeV");
+  MSPlot["Reco_ttbar_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_ttbar_mass", 50, 0, 1000, "M_{t#bar{t}}", "GeV");
 
   MSPlot["Reco_dR_lep_b_min"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_min", 25, 0, 5, "#Delta R(l,b_{l})");
   MSPlot["Reco_dR_lep_b_max"] = new MultiSamplePlot(datasetsMSP, "Reco_dR_lep_b_max", 25, 0, 5, "#Delta R(l,b_{h})");
@@ -2206,16 +2209,16 @@ void InitMSPlots()
     MSPlot["KF_Chi2"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter", 200, 0, 5, "#chi^{2}");
     MSPlot["KF_Chi2_narrow"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter  ", 200, 0, 2, "#chi^{2}");
     MSPlot["KF_Chi2_wide"] = new MultiSamplePlot(datasetsMSP, "Chi2 value of kinFitter ", 200, 0, 20, "#chi^{2}");
-    MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W} [GeV]");
-    MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t} [GeV]");
-    MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T} [GeV]");
-    MSPlot["KF_W_mass_corr"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 250, 0, 500, "m_{W,kf} [GeV]");
-    MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf} [GeV]");
-    MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf} [GeV]");
+    MSPlot["KF_W_mass_orig"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 250, 0, 500, "m_{W}", "GeV");
+    MSPlot["KF_top_mass_orig"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 400, 0, 800, "m_{t}", "GeV");
+    MSPlot["KF_top_pt_orig"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 400, 0, 800, "p_{T}", "GeV");
+    MSPlot["KF_W_mass_corr"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 250, 0, 500, "m_{W,kf}", "GeV");
+    MSPlot["KF_top_mass_corr"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 400, 0, 800, "m_{t,kf}", "GeV");
+    MSPlot["KF_top_pt_corr"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 400, 0, 800, "p_{T,kf}", "GeV");
     
-    MSPlot["KF_top_mass_orig_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_orig_short", 80, 0, 400, "m_{t} [GeV]");
-    MSPlot["KF_top_mass_corr_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_corr_short", 80, 0, 400, "m_{t,kf} [GeV]");
-    MSPlot["KF_top_mass_corr_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter ", 100, 90, 250, "m_{t,kf} [GeV]");
+    MSPlot["KF_top_mass_orig_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_orig_short", 80, 0, 400, "m_{t}", "GeV");
+    MSPlot["KF_top_mass_corr_short"] = new MultiSamplePlot(datasetsMSP, "KF_top_mass_corr_short", 80, 0, 400, "m_{t,kf}", "GeV");
+    MSPlot["KF_top_mass_corr_fewerBins"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter ", 100, 90, 250, "m_{t,kf}", "GeV");
   }
 }
 
