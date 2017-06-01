@@ -66,6 +66,359 @@ bool test = false;
 bool fillLooseTree = false;
 
 
+/// Configuration
+bool applyLeptonSF = true;
+bool applyPU = true;
+bool applyPUup = false;
+bool applyPUdown = false;
+bool applyJER = true;
+bool applyJERup = false;
+bool applyJERdown = false;
+bool applyJEC = true;
+bool applyJESup = true;  // Check implementation
+bool applyJESdown = false;
+bool calculateBTagSF = true;
+bool applyBTagSF = false;
+bool applyJetLeptonCleaning = true;
+
+
+/// Process arguments
+string dName, dTitle, channel;
+int color, ls, lw, jobNum = 0, startEvent = 0, endEvent = 200, JES, JER, fillBtagHisto;
+float normf, eqLumi, xSect, preselEff;
+string fileName;
+vector<string> vecfileNames;
+int ndatasets;
+bool localgridSubmission = false;
+int verbose;
+
+TRootEvent* event = 0;
+TRootRun *runInfos = new TRootRun();
+
+
+/// corrections
+string pathCalLept = "../TopTreeAnalysisBase/Calibrations/LeptonSF/MuonSF/20170413/";
+string pathCalBTag = "../TopTreeAnalysisBase/Calibrations/BTagging/";
+string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
+string pathCalJEC = "../TopTreeAnalysisBase/Calibrations/JECFiles/";
+
+// Leptons
+MuonSFWeight* muonSFWeightID_T_BCDEF;
+MuonSFWeight* muonSFWeightID_T_GH;
+MuonSFWeight* muonSFWeightIso_TT_BCDEF;
+MuonSFWeight* muonSFWeightIso_TT_GH;
+MuonSFWeight* muonSFWeightTrig_BCDEF;
+MuonSFWeight* muonSFWeightTrig_GH;
+TFile *muontrackfile;
+TGraph* h_muonSFWeightTrackEta;
+TGraph* h_muonSFWeightTrackAEta;
+TGraph* h_muonSFWeightTrackPV;
+
+// B tag
+BTagCalibration* bTagCalib;
+BTagCalibrationReader* bTagReader_M;
+BTagCalibrationReader* bTagReader_M_up;
+BTagCalibrationReader* bTagReader_M_down;
+BTagWeightTools* bTagHistoTool_M;
+BTagWeightTools* bTagHistoTool_M_up;
+BTagWeightTools* bTagHistoTool_M_down;
+
+// Pile-up
+LumiReWeighting LumiWeights;
+LumiReWeighting LumiWeights_up;
+LumiReWeighting LumiWeights_down;
+
+// JEC
+vector<JetCorrectorParameters> vCorrParam;
+JetCorrectionUncertainty *jecUnc;
+
+
+/// Define output trees
+TFile* fout;
+TTree* myTree;
+TTree* statTree;
+TTree* looseTree;
+
+
+/// Define var sizes
+const int maxMuons = 10;
+const int maxLooseMuons = 10;
+const int maxJets = 20;
+const int maxLooseJets = 30;
+const int maxMC = 200;
+
+/// Define variables for trees
+// stats of dataset
+Long64_t nEvents;
+Long64_t nEventsSel;
+Int_t nofPosWeights;
+Int_t nofNegWeights;
+Double_t sumW;
+Int_t cutFlow[10];
+Int_t cutFlow2[10];
+Int_t appliedJER;
+Int_t appliedJES;
+Int_t appliedPU;
+
+Long64_t nofEventsRunB;
+Long64_t nofEventsRunCD;
+Long64_t nofEventsRunEF;
+Long64_t nofEventsRunG;
+Long64_t nofEventsRunH;
+Long64_t nofSelEventsRunB;
+Long64_t nofSelEventsRunCD;
+Long64_t nofSelEventsRunEF;
+Long64_t nofSelEventsRunG;
+Long64_t nofSelEventsRunH;
+
+Long64_t nofEventsWithGenTop;
+Long64_t nofEventsWithGenTopWithStatus22or62;
+Long64_t nofEventsWithGenAntiTop;
+Long64_t nofEventsWithGenAntiTopWithStatus22or62;
+Long64_t nofTTEventsWithoutBothGenTops;
+Long64_t nofTTEventsWithoutGenTop;
+Long64_t nofTTEventsWithoutGenAntiTop;
+Long64_t nofTTEventsWithoutBothGenTopsWithStatus22;
+Long64_t nofTTEventsWithoutGenTopWithStatus22;
+Long64_t nofTTEventsWithoutGenAntiTopWithStatus22;
+Long64_t nofTTEventsWithoutBothGenTopsWithStatus62;
+Long64_t nofTTEventsWithoutGenTopWithStatus62;
+Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
+
+// event related variables
+Int_t run_num;
+Long64_t evt_num;
+Int_t lumi_num;
+Int_t nvtx;
+Int_t npu;
+Double_t rho;
+
+Bool_t isTrigged;
+Bool_t isSelected;
+Bool_t hasExactly4Jets;
+Bool_t hasJetLeptonCleaning;
+Bool_t hasLooseJetLeptonCleaning;
+Bool_t hasErasedBadOrCloneMuon;
+Bool_t hasErasedBadOrCloneLooseMuon;
+
+// filters
+Bool_t filterPV;
+Bool_t filterHBHENoise;
+Bool_t filterHBHEIso;
+Bool_t filterCSCTightHalo;
+Bool_t filterEcalDeadCell;
+Bool_t filterEEBadSc;  // recommended for data-only
+Bool_t filterBadChCand;
+Bool_t filterBadMuon;
+Bool_t passedMETFilter;
+
+Bool_t isDataRunB;
+Bool_t isDataRunC;
+Bool_t isDataRunD;
+Bool_t isDataRunE;
+Bool_t isDataRunF;
+Bool_t isDataRunG;
+Bool_t isDataRunH;
+Bool_t hasPosWeight;
+Bool_t hasNegWeight;
+Bool_t hasGenTop;
+Bool_t hasGenTopWithStatus22;
+Bool_t hasGenTopWithStatus62;
+Bool_t hasGenAntiTop;
+Bool_t hasGenAntiTopWithStatus22;
+Bool_t hasGenAntiTopWithStatus62;
+
+Double_t nloWeight; // for amc@nlo samples
+Double_t btagSF;
+Double_t btagSF_up;
+Double_t btagSF_down;
+Double_t puSF;
+Double_t puSF_up;
+Double_t puSF_down;
+Double_t muonIdSF_BCDEF[maxMuons];
+Double_t muonIdSF_GH[maxMuons];
+Double_t muonIdSF_up_BCDEF[maxMuons];
+Double_t muonIdSF_up_GH[maxMuons];
+Double_t muonIdSF_down_BCDEF[maxMuons];
+Double_t muonIdSF_down_GH[maxMuons];
+Double_t muonIsoSF_BCDEF[maxMuons];
+Double_t muonIsoSF_GH[maxMuons];
+Double_t muonIsoSF_up_BCDEF[maxMuons];
+Double_t muonIsoSF_up_GH[maxMuons];
+Double_t muonIsoSF_down_BCDEF[maxMuons];
+Double_t muonIsoSF_down_GH[maxMuons];
+Double_t muonTrigSF_BCDEF[maxMuons];
+Double_t muonTrigSF_GH[maxMuons];
+Double_t muonTrigSF_up_BCDEF[maxMuons];
+Double_t muonTrigSF_up_GH[maxMuons];
+Double_t muonTrigSF_down_BCDEF[maxMuons];
+Double_t muonTrigSF_down_GH[maxMuons];
+Double_t muonTrackSF_eta[maxMuons];
+Double_t muonTrackSF_aeta[maxMuons];
+Double_t muonTrackSF_nPV[maxMuons];
+
+Double_t looseMuonIdSF_BCDEF[maxLooseMuons];
+Double_t looseMuonIdSF_GH[maxLooseMuons];
+Double_t looseMuonIsoSF_BCDEF[maxLooseMuons];
+Double_t looseMuonIsoSF_GH[maxLooseMuons];
+Double_t looseMuonTrigSF_BCDEF[maxLooseMuons];
+Double_t looseMuonTrigSF_GH[maxLooseMuons];
+Double_t looseMuonTrackSF_eta[maxLooseMuons];
+Double_t looseMuonTrackSF_aeta[maxLooseMuons];
+Double_t looseMuonTrackSF_nPV[maxLooseMuons];
+
+
+
+/// Variables for muons
+Int_t nMuons;
+Int_t muon_charge[maxMuons];
+Double_t muon_pt[maxMuons];
+Double_t muon_phi[maxMuons];
+Double_t muon_eta[maxMuons];
+Double_t muon_E[maxMuons];
+Double_t muon_M[maxMuons];
+Double_t muon_d0[maxMuons];
+Double_t muon_chargedHadronIso[maxMuons];
+Double_t muon_neutralHadronIso[maxMuons];
+Double_t muon_photonIso[maxMuons];
+Double_t muon_puChargedHadronIso[maxMuons];
+Double_t muon_relIso[maxMuons];
+Double_t muon_pfIso[maxMuons];
+
+Int_t nLooseMuons;
+Int_t muon_loose_charge[maxLooseMuons];
+Double_t muon_loose_pt[maxLooseMuons];
+Double_t muon_loose_phi[maxLooseMuons];
+Double_t muon_loose_eta[maxLooseMuons];
+Double_t muon_loose_E[maxLooseMuons];
+Double_t muon_loose_d0[maxLooseMuons];
+Double_t muon_loose_relIso[maxLooseMuons];
+Bool_t isGlobalLooseMuon[maxLooseMuons];
+Bool_t isTrackerLooseMuon[maxLooseMuons];
+
+/// Variables for jets
+Int_t nJets;
+Int_t jet_nConstituents[maxMuons];
+Int_t jet_nChConstituents[maxMuons];
+Int_t jet_charge[maxMuons];
+Double_t jet_pt[maxMuons];
+Double_t jet_phi[maxMuons];
+Double_t jet_eta[maxMuons];
+Double_t jet_E[maxMuons];
+Double_t jet_M[maxMuons];
+Double_t jet_bdiscr[maxMuons];
+
+Int_t nLooseJets;
+Int_t jet_loose_nConstituents[maxLooseJets];
+Int_t jet_loose_nChConstituents[maxLooseJets];
+Int_t jet_loose_charge[maxLooseJets];
+Double_t jet_loose_pt[maxLooseJets];
+Double_t jet_loose_phi[maxLooseJets];
+Double_t jet_loose_eta[maxLooseJets];
+Double_t jet_loose_E[maxLooseJets];
+Double_t jet_loose_M[maxLooseJets];
+Double_t jet_loose_bdiscr[maxLooseJets];
+
+/// met
+Double_t met_px;
+Double_t met_py;
+Double_t met_pt;
+Double_t met_phi;
+Double_t met_eta;
+Double_t met_Et;
+Double_t met_E;
+
+Double_t met_corr_px;
+Double_t met_corr_py;
+Double_t met_corr_pt;
+Double_t met_corr_phi;
+Double_t met_corr_eta;
+Double_t met_corr_Et;
+Double_t met_corr_E;
+
+/// mcparticles
+Int_t nMCParticles;
+Int_t mc_status[maxMC];
+Int_t mc_pdgId[maxMC];
+Int_t mc_mother[maxMC];
+Int_t mc_granny[maxMC];
+Double_t mc_pt[maxMC];
+Double_t mc_phi[maxMC];
+Double_t mc_eta[maxMC];
+Double_t mc_E[maxMC];
+Double_t mc_M[maxMC];
+Bool_t mc_isLastCopy[maxMC];
+Bool_t mc_isPromptFinalState[maxMC];
+Bool_t mc_isHardProcess[maxMC];
+Bool_t mc_fromHardProcessFinalState[maxMC];
+
+
+/// Define vectors
+vector < TRootVertex* > vertex;
+vector < TRootMuon* > init_muons;
+vector < TRootElectron* > init_electrons;
+vector < TRootJet* > init_jets_corrected;
+vector < TRootJet* > init_jets;
+vector < TRootMET* > mets;
+vector < TRootMET* > mets_corrected;
+vector < TRootGenJet* > genjets;
+vector < TRootMCParticle* > mcParticles;
+
+vector < TRootPFJet* > jetsBC;
+vector < TRootPFJet* > selectedJets;
+vector < TRootPFJet* > selectedBJets;
+vector < TRootPFJet* > selectedLooseJets;
+vector < TRootMuon* > selectedMuons;
+vector < TRootMuon* > selectedMuonsBC;
+vector < TRootMuon* > selectedLooseMuons;
+vector < TRootMuon* > selectedLooseMuonsBC;
+vector < TRootMuon* > vetoMuons;
+vector < TRootElectron* > selectedElectrons;
+vector < TRootElectron* > selectedLooseElectrons;
+vector < TRootElectron* > vetoElectrons;
+
+
+
+/// Selection
+float muonPTSel = 26.; // GeV
+float muonEtaSel = 2.4;
+float muonRelIsoSel = 0.15;  // Tight muon
+string muonWP = "Tight";
+
+float muonPTVeto = 10.; // GeV
+float muonEtaVeto = 2.5;
+float muonRelIsoVeto = 0.25;  // Loose muon
+
+float electronPTSel = 34.; // GeV
+float electronEtaSel = 2.1;
+string electronWP = "Tight";
+
+float electronPTVeto = 15.; // GeV
+float electronEtaVeto = 2.5;
+
+float jetPT = 30.; // GeV
+float jetEta = 2.4;  // to allow b tagging
+
+
+/// Working points for b tagging
+
+// Updated 13/04/17, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
+double CSVv2Loose  = 0.5426;
+double CSVv2Medium = 0.8484;
+double CSVv2Tight  = 0.9535;
+
+
+/// Variables
+int maxMCParticles = -1;
+bool isAmc = false;
+bool isData = false;
+bool isTTbar = false;
+
+bool isGoodPV;
+bool isBadMuon, isCloneMuon;
+bool toBeErased;
+
+
 string ConvertIntToString(int Number, int pad)
 {
   ostringstream convert;
@@ -99,6 +452,899 @@ string MakeTimeStamp()
   return date_str;
 }
 
+void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
+{
+  statTree->Branch("nEvents" , &nEvents, "nEvents/L");
+  statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
+  statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/I");
+  statTree->Branch("cutFlow2",&cutFlow2,"cutFlow2[10]/I");
+  statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
+  statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
+  statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
+  if (isData)
+  {
+    statTree->Branch("nofEventsRunB",&nofEventsRunB,"nofEventsRunB/L");
+    statTree->Branch("nofEventsRunCD",&nofEventsRunCD,"nofEventsRunCD/L");
+    statTree->Branch("nofEventsRunEF",&nofEventsRunEF,"nofEventsRunEF/L");
+    statTree->Branch("nofEventsRunG",&nofEventsRunG,"nofEventsRunG/L");
+    statTree->Branch("nofEventsRunH",&nofEventsRunH,"nofEventsRunH/L");
+    statTree->Branch("nofSelEventsRunB",&nofSelEventsRunB,"nofSelEventsRunB/L");
+    statTree->Branch("nofSelEventsRunCD",&nofSelEventsRunCD,"nofSelEventsRunCD/L");
+    statTree->Branch("nofSelEventsRunEF",&nofSelEventsRunEF,"nofSelEventsRunEF/L");
+    statTree->Branch("nofSelEventsRunG",&nofSelEventsRunG,"nofSelEventsRunG/L");
+    statTree->Branch("nofSelEventsRunH",&nofSelEventsRunH,"nofSelEventsRunH/L");
+  }
+  else
+  {
+    statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
+    statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
+    statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
+    statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
+    if (isTTbar)
+    {
+      statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
+      statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
+      statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
+      statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
+      statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
+      statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
+      statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
+      statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
+      statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
+    }
+  }
+  if (isAmc)
+  {
+    statTree->Branch("nofPosWeights",&nofPosWeights,"nofPosWeights/I");
+    statTree->Branch("nofNegWeights",&nofNegWeights,"nofNegWeights/I");
+    statTree->Branch("sumW", &sumW, "sumW/D");
+    myTree->Branch("hasPosWeight",&hasPosWeight,"hasPosWeight/O");
+    myTree->Branch("hasNegWeight",&hasNegWeight,"hasNegWeight/O");
+  }
+  
+  myTree->Branch("run_num",&run_num,"run_num/I");
+  myTree->Branch("evt_num",&evt_num,"evt_num/L");
+  myTree->Branch("lumi_num",&lumi_num,"lumi_num/I");
+  myTree->Branch("nvtx",&nvtx,"nvtx/I");
+  myTree->Branch("npu",&npu,"npu/I");
+  myTree->Branch("rho",&rho,"rho/D");
+  myTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
+  myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
+  myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
+  myTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
+  if (makeLooseTree)
+  {
+    looseTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
+    looseTree->Branch("hasLooseJetLeptonCleaning",&hasLooseJetLeptonCleaning,"hasLooseJetLeptonCleaning/O");
+    looseTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
+    looseTree->Branch("hasErasedBadOrCloneLooseMuon",&hasErasedBadOrCloneLooseMuon,"hasErasedBadOrCloneLooseMuon/O");
+  }
+  
+  myTree->Branch("filterPV",&filterPV,"filterPV/O");
+  myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
+  myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
+  myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
+  myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
+  myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
+  myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
+  myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
+  myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
+  
+  if (isData)
+  {
+    myTree->Branch("isDataRunB",&isDataRunB,"isDataRunB/O");
+    myTree->Branch("isDataRunC",&isDataRunC,"isDataRunC/O");
+    myTree->Branch("isDataRunD",&isDataRunD,"isDataRunD/O");
+    myTree->Branch("isDataRunE",&isDataRunE,"isDataRunE/O");
+    myTree->Branch("isDataRunF",&isDataRunF,"isDataRunF/O");
+    myTree->Branch("isDataRunG",&isDataRunG,"isDataRunG/O");
+    myTree->Branch("isDataRunH",&isDataRunH,"isDataRunH/O");
+  }
+  
+  // muons
+  myTree->Branch("nMuons",&nMuons, "nMuons/I");
+  myTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/I");
+  myTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
+  myTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
+  myTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
+  myTree->Branch("muon_E",&muon_E,"muon_E[nMuons]/D");
+  myTree->Branch("muon_M",&muon_M,"muon_M[nMuons]/D");
+  myTree->Branch("muon_d0",&muon_d0,"muon_d0[nMuons]/D");
+  myTree->Branch("muon_chargedHadronIso",&muon_chargedHadronIso,"muon_chargedHadronIso[nMuons]/D");
+  myTree->Branch("muon_neutralHadronIso",&muon_neutralHadronIso,"muon_neutralHadronIso[nMuons]/D");
+  myTree->Branch("muon_photonIso",&muon_photonIso,"muon_photonIso[nMuons]/D");
+  myTree->Branch("muon_puChargedHadronIso",&muon_puChargedHadronIso,"muon_puChargedHadronIso[nMuons]/D");
+  myTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
+  myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");
+  
+  if (makeLooseTree)
+  {
+    looseTree->Branch("nMuons",&nMuons, "nMuons/I");
+    looseTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/I");
+    looseTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
+    looseTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
+    looseTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
+    looseTree->Branch("muon_E",&muon_E,"muon_E[nMuons]/D");
+    looseTree->Branch("muon_d0",&muon_d0,"muon_d0[nMuons]/D");
+    looseTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
+    
+    looseTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
+    looseTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/I");
+    looseTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
+    looseTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
+    looseTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
+    looseTree->Branch("muon_loose_E",&muon_loose_E,"muon_loose_E[nLooseMuons]/D");
+    looseTree->Branch("muon_loose_d0",&muon_loose_d0,"muon_loose_d0[nLooseMuons]/D");
+    looseTree->Branch("muon_loose_relIso",&muon_loose_relIso,"muon_loose_relIso[nLooseMuons]/D");
+    looseTree->Branch("isGlobalLooseMuon",&isGlobalLooseMuon,"isGlobalLooseMuon[nLooseMuons]/O");
+    looseTree->Branch("isTrackerLooseMuon",&isTrackerLooseMuon,"isTrackerLooseMuon[nLooseMuons]/O");
+  }
+  
+  // jets
+  myTree->Branch("nJets",&nJets,"nJets/I");
+  myTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
+  myTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
+  myTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/I");
+  myTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
+  myTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
+  myTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
+  myTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
+  myTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
+  myTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
+  
+  if (makeLooseTree)
+  {
+    looseTree->Branch("nJets",&nJets,"nJets/I");
+    looseTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
+    looseTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
+    looseTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/I");
+    looseTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
+    looseTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
+    looseTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
+    looseTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
+    looseTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
+    looseTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
+    
+    looseTree->Branch("nLooseJets",&nLooseJets,"nLooseJets/I");
+    looseTree->Branch("jet_loose_nConstituents",&jet_loose_nConstituents,"jet_loose_nConstituents[nLooseJets]/I");
+    looseTree->Branch("jet_loose_nChConstituents",&jet_loose_nChConstituents,"jet_loose_nChConstituents[nLooseJets]/I");
+    looseTree->Branch("jet_loose_charge",&jet_loose_charge,"jet_loose_charge[nLooseJets]/I");
+    looseTree->Branch("jet_loose_pt",&jet_loose_pt,"jet_loose_pt[nLooseJets]/D");
+    looseTree->Branch("jet_loose_phi",&jet_loose_phi,"jet_loose_phi[nLooseJets]/D");
+    looseTree->Branch("jet_loose_eta",&jet_loose_eta,"jet_loose_eta[nLooseJets]/D");
+    looseTree->Branch("jet_loose_E",&jet_loose_E,"jet_loose_E[nLooseJets]/D");
+    looseTree->Branch("jet_loose_M",&jet_loose_M,"jet_loose_M[nLooseJets]/D");
+    looseTree->Branch("jet_loose_bdiscr",&jet_loose_bdiscr,"jet_loose_bdiscr[nLooseJets]/D");
+  }
+  
+  // met
+  myTree->Branch("met_px", &met_px, "met_px/D");
+  myTree->Branch("met_py", &met_py, "met_py/D");
+  myTree->Branch("met_pt", &met_pt, "met_pt/D");
+  myTree->Branch("met_phi", &met_phi, "met_phi/D");
+  myTree->Branch("met_eta", &met_eta,"met_eta/D");
+  myTree->Branch("met_Et", &met_Et,"met_Et/D");
+  myTree->Branch("met_E", &met_E,"met_E/D");
+  
+  myTree->Branch("met_corr_px", &met_corr_px, "met_corr_px/D");
+  myTree->Branch("met_corr_py", &met_corr_py, "met_corr_py/D");
+  myTree->Branch("met_corr_pt", &met_corr_pt, "met_corr_pt/D");
+  myTree->Branch("met_corr_phi", &met_corr_phi, "met_corr_phi/D");
+  myTree->Branch("met_corr_eta", &met_corr_eta,"met_corr_eta/D");
+  myTree->Branch("met_corr_Et", &met_corr_Et,"met_corr_Et/D");
+  myTree->Branch("met_corr_E", &met_corr_E,"met_corr_E/D");
+  
+  
+  // mcparticles
+  if (! isData)
+  {
+    myTree->Branch("nMCParticles",&nMCParticles,"nMCParticles/I");
+    myTree->Branch("mc_status",&mc_status,"mc_status[nMCParticles]/I");
+    myTree->Branch("mc_pdgId",&mc_pdgId,"mc_pdgId[nMCParticles]/I");
+    myTree->Branch("mc_mother",&mc_mother,"mc_mother[nMCParticles]/I");
+    myTree->Branch("mc_granny",&mc_granny,"mc_granny[nMCParticles]/I");
+    myTree->Branch("mc_pt",&mc_pt,"mc_pt[nMCParticles]/D");
+    myTree->Branch("mc_phi",&mc_phi,"mc_phi[nMCParticles]/D");
+    myTree->Branch("mc_eta",&mc_eta,"mc_eta[nMCParticles]/D");
+    myTree->Branch("mc_E",&mc_E,"mc_E[nMCParticles]/D");
+    myTree->Branch("mc_M",&mc_M,"mc_M[nMCParticles]/D");
+    myTree->Branch("mc_isLastCopy", &mc_isLastCopy, "mc_isLastCopy[nMCParticles]/O");
+    myTree->Branch("mc_isPromptFinalState", &mc_isPromptFinalState, "mc_isPromptFinalState[nMCParticles]/O");
+    myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
+    myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
+    myTree->Branch("hasGenTop", &hasGenTop, "hasGenTop/O");
+    myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
+    myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
+    myTree->Branch("hasGenAntiTop", &hasGenAntiTop, "hasGenAntiTop/O");
+    myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
+    myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
+  }
+  
+  
+  /// SFs
+  if (! isData)
+  {
+    if (isAmc) myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
+    myTree->Branch("btagSF",&btagSF,"btagSF/D");
+    myTree->Branch("btagSF_up",&btagSF_up,"btagSF_up/D");
+    myTree->Branch("btagSF_down",&btagSF_down,"btagSF_down/D");
+    myTree->Branch("puSF",&puSF,"puSF/D");
+    myTree->Branch("puSF_up",&puSF_up,"puSF_up/D");
+    myTree->Branch("puSF_down",&puSF_down,"puSF_down/D");
+    
+    myTree->Branch("muonIdSF_BCDEF",&muonIdSF_BCDEF,"muonIdSF_BCDEF[nMuons]/D");
+    myTree->Branch("muonIdSF_GH",&muonIdSF_GH,"muonIdSF_GH[nMuons]/D");
+    myTree->Branch("muonIdSF_up_BCDEF",&muonIdSF_up_BCDEF,"muonIdSF_up_BCDEF[nMuons]/D");
+    myTree->Branch("muonIdSF_up_GH",&muonIdSF_up_GH,"muonIdSF_up_GH[nMuons]/D");
+    myTree->Branch("muonIdSF_down_BCDEF",&muonIdSF_down_BCDEF,"muonIdSF_down_BCDEF[nMuons]/D");
+    myTree->Branch("muonIdSF_down_GH",&muonIdSF_down_GH,"muonIdSF_down_GH[nMuons]/D");
+    myTree->Branch("muonIsoSF_BCDEF",&muonIsoSF_BCDEF, "muonIsoSF_BCDEF[nMuons]/D");
+    myTree->Branch("muonIsoSF_GH",&muonIsoSF_GH, "muonIsoSF_GH[nMuons]/D");
+    myTree->Branch("muonIsoSF_up_BCDEF",&muonIsoSF_up_BCDEF, "muonIsoSF_up_BCDEF[nMuons]/D");
+    myTree->Branch("muonIsoSF_up_GH",&muonIsoSF_up_GH, "muonIsoSF_up_GH[nMuons]/D");
+    myTree->Branch("muonIsoSF_down_BCDEF",&muonIsoSF_down_BCDEF, "muonIsoSF_down_BCDEF[nMuons]/D");
+    myTree->Branch("muonIsoSF_down_GH",&muonIsoSF_down_GH, "muonIsoSF_down_GH[nMuons]/D");
+    myTree->Branch("muonTrigSF_BCDEF",&muonTrigSF_BCDEF,"muonTrigSF_BCDEF[nMuons]/D");
+    myTree->Branch("muonTrigSF_GH",&muonTrigSF_GH,"muonTrigSF_GH[nMuons]/D");
+    myTree->Branch("muonTrigSF_up_BCDEF",&muonTrigSF_up_BCDEF,"muonTrigSF_up_BCDEF[nMuons]/D");
+    myTree->Branch("muonTrigSF_up_GH",&muonTrigSF_up_GH,"muonTrigSF_up_GH[nMuons]/D");
+    myTree->Branch("muonTrigSF_down_BCDEF",&muonTrigSF_down_BCDEF,"muonTrigSF_down_BCDEF[nMuons]/D");
+    myTree->Branch("muonTrigSF_down_GH",&muonTrigSF_down_GH,"muonTrigSF_down_GH[nMuons]/D");
+    myTree->Branch("muonTrackSF_eta",&muonTrackSF_eta,"muonTrackSF_eta[nMuons]/D");
+    myTree->Branch("muonTrackSF_aeta",&muonTrackSF_aeta,"muonTrackSF_aeta[nMuons]/D");
+    myTree->Branch("muonTrackSF_nPV",&muonTrackSF_nPV,"muonTrackSF_nPV[nMuons]/D");
+    
+    if (makeLooseTree)
+    {
+      looseTree->Branch("puSF",&puSF,"puSF/D");
+      
+      looseTree->Branch("muonIdSF_BCDEF",&muonIdSF_BCDEF,"muonIdSF_BCDEF[nMuons]/D");
+      looseTree->Branch("muonIdSF_GH",&muonIdSF_GH,"muonIdSF_GH[nMuons]/D");
+      looseTree->Branch("muonIsoSF_BCDEF",&muonIsoSF_BCDEF, "muonIsoSF_BCDEF[nMuons]/D");
+      looseTree->Branch("muonIsoSF_GH",&muonIsoSF_GH, "muonIsoSF_GH[nMuons]/D");
+      looseTree->Branch("muonTrigSF_BCDEF",&muonTrigSF_BCDEF,"muonTrigSF_BCDEF[nMuons]/D");
+      looseTree->Branch("muonTrigSF_GH",&muonTrigSF_GH,"muonTrigSF_GH[nMuons]/D");
+      looseTree->Branch("muonTrackSF_eta",&muonTrackSF_eta,"muonTrackSF_eta[nMuons]/D");
+      looseTree->Branch("muonTrackSF_aeta",&muonTrackSF_aeta,"muonTrackSF_aeta[nMuons]/D");
+      looseTree->Branch("muonTrackSF_nPV",&muonTrackSF_nPV,"muonTrackSF_nPV[nMuons]/D");
+      
+      looseTree->Branch("looseMuonIdSF_BCDEF",&looseMuonIdSF_BCDEF,"looseMuonIdSF_BCDEF[nLooseMuons]/D");
+      looseTree->Branch("looseMuonIdSF_GH",&looseMuonIdSF_GH,"looseMuonIdSF_GH[nLooseMuons]/D");
+      looseTree->Branch("looseMuonIsoSF_BCDEF",&looseMuonIsoSF_BCDEF, "looseMuonIsoSF_BCDEF[nLooseMuons]/D");
+      looseTree->Branch("looseMuonIsoSF_GH",&looseMuonIsoSF_GH, "looseMuonIsoSF_GH[nLooseMuons]/D");
+      looseTree->Branch("looseMuonTrigSF_BCDEF",&looseMuonTrigSF_BCDEF,"looseMuonTrigSF_BCDEF[nLooseMuons]/D");
+      looseTree->Branch("looseMuonTrigSF_GH",&looseMuonTrigSF_GH,"looseMuonTrigSF_GH[nLooseMuons]/D");
+      looseTree->Branch("looseMuonTrackSF_eta",&looseMuonTrackSF_eta,"looseMuonTrackSF_eta[nLooseMuons]/D");
+      looseTree->Branch("looseMuonTrackSF_aeta",&looseMuonTrackSF_aeta,"looseMuonTrackSF_aeta[nLooseMuons]/D");
+      looseTree->Branch("looseMuonTrackSF_nPV",&looseMuonTrackSF_nPV,"looseMuonTrackSF_nPV[nLooseMuons]/D");
+    }
+  }
+}
+
+void ClearMeta()
+{
+  nEvents = 0;
+  nEventsSel = 0;
+  nofPosWeights = 0;
+  nofNegWeights = 0;
+  sumW = 0.;
+  nofEventsRunB = 0;
+  nofEventsRunCD = 0;
+  nofEventsRunEF = 0;
+  nofEventsRunG = 0;
+  nofEventsRunH = 0;
+  nofSelEventsRunB = 0;
+  nofSelEventsRunCD = 0;
+  nofSelEventsRunEF = 0;
+  nofSelEventsRunG = 0;
+  nofSelEventsRunH = 0;
+  nofEventsWithGenTop = 0;
+  nofEventsWithGenTopWithStatus22or62 = 0;
+  nofEventsWithGenAntiTop = 0;
+  nofEventsWithGenAntiTopWithStatus22or62 = 0;
+  nofTTEventsWithoutBothGenTops = 0;
+  nofTTEventsWithoutGenTop = 0;
+  nofTTEventsWithoutGenAntiTop = 0;
+  nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
+  nofTTEventsWithoutGenTopWithStatus22 = 0;
+  nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
+  nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
+  nofTTEventsWithoutGenTopWithStatus62 = 0;
+  nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+  
+  for (Int_t i = 0; i < 10; i++)
+  {
+    cutFlow[i] = 0;
+    cutFlow2[i] = 0;
+  }
+}
+
+void ClearVectors()
+{
+  vertex.clear();
+  init_muons.clear();
+  init_electrons.clear();
+  init_jets_corrected.clear();
+  init_jets.clear();
+  mets.clear();
+  mets_corrected.clear();
+  genjets.clear();
+  mcParticles.clear();
+  
+  jetsBC.clear();
+  selectedJets.clear();
+  selectedBJets.clear();
+  selectedLooseJets.clear();
+  selectedMuons.clear();
+  selectedMuonsBC.clear();
+  selectedLooseMuons.clear();
+  selectedLooseMuonsBC.clear();
+  vetoMuons.clear();
+  selectedElectrons.clear();
+  selectedLooseElectrons.clear();
+  vetoElectrons.clear();
+}
+
+void ClearObjects()
+{
+  isTrigged = false;
+  isSelected = false;
+  hasExactly4Jets = false;
+  hasJetLeptonCleaning = false;
+  hasLooseJetLeptonCleaning = false;
+  hasErasedBadOrCloneMuon = false;
+  hasErasedBadOrCloneLooseMuon = false;
+  
+  filterHBHENoise = false;
+  filterHBHEIso = false;
+  filterCSCTightHalo = false;
+  filterEcalDeadCell = false;
+  filterEEBadSc = false;  // recommended for data-only
+  filterBadChCand = false;
+  filterBadMuon = false;
+  passedMETFilter = false;
+  
+  isDataRunB = false;
+  isDataRunC = false;
+  isDataRunD = false;
+  isDataRunE = false;
+  isDataRunF = false;
+  isDataRunG = false;
+  isDataRunH = false;
+  hasPosWeight = false;
+  hasNegWeight = false;
+  hasGenTop = false;
+  hasGenTopWithStatus22 = false;
+  hasGenTopWithStatus62 = false;
+  hasGenAntiTop = false;
+  hasGenAntiTopWithStatus22 = false;
+  hasGenAntiTopWithStatus62 = false;
+  
+  nloWeight = 1.; // for amc@nlo samples
+  btagSF = 1.;
+  btagSF_up = 1.;
+  btagSF_down = 1.;
+  puSF = 1.;
+  puSF_up = 1.;
+  puSF_down = 1.;
+  for (Int_t i = 0; i < maxMuons; i++)
+  {
+    muonIdSF_BCDEF[i] = 1.;
+    muonIdSF_GH[i] = 1.;
+    muonIdSF_up_BCDEF[i] = 1.;
+    muonIdSF_up_GH[i] = 1.;
+    muonIdSF_down_BCDEF[i] = 1.;
+    muonIdSF_down_GH[i] = 1.;
+    muonIsoSF_BCDEF[i] = 1.;
+    muonIsoSF_GH[i] = 1.;
+    muonIsoSF_up_BCDEF[i] = 1.;
+    muonIsoSF_up_GH[i] = 1.;
+    muonIsoSF_down_BCDEF[i] = 1.;
+    muonIsoSF_down_GH[i] = 1.;
+    muonTrigSF_BCDEF[i] = 1.;
+    muonTrigSF_GH[i] = 1.;
+    muonTrigSF_up_BCDEF[i] = 1.;
+    muonTrigSF_up_GH[i] = 1.;
+    muonTrigSF_down_BCDEF[i] = 1.;
+    muonTrigSF_down_GH[i] = 1.;
+    muonTrackSF_eta[i] = 1.;
+    muonTrackSF_aeta[i] = 1.;
+    muonTrackSF_nPV[i] = 1.;
+  }
+  for (Int_t i = 0; i < maxLooseMuons; i++)
+  {
+    looseMuonIdSF_BCDEF[i] = 1.;
+    looseMuonIdSF_GH[i] = 1.;
+    looseMuonIsoSF_BCDEF[i] = 1.;
+    looseMuonIsoSF_GH[i] = 1.;
+    looseMuonTrigSF_BCDEF[i] = 1.;
+    looseMuonTrigSF_GH[i] = 1.;
+    looseMuonTrackSF_eta[i] = 1.;
+    looseMuonTrackSF_aeta[i] = 1.;
+    looseMuonTrackSF_nPV[i] = 1.;
+  }
+  
+  
+  nMuons = -1;
+  nLooseMuons = -1;
+  nJets = -1;
+  nLooseJets = -1;
+  
+  for (Int_t i = 0; i < maxMuons; i++)
+  {
+    muon_charge[i] = 0;
+    muon_pt[i] = 0.;
+    muon_phi[i] = 0.;
+    muon_eta[i] = 0.;
+    muon_E[i] = 0.;
+    muon_M[i] = 0.;
+    muon_d0[i] = 999.;
+    muon_chargedHadronIso[i] = 999.;
+    muon_neutralHadronIso[i] = 999.;
+    muon_photonIso[i] = 999.;
+    muon_puChargedHadronIso[i] = 999.;
+    muon_relIso[i] = 999.;
+    muon_pfIso[i] = 999.;
+  }
+  
+  for (Int_t i = 0; i < maxLooseMuons; i++)
+  {
+    muon_loose_charge[i] = 0;
+    muon_loose_pt[i] = 0.;
+    muon_loose_phi[i] = 0.;
+    muon_loose_eta[i] = 0.;
+    muon_loose_E[i] = 0.;
+    muon_loose_d0[i] = 999.;
+    muon_loose_relIso[i] = 999.;
+    isGlobalLooseMuon[i] = false;
+    isTrackerLooseMuon[i] = false;
+  }
+  
+  for (Int_t i = 0; i < maxJets; i++)
+  {
+    jet_nConstituents[i] = 0.;
+    jet_nChConstituents[i] = 0.;
+    jet_charge[i] = 0;
+    jet_pt[i] = 0.;
+    jet_phi[i] = 0.;
+    jet_eta[i] = 0.;
+    jet_E[i] = 0.;
+    jet_M[i] = 0.;
+    jet_bdiscr[i] = -1.;
+  }
+  
+  for (Int_t i = 0; i < maxLooseJets; i++)
+  {
+    jet_loose_nConstituents[i] = 0;
+    jet_loose_nChConstituents[i] = 0;
+    jet_loose_charge[i] = 0;
+    jet_loose_pt[i] = 0.;
+    jet_loose_phi[i] = 0.;
+    jet_loose_eta[i] = 0.;
+    jet_loose_E[i] = 0.;
+    jet_loose_M[i] = 0.;
+    jet_loose_bdiscr[i] = 0.;
+  }
+  
+  met_px = 0.;
+  met_py = 0.;
+  met_pt = 0.;
+  met_phi = 0.;
+  met_eta = 0.;
+  met_Et = 0.;
+  met_E = 0.;
+  
+  met_corr_px = 0.;
+  met_corr_py = 0.;
+  met_corr_pt = 0.;
+  met_corr_phi = 0.;
+  met_corr_eta = 0.;
+  met_corr_Et = 0.;
+  met_corr_E = 0.;
+  
+  /// mcparticles
+  nMCParticles = -1;
+  for (Int_t i = 0; i < maxMC; i++)
+  {
+    mc_status[i] = -1;
+    mc_pdgId[i] = 0;
+    mc_mother[i] = 0;
+    mc_granny[i] = 0;
+    mc_pt[i] = 0.;
+    mc_phi[i] = 0.;
+    mc_eta[i] = 0.;
+    mc_E[i] = 0.;
+    mc_M[i] = 0.;
+    mc_isLastCopy[i] = false;
+    mc_isPromptFinalState[i] = false;
+    mc_isHardProcess[i] = false;
+    mc_fromHardProcessFinalState[i] = false;
+  }
+}
+
+void ClearVars()
+{
+  ClearVectors();
+  ClearObjects();
+  
+  isGoodPV = false;
+  isBadMuon = false;
+  isCloneMuon = false;
+  toBeErased = false;
+}
+
+void InitJEC(bool isData, string dataSetName)
+{
+  if (! isData)
+  {
+    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt");
+    vCorrParam.push_back(*L1JetCorPar);
+    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L2Relative_AK4PFchs.txt");
+    vCorrParam.push_back(*L2JetCorPar);
+    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L3Absolute_AK4PFchs.txt");
+    vCorrParam.push_back(*L3JetCorPar);
+    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_Uncertainty_AK4PFchs.txt");
+  }
+  else if ( dataSetName.find("Run2016B") != std::string::npos || dataSetName.find("Run2016C") != std::string::npos || dataSetName.find("Run2016D") != std::string::npos )
+  {
+    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L1FastJet_AK4PFchs.txt");
+    vCorrParam.push_back(*L1JetCorPar);
+    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2Relative_AK4PFchs.txt");
+    vCorrParam.push_back(*L2JetCorPar);
+    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L3Absolute_AK4PFchs.txt");
+    vCorrParam.push_back(*L3JetCorPar);
+    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2L3Residual_AK4PFchs.txt");
+    vCorrParam.push_back(*L2L3ResJetCorPar);
+    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_Uncertainty_AK4PFchs.txt");
+  }
+  else if ( dataSetName.find("Run2016E") != std::string::npos || dataSetName.find("Run2016F") != std::string::npos )
+  {
+    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L1FastJet_AK4PFchs.txt");
+    vCorrParam.push_back(*L1JetCorPar);
+    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2Relative_AK4PFchs.txt");
+    vCorrParam.push_back(*L2JetCorPar);
+    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L3Absolute_AK4PFchs.txt");
+    vCorrParam.push_back(*L3JetCorPar);
+    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2L3Residual_AK4PFchs.txt");
+    vCorrParam.push_back(*L2L3ResJetCorPar);
+    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_Uncertainty_AK4PFchs.txt");
+  }
+  else if ( dataSetName.find("Run2016G") != std::string::npos )
+  {
+    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L1FastJet_AK4PFchs.txt");
+    vCorrParam.push_back(*L1JetCorPar);
+    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2Relative_AK4PFchs.txt");
+    vCorrParam.push_back(*L2JetCorPar);
+    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L3Absolute_AK4PFchs.txt");
+    vCorrParam.push_back(*L3JetCorPar);
+    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2L3Residual_AK4PFchs.txt");
+    vCorrParam.push_back(*L2L3ResJetCorPar);
+    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_Uncertainty_AK4PFchs.txt");
+  }
+  else if ( dataSetName.find("Run2016H") != std::string::npos )
+  {
+    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L1FastJet_AK4PFchs.txt");
+    vCorrParam.push_back(*L1JetCorPar);
+    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2Relative_AK4PFchs.txt");
+    vCorrParam.push_back(*L2JetCorPar);
+    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L3Absolute_AK4PFchs.txt");
+    vCorrParam.push_back(*L3JetCorPar);
+    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2L3Residual_AK4PFchs.txt");
+    vCorrParam.push_back(*L2L3ResJetCorPar);
+    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_Uncertainty_AK4PFchs.txt");
+  }
+}
+
+vector<TRootPFJet*> JetLeptonCleaning(vector<TRootPFJet*> jets, vector<TRootMuon*> muons, vector<TRootElectron*> electrons)
+{
+  jetsBC.clear();
+  jetsBC = jets;
+  jets.clear();
+  
+  for (int iOrigJet = 0; iOrigJet < jetsBC.size(); iOrigJet++)
+  {
+    toBeErased = false;
+    for (int iMuon = 0; iMuon < muons.size(); iMuon++)
+    {
+      if ( jetsBC[iOrigJet]->DeltaR(*muons[iMuon]) < 0.4 )
+      {
+        toBeErased = true;
+        hasJetLeptonCleaning = true;
+        break;
+      }
+    }
+    if (toBeErased) continue;
+    for (int iElectron = 0; iElectron < electrons.size(); iElectron++)
+    {
+      if ( jetsBC[iOrigJet]->DeltaR(*electrons[iElectron]) < 0.3 )
+      {
+        toBeErased = true;
+        hasJetLeptonCleaning = true;
+        break;
+      }
+    }
+    if (! toBeErased)
+    {
+      jets.push_back(jetsBC[iOrigJet]);
+    }
+  }
+  
+  if ( verbose > 3 )
+  {
+    if ( jetsBC.size() != jets.size() ) cout << "--> original = " << jetsBC.size()  << " after cleaning = " << jets.size() << endl;
+  }
+  
+  return jets;
+}
+
+void FillJetVars(vector<TRootPFJet*> selectedJets)
+{
+  nJets = selectedJets.size();
+  for(Int_t iJet = 0; iJet < nJets; iJet++)
+  {
+    jet_charge[iJet] = selectedJets[iJet]->charge();
+    jet_nConstituents[iJet] = selectedJets[iJet]->nConstituents();
+    jet_nChConstituents[iJet] = selectedJets[iJet]->chargedMultiplicity();
+    jet_pt[iJet] = selectedJets[iJet]->Pt();
+    jet_phi[iJet] = selectedJets[iJet]->Phi();
+    jet_eta[iJet] = selectedJets[iJet]->Eta();
+    jet_E[iJet] = selectedJets[iJet]->E();
+    jet_M[iJet] = selectedJets[iJet]->M();
+    jet_bdiscr[iJet] = selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
+  }
+}
+
+void FillLooseJetVars(vector<TRootPFJet*> selectedLooseJets)
+{
+  nLooseJets = selectedLooseJets.size();
+  for(Int_t iJet = 0; iJet < nLooseJets; iJet++)
+  {
+    jet_loose_charge[iJet] = selectedLooseJets[iJet]->charge();
+    jet_loose_nConstituents[iJet] = selectedLooseJets[iJet]->nConstituents();
+    jet_loose_nChConstituents[iJet] = selectedLooseJets[iJet]->chargedMultiplicity();
+    jet_loose_pt[iJet] = selectedLooseJets[iJet]->Pt();
+    jet_loose_phi[iJet] = selectedLooseJets[iJet]->Phi();
+    jet_loose_eta[iJet] = selectedLooseJets[iJet]->Eta();
+    jet_loose_E[iJet] = selectedLooseJets[iJet]->E();
+    jet_loose_M[iJet] = selectedLooseJets[iJet]->M();
+    jet_loose_bdiscr[iJet] = selectedLooseJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
+  }
+}
+
+void FillMuonVars(vector<TRootMuon*> selectedMuons)
+{
+  nMuons = selectedMuons.size();
+  for (Int_t iMuon = 0; iMuon < nMuons; iMuon++)
+  {
+    muon_charge[iMuon] = selectedMuons[iMuon]->charge();
+    muon_pt[iMuon] = selectedMuons[iMuon]->Pt();
+    muon_phi[iMuon] = selectedMuons[iMuon]->Phi();
+    muon_eta[iMuon] = selectedMuons[iMuon]->Eta();
+    muon_E[iMuon] = selectedMuons[iMuon]->E();
+    muon_M[iMuon] = selectedMuons[iMuon]->M();
+    muon_d0[iMuon] = selectedMuons[iMuon]->d0();
+    muon_chargedHadronIso[iMuon] = selectedMuons[iMuon]->chargedHadronIso(4);
+    muon_neutralHadronIso[iMuon] = selectedMuons[iMuon]->neutralHadronIso(4);
+    muon_photonIso[iMuon] = selectedMuons[iMuon]->photonIso(4);
+    muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
+    muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
+    muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
+  }
+}
+
+void FillLooseMuonVars(vector<TRootMuon*> selectedLooseMuons)
+{
+  nLooseMuons = selectedLooseMuons.size();
+  for (Int_t iMuon = 0; iMuon < nLooseMuons; iMuon++)
+  {
+    muon_loose_charge[iMuon] = selectedLooseMuons[iMuon]->charge();
+    muon_loose_pt[iMuon] = selectedLooseMuons[iMuon]->Pt();
+    muon_loose_phi[iMuon] = selectedLooseMuons[iMuon]->Phi();
+    muon_loose_eta[iMuon] = selectedLooseMuons[iMuon]->Eta();
+    muon_loose_E[iMuon] = selectedLooseMuons[iMuon]->E();
+    muon_loose_d0[iMuon] = selectedLooseMuons[iMuon]->d0();
+    muon_loose_relIso[iMuon] = ( selectedLooseMuons[iMuon]->chargedHadronIso(4) + max( 0.0, selectedLooseMuons[iMuon]->neutralHadronIso(4) + selectedLooseMuons[iMuon]->photonIso(4) - 0.5*selectedLooseMuons[iMuon]->puChargedHadronIso(4) ) ) / muon_loose_pt[iMuon];  // dR = 0.4, dBeta corrected
+    isGlobalLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isGlobalMuon();
+    isTrackerLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isTrackerMuon();
+  }
+}
+
+void FillMetVars(vector<TRootMET*> mets, vector<TRootMET*> mets_corrected)
+{
+  met_px = mets[0]->Px();
+  met_py = mets[0]->Py();
+  met_pt = sqrt(met_px*met_px + met_py*met_py);
+  met_phi = mets[0]->Phi();
+  met_eta = mets[0]->Eta();
+  met_Et = mets[0]->Et();
+  met_E = mets[0]->E();
+  
+  met_corr_px = mets_corrected[0]->Px();
+  met_corr_py = mets_corrected[0]->Py();
+  met_corr_pt = sqrt(met_corr_px*met_corr_px + met_corr_py*met_corr_py);
+  met_corr_phi = mets_corrected[0]->Phi();
+  met_corr_eta = mets_corrected[0]->Eta();
+  met_corr_Et = mets_corrected[0]->Et();
+  met_corr_E = mets_corrected[0]->E();
+}
+
+void FillMCParticles(bool isTTbar)
+{
+  nMCParticles = mcParticles.size();
+  if (nMCParticles > maxMCParticles) maxMCParticles = nMCParticles;
+  for (Int_t iMC = 0; iMC < nMCParticles; iMC++)
+  {
+    mc_status[iMC] = mcParticles[iMC]->status();
+    mc_pdgId[iMC] = mcParticles[iMC]->type();
+    mc_mother[iMC] = mcParticles[iMC]->motherType();
+    mc_granny[iMC] = mcParticles[iMC]->grannyType();
+    mc_pt[iMC] = mcParticles[iMC]->Pt();
+    mc_phi[iMC] = mcParticles[iMC]->Phi();
+    mc_eta[iMC] = mcParticles[iMC]->Eta();
+    mc_E[iMC] = mcParticles[iMC]->E();
+    mc_M[iMC] = mcParticles[iMC]->M();
+    mc_isLastCopy[iMC] = mcParticles[iMC]->isLastCopy();
+    mc_isPromptFinalState[iMC] = mcParticles[iMC]->isPromptFinalState();
+    mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
+    mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
+    
+    if ( mc_pdgId[iMC] == 6 )
+    {
+      hasGenTop = true;
+      nofEventsWithGenTop++;
+      if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+      {
+        nofEventsWithGenTopWithStatus22or62++;
+        if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
+        else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
+      }
+    }
+    else if ( mc_pdgId[iMC] == -6 )
+    {
+      hasGenAntiTop = true;
+      nofEventsWithGenAntiTop++;
+      if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+      {
+        nofEventsWithGenAntiTopWithStatus22or62++;
+        if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
+        else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
+      }
+    }
+  }
+  
+  if (isTTbar)
+  {
+    if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
+    else if (! hasGenTop) nofTTEventsWithoutGenTop++;
+    else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
+    
+    if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
+    else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
+    else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
+    
+    if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
+    else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
+    else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
+  }
+}
+
+void FillFilters(bool isData)
+{
+  filterPV = event->getPVFilter();
+  filterHBHENoise = event->getHBHENoiseFilter();
+  filterHBHEIso = event->getHBHENoiseIsoFilter();
+  filterCSCTightHalo = event->getglobalTightHalo2016Filter();
+  filterEcalDeadCell = event->getEcalDeadCellTriggerPrimitiveFilter();
+  if (isData) filterEEBadSc = event->getEEBadScFilter();  // recommended for data-only
+  else filterEEBadSc = true;
+  filterBadChCand = event->getBadChCandFilter();
+  filterBadMuon = event->getBadPFMuonFilter();
+  
+  if ( filterPV && filterHBHENoise && filterHBHEIso && filterCSCTightHalo && filterEcalDeadCell && filterEEBadSc && filterBadChCand && filterBadMuon ) passedMETFilter = true;
+}
+
+void FillBTagScaleFactors()
+{
+  btagSF = bTagHistoTool_M->getMCEventWeight(selectedJets, false);
+  btagSF_up = bTagHistoTool_M_up->getMCEventWeight(selectedJets, false);
+  btagSF_down = bTagHistoTool_M_down->getMCEventWeight(selectedJets, false);
+}
+
+void FillPUScaleFactors()
+{
+  puSF = LumiWeights.ITweight( (int)event->nTruePU() );
+  puSF_up = LumiWeights_up.ITweight( (int)event->nTruePU() );
+  puSF_down = LumiWeights_down.ITweight( (int)event->nTruePU() );
+}
+
+void FillMuonScaleFactors(vector<TRootMuon*> selectedMuons)
+{
+  for (int iMuon = 0; iMuon < selectedMuons.size(); iMuon++)
+  {
+    muonIdSF_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);  // eta, pt, shiftUpDown;
+    muonIdSF_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
+    muonIdSF_up_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonIdSF_up_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonIdSF_down_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    muonIdSF_down_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    
+    muonIsoSF_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
+    muonIsoSF_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
+    muonIsoSF_up_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonIsoSF_up_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonIsoSF_down_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    muonIsoSF_down_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    
+    muonTrigSF_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
+    muonTrigSF_GH[iMuon] =    muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
+    muonTrigSF_up_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonTrigSF_up_GH[iMuon] = muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
+    muonTrigSF_down_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    muonTrigSF_down_GH[iMuon] = muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
+    
+    muonTrackSF_eta[iMuon] = h_muonSFWeightTrackEta->Eval(selectedMuons[iMuon]->Eta());
+    muonTrackSF_aeta[iMuon] = h_muonSFWeightTrackAEta->Eval(fabs(selectedMuons[iMuon]->Eta()));
+    muonTrackSF_nPV[iMuon] = h_muonSFWeightTrackPV->Eval(npu);
+  }
+}
+
+void FillLooseMuonScaleFactors(vector<TRootMuon*> selectedLooseMuons)
+{
+  for (int iMuon = 0; iMuon < selectedLooseMuons.size(); iMuon++)
+  {
+    looseMuonIdSF_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);  // eta, pt, shiftUpDown;
+    looseMuonIdSF_GH[iMuon] = muonSFWeightID_T_GH->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);
+    
+    looseMuonIsoSF_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);
+    looseMuonIsoSF_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);
+    
+    looseMuonTrigSF_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);
+    looseMuonTrigSF_GH[iMuon] =    muonSFWeightTrig_GH->at(selectedLooseMuons[iMuon]->Eta(), selectedLooseMuons[iMuon]->Pt(), 0);
+    
+    looseMuonTrackSF_eta[iMuon] = h_muonSFWeightTrackEta->Eval(selectedLooseMuons[iMuon]->Eta());
+    looseMuonTrackSF_aeta[iMuon] = h_muonSFWeightTrackAEta->Eval(fabs(selectedLooseMuons[iMuon]->Eta()));
+    looseMuonTrackSF_nPV[iMuon] = h_muonSFWeightTrackPV->Eval(npu);
+  }
+}
+
+void FillaMCScaleFactors()
+{
+  if ( event->getWeight(1001) != -9999. )
+  {
+    nloWeight = event->getWeight(1001)/abs(event->originalXWGTUP());
+    //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
+    //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
+    if ( nloWeight >= 0. )
+    {
+      nofPosWeights++;
+      hasPosWeight = true;
+    }
+    else
+    {
+      nofNegWeights++;
+      hasNegWeight = true;
+    }
+  }
+  if ( event->getWeight(1) != -9999. )
+  {
+    nloWeight = event->getWeight(1)/abs(event->originalXWGTUP());
+    //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
+    //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
+    if ( nloWeight >= 0. )
+    {
+      nofPosWeights++;
+      hasPosWeight = true;
+    }
+    else
+    {
+      nofNegWeights++;
+      hasNegWeight = true;
+    }
+  }
+  
+  sumW += nloWeight;
+}
+
 
 
 int main (int argc, char *argv[])
@@ -116,23 +1362,15 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-  string xmlFileName ="config/topWidth_data.xml";
-//  string xmlFileName ="config/topWidth_MC.xml";
-  int maxMCParticles = -1;
+//  string xmlFileName ="config/topWidth_data.xml";
+  string xmlFileName ="config/topWidth_MC.xml";
+  
   
   
   ///////////////////////////
   ///  Process arguments  ///
   ///////////////////////////
   
-  string dName, dTitle, channel;
-  int color, ls, lw, jobNum = 0, startEvent = 0, endEvent = 200, JES, JER, fillBtagHisto;
-  float normf, eqLumi, xSect, preselEff;
-  string fileName;
-  vector<string> vecfileNames;
-  int ndatasets;
-  
-  bool localgridSubmission = false;
   if ( argc > 2 ) localgridSubmission = true;
   if ( argc == 2 && ((string)argv[1]).find(".xml") != std::string::npos )
   {
@@ -190,23 +1428,9 @@ int main (int argc, char *argv[])
   ///  Configuration
   /////////////////////
   
-  bool applyLeptonSF = true;
-  bool applyPU = true;
-  bool applyPUup = false;
-  bool applyPUdown = false;
-  bool applyJER = true;
-  bool applyJERup = false;
-  bool applyJERdown = false;
-  bool applyJEC = true;
-  bool applyJESup = false;  // Check implementation
-  bool applyJESdown = false;
-  bool calculateBTagSF = false;
-  bool applyBTagSF = true;
-  bool applyJetLeptonCleaning = true;
-  
   if (localgridSubmission)
   {
-    if ( JES == 0 ) { applyJEC = true; /*applyJESup = false; applyJESdown = false;*/}  // Check
+    if ( JES == 0 ) { applyJEC = true; /*applyJESup = false; applyJESdown = false;*/}
     else if ( JES == 1 ) { /*applyJEC = false;*/ applyJESup = true; applyJESdown = false;}
     else if ( JES == -1 ) { /*applyJEC = false;*/ applyJESup = false; applyJESdown = true;}
     
@@ -285,6 +1509,12 @@ int main (int argc, char *argv[])
     cout << "----------------------------------------" << endl << endl;
   }
   
+  string sysString = "nominal";
+  if (applyJESup) sysString = "JESup";
+  else if (applyJESdown) sysString = "JESdown";
+  else if (applyJERup)   sysString = "JERup";
+  else if (applyJERdown) sysString = "JERdown";
+  
   
   /// xml file
   const char *xmlfile = xmlFileName.c_str();
@@ -297,6 +1527,7 @@ int main (int argc, char *argv[])
   configTree->Branch("Datasets","TClonesArray",&tcdatasets);
   TClonesArray* tcAnaEnv = new TClonesArray("AnalysisEnvironment",1000);
   configTree->Branch("AnaEnv","TClonesArray",&tcAnaEnv);
+  
   
   
   ////////////////////////////////////
@@ -313,7 +1544,7 @@ int main (int argc, char *argv[])
     << endl;
   
   new ((*tcAnaEnv)[0]) AnalysisEnvironment(anaEnv);
-  int verbose = anaEnv.Verbose;
+  verbose = anaEnv.Verbose;
 //  verbose = 2;
   float oldLuminosity = anaEnv.Luminosity;  // in 1/pb
   cout << "Analysis environment luminosity for rescaling " << oldLuminosity << endl;
@@ -356,11 +1587,6 @@ int main (int argc, char *argv[])
   if ( Luminosity != oldLuminosity ) cout << "Changed analysis environment luminosity to "<< Luminosity << endl;
   
   
-  //Global variable
-  TRootEvent* event = 0;
-  TRootRun *runInfos = new TRootRun();
-  
-  
   
   ////////////////////////////
   ///  Initialise trigger  ///
@@ -375,94 +1601,48 @@ int main (int argc, char *argv[])
   ///  Initialise scale factors  ///
   //////////////////////////////////
   
-  string pathCalLept = "../TopTreeAnalysisBase/Calibrations/LeptonSF/MuonSF/20170413/";
-  string pathCalBTag = "../TopTreeAnalysisBase/Calibrations/BTagging/";
-  string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
-  string pathCalJEC = "../TopTreeAnalysisBase/Calibrations/JECFiles/";
-  
   /// Leptons
   cout << " - Loading lepton scale factors ...";
   if (! applyLeptonSF) { cout << "    --- At the moment these are not used in the analysis";}
+  else
+  {
+    muonSFWeightID_T_BCDEF = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_BCDEF.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false);  // (... , ... , extendRange, debug, print warning)
+    muonSFWeightID_T_GH = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_GH.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false);
+    
+    muonSFWeightIso_TT_BCDEF = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_BCDEF.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+    muonSFWeightIso_TT_GH = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_GH.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
+    
+    muonSFWeightTrig_BCDEF = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_RunBtoF.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
+    muonSFWeightTrig_GH = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_GH.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
+    
+    muontrackfile = new TFile((pathCalLept+"Tracking_EfficienciesAndSF_BCDEFGH.root").c_str(),"read");
+    h_muonSFWeightTrackEta = (TGraph*) muontrackfile->Get("ratio_eff_eta3_dr030e030_corr")->Clone();  //Tracking efficiency as function of eta
+    h_muonSFWeightTrackAEta = (TGraph*) muontrackfile->Get("ratio_eff_aeta_dr030e030_corr")->Clone();  //Tracking efficiency as function of abs(eta)
+    h_muonSFWeightTrackPV = (TGraph*) muontrackfile->Get("ratio_eff_vtx_dr030e030_corr")->Clone();  //Tracking efficiency as function of nPV
+  }
   cout << endl;
-  
-  MuonSFWeight* muonSFWeightID_T_BCDEF = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_BCDEF.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false); // (... , ... , extendRange, debug, print warning)
-  MuonSFWeight* muonSFWeightID_T_GH = new MuonSFWeight(pathCalLept+"IDEfficienciesAndSF_GH.root", "MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio", true, false, false);
-  
-  MuonSFWeight* muonSFWeightIso_TT_BCDEF = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_BCDEF.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
-  MuonSFWeight* muonSFWeightIso_TT_GH = new MuonSFWeight(pathCalLept+"IsoEfficienciesAndSF_GH.root", "TightISO_TightID_pt_eta/abseta_pt_ratio", true, false, false);  // Tight RelIso, Tight ID
-  
-  MuonSFWeight *muonSFWeightTrig_BCDEF = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_RunBtoF.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
-  MuonSFWeight *muonSFWeightTrig_GH = new MuonSFWeight(pathCalLept+"TrigEfficienciesAndSF_GH.root", "IsoMu24_OR_IsoTkMu24_PtEtaBins/abseta_pt_ratio", true, false, false);
-  
-  TFile *muontrackfile = new TFile((pathCalLept+"Tracking_EfficienciesAndSF_BCDEFGH.root").c_str(),"read");
-  TGraph* h_muonSFWeightTrackEta = (TGraph*) muontrackfile->Get("ratio_eff_eta3_dr030e030_corr")->Clone();//Tracking efficiency as function of eta
-  TGraph* h_muonSFWeightTrackAEta = (TGraph*) muontrackfile->Get("ratio_eff_aeta_dr030e030_corr")->Clone();//Tracking efficiency as function of abs(eta)
-  TGraph* h_muonSFWeightTrackPV = (TGraph*) muontrackfile->Get("ratio_eff_vtx_dr030e030_corr")->Clone();//Tracking efficiency as function of nPV
   
   
   /// B tag
   // documentation at http://mon.iihe.ac.be/%7Esmoortga/TopTrees/BTagSF/BTaggingSF_inTopTrees_v4.pdf
   cout << " - Loading b tag scale factors ...";
-  if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis";}
-  BTagCalibration *bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2Moriond17_2017_1_26_BtoH.csv");
-  BTagCalibrationReader *bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "central");
-  BTagCalibrationReader *bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "up");
-  BTagCalibrationReader *bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "down");
-  BTagWeightTools *bTagHistoTool_M;
-  BTagWeightTools *bTagHistoTool_M_up;
-  BTagWeightTools *bTagHistoTool_M_down;
+  if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis" << endl;}
+  bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2Moriond17_2017_1_26_BtoH.csv");
+  bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "central");
+  bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "up");
+  bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "down");
   
   
   /// Pile-up
   cout << " - Loading pile-up scale factors ...";
   if (! applyPU) { cout << "   --- At the moment these are not used in the analysis";}
+  else
+  {
+    LumiWeights = LumiReWeighting(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet.root", "pileup", "pileup");
+    LumiWeights_up = LumiReWeighting(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet_sysPlus.root", "pileup", "pileup");
+    LumiWeights_down = LumiReWeighting(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet_sysMinus.root", "pileup", "pileup");
+  }
   cout << endl;
-  
-  LumiReWeighting LumiWeights(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet.root", "pileup", "pileup");
-  LumiReWeighting LumiWeights_up(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet_sysPlus.root", "pileup", "pileup");
-  LumiReWeighting LumiWeights_down(pathCalPileup+"MCPileup_Summer16.root", pathCalPileup+"pileup_2016Data80X_Run271036-284044Cert__Full2016DataSet_sysMinus.root", "pileup", "pileup");
-  
-  /// JEC
-  vector<JetCorrectorParameters> vCorrParam;
-  JetCorrectionUncertainty *jecUnc;
-  
-  
-  
-  ///////////////////
-  ///  Selection  ///
-  ///////////////////
-  
-  float muonPTSel = 26.; // GeV
-  float muonEtaSel = 2.4;
-  float muonRelIsoSel = 0.15;  // Tight muon
-  string muonWP = "Tight";
-  
-  float muonPTVeto = 10.; // GeV
-  float muonEtaVeto = 2.5;
-  float muonRelIsoVeto = 0.25;  // Loose muon
-  
-  float electronPTSel = 34.; // GeV
-  float electronEtaSel = 2.1;
-  string electronWP = "Tight";
-  
-  float electronPTVeto = 15.; // GeV
-  float electronEtaVeto = 2.5;
-  
-  float jetPT = 30.; // GeV
-  float jetEta = 2.4;  // to allow b tagging
-  
-  
-  
-  //////////////////////////////////////
-  ///  Working points for b tagging  ///
-  //////////////////////////////////////
-  
-  /// Updated 13/04/17, https://twiki.cern.ch/twiki/bin/view/CMS/TopBTV
-  
-  double CSVv2Loose  = 0.5426;
-  double CSVv2Medium = 0.8484;
-  double CSVv2Tight  = 0.9535;
-  
   
   
   ////////////////////////////////////
@@ -472,12 +1652,14 @@ int main (int argc, char *argv[])
   if (verbose > 0)
     cout << " - Loop over datasets ... " << ndatasets << " datasets !" << endl;
   
-  for (unsigned int d = 0; d < ndatasets; d++)
+  int nd = ndatasets;
+  if (test) nd = 2;
+  for (unsigned int d = 0; d < nd; d++)
   //for (unsigned int d = 1; d < 2; d++)
   {
-    bool nlo = false;
-    bool isData = false;
-    bool isTTbar = false;
+    isAmc = false;
+    isData = false;
+    isTTbar = false;
     
     string dataSetName = datasets[d]->Name();
     
@@ -504,7 +1686,7 @@ int main (int argc, char *argv[])
     
     if ( (datasets[d]->Title()).find("amc") != std::string::npos || (datasets[d]->Title()).find("AMC") != std::string::npos || (datasets[d]->Title()).find("Amc") != std::string::npos || (datasets[d]->Title()).find("aMC") != std::string::npos )
     {
-      nlo = true;
+      isAmc = true;
       cout << "         This is an amc@nlo sample." << endl;
     }
     
@@ -536,16 +1718,16 @@ int main (int argc, char *argv[])
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
       //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_comb_central.root", false, 20., 600., 2.4);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_nominal.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_up.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_down.root", false, 30., 600., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 600., 2.4);
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 600., 2.4);
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 600., 2.4);
     }
     else if (calculateBTagSF && ! isData)
     {
       mkdir(("BTagHistos/"+dateString).c_str(),0777);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_central.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_up.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_down.root", false, 30., 600., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_central.root", true, 30., 600., 2.4);
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_up.root", false, 30., 600., 2.4);
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_down.root", false, 30., 600., 2.4);
     }
     
     
@@ -556,64 +1738,7 @@ int main (int argc, char *argv[])
     
     vCorrParam.clear();
     
-    if (! isData)
-    {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt");
-      vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L2Relative_AK4PFchs.txt");
-      vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L3Absolute_AK4PFchs.txt");
-      vCorrParam.push_back(*L3JetCorPar);
-      jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_Uncertainty_AK4PFchs.txt");
-    }
-    else if ( dataSetName.find("Run2016B") != std::string::npos || dataSetName.find("Run2016C") != std::string::npos || dataSetName.find("Run2016D") != std::string::npos )
-    {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L1FastJet_AK4PFchs.txt");
-      vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2Relative_AK4PFchs.txt");
-      vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L3Absolute_AK4PFchs.txt");
-      vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2L3Residual_AK4PFchs.txt");
-      vCorrParam.push_back(*L2L3ResJetCorPar);
-      jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_Uncertainty_AK4PFchs.txt");
-    }
-    else if ( dataSetName.find("Run2016E") != std::string::npos || dataSetName.find("Run2016F") != std::string::npos )
-    {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L1FastJet_AK4PFchs.txt");
-      vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2Relative_AK4PFchs.txt");
-      vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L3Absolute_AK4PFchs.txt");
-      vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2L3Residual_AK4PFchs.txt");
-      vCorrParam.push_back(*L2L3ResJetCorPar);
-      jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_Uncertainty_AK4PFchs.txt");
-    }
-    else if ( dataSetName.find("Run2016G") != std::string::npos )
-    {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L1FastJet_AK4PFchs.txt");
-      vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2Relative_AK4PFchs.txt");
-      vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L3Absolute_AK4PFchs.txt");
-      vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2L3Residual_AK4PFchs.txt");
-      vCorrParam.push_back(*L2L3ResJetCorPar);
-      jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_Uncertainty_AK4PFchs.txt");
-    }
-    else if ( dataSetName.find("Run2016H") != std::string::npos )
-    {
-      JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L1FastJet_AK4PFchs.txt");
-      vCorrParam.push_back(*L1JetCorPar);
-      JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2Relative_AK4PFchs.txt");
-      vCorrParam.push_back(*L2JetCorPar);
-      JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L3Absolute_AK4PFchs.txt");
-      vCorrParam.push_back(*L3JetCorPar);
-      JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2L3Residual_AK4PFchs.txt");
-      vCorrParam.push_back(*L2L3ResJetCorPar);
-      jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_Uncertainty_AK4PFchs.txt");
-    }
+    InitJEC(isData, dataSetName);
     
     JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
     
@@ -625,457 +1750,18 @@ int main (int argc, char *argv[])
     
     string rootFileName = "Ntuples_output_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+".root";
     
-    cout << " - Recreate output file ..." << rootFileName << endl;
-    TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
-    fout->cd();
-    
-    TTree* myTree = new TTree("tree","tree");
-    TTree* statTree = new TTree("stats","stats");
-    TTree* looseTree = new TTree("looseObj","looseObj");
-    
-    
-    
-    ////////////////////////////////////
-    ///  Define variables for trees  ///
-    ////////////////////////////////////
-    
-    /// stats of dataset
-    Long64_t nEvents;
-    Long64_t nEventsSel;
-    Int_t nofPosWeights;
-    Int_t nofNegWeights;
-    Double_t sumW;
-    Int_t cutFlow[10];
-    Int_t cutFlow2[10];
-    Int_t appliedJER;
-    Int_t appliedJES;
-    Int_t appliedPU;
-    
-    Long64_t nofEventsRunB;
-    Long64_t nofEventsRunCD;
-    Long64_t nofEventsRunEF;
-    Long64_t nofEventsRunG;
-    Long64_t nofEventsRunH;
-    Long64_t nofSelEventsRunB;
-    Long64_t nofSelEventsRunCD;
-    Long64_t nofSelEventsRunEF;
-    Long64_t nofSelEventsRunG;
-    Long64_t nofSelEventsRunH;
-    
-    Long64_t nofEventsWithGenTop;
-    Long64_t nofEventsWithGenTopWithStatus22or62;
-    Long64_t nofEventsWithGenAntiTop;
-    Long64_t nofEventsWithGenAntiTopWithStatus22or62;
-    Long64_t nofTTEventsWithoutBothGenTops;
-    Long64_t nofTTEventsWithoutGenTop;
-    Long64_t nofTTEventsWithoutGenAntiTop;
-    Long64_t nofTTEventsWithoutBothGenTopsWithStatus22;
-    Long64_t nofTTEventsWithoutGenTopWithStatus22;
-    Long64_t nofTTEventsWithoutGenAntiTopWithStatus22;
-    Long64_t nofTTEventsWithoutBothGenTopsWithStatus62;
-    Long64_t nofTTEventsWithoutGenTopWithStatus62;
-    Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
-    
-    /// event related variables
-    Int_t run_num;
-    Long64_t evt_num;
-    Int_t lumi_num;
-    Int_t nvtx;
-    Int_t npu;
-    Double_t rho;
-    
-    Bool_t isTrigged;
-    Bool_t isSelected;
-    Bool_t hasExactly4Jets;
-    Bool_t hasJetLeptonCleaning;
-    Bool_t hasLooseJetLeptonCleaning;
-    Bool_t hasErasedBadOrCloneMuon;
-    Bool_t hasErasedBadOrCloneLooseMuon;
-    
-    // filters
-    Bool_t filterHBHENoise;
-    Bool_t filterHBHEIso;
-    Bool_t filterCSCTightHalo;
-    Bool_t filterEcalDeadCell;
-    Bool_t filterEEBadSc;  // recommended for data-only
-    Bool_t filterBadChCand;
-    Bool_t filterBadMuon;
-    Bool_t passedMETFilter;
-    
-    Bool_t isDataRunB;
-    Bool_t isDataRunC;
-    Bool_t isDataRunD;
-    Bool_t isDataRunE;
-    Bool_t isDataRunF;
-    Bool_t isDataRunG;
-    Bool_t isDataRunH;
-    Bool_t hasPosWeight;
-    Bool_t hasNegWeight;
-    Bool_t hasGenTop;
-    Bool_t hasGenTopWithStatus22;
-    Bool_t hasGenTopWithStatus62;
-    Bool_t hasGenAntiTop;
-    Bool_t hasGenAntiTopWithStatus22;
-    Bool_t hasGenAntiTopWithStatus62;
-    
-    Double_t nloWeight; // for amc@nlo samples
-    Double_t btagSF;
-    Double_t btagSF_up;
-    Double_t btagSF_down;
-    Double_t puSF;
-    Double_t puSF_up;
-    Double_t puSF_down;
-    Double_t muonIdSF_BCDEF[10];
-    Double_t muonIdSF_GH[10];
-    Double_t muonIdSF_up_BCDEF[10];
-    Double_t muonIdSF_up_GH[10];
-    Double_t muonIdSF_down_BCDEF[10];
-    Double_t muonIdSF_down_GH[10];
-    Double_t muonIsoSF_BCDEF[10];
-    Double_t muonIsoSF_GH[10];
-    Double_t muonIsoSF_up_BCDEF[10];
-    Double_t muonIsoSF_up_GH[10];
-    Double_t muonIsoSF_down_BCDEF[10];
-    Double_t muonIsoSF_down_GH[10];
-    Double_t muonTrigSF_BCDEF[10];
-    Double_t muonTrigSF_GH[10];
-    Double_t muonTrigSF_up_BCDEF[10];
-    Double_t muonTrigSF_up_GH[10];
-    Double_t muonTrigSF_down_BCDEF[10];
-    Double_t muonTrigSF_down_GH[10];
-    Double_t muonTrackSF_eta[10];
-    Double_t muonTrackSF_aeta[10];
-    Double_t muonTrackSF_nPV[10];
-    
-    
-    /// Variables for muons
-    Int_t nMuons;
-    Int_t muon_charge[10];
-    Double_t muon_pt[10];
-    Double_t muon_phi[10];
-    Double_t muon_eta[10];
-    Double_t muon_E[10];
-    Double_t muon_M[10];
-    Double_t muon_d0[10];
-    Double_t muon_chargedHadronIso[10];
-    Double_t muon_neutralHadronIso[10];
-    Double_t muon_photonIso[10];
-    Double_t muon_puChargedHadronIso[10];
-    Double_t muon_relIso[10];
-    Double_t muon_pfIso[10];
-    
-    Int_t nLooseMuons;
-    Int_t muon_loose_charge[20];
-    Double_t muon_loose_pt[20];
-    Double_t muon_loose_phi[20];
-    Double_t muon_loose_eta[20];
-    Double_t muon_loose_E[20];
-    Double_t muon_loose_d0[20];
-    Double_t muon_loose_relIso[20];
-    Bool_t isGlobalLooseMuon[20];
-    Bool_t isTrackerLooseMuon[20];
-    
-    /// Variables for jets
-    Int_t nJets;
-    Int_t jet_nConstituents[20];
-    Int_t jet_nChConstituents[20];
-    Int_t jet_charge[20];
-    Double_t jet_pt[20];
-    Double_t jet_phi[20];
-    Double_t jet_eta[20];
-    Double_t jet_E[20];
-    Double_t jet_M[20];
-    Double_t jet_bdiscr[20];
-    
-    Int_t nLooseJets;
-    Int_t jet_loose_nConstituents[30];
-    Int_t jet_loose_nChConstituents[30];
-    Int_t jet_loose_charge[30];
-    Double_t jet_loose_pt[30];
-    Double_t jet_loose_phi[30];
-    Double_t jet_loose_eta[30];
-    Double_t jet_loose_E[30];
-    Double_t jet_loose_M[30];
-    Double_t jet_loose_bdiscr[30];
-    
-    /// met
-    Double_t met_px;
-    Double_t met_py;
-    Double_t met_pt;
-    Double_t met_phi;
-    Double_t met_eta;
-    Double_t met_Et;
-    Double_t met_E;
-    
-    Double_t met_corr_px;
-    Double_t met_corr_py;
-    Double_t met_corr_pt;
-    Double_t met_corr_phi;
-    Double_t met_corr_eta;
-    Double_t met_corr_Et;
-    Double_t met_corr_E;
-    
-    /// mcparticles
-    Int_t nMCParticles;
-    Int_t mc_status[200];
-    Int_t mc_pdgId[200];
-    Int_t mc_mother[200];
-    Int_t mc_granny[200];
-    Double_t mc_pt[200];
-    Double_t mc_phi[200];
-    Double_t mc_eta[200];
-    Double_t mc_E[200];
-    Double_t mc_M[200];
-    Bool_t mc_isLastCopy[200];
-    Bool_t mc_isPromptFinalState[200];
-    Bool_t mc_isHardProcess[200];
-    Bool_t mc_fromHardProcessFinalState[200];
-    
-    
-    
-    /////////////////////////
-    ///  Define branches  ///
-    /////////////////////////
-    
-    
-    statTree->Branch("nEvents" , &nEvents, "nEvents/L");
-    statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
-    statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/I");
-    statTree->Branch("cutFlow2",&cutFlow2,"cutFlow2[10]/I");
-    statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
-    statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
-    statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
-    if (isData)
+    if (! calculateBTagSF)
     {
-      statTree->Branch("nofEventsRunB",&nofEventsRunB,"nofEventsRunB/L");
-      statTree->Branch("nofEventsRunCD",&nofEventsRunCD,"nofEventsRunCD/L");
-      statTree->Branch("nofEventsRunEF",&nofEventsRunEF,"nofEventsRunEF/L");
-      statTree->Branch("nofEventsRunG",&nofEventsRunG,"nofEventsRunG/L");
-      statTree->Branch("nofEventsRunH",&nofEventsRunH,"nofEventsRunH/L");
-      statTree->Branch("nofSelEventsRunB",&nofSelEventsRunB,"nofSelEventsRunB/L");
-      statTree->Branch("nofSelEventsRunCD",&nofSelEventsRunCD,"nofSelEventsRunCD/L");
-      statTree->Branch("nofSelEventsRunEF",&nofSelEventsRunEF,"nofSelEventsRunEF/L");
-      statTree->Branch("nofSelEventsRunG",&nofSelEventsRunG,"nofSelEventsRunG/L");
-      statTree->Branch("nofSelEventsRunH",&nofSelEventsRunH,"nofSelEventsRunH/L");
-    }
-    else
-    {
-      statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
-      statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
-      statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
-      statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
-      if (isTTbar)
-      {
-        statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
-        statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
-        statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
-        statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
-        statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
-        statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
-        statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
-        statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
-        statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
-      }
-    }
-    if (nlo)
-    {
-      statTree->Branch("nofPosWeights",&nofPosWeights,"nofPosWeights/I");
-      statTree->Branch("nofNegWeights",&nofNegWeights,"nofNegWeights/I");
-      statTree->Branch("sumW", &sumW, "sumW/D");
-      myTree->Branch("hasPosWeight",&hasPosWeight,"hasPosWeight/O");
-      myTree->Branch("hasNegWeight",&hasNegWeight,"hasNegWeight/O");
-    }
-    
-    myTree->Branch("run_num",&run_num,"run_num/I");
-    myTree->Branch("evt_num",&evt_num,"evt_num/L");
-    myTree->Branch("lumi_num",&lumi_num,"lumi_num/I");
-    myTree->Branch("nvtx",&nvtx,"nvtx/I");
-    myTree->Branch("npu",&npu,"npu/I");
-    myTree->Branch("rho",&rho,"rho/D");
-    myTree->Branch("isTrigged",&isTrigged,"isTrigged/O");
-    myTree->Branch("hasExactly4Jets",&hasExactly4Jets,"hasExactly4Jets/O");
-    myTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
-    myTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
-    if (fillLooseTree)
-    {
-      looseTree->Branch("hasJetLeptonCleaning",&hasJetLeptonCleaning,"hasJetLeptonCleaning/O");
-      looseTree->Branch("hasLooseJetLeptonCleaning",&hasLooseJetLeptonCleaning,"hasLooseJetLeptonCleaning/O");
-      looseTree->Branch("hasErasedBadOrCloneMuon",&hasErasedBadOrCloneMuon,"hasErasedBadOrCloneMuon/O");
-      looseTree->Branch("hasErasedBadOrCloneLooseMuon",&hasErasedBadOrCloneLooseMuon,"hasErasedBadOrCloneLooseMuon/O");
-    }
-    
-    myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
-    myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
-    myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
-    myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
-    myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
-    myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
-    myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
-    myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
-    
-    if (isData)
-    {
-      myTree->Branch("isDataRunB",&isDataRunB,"isDataRunB/O");
-      myTree->Branch("isDataRunC",&isDataRunC,"isDataRunC/O");
-      myTree->Branch("isDataRunD",&isDataRunD,"isDataRunD/O");
-      myTree->Branch("isDataRunE",&isDataRunE,"isDataRunE/O");
-      myTree->Branch("isDataRunF",&isDataRunF,"isDataRunF/O");
-      myTree->Branch("isDataRunG",&isDataRunG,"isDataRunG/O");
-      myTree->Branch("isDataRunH",&isDataRunH,"isDataRunH/O");
-    }
-    
-    // muons
-    myTree->Branch("nMuons",&nMuons, "nMuons/I");
-    myTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/I");
-    myTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
-    myTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
-    myTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
-    myTree->Branch("muon_E",&muon_E,"muon_E[nMuons]/D");
-    myTree->Branch("muon_M",&muon_M,"muon_M[nMuons]/D");
-    myTree->Branch("muon_d0",&muon_d0,"muon_d0[nMuons]/D");
-    myTree->Branch("muon_chargedHadronIso",&muon_chargedHadronIso,"muon_chargedHadronIso[nMuons]/D");
-    myTree->Branch("muon_neutralHadronIso",&muon_neutralHadronIso,"muon_neutralHadronIso[nMuons]/D");
-    myTree->Branch("muon_photonIso",&muon_photonIso,"muon_photonIso[nMuons]/D");
-    myTree->Branch("muon_puChargedHadronIso",&muon_puChargedHadronIso,"muon_puChargedHadronIso[nMuons]/D");
-    myTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
-    myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");
-    
-    if (fillLooseTree)
-    {
-      looseTree->Branch("nMuons",&nMuons, "nMuons/I");
-      looseTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/I");
-      looseTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
-      looseTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
-      looseTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
-      looseTree->Branch("muon_E",&muon_E,"muon_E[nMuons]/D");
-      looseTree->Branch("muon_d0",&muon_d0,"muon_d0[nMuons]/D");
-      looseTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
+      cout << " - Recreate output file ..." << rootFileName << endl;
+      fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
+      fout->cd();
       
-      looseTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
-      looseTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/I");
-      looseTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
-      looseTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
-      looseTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
-      looseTree->Branch("muon_loose_E",&muon_loose_E,"muon_loose_E[nLooseMuons]/D");
-      looseTree->Branch("muon_loose_d0",&muon_loose_d0,"muon_loose_d0[nLooseMuons]/D");
-      looseTree->Branch("muon_loose_relIso",&muon_loose_relIso,"muon_loose_relIso[nLooseMuons]/D");
-      looseTree->Branch("isGlobalLooseMuon",&isGlobalLooseMuon,"isGlobalLooseMuon[nLooseMuons]/O");
-      looseTree->Branch("isTrackerLooseMuon",&isTrackerLooseMuon,"isTrackerLooseMuon[nLooseMuons]/O");
-    }
-    
-    // jets
-    myTree->Branch("nJets",&nJets,"nJets/I");
-    myTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
-    myTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
-    myTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/I");
-    myTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
-    myTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
-    myTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
-    myTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
-    myTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
-    myTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
-    
-    if (fillLooseTree)
-    {
-      looseTree->Branch("nJets",&nJets,"nJets/I");
-      looseTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
-      looseTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
-      looseTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/I");
-      looseTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
-      looseTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
-      looseTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
-      looseTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
-      looseTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
-      looseTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
+      myTree = new TTree("tree","tree");
+      statTree = new TTree("stats","stats");
+      if (fillLooseTree) looseTree = new TTree("looseObj","looseObj");
       
-      looseTree->Branch("nLooseJets",&nLooseJets,"nLooseJets/I");
-      looseTree->Branch("jet_loose_nConstituents",&jet_loose_nConstituents,"jet_loose_nConstituents[nLooseJets]/I");
-      looseTree->Branch("jet_loose_nChConstituents",&jet_loose_nChConstituents,"jet_loose_nChConstituents[nLooseJets]/I");
-      looseTree->Branch("jet_loose_charge",&jet_loose_charge,"jet_loose_charge[nLooseJets]/I");
-      looseTree->Branch("jet_loose_pt",&jet_loose_pt,"jet_loose_pt[nLooseJets]/D");
-      looseTree->Branch("jet_loose_phi",&jet_loose_phi,"jet_loose_phi[nLooseJets]/D");
-      looseTree->Branch("jet_loose_eta",&jet_loose_eta,"jet_loose_eta[nLooseJets]/D");
-      looseTree->Branch("jet_loose_E",&jet_loose_E,"jet_loose_E[nLooseJets]/D");
-      looseTree->Branch("jet_loose_M",&jet_loose_M,"jet_loose_M[nLooseJets]/D");
-      looseTree->Branch("jet_loose_bdiscr",&jet_loose_bdiscr,"jet_loose_bdiscr[nLooseJets]/D");
-    }
-    
-    // met
-    myTree->Branch("met_px", &met_px, "met_px/D");
-    myTree->Branch("met_py", &met_py, "met_py/D");
-    myTree->Branch("met_pt", &met_pt, "met_pt/D");
-    myTree->Branch("met_phi", &met_phi, "met_phi/D");
-    myTree->Branch("met_eta", &met_eta,"met_eta/D");
-    myTree->Branch("met_Et", &met_Et,"met_Et/D");
-    myTree->Branch("met_E", &met_E,"met_E/D");
-    
-    myTree->Branch("met_corr_px", &met_corr_px, "met_corr_px/D");
-    myTree->Branch("met_corr_py", &met_corr_py, "met_corr_py/D");
-    myTree->Branch("met_corr_pt", &met_corr_pt, "met_corr_pt/D");
-    myTree->Branch("met_corr_phi", &met_corr_phi, "met_corr_phi/D");
-    myTree->Branch("met_corr_eta", &met_corr_eta,"met_corr_eta/D");
-    myTree->Branch("met_corr_Et", &met_corr_Et,"met_corr_Et/D");
-    myTree->Branch("met_corr_E", &met_corr_E,"met_corr_E/D");
-    
-    
-    // mcparticles
-    if (! isData)
-    {
-      myTree->Branch("nMCParticles",&nMCParticles,"nMCParticles/I");
-      myTree->Branch("mc_status",&mc_status,"mc_status[nMCParticles]/I");
-      myTree->Branch("mc_pdgId",&mc_pdgId,"mc_pdgId[nMCParticles]/I");
-      myTree->Branch("mc_mother",&mc_mother,"mc_mother[nMCParticles]/I");
-      myTree->Branch("mc_granny",&mc_granny,"mc_granny[nMCParticles]/I");
-      myTree->Branch("mc_pt",&mc_pt,"mc_pt[nMCParticles]/D");
-      myTree->Branch("mc_phi",&mc_phi,"mc_phi[nMCParticles]/D");
-      myTree->Branch("mc_eta",&mc_eta,"mc_eta[nMCParticles]/D");
-      myTree->Branch("mc_E",&mc_E,"mc_E[nMCParticles]/D");
-      myTree->Branch("mc_M",&mc_M,"mc_M[nMCParticles]/D");
-      myTree->Branch("mc_isLastCopy", &mc_isLastCopy, "mc_isLastCopy[nMCParticles]/O");
-      myTree->Branch("mc_isPromptFinalState", &mc_isPromptFinalState, "mc_isPromptFinalState[nMCParticles]/O");
-      myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
-      myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
-      myTree->Branch("hasGenTop", &hasGenTop, "hasGenTop/O");
-      myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
-      myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
-      myTree->Branch("hasGenAntiTop", &hasGenAntiTop, "hasGenAntiTop/O");
-      myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
-      myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
-    }
-    
-    
-    /// SFs
-    if (! isData)
-    {
-      if (nlo) myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
-      myTree->Branch("btagSF",&btagSF,"btagSF/D");
-      myTree->Branch("btagSF_up",&btagSF_up,"btagSF_up/D");
-      myTree->Branch("btagSF_down",&btagSF_down,"btagSF_down/D");
-      myTree->Branch("puSF",&puSF,"puSF/D");
-      myTree->Branch("puSF_up",&puSF_up,"puSF_up/D");
-      myTree->Branch("puSF_down",&puSF_down,"puSF_down/D");
-      
-      myTree->Branch("muonIdSF_BCDEF",&muonIdSF_BCDEF,"muonIdSF_BCDEF[nMuons]/D");
-      myTree->Branch("muonIdSF_GH",&muonIdSF_GH,"muonIdSF_GH[nMuons]/D");
-      myTree->Branch("muonIdSF_up_BCDEF",&muonIdSF_up_BCDEF,"muonIdSF_up_BCDEF[nMuons]/D");
-      myTree->Branch("muonIdSF_up_GH",&muonIdSF_up_GH,"muonIdSF_up_GH[nMuons]/D");
-      myTree->Branch("muonIdSF_down_BCDEF",&muonIdSF_down_BCDEF,"muonIdSF_down_BCDEF[nMuons]/D");
-      myTree->Branch("muonIdSF_down_GH",&muonIdSF_down_GH,"muonIdSF_down_GH[nMuons]/D");
-      myTree->Branch("muonIsoSF_BCDEF",&muonIsoSF_BCDEF, "muonIsoSF_BCDEF[nMuons]/D");
-      myTree->Branch("muonIsoSF_GH",&muonIsoSF_GH, "muonIsoSF_GH[nMuons]/D");
-      myTree->Branch("muonIsoSF_up_BCDEF",&muonIsoSF_up_BCDEF, "muonIsoSF_up_BCDEF[nMuons]/D");
-      myTree->Branch("muonIsoSF_up_GH",&muonIsoSF_up_GH, "muonIsoSF_up_GH[nMuons]/D");
-      myTree->Branch("muonIsoSF_down_BCDEF",&muonIsoSF_down_BCDEF, "muonIsoSF_down_BCDEF[nMuons]/D");
-      myTree->Branch("muonIsoSF_down_GH",&muonIsoSF_down_GH, "muonIsoSF_down_GH[nMuons]/D");
-      myTree->Branch("muonTrigSF_BCDEF",&muonTrigSF_BCDEF,"muonTrigSF_BCDEF[nMuons]/D");
-      myTree->Branch("muonTrigSF_GH",&muonTrigSF_GH,"muonTrigSF_GH[nMuons]/D");
-      myTree->Branch("muonTrigSF_up_BCDEF",&muonTrigSF_up_BCDEF,"muonTrigSF_up_BCDEF[nMuons]/D");
-      myTree->Branch("muonTrigSF_up_GH",&muonTrigSF_up_GH,"muonTrigSF_up_GH[nMuons]/D");
-      myTree->Branch("muonTrigSF_down_BCDEF",&muonTrigSF_down_BCDEF,"muonTrigSF_down_BCDEF[nMuons]/D");
-      myTree->Branch("muonTrigSF_down_GH",&muonTrigSF_down_GH,"muonTrigSF_down_GH[nMuons]/D");
-      myTree->Branch("muonTrackSF_eta",&muonTrackSF_eta,"muonTrackSF_eta[nMuons]/D");
-      myTree->Branch("muonTrackSF_aeta",&muonTrackSF_aeta,"muonTrackSF_aeta[nMuons]/D");
-      myTree->Branch("muonTrackSF_nPV",&muonTrackSF_nPV,"muonTrackSF_nPV[nMuons]/D");
+      /// Define branches
+      MakeBranches(isData, isTTbar, isAmc, fillLooseTree);
     }
     
     
@@ -1089,7 +1775,7 @@ int main (int argc, char *argv[])
     double end_d = ending;
     if ( localgridSubmission && endEvent < ending )
       end_d = endEvent;
-    if (test) end_d = 2000;  // for testing
+    if (test) end_d = 10000;  // for testing
     
     if ( end_d < startEvent )
     {
@@ -1105,82 +1791,17 @@ int main (int argc, char *argv[])
     
     
     
-    /////////////////////////
-    ///  Define internal variables
-    /////////////////////////
-    
-    bool isGoodPV;
-    bool isBadMuon, isCloneMuon;
-    bool toBeErased;
-    
     
     ////////////////////////////////////
     ///  Loop on events
     ////////////////////////////////////
     
-    nEvents = 0;
-    nEventsSel = 0;
-    nofPosWeights = 0;
-    nofNegWeights = 0;
-    sumW = 0.;
-    nofEventsRunB = 0;
-    nofEventsRunCD = 0;
-    nofEventsRunEF = 0;
-    nofEventsRunG = 0;
-    nofEventsRunH = 0;
-    nofSelEventsRunB = 0;
-    nofSelEventsRunCD = 0;
-    nofSelEventsRunEF = 0;
-    nofSelEventsRunG = 0;
-    nofSelEventsRunH = 0;
-    nofEventsWithGenTop = 0;
-    nofEventsWithGenTopWithStatus22or62 = 0;
-    nofEventsWithGenAntiTop = 0;
-    nofEventsWithGenAntiTopWithStatus22or62 = 0;
-    nofTTEventsWithoutBothGenTops = 0;
-    nofTTEventsWithoutGenTop = 0;
-    nofTTEventsWithoutGenAntiTop = 0;
-    nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-    nofTTEventsWithoutGenTopWithStatus22 = 0;
-    nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-    nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-    nofTTEventsWithoutGenTopWithStatus62 = 0;
-    nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
-    
-    for (Int_t i = 0; i < 10; i++)
-    {
-      cutFlow[i] = 0;
-      cutFlow2[i] = 0;
-    }
+    ClearMeta();
     
     /// Get run information
     datasets[d]->runTree()->SetBranchStatus("runInfos*",1);
     datasets[d]->runTree()->SetBranchAddress("runInfos",&runInfos);
     
-    /// Define objects
-    vector < TRootVertex* > vertex;
-    vector < TRootMuon* > init_muons;
-    vector < TRootElectron* > init_electrons;
-    vector < TRootJet* > init_jets_corrected;
-    vector < TRootJet* > init_jets;
-    vector < TRootMET* > mets;
-    vector < TRootMET* > mets_corrected;
-    vector < TRootGenJet* > genjets;
-    vector < TRootMCParticle* > mcParticles;
-    
-    vector < TRootPFJet* > selectedJets;
-    vector < TRootPFJet* > selectedBJets;
-    vector < TRootPFJet* > selectedJetsBC;
-    vector < TRootPFJet* > selectedLooseJets;
-    vector < TRootPFJet* > selectedLooseJetsBC;
-    vector < TRootMuon* > selectedMuons;
-    vector < TRootMuon* > selectedMuonsBC;
-    vector < TRootMuon* > vetoMuons;
-    vector < TRootMuon* > selectedLooseMuons;
-    vector < TRootMuon* > selectedLooseMuonsBC;
-    vector < TRootElectron* > selectedElectrons;
-    vector < TRootElectron* > vetoElectrons;
-    vector < TRootElectron* > selectedLooseElectrons;
     
     /// Systematics
     if (applyJEC) { appliedJES = 0;}
@@ -1206,199 +1827,7 @@ int main (int argc, char *argv[])
         cout << "Processing event " << ievt << "..." << endl;
       
       
-      /// Clear objects
-      vertex.clear();
-      init_muons.clear();
-      init_electrons.clear();
-      init_jets_corrected.clear();
-      init_jets.clear();
-      mets.clear();
-      mets_corrected.clear();
-      genjets.clear();
-      mcParticles.clear();
-      
-      selectedJets.clear();
-      selectedBJets.clear();
-      selectedJetsBC.clear();
-      selectedLooseJets.clear();
-      selectedLooseJetsBC.clear();
-      selectedMuons.clear();
-      selectedMuonsBC.clear();
-      vetoMuons.clear();
-      selectedLooseMuons.clear();
-      selectedLooseMuonsBC.clear();
-      selectedElectrons.clear();
-      vetoElectrons.clear();
-      selectedLooseElectrons.clear();
-      
-      /// Reset other stuff
-      isTrigged = false;
-      isSelected = false;
-      hasExactly4Jets = false;
-      hasJetLeptonCleaning = false;
-      hasLooseJetLeptonCleaning = false;
-      hasErasedBadOrCloneMuon = false;
-      hasErasedBadOrCloneLooseMuon = false;
-      
-      filterHBHENoise = false;
-      filterHBHEIso = false;
-      filterCSCTightHalo = false;
-      filterEcalDeadCell = false;
-      filterEEBadSc = false;  // recommended for data-only
-      filterBadChCand = false;
-      filterBadMuon = false;
-      passedMETFilter = false;
-      
-      isDataRunB = false;
-      isDataRunC = false;
-      isDataRunD = false;
-      isDataRunE = false;
-      isDataRunF = false;
-      isDataRunG = false;
-      isDataRunH = false;
-      hasPosWeight = false;
-      hasNegWeight = false;
-      hasGenTop = false;
-      hasGenTopWithStatus22 = false;
-      hasGenTopWithStatus62 = false;
-      hasGenAntiTop = false;
-      hasGenAntiTopWithStatus22 = false;
-      hasGenAntiTopWithStatus62 = false;
-      
-      nloWeight = 1.; // for amc@nlo samples
-      btagSF = 1.;
-      btagSF_up = 1.;
-      btagSF_down = 1.;
-      puSF = 1.;
-      puSF_up = 1.;
-      puSF_down = 1.;
-      for (Int_t i = 0; i < 10; i++)
-      {
-        muonIdSF_BCDEF[i] = 1.;
-        muonIdSF_GH[i] = 1.;
-        muonIdSF_up_BCDEF[i] = 1.;
-        muonIdSF_up_GH[i] = 1.;
-        muonIdSF_down_BCDEF[i] = 1.;
-        muonIdSF_down_GH[i] = 1.;
-        muonIsoSF_BCDEF[i] = 1.;
-        muonIsoSF_GH[i] = 1.;
-        muonIsoSF_up_BCDEF[i] = 1.;
-        muonIsoSF_up_GH[i] = 1.;
-        muonIsoSF_down_BCDEF[i] = 1.;
-        muonIsoSF_down_GH[i] = 1.;
-        muonTrigSF_BCDEF[i] = 1.;
-        muonTrigSF_GH[i] = 1.;
-        muonTrigSF_up_BCDEF[i] = 1.;
-        muonTrigSF_up_GH[i] = 1.;
-        muonTrigSF_down_BCDEF[i] = 1.;
-        muonTrigSF_down_GH[i] = 1.;
-        muonTrackSF_eta[i] = 1.;
-        muonTrackSF_aeta[i] = 1.;
-        muonTrackSF_nPV[i] = 1.;
-      }
-      
-      
-      nMuons = -1;
-      nLooseMuons = -1;
-      nJets = -1;
-      nLooseJets = -1;
-      
-      for (Int_t i = 0; i < 10; i++)
-      {
-        muon_charge[i] = 0;
-        muon_pt[i] = 0.;
-        muon_phi[i] = 0.;
-        muon_eta[i] = 0.;
-        muon_E[i] = 0.;
-        muon_M[i] = 0.;
-        muon_d0[i] = 999.;
-        muon_chargedHadronIso[i] = 999.;
-        muon_neutralHadronIso[i] = 999.;
-        muon_photonIso[i] = 999.;
-        muon_puChargedHadronIso[i] = 999.;
-        muon_relIso[i] = 999.;
-        muon_pfIso[i] = 999.;
-      }
-      
-      for (Int_t i = 0; i < 20; i++)
-      {
-        muon_loose_charge[i] = 0;
-        muon_loose_pt[i] = 0.;
-        muon_loose_phi[i] = 0.;
-        muon_loose_eta[i] = 0.;
-        muon_loose_E[i] = 0.;
-        muon_loose_d0[i] = 999.;
-        muon_loose_relIso[i] = 999.;
-        isGlobalLooseMuon[i] = false;
-        isTrackerLooseMuon[i] = false;
-      }
-      
-      for (Int_t i = 0; i < 20; i++)
-      {
-        jet_nConstituents[i] = 0.;
-        jet_nChConstituents[i] = 0.;
-        jet_charge[i] = 0;
-        jet_pt[i] = 0.;
-        jet_phi[i] = 0.;
-        jet_eta[i] = 0.;
-        jet_E[i] = 0.;
-        jet_M[i] = 0.;
-        jet_bdiscr[i] = -1.;
-      }
-      
-      for (Int_t i = 0; i < 30; i++)
-      {
-        jet_loose_nConstituents[i] = 0;
-        jet_loose_nChConstituents[i] = 0;
-        jet_loose_charge[i] = 0;
-        jet_loose_pt[i] = 0.;
-        jet_loose_phi[i] = 0.;
-        jet_loose_eta[i] = 0.;
-        jet_loose_E[i] = 0.;
-        jet_loose_M[i] = 0.;
-        jet_loose_bdiscr[i] = 0.;
-      }
-      
-      met_px = 0.;
-      met_py = 0.;
-      met_pt = 0.;
-      met_phi = 0.;
-      met_eta = 0.;
-      met_Et = 0.;
-      met_E = 0.;
-      
-      met_corr_px = 0.;
-      met_corr_py = 0.;
-      met_corr_pt = 0.;
-      met_corr_phi = 0.;
-      met_corr_eta = 0.;
-      met_corr_Et = 0.;
-      met_corr_E = 0.;
-      
-      /// mcparticles
-      nMCParticles = -1;
-      for (Int_t i = 0; i < 200; i++)
-      {
-        mc_status[i] = -1;
-        mc_pdgId[i] = 0;
-        mc_mother[i] = 0;
-        mc_granny[i] = 0;
-        mc_pt[i] = 0.;
-        mc_phi[i] = 0.;
-        mc_eta[i] = 0.;
-        mc_E[i] = 0.;
-        mc_M[i] = 0.;
-        mc_isLastCopy[i] = false;
-        mc_isPromptFinalState[i] = false;
-        mc_isHardProcess[i] = false;
-        mc_fromHardProcessFinalState[i] = false;
-      }
-      
-      /// Clear vars
-      isGoodPV = false;
-      isBadMuon = false;
-      isCloneMuon = false;
-      toBeErased = false;
+      ClearVars();
       
       
       
@@ -1487,13 +1916,14 @@ int main (int argc, char *argv[])
       jetTools->correctJets(init_jets_corrected, rho, isData);
       jetTools->correctMETTypeOne(init_jets_corrected, mets_corrected[0], isData);
       
-      if (applyJESdown)
-        jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "minus", 1); // with or without met?
-      else if (applyJESup)
-        jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "plus", 1);
       
       if (! isData)
       {
+        if (applyJESdown)
+          jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "minus", 1); // with or without met?
+        else if (applyJESup)
+          jetTools->correctJetJESUnc(init_jets_corrected, mets_corrected[0], "plus", 1);
+        
         if (applyJERdown)
           jetTools->correctJetJER(init_jets_corrected, genjets, mets_corrected[0], "minus", false);
         else if (applyJERup)
@@ -1561,78 +1991,11 @@ int main (int argc, char *argv[])
       {
         if(verbose > 3) cout << "  - Applying jet/lepton cleaning... " << endl; 
         
-        selectedJetsBC.clear();
-        selectedJetsBC = selectedJets;
-        selectedJets.clear();
+        selectedJets = JetLeptonCleaning(selectedJets, selectedLooseMuons, selectedLooseElectrons);
         
-        for (int iOrigJet = 0; iOrigJet < selectedJetsBC.size(); iOrigJet++)
+        if (fillLooseTree)
         {
-          toBeErased = false;
-          for (int iMuon = 0; iMuon < selectedLooseMuons.size(); iMuon++)
-          {
-            if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedLooseMuons[iMuon]) < 0.4 )
-            {
-              toBeErased = true;
-              hasJetLeptonCleaning = true;
-              break;
-            }
-          }
-          if (toBeErased) continue;
-          for (int iElectron = 0; iElectron < selectedLooseElectrons.size(); iElectron++)
-          {
-            if ( selectedJetsBC[iOrigJet]->DeltaR(*selectedLooseElectrons[iElectron]) < 0.3 )
-            {
-              toBeErased = true;
-              hasJetLeptonCleaning = true;
-              break;
-            }
-          }
-          if (! toBeErased)
-          {
-            selectedJets.push_back(selectedJetsBC[iOrigJet]);
-          }
-        }
-        if ( verbose > 3 )
-        {
-          if ( selectedJetsBC.size() != selectedJets.size() ) cout << "--> original = " << selectedJetsBC.size()  << " after cleaning = " << selectedJets.size() << endl;
-        }
-        
-        
-        /// Loose jets
-        selectedLooseJetsBC.clear();
-        selectedLooseJetsBC = selectedLooseJets;
-        selectedLooseJets.clear();
-        
-        for (int iOrigJet = 0; iOrigJet < selectedLooseJetsBC.size(); iOrigJet++)
-        {
-          bool toBeErased = false;
-          for (int iMuon = 0; iMuon < selectedLooseMuons.size(); iMuon++)
-          {
-            if ( selectedLooseJetsBC[iOrigJet]->DeltaR(*selectedLooseMuons[iMuon]) < 0.4 )
-            {
-              toBeErased = true;
-              hasLooseJetLeptonCleaning = true;
-              break;
-            }
-          }
-          if (toBeErased) continue;
-          for (int iElectron = 0; iElectron < selectedLooseElectrons.size(); iElectron++)
-          {
-            if ( selectedLooseJetsBC[iOrigJet]->DeltaR(*selectedLooseElectrons[iElectron]) < 0.3 )
-            {
-              toBeErased = true;
-              hasLooseJetLeptonCleaning = true;
-              break;
-            }
-          }
-          if (! toBeErased)
-          {
-            selectedLooseJets.push_back(selectedLooseJetsBC[iOrigJet]);
-          }
-        }
-        if ( verbose > 3 )
-        {
-          if ( selectedLooseJetsBC.size() != selectedLooseJets.size() ) cout << "--> original = " << selectedLooseJetsBC.size()  << " after cleaning = " << selectedLooseJets.size() << endl;
+          selectedLooseJets = JetLeptonCleaning(selectedLooseJets, selectedLooseMuons, selectedLooseElectrons);
         }
                 
       }  // end jet cleaning
@@ -1645,78 +2008,7 @@ int main (int argc, char *argv[])
       }
       
       
-      /// Fill tree with loose objects before event selection
-      //  Define jet & muon variables
-      if ( ! calculateBTagSF )
-      {
-        nJets = selectedJets.size();
-        nLooseJets = selectedLooseJets.size();
-        nMuons = selectedMuons.size();
-        nLooseMuons = selectedLooseMuons.size();
-        
-        for(Int_t iJet = 0; iJet < nJets; iJet++)
-        {
-          jet_charge[iJet] = selectedJets[iJet]->charge();
-          jet_nConstituents[iJet] = selectedJets[iJet]->nConstituents();
-          jet_nChConstituents[iJet] = selectedJets[iJet]->chargedMultiplicity();
-          jet_pt[iJet] = selectedJets[iJet]->Pt();
-          jet_phi[iJet] = selectedJets[iJet]->Phi();
-          jet_eta[iJet] = selectedJets[iJet]->Eta();
-          jet_E[iJet] = selectedJets[iJet]->E();
-          jet_M[iJet] = selectedJets[iJet]->M();
-          jet_bdiscr[iJet] = selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
-        }
-        
-        for (Int_t iMuon = 0; iMuon < nMuons; iMuon++)
-        {
-          muon_charge[iMuon] = selectedMuons[iMuon]->charge();
-          muon_pt[iMuon] = selectedMuons[iMuon]->Pt();
-          muon_phi[iMuon] = selectedMuons[iMuon]->Phi();
-          muon_eta[iMuon] = selectedMuons[iMuon]->Eta();
-          muon_E[iMuon] = selectedMuons[iMuon]->E();
-          muon_M[iMuon] = selectedMuons[iMuon]->M();
-          muon_d0[iMuon] = selectedMuons[iMuon]->d0();
-          muon_chargedHadronIso[iMuon] = selectedMuons[iMuon]->chargedHadronIso(4);
-          muon_neutralHadronIso[iMuon] = selectedMuons[iMuon]->neutralHadronIso(4);
-          muon_photonIso[iMuon] = selectedMuons[iMuon]->photonIso(4);
-          muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
-          muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
-          muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
-        }
-        
-        // TO DO: Include nominal event scale factors in loose tree (muon, PU)
-        
-        if ( fillLooseTree && nLooseMuons > 0 )
-        {
-          for(Int_t iJet = 0; iJet < nLooseJets; iJet++)
-          {
-            jet_loose_charge[iJet] = selectedLooseJets[iJet]->charge();
-            jet_loose_nConstituents[iJet] = selectedLooseJets[iJet]->nConstituents();
-            jet_loose_nChConstituents[iJet] = selectedLooseJets[iJet]->chargedMultiplicity();
-            jet_loose_pt[iJet] = selectedLooseJets[iJet]->Pt();
-            jet_loose_phi[iJet] = selectedLooseJets[iJet]->Phi();
-            jet_loose_eta[iJet] = selectedLooseJets[iJet]->Eta();
-            jet_loose_E[iJet] = selectedLooseJets[iJet]->E();
-            jet_loose_M[iJet] = selectedLooseJets[iJet]->M();
-            jet_loose_bdiscr[iJet] = selectedLooseJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
-          }
-          
-          for (Int_t iMuon = 0; iMuon < nLooseMuons; iMuon++)
-          {
-            muon_loose_charge[iMuon] = selectedLooseMuons[iMuon]->charge();
-            muon_loose_pt[iMuon] = selectedLooseMuons[iMuon]->Pt();
-            muon_loose_phi[iMuon] = selectedLooseMuons[iMuon]->Phi();
-            muon_loose_eta[iMuon] = selectedLooseMuons[iMuon]->Eta();
-            muon_loose_E[iMuon] = selectedLooseMuons[iMuon]->E();
-            muon_loose_d0[iMuon] = selectedLooseMuons[iMuon]->d0();
-            muon_loose_relIso[iMuon] = ( selectedLooseMuons[iMuon]->chargedHadronIso(4) + max( 0.0, selectedLooseMuons[iMuon]->neutralHadronIso(4) + selectedLooseMuons[iMuon]->photonIso(4) - 0.5*selectedLooseMuons[iMuon]->puChargedHadronIso(4) ) ) / muon_loose_pt[iMuon];  // dR = 0.4, dBeta corrected
-            isGlobalLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isGlobalMuon();
-            isTrackerLooseMuon[iMuon] = selectedLooseMuons[iMuon]->isTrackerMuon();
-          }
-          
-          looseTree->Fill();
-        }
-      }
+      if (! isData && ! calculateBTagSF && isAmc) FillaMCScaleFactors();
       
       
       ////// Selection
@@ -1728,24 +2020,49 @@ int main (int argc, char *argv[])
         cutFlow2[1]++;
         if (isGoodPV)
         {
+          if (! isData && ! calculateBTagSF) FillPUScaleFactors();
+          
           cutFlow[2]++;
           cutFlow2[2]++;
-          if (selectedMuons.size() == 1)
+          
+          /// Fill tree with loose objects before event selection
+          if ( fillLooseTree && ! calculateBTagSF && selectedMuons.size() > 0)
           {
+            FillFilters(isData);
+            if (passedMETFilter)
+            {
+              FillJetVars(selectedJets);
+              FillLooseJetVars(selectedLooseJets);
+              FillMuonVars(selectedMuons);
+              FillLooseMuonVars(selectedLooseMuons);
+              FillMuonScaleFactors(selectedMuons);
+              FillLooseMuonScaleFactors(selectedLooseMuons);
+              
+              looseTree->Fill();
+            }
+          }
+          
+          if ( selectedMuons.size() == 1 )
+          {
+            if (! isData && ! calculateBTagSF) FillMuonScaleFactors(selectedMuons);
             cutFlow[3]++;
             cutFlow2[3]++;
-            if (vetoMuons.size() == 1)
+            
+            if ( vetoMuons.size() == 1 )
             {
               cutFlow[4]++;
               cutFlow2[4]++;
-              if (vetoElectrons.size() == 0)
+              
+              if ( vetoElectrons.size() == 0 )
               {
                 cutFlow[5]++;
                 cutFlow2[5]++;
+                
                 if ( selectedJets.size() >= 4 )
                 {
                   cutFlow[6]++;
                   cutFlow2[6]++;
+                  
                   if ( selectedJets.size() == 4 )
                   {
                     cutFlow2[7]++;
@@ -1754,8 +2071,10 @@ int main (int argc, char *argv[])
                   
                   if ( selectedBJets.size() > 0 )
                   {
+                    if (! isData && applyBTagSF) FillBTagScaleFactors();
                     cutFlow[7]++;
                     if (hasExactly4Jets) cutFlow2[8]++;
+                    
                     if ( selectedBJets.size() > 1 )
                     {
                       cutFlow[8]++;
@@ -1784,15 +2103,6 @@ int main (int argc, char *argv[])
       
       nEventsSel++;
       
-      if (isData)
-      {
-        if (isDataRunB) nofSelEventsRunB++;
-        else if (isDataRunC || isDataRunD) nofSelEventsRunCD++;
-        else if (isDataRunE || isDataRunF) nofSelEventsRunEF++;
-        else if (isDataRunG) nofSelEventsRunG++;
-        else if (isDataRunH) nofSelEventsRunH++;
-      }
-      
       
       /// B-tagging
       if (calculateBTagSF && ! isData)
@@ -1807,180 +2117,26 @@ int main (int argc, char *argv[])
       /// The tree is not written
       
       
+      if (isData)
+      {
+        if (isDataRunB) nofSelEventsRunB++;
+        else if (isDataRunC || isDataRunD) nofSelEventsRunCD++;
+        else if (isDataRunE || isDataRunF) nofSelEventsRunEF++;
+        else if (isDataRunG) nofSelEventsRunG++;
+        else if (isDataRunH) nofSelEventsRunH++;
+      }
+      
+      
       
       ///////////////////////////////
       ///  Fill Object Variables  ///
       ///////////////////////////////
       
-      
-      met_px = mets[0]->Px();
-      met_py = mets[0]->Py();
-      met_pt = sqrt(met_px*met_px + met_py*met_py);
-      met_phi = mets[0]->Phi();
-      met_eta = mets[0]->Eta();
-      met_Et = mets[0]->Et();
-      met_E = mets[0]->E();
-      
-      met_corr_px = mets_corrected[0]->Px();
-      met_corr_py = mets_corrected[0]->Py();
-      met_corr_pt = sqrt(met_corr_px*met_corr_px + met_corr_py*met_corr_py);
-      met_corr_phi = mets_corrected[0]->Phi();
-      met_corr_eta = mets_corrected[0]->Eta();
-      met_corr_Et = mets_corrected[0]->Et();
-      met_corr_E = mets_corrected[0]->E();
-      
-      filterHBHENoise = event->getHBHENoiseFilter();
-      filterHBHEIso = event->getHBHENoiseIsoFilter();
-      filterCSCTightHalo = event->getglobalTightHalo2016Filter();
-      filterEcalDeadCell = event->getEcalDeadCellTriggerPrimitiveFilter();
-      if (isData) filterEEBadSc = event->getEEBadScFilter();  // recommended for data-only
-      else filterEEBadSc = true;
-      filterBadChCand = event->getBadChCandFilter();
-      filterBadMuon = event->getBadPFMuonFilter();
-      
-      if ( isGoodPV && filterHBHENoise && filterHBHEIso && filterCSCTightHalo && filterEcalDeadCell && filterEEBadSc && filterBadChCand && filterBadMuon ) passedMETFilter = true;
-      
-      if (! isData)
-      {
-        nMCParticles = mcParticles.size();
-        if (nMCParticles > maxMCParticles) maxMCParticles = nMCParticles;
-        for (Int_t iMC = 0; iMC < nMCParticles; iMC++)
-        {
-          mc_status[iMC] = mcParticles[iMC]->status();
-          mc_pdgId[iMC] = mcParticles[iMC]->type();
-          mc_mother[iMC] = mcParticles[iMC]->motherType();
-          mc_granny[iMC] = mcParticles[iMC]->grannyType();
-          mc_pt[iMC] = mcParticles[iMC]->Pt();
-          mc_phi[iMC] = mcParticles[iMC]->Phi();
-          mc_eta[iMC] = mcParticles[iMC]->Eta();
-          mc_E[iMC] = mcParticles[iMC]->E();
-          mc_M[iMC] = mcParticles[iMC]->M();
-          mc_isLastCopy[iMC] = mcParticles[iMC]->isLastCopy();
-          mc_isPromptFinalState[iMC] = mcParticles[iMC]->isPromptFinalState();
-          mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
-          mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
-          
-          if ( mc_pdgId[iMC] == 6 )
-          {
-            hasGenTop = true;
-            nofEventsWithGenTop++;
-            if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-            {
-              nofEventsWithGenTopWithStatus22or62++;
-              if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
-              else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
-            }
-          }
-          else if ( mc_pdgId[iMC] == -6 )
-          {
-            hasGenAntiTop = true;
-            nofEventsWithGenAntiTop++;
-            if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-            {
-              nofEventsWithGenAntiTopWithStatus22or62++;
-              if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
-              else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
-            }
-          }
-        }
-        
-        if (isTTbar)
-        {
-          if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
-          else if (! hasGenTop) nofTTEventsWithoutGenTop++;
-          else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
-          
-          if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
-          else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
-          else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
-          
-          if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
-          else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
-          else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
-        }
-      }
-      
-      
-      /// Fill scalefactors
-      if (! isData)
-      {
-        if (applyBTagSF)
-        {
-          btagSF = bTagHistoTool_M->getMCEventWeight(selectedJets, false);
-          btagSF_up = bTagHistoTool_M_up->getMCEventWeight(selectedJets, false);
-          btagSF_down = bTagHistoTool_M_down->getMCEventWeight(selectedJets, false);
-        }
-        
-        puSF = LumiWeights.ITweight( (int)event->nTruePU() );
-        puSF_up = LumiWeights_up.ITweight( (int)event->nTruePU() );
-        puSF_down = LumiWeights_down.ITweight( (int)event->nTruePU() );
-        
-        for (int iMuon = 0; iMuon < selectedMuons.size(); iMuon++)
-        {
-          muonIdSF_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);  // eta, pt, shiftUpDown;
-          muonIdSF_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
-          muonIdSF_up_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonIdSF_up_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonIdSF_down_BCDEF[iMuon] = muonSFWeightID_T_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          muonIdSF_down_GH[iMuon] = muonSFWeightID_T_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          
-          muonIsoSF_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
-          muonIsoSF_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
-          muonIsoSF_up_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonIsoSF_up_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonIsoSF_down_BCDEF[iMuon] = muonSFWeightIso_TT_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          muonIsoSF_down_GH[iMuon] = muonSFWeightIso_TT_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          
-          muonTrigSF_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
-          muonTrigSF_GH[iMuon] =    muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 0);
-          muonTrigSF_up_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonTrigSF_up_GH[iMuon] = muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), 1);
-          muonTrigSF_down_BCDEF[iMuon] = muonSFWeightTrig_BCDEF->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          muonTrigSF_down_GH[iMuon] = muonSFWeightTrig_GH->at(selectedMuons[iMuon]->Eta(), selectedMuons[iMuon]->Pt(), -1);
-          
-          muonTrackSF_eta[iMuon] = h_muonSFWeightTrackEta->Eval(selectedMuons[iMuon]->Eta());
-          muonTrackSF_aeta[iMuon] = h_muonSFWeightTrackAEta->Eval(fabs(selectedMuons[iMuon]->Eta()));
-          muonTrackSF_nPV[iMuon] = h_muonSFWeightTrackPV->Eval(npu);
-        }
-        
-        if (nlo)
-        {
-          if ( event->getWeight(1001) != -9999. )
-          {
-            nloWeight = event->getWeight(1001)/abs(event->originalXWGTUP());
-            //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
-            //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
-            if ( nloWeight >= 0. ) 
-            {
-              nofPosWeights++;
-              hasPosWeight = true;
-            }
-            else
-            {
-              nofNegWeights++;
-              hasNegWeight = true;
-            }
-          }
-          if ( event->getWeight(1) != -9999. )
-          {
-            nloWeight = event->getWeight(1)/abs(event->originalXWGTUP());
-            //mc_scaleupweight = event->getWeight(5)/abs(event->originalXWGTUP());
-            //mc_scaledownweight = event->getWeight(9)/abs(event->originalXWGTUP());
-            if ( nloWeight >= 0. )
-            {
-              nofPosWeights++;
-              hasPosWeight = true;
-            }
-            else
-            {
-              nofNegWeights++;
-              hasNegWeight = true;
-            }
-          }
-          
-          sumW += nloWeight;
-        }
-      }
+      FillMuonVars(selectedMuons);
+      FillJetVars(selectedJets);
+      FillMetVars(mets, mets_corrected);
+      FillFilters(isData);
+      if (! isData) FillMCParticles(isTTbar);
       
       
       if (! calculateBTagSF)
@@ -1990,6 +2146,7 @@ int main (int argc, char *argv[])
       
       
     }  // end loop events
+    
     if (! isData && ! calculateBTagSF) cout << "Max MCParticles: " << maxMCParticles << endl << endl;
     
     if (! calculateBTagSF)
@@ -2002,9 +2159,9 @@ int main (int argc, char *argv[])
       myTree->Write();
       statTree->Write();
       if (fillLooseTree) looseTree->Write();
+      fout->Close();
+      delete fout;
     }
-    fout->Close();
-    delete fout;
     
     
     //important: free memory
