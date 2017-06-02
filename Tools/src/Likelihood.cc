@@ -2,7 +2,7 @@
 
 const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10.};
 
-const std::string Likelihood::listCats_[] = {"CP", "WP", "UP"};
+const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
 
 const int Likelihood::nWidths_ = sizeof(widthArray_)/sizeof(widthArray_[0]);
 const int Likelihood::nCats_ = sizeof(listCats_)/sizeof(listCats_[0]);
@@ -14,9 +14,9 @@ double Likelihood::loglike_data_[nWidths_] = {0};
 double Likelihood::loglike_per_evt_[nWidths_] = {0};
 double Likelihood::loglike_good_evts_[nWidths_] = {0};
 double Likelihood::loglike_good_evts_data_[nWidths_] = {0};
-double Likelihood::loglike_CP_[nWidths_] = {0};
-double Likelihood::loglike_CP_per_evt_[nWidths_] = {0};
-double Likelihood::loglike_CP_good_evts_[nWidths_] = {0};
+double Likelihood::loglike_CM_[nWidths_] = {0};
+double Likelihood::loglike_CM_per_evt_[nWidths_] = {0};
+double Likelihood::loglike_CM_good_evts_[nWidths_] = {0};
 double Likelihood::loglike_gen_[nWidths_] = {0};
 double Likelihood::loglike_gen_per_evt_[nWidths_] = {0};
 double Likelihood::loglike_gen_good_evts_[nWidths_] = {0};
@@ -48,7 +48,7 @@ int Likelihood::LocMinArray(int n, double* array)
 }
 
 Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
-verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCPLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
+verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
@@ -64,8 +64,8 @@ verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"
     loglike_data_[i] = 0.;
     loglike_good_evts_[i] = 0.;
     loglike_good_evts_data_[i] = 0.;
-    loglike_CP_[i] = 0.;
-    loglike_CP_good_evts_[i] = 0.;
+    loglike_CM_[i] = 0.;
+    loglike_CM_good_evts_[i] = 0.;
     loglike_gen_[i] = 0.;
     loglike_gen_good_evts_[i] = 0.;
   }
@@ -92,17 +92,17 @@ void Likelihood::BookHistograms()
   {
     thisWidth_ = stringWidthArray_[iWidth];
     
-    histo_[("Red_top_mass_CP_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_CP_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", CP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_CP_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_CP_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", CP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_CP_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_CP_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", CP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
     
-    histo_[("Red_top_mass_WP_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_WP_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", WP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_WP_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_WP_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", WP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_WP_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_WP_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", WP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
     
-    histo_[("Red_top_mass_UP_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_UP_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", UP; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_UP_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_UP_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", UP; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_UP_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_UP_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", UP; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
   }
 }
 
@@ -209,15 +209,15 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
     
     /// Make arrays as input for TGraph
     const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double binCentreArray[nPoints] = {0.}, binContentArray[nCats_][nPoints] = {0.}, likelihoodCPArray[nPoints] = {0.}, totalBinContentArray[nPoints] = {0.}, likelihoodArray[nPoints] = {0.};
+    double binCentreArray[nPoints] = {0.}, binContentArray[nCats_][nPoints] = {0.}, likelihoodCMArray[nPoints] = {0.}, totalBinContentArray[nPoints] = {0.}, likelihoodArray[nPoints] = {0.};
     for (int i = 0; i < nPoints; i++)
     {
       binCentreArray[i] = (vecBinCentres_[listCats_[0]+"_"+suffix_]).at(i);
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
         binContentArray[iCat][i] = (vecBinContents_[listCats_[iCat]+"_"+suffix_]).at(i);
-        // For CP events
-        if ( iCat == 0 ) { likelihoodCPArray[i] = -TMath::Log(binContentArray[iCat][i]);}
+        // For CM events
+        if ( iCat == 0 ) { likelihoodCMArray[i] = -TMath::Log(binContentArray[iCat][i]);}
         // Calculate event fractions (one time)
         if ( i == 0 ) { fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents;}
       }
@@ -233,14 +233,14 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       graph_[histoName_]->SetTitle(histoName_.c_str());
       graph_[histoName_]->Write();
       DrawGraph(histoSm_[histoName_], graph_[histoName_], "Graph_Red_top_mass_"+histoName_);
-      if ( iCat == 0 )  //CP
+      if ( iCat == 0 )  //CM
       {
-        graph_["likelihood_CP_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodCPArray);
-        graph_["likelihood_CP_"+suffix_]->SetName(("likelihood_CP_"+suffix_).c_str());
-        graph_["likelihood_CP_"+suffix_]->SetTitle(("likelihood_CP_"+suffix_).c_str());
-        graph_["likelihood_CP_"+suffix_]->Write();
+        graph_["likelihood_CM_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodCMArray);
+        graph_["likelihood_CM_"+suffix_]->SetName(("likelihood_CM_"+suffix_).c_str());
+        graph_["likelihood_CM_"+suffix_]->SetTitle(("likelihood_CM_"+suffix_).c_str());
+        graph_["likelihood_CM_"+suffix_]->Write();
         
-        WriteOutput(nPoints, iWidth, binCentreArray, likelihoodCPArray, "CorrectMatchLikelihood_"+suffix_, 1);
+        WriteOutput(nPoints, iWidth, binCentreArray, likelihoodCMArray, "CorrectMatchLikelihood_"+suffix_, 1);
       }
       
       
@@ -252,7 +252,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       if ( iCat == 0 )
       {
         histoTotal_[suffix_] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
-        histoTotal_[suffix_]->SetTitle("#frac{n_{CP}}{n_{tot}} * f_{CP}(x|#Gamma) + #frac{n_{WP}}{n_{tot}} * f_{WP}(x|#Gamma) + #frac{n_{UP}}{n_{tot}} * f_{UP}(x|#Gamma)");
+        histoTotal_[suffix_]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x|#Gamma) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x|#Gamma)");
       }
       else histoTotal_[suffix_]->Add(histoSm_[histoName_]);
     }
@@ -376,7 +376,7 @@ void Likelihood::CalculateLikelihood(double redMass, double massForWidthSF, doub
   }
 }
 
-void Likelihood::CalculateCPLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateCMLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
   {
@@ -385,7 +385,7 @@ void Likelihood::CalculateCPLikelihood(double redMass, double massForWidthSF, do
   }
   else if ( redMass > minRedMass_ && redMass < maxRedMass_ )
   {
-    if (! calledCPLLCalculation_) calledCPLLCalculation_ = true;
+    if (! calledCMLLCalculation_) calledCMLLCalculation_ = true;
     
     if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(massForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
@@ -394,8 +394,8 @@ void Likelihood::CalculateCPLikelihood(double redMass, double massForWidthSF, do
     {
       thisWidth_ = stringWidthArray_[iWidth];
       
-      loglike_CP_per_evt_[iWidth] = graph_["CorrectMatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
-      loglike_CP_[iWidth] += loglike_CP_per_evt_[iWidth]*thisWidthSF_;
+      loglike_CM_per_evt_[iWidth] = graph_["CorrectMatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
+      loglike_CM_[iWidth] += loglike_CM_per_evt_[iWidth]*thisWidthSF_;
     }
     
     if (calculateGoodEvtLL_)
@@ -403,7 +403,7 @@ void Likelihood::CalculateCPLikelihood(double redMass, double massForWidthSF, do
       bool isGoodLL = false;
       for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
       {
-        if ( loglike_CP_per_evt_[0] > loglike_CP_per_evt_[iWidth] && loglike_CP_per_evt_[iWidth] < loglike_CP_per_evt_[nWidths_-1] )
+        if ( loglike_CM_per_evt_[0] > loglike_CM_per_evt_[iWidth] && loglike_CM_per_evt_[iWidth] < loglike_CM_per_evt_[nWidths_-1] )
         {
           isGoodLL = true;
           break;
@@ -414,7 +414,7 @@ void Likelihood::CalculateCPLikelihood(double redMass, double massForWidthSF, do
 //        nofGoodEvtsLL[d]++;
         for (int iWidth = 0; iWidth < nWidths_; iWidth++)
         {
-          loglike_CP_good_evts_[iWidth] += loglike_CP_per_evt_[iWidth]*thisWidthSF_;
+          loglike_CM_good_evts_[iWidth] += loglike_CM_per_evt_[iWidth]*thisWidthSF_;
         }
       }
 //       else
@@ -487,8 +487,8 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type)
   if (! type.empty() ) loglikePlotName += type+"_";
   loglikePlotName += "widthx"+tls_->DotReplace(inputWidth);
   
-  if ( type.find("CP") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_CP_, loglikePlotName);
+  if ( type.find("CM") != std::string::npos )
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName);
   else
@@ -955,21 +955,21 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
 //     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
 //   }
 //   txtOutputLogLike << "};" << std::endl;
-  if (calledCPLLCalculation_)
+  if (calledCMLLCalculation_)
   {
-    txtOutputLogLike << "CP likelihood values : {";
+    txtOutputLogLike << "CM likelihood values : {";
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      txtOutputLogLike << loglike_CP_[iWidth]/(1e+2);
+      txtOutputLogLike << loglike_CM_[iWidth]/(1e+2);
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
     }
     txtOutputLogLike << "} *10^2;";
     if (calculateGoodEvtLL_)
     {
-      txtOutputLogLike << std::endl << "CP likelihood values (only good events) : {";
+      txtOutputLogLike << std::endl << "CM likelihood values (only good events) : {";
       for (int iWidth = 0; iWidth < nWidths_; iWidth++)
       {
-        txtOutputLogLike << loglike_CP_good_evts_[iWidth]/(1e+2);
+        txtOutputLogLike << loglike_CM_good_evts_[iWidth]/(1e+2);
         if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
       }
     }

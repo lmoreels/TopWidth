@@ -44,7 +44,7 @@ class Likelihood{
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, bool isData);
     void CalculateLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
-    void CalculateCPLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void CalculateCMLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
     void GetOutputWidth(double inputWidth);
@@ -87,9 +87,9 @@ class Likelihood{
     static double loglike_per_evt_[];
     static double loglike_good_evts_[];
     static double loglike_good_evts_data_[];
-    static double loglike_CP_[];
-    static double loglike_CP_per_evt_[];
-    static double loglike_CP_good_evts_[];
+    static double loglike_CM_[];
+    static double loglike_CM_per_evt_[];
+    static double loglike_CM_good_evts_[];
     static double loglike_gen_[];
     static double loglike_gen_per_evt_[];
     static double loglike_gen_good_evts_[];
@@ -113,7 +113,7 @@ class Likelihood{
     
     bool calculateGoodEvtLL_;
     bool calledLLCalculation_;
-    bool calledCPLLCalculation_;
+    bool calledCMLLCalculation_;
     bool calledGenLLCalculation_;
     
     std::ifstream fileIn_;

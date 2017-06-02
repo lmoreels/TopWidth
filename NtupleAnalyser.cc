@@ -103,9 +103,9 @@ int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
-int nofCP = 0, nofWP = 0, nofUP = 0;
-int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
-double nofCP_weighted = 0, nofWP_weighted = 0, nofUP_weighted = 0;
+int nofCM = 0, nofWM = 0, nofNM = 0;
+int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
+double nofCM_weighted = 0, nofWM_weighted = 0, nofNM_weighted = 0;
 
 /// Lumi per data era
 double lumi_runBCDEF = 19.67550334113;  // 1/fb
@@ -118,8 +118,8 @@ double CSVv2Medium = 0.8484;
 double CSVv2Tight  = 0.9535;
 
 /// Average top mass
-// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
-// also background in CP/WP/UP cats (unlike name suggests)
+// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WM/NM, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
+// also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
 std::array<double, nofAveMasses> aveTopMass = {171.825, 169.751, 167.558, 193.812, 191.823, 198.213, 182.175, 252.030, 252.837, 233.056, 230.495, 214.340, 212.065, 185.199, 182.561, 182.876};
@@ -145,7 +145,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets, datasetsMSP, datasetsTemp;
 
-ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassReco;
+ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMNM, txtMassRecoNM, txtMassRecoWM, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -495,8 +495,8 @@ int labelMlb, labelMl_nonb;
 double massForWidth;
 
 string catSuffix = "";
-string catSuffixList[] = {"_CP", "_WP", "_UP"};
-bool isCP, isWP, isUP;
+string catSuffixList[] = {"_CM", "_WM", "_NM"};
+bool isCM, isWM, isNM;
 
 
 /// Define TLVs
@@ -738,8 +738,8 @@ int main(int argc, char* argv[])
     {
       datasets[d]->SetTitle("t#bar{t}");
       datasets[d]->SetColor(kRed+1);
-      datasetsMSP[dTT+2]->SetName("TT_UP");
-      datasetsMSP[dTT+2]->SetTitle("t#bar{t} UP");
+      datasetsMSP[dTT+2]->SetName("TT_NM");
+      datasetsMSP[dTT+2]->SetTitle("t#bar{t} NM");
       datasetsMSP[dTT+2]->SetColor(kRed-10);
       
       dTT = d;
@@ -778,14 +778,14 @@ int main(int argc, char* argv[])
   }
   
   treeLoader.LoadDatasets(datasetsTemp, xmlfile);
-  datasetsTemp[dTT]->SetName("TT_WP");
-  datasetsTemp[dTT]->SetTitle("t#bar{t} WP");
+  datasetsTemp[dTT]->SetName("TT_WM");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} WM");
   datasetsTemp[dTT]->SetColor(kRed-9);
   datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
   datasetsTemp.clear();
   treeLoader.LoadDatasets(datasetsTemp, xmlfile);
-  datasetsTemp[dTT]->SetName("TT_CP");
-  datasetsTemp[dTT]->SetTitle("t#bar{t} CP");
+  datasetsTemp[dTT]->SetName("TT_CM");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} CM");
   datasetsTemp[dTT]->SetColor(kRed-7);
   datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
   
@@ -853,10 +853,10 @@ int main(int argc, char* argv[])
     mkdir("averageMass/",0777);
     txtMassGenPMatched.open(("averageMass/mass_genp_matched_TT_"+dateString+".txt").c_str());
     txtMassGenJMatched.open(("averageMass/mass_genj_matched_TT_"+dateString+".txt").c_str());
-    txtMassRecoCP.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
-    txtMassRecoWPUP.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
-    txtMassRecoUP.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
-    txtMassRecoWP.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
+    txtMassRecoCM.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
+    txtMassRecoWMNM.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
+    txtMassRecoNM.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
+    txtMassRecoWM.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
   }
   
   txtDebugTopMass.open("debug_missing_topQ.txt");
@@ -1426,37 +1426,37 @@ int main(int argc, char* argv[])
           /// Correct match
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
-            isCP = true;
+            isCM = true;
             nofCorrectlyMatched++;
           }
           else  // wrong permutation
           {
-            isWP = true;
+            isWM = true;
             nofNotCorrectlyMatched++;
           }
         }  // end hadrTopMatch
         else  // no match
         {
-          isUP = true;
+          isNM = true;
         }
         
         
-        if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
-          cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
+        if ( (! isCM && ! isWM && ! isNM) || (isCM && isWM) || (isCM && isNM) || (isWM && isNM) )
+          cerr << "Something wrong with trigger logic CM/WM/NM !! " << endl;
         
       }  // not Data
       
       
-      if (isCP) catSuffix = catSuffixList[0];
-      else if (isWP) catSuffix = catSuffixList[1];
-      else if (isUP) catSuffix = catSuffixList[2];
+      if (isCM) catSuffix = catSuffixList[0];
+      else if (isWM) catSuffix = catSuffixList[1];
+      else if (isNM) catSuffix = catSuffixList[2];
       
       if (makePlots)
       {
         int dMSP = d;
         if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-        else if (isTTbar && isWP) dMSP = d+1;
-        else if (isTTbar && isUP) dMSP = d+2;
+        else if (isTTbar && isWM) dMSP = d+1;
+        else if (isTTbar && isNM) dMSP = d+2;
         FillGeneralPlots(datasetsMSP, dMSP);
         
         MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
@@ -1539,44 +1539,44 @@ int main(int argc, char* argv[])
       if (calculateLikelihood)
       {
         like->CalculateLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
-        if (isCP && ! doPseudoExps)  // isCP ensures ! isData
-          like->CalculateCPLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+        if (isCM && ! doPseudoExps)  // isCM ensures ! isData
+          like->CalculateCMLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
       }
       
       if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
       if ( redTopMass < minRedTopMass ) minRedTopMass = redTopMass;
       if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
       {
-        if (isCP)
+        if (isCM)
         {
-          nofCP++;
-          nofCP_weighted += widthSF;
-          if (isTTbar) nofCP_TT++;
+          nofCM++;
+          nofCM_weighted += widthSF;
+          if (isTTbar) nofCM_TT++;
         }
-        else if (isWP)
+        else if (isWM)
         {
-          nofWP++;
-          nofWP_weighted += widthSF;
-          if (isTTbar) nofWP_TT++;
+          nofWM++;
+          nofWM_weighted += widthSF;
+          if (isTTbar) nofWM_TT++;
         }
-        else if (isUP)
+        else if (isNM)
         {
-          nofUP++;
-          nofUP_weighted += widthSF;
-          if (isTTbar) nofUP_TT++;
+          nofNM++;
+          nofNM_weighted += widthSF;
+          if (isTTbar) nofNM_TT++;
         }
       }
       
       if (calculateAverageMass && ! isData)
       {
-        if (isCP) txtMassRecoCP << ievt << "  " << topmass_reco_kf << endl;
+        if (isCM) txtMassRecoCM << ievt << "  " << topmass_reco_kf << endl;
         else
         {
-          txtMassRecoWPUP << ievt << "  " << topmass_reco_kf << endl;
-          if (isWP)
-            txtMassRecoWP << ievt << "  " << topmass_reco_kf << endl;
-          else if (isUP)
-            txtMassRecoUP << ievt << "  " << topmass_reco_kf << endl;
+          txtMassRecoWMNM << ievt << "  " << topmass_reco_kf << endl;
+          if (isWM)
+            txtMassRecoWM << ievt << "  " << topmass_reco_kf << endl;
+          else if (isNM)
+            txtMassRecoNM << ievt << "  " << topmass_reco_kf << endl;
         }
       }  // end aveMassCalc
       
@@ -1606,8 +1606,8 @@ int main(int argc, char* argv[])
             
             int dMSP = d;
             if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-            else if (isTTbar && isWP) dMSP = d+1;
-            else if (isTTbar && isUP) dMSP = d+2;
+            else if (isTTbar && isWM) dMSP = d+1;
+            else if (isTTbar && isNM) dMSP = d+2;
             
             FillMSPlots(dMSP);
           }
@@ -1627,8 +1627,8 @@ int main(int argc, char* argv[])
         
         int dMSP = d;
         if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-        else if (isTTbar && isWP) dMSP = d+1;
-        else if (isTTbar && isUP) dMSP = d+2;
+        else if (isTTbar && isWM) dMSP = d+1;
+        else if (isTTbar && isNM) dMSP = d+2;
         
         FillMSPlots(dMSP);
         
@@ -1710,19 +1710,19 @@ int main(int argc, char* argv[])
   {
     txtMassGenPMatched.close();
     txtMassGenJMatched.close();
-    txtMassRecoCP.close();
-    txtMassRecoWPUP.close();
-    txtMassRecoUP.close();
-    txtMassRecoWP.close();
+    txtMassRecoCM.close();
+    txtMassRecoWMNM.close();
+    txtMassRecoNM.close();
+    txtMassRecoWM.close();
   }
   
   if (applyWidthSF) txtDebugTopMass.close();
   
   if (! doGenOnly && ! testTTbarOnly)
   {
-    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << 100*(double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << 100*(double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << 100*(double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
-    cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << (int)(nofCP_weighted+nofWP_weighted+nofUP_weighted) << endl;
-    cout << "                               (TTbar only) CP: " << nofCP_TT << "              WP: " << nofWP_TT << "              UP: " << nofUP_TT << endl;
+    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofNM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofNM)) << "%)   NM: " << nofNM << " (" << 100*(double)nofNM/((double)(nofCM+nofWM+nofNM)) << "%)   Total: " << nofCM+nofWM+nofNM << endl;
+    cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
+    cout << "                               (TTbar only) CM: " << nofCM_TT << "              WM: " << nofWM_TT << "              NM: " << nofNM_TT << endl;
   }
   
   
@@ -1751,9 +1751,9 @@ int main(int argc, char* argv[])
     like->GetOutputWidth(scaleWidth);
     if (! doPseudoExps)
     {
-      cout << "Output width for correctly matched events (using likelihood with only CP template): " << endl;
-      like->GetOutputWidth(scaleWidth, "CP");
-      cout << "Output width for generated events (using likelihood with only CP template): " << endl;
+      cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+      like->GetOutputWidth(scaleWidth, "CM");
+      cout << "Output width for generated events (using likelihood with only CM template): " << endl;
       like->GetOutputWidth(scaleWidth, "gen");
     }
     //cout << "Output width from file (standard calculation): " << endl;
@@ -2237,10 +2237,10 @@ void InitHisto1D()
   histo1D["Reco_top_mass_reco"] = new TH1F("Reco_top_mass_reco","Reconstructed top mass; M_{t} [GeV]", 80, 0, 800);
     
   /// m_t/<m_t>
-  histo1D["Reduced_top_mass_TT_reco_CP"] = new TH1F("Reduced_top_mass_TT_reco_CP","Reduced top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["Reduced_top_mass_TT_reco_WPUP"] = new TH1F("Reduced_top_mass_TT_reco_WPUP","Reduced top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["Reduced_top_mass_TT_reco_UP"] = new TH1F("Reduced_top_mass_TT_reco_UP","Reduced top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["Reduced_top_mass_TT_reco_WP"] = new TH1F("Reduced_top_mass_TT_reco_WP","Reduced top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_CM"] = new TH1F("Reduced_top_mass_TT_reco_CM","Reduced top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_WMNM"] = new TH1F("Reduced_top_mass_TT_reco_WMNM","Reduced top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_NM"] = new TH1F("Reduced_top_mass_TT_reco_NM","Reduced top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["Reduced_top_mass_TT_reco_WM"] = new TH1F("Reduced_top_mass_TT_reco_WM","Reduced top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   histo1D["Reduced_top_mass_bkgd"] = new TH1F("Reduced_top_mass_bkgd","Reduced top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["Reduced_top_mass_TT"] = new TH1F("Reduced_top_mass_TT","Reduced top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
@@ -2253,25 +2253,25 @@ void InitHisto1D()
   histo1D["Reduced_top_mass_data"] = new TH1F("Reduced_top_mass_data","Reduced top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   /// mlb
-  histo1D["minMlb_reco_CP"]  = new TH1F("minMlb_reco_CP","Minimal reconstructed M_{lb} mass using events that have correct hadronic top match (CP); min(M_{lb}) [GeV]", 400, 0, 800);
-  histo1D["minMlb_reco_WP"]  = new TH1F("minMlb_reco_WP","Minimal reconstructed M_{lb} mass using events that have wrong permutation hadronic top match (WP); min(M_{lb}) [GeV]", 400, 0, 800);
-  histo1D["minMlb_reco_UP"]  = new TH1F("minMlb_reco_UP","Minimal reconstructed M_{lb} mass using events that have no hadronic top match (UP); min(M_{lb}) [GeV]", 400, 0, 800);
+  histo1D["minMlb_reco_CM"]  = new TH1F("minMlb_reco_CM","Minimal reconstructed M_{lb} mass using events that have correct hadronic top match (CM); min(M_{lb}) [GeV]", 400, 0, 800);
+  histo1D["minMlb_reco_WM"]  = new TH1F("minMlb_reco_WM","Minimal reconstructed M_{lb} mass using events that have wrong permutation hadronic top match (WM); min(M_{lb}) [GeV]", 400, 0, 800);
+  histo1D["minMlb_reco_NM"]  = new TH1F("minMlb_reco_NM","Minimal reconstructed M_{lb} mass using events that have no hadronic top match (NM); min(M_{lb}) [GeV]", 400, 0, 800);
   
   /// dR
   //  lepton, b(lep)
   histo1D["dR_lep_b_reco"] = new TH1F("dR_lep_b_reco","Minimal delta R between the lepton and a b jet (for reconstructed events); #Delta R(l,b)", 25, 0, 5);
-  histo1D["dR_lep_b_lep_reco_CP"]  = new TH1F("dR_lep_b_lep_reco_CP","Minimal delta R between the lepton and the leptonic b jet (reco, correct match); #Delta R(l,b_{l})", 25, 0, 5);
-  histo1D["dR_lep_b_lep_reco_WP"]  = new TH1F("dR_lep_b_lep_reco_WP","Minimal delta R between the lepton and the leptonic b jet (reco, wrong permutation); #Delta R(l,b_{l})", 25, 0, 5);
-  histo1D["dR_lep_b_lep_reco_UP"]  = new TH1F("dR_lep_b_lep_reco_UP","Minimal delta R between the lepton and the leptonic b jet (reco, no match); #Delta R(l,b_{l})", 25, 0, 5);
+  histo1D["dR_lep_b_lep_reco_CM"]  = new TH1F("dR_lep_b_lep_reco_CM","Minimal delta R between the lepton and the leptonic b jet (reco, correct match); #Delta R(l,b_{l})", 25, 0, 5);
+  histo1D["dR_lep_b_lep_reco_WM"]  = new TH1F("dR_lep_b_lep_reco_WM","Minimal delta R between the lepton and the leptonic b jet (reco, wrong permutation); #Delta R(l,b_{l})", 25, 0, 5);
+  histo1D["dR_lep_b_lep_reco_NM"]  = new TH1F("dR_lep_b_lep_reco_NM","Minimal delta R between the lepton and the leptonic b jet (reco, no match); #Delta R(l,b_{l})", 25, 0, 5);
   //  lepton, b(hadr)
-  histo1D["dR_lep_b_had_reco_CP"]  = new TH1F("dR_lep_b_had_reco_CP","Minimal delta R between the lepton and the hadronic b jet (reco, correct match); #Delta R(l,b_{h})", 25, 0, 5);
-  histo1D["dR_lep_b_had_reco_WP"]  = new TH1F("dR_lep_b_had_reco_WP","Minimal delta R between the lepton and the hadronic b jet (reco, wrong permutation); #Delta R(l,b_{h})", 25, 0, 5);
-  histo1D["dR_lep_b_had_reco_UP"]  = new TH1F("dR_lep_b_had_reco_UP","Minimal delta R between the lepton and the hadronic b jet (reco, no match); #Delta R(l,b_{h})", 25, 0, 5);
+  histo1D["dR_lep_b_had_reco_CM"]  = new TH1F("dR_lep_b_had_reco_CM","Minimal delta R between the lepton and the hadronic b jet (reco, correct match); #Delta R(l,b_{h})", 25, 0, 5);
+  histo1D["dR_lep_b_had_reco_WM"]  = new TH1F("dR_lep_b_had_reco_WM","Minimal delta R between the lepton and the hadronic b jet (reco, wrong permutation); #Delta R(l,b_{h})", 25, 0, 5);
+  histo1D["dR_lep_b_had_reco_NM"]  = new TH1F("dR_lep_b_had_reco_NM","Minimal delta R between the lepton and the hadronic b jet (reco, no match); #Delta R(l,b_{h})", 25, 0, 5);
   
   /// ttbar mass
-  histo1D["ttbar_mass_reco_CP"] = new TH1F("ttbar_mass_reco_CP","Reconstructed mass of the top quark pair (reco, correct match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
-  histo1D["ttbar_mass_reco_WP"] = new TH1F("ttbar_mass_reco_WP","Reconstructed mass of the top quark pair (reco, wrong permutation); M_{t#bar{t}} [GeV]", 500, 0, 1000);
-  histo1D["ttbar_mass_reco_UP"] = new TH1F("ttbar_mass_reco_UP","Reconstructed mass of the top quark pair (reco, no match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
+  histo1D["ttbar_mass_reco_CM"] = new TH1F("ttbar_mass_reco_CM","Reconstructed mass of the top quark pair (reco, correct match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
+  histo1D["ttbar_mass_reco_WM"] = new TH1F("ttbar_mass_reco_WM","Reconstructed mass of the top quark pair (reco, wrong permutation); M_{t#bar{t}} [GeV]", 500, 0, 1000);
+  histo1D["ttbar_mass_reco_NM"] = new TH1F("ttbar_mass_reco_NM","Reconstructed mass of the top quark pair (reco, no match); M_{t#bar{t}} [GeV]", 500, 0, 1000);
   
   // debug
 //  histo1D["debugLL_hadr_top_mass_reco"] = new TH1F("debugLL_hadr_top_mass_reco","Reconstructed mass of the hadronic top quark; M_{t} [GeV]", 400, 0, 800);
@@ -2303,16 +2303,16 @@ void InitHisto1D()
     histo1D["KF_jet0_Et_diff_TT"] = new TH1F("KF_jet0_Et_diff_TT", "Et difference after kinFitter for jet0 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
     histo1D["KF_jet1_Et_diff_TT"] = new TH1F("KF_jet1_Et_diff_TT", "Et difference after kinFitter for jet1 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
     
-    histo1D["KF_top_mass_corr_CP"] = new TH1F("KF_top_mass_corr_CP", "Top mass after kinFitter for correct match (CP); m_{t,kf} [GeV]", 400, 0, 800);
-    histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
-    histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_CM"] = new TH1F("KF_top_mass_corr_CM", "Top mass after kinFitter for correct match (CM); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_WM"] = new TH1F("KF_top_mass_corr_WM", "Top mass after kinFitter for wrong permutations (WM); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_NM"] = new TH1F("KF_top_mass_corr_NM", "Top mass after kinFitter for no match (NM); m_{t,kf} [GeV]", 400, 0, 800);
     
-    histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_CP_wide"] = new TH1F("KF_Chi2_CP_wide", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
-    histo1D["KF_Chi2_WP_wide"] = new TH1F("KF_Chi2_WP_wide", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
-    histo1D["KF_Chi2_UP_wide"] = new TH1F("KF_Chi2_UP_wide", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_CM"] = new TH1F("KF_Chi2_CM", "Chi2 value of kinFitter (CM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_WM"] = new TH1F("KF_Chi2_WM", "Chi2 value of kinFitter (WM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_NM"] = new TH1F("KF_Chi2_NM", "Chi2 value of kinFitter (NM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_CM_wide"] = new TH1F("KF_Chi2_CM_wide", "Chi2 value of kinFitter (CM); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_WM_wide"] = new TH1F("KF_Chi2_WM_wide", "Chi2 value of kinFitter (WM); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_NM_wide"] = new TH1F("KF_Chi2_NM_wide", "Chi2 value of kinFitter (NM); #chi^{2}", 200, 0, 20);
     
     histo1D["KF_top_mass_orig_match"] = new TH1F("KF_top_mass_orig_match", "Top mass before kinFitter for matched events; m_{t} [GeV]", 80, 0, 400);
     histo1D["KF_top_mass_corr_match"] = new TH1F("KF_top_mass_corr_match", "Top mass after kinFitter for matched events; m_{t,kf} [GeV]", 80, 0, 400);
@@ -2326,34 +2326,34 @@ void InitHisto2D()
   InitHisto2DMatch();
   
   /// Reco
-  histo2D["dR_lep_b_lep_vs_had_CP"] = new TH2F("dR_lep_b_lep_vs_had_CP","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, correct match); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
-  histo2D["dR_lep_b_lep_vs_had_WP"] = new TH2F("dR_lep_b_lep_vs_had_WP","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, wrong permutations); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
-  histo2D["dR_lep_b_lep_vs_had_UP"] = new TH2F("dR_lep_b_lep_vs_had_UP","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, no match); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
+  histo2D["dR_lep_b_lep_vs_had_CM"] = new TH2F("dR_lep_b_lep_vs_had_CM","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, correct match); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
+  histo2D["dR_lep_b_lep_vs_had_WM"] = new TH2F("dR_lep_b_lep_vs_had_WM","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, wrong permutations); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
+  histo2D["dR_lep_b_lep_vs_had_NM"] = new TH2F("dR_lep_b_lep_vs_had_NM","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, no match); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
   
-  histo2D["ttbar_mass_vs_minMlb_CP"] = new TH2F("ttbar_mass_vs_minMlb_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_WP"] = new TH2F("ttbar_mass_vs_minMlb_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_UP"] = new TH2F("ttbar_mass_vs_minMlb_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_CM"] = new TH2F("ttbar_mass_vs_minMlb_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_WM"] = new TH2F("ttbar_mass_vs_minMlb_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_NM"] = new TH2F("ttbar_mass_vs_minMlb_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
-  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRlepCut_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCut_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCut_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCut_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
-  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
-  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_CP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_WP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UP"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_UP","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
   /// KinFitter
   if (doKinFit)
@@ -2746,9 +2746,9 @@ void ClearVars()
   labelMl_nonb = -9999;
   massForWidth = 0.01;
   catSuffix = "";
-  isCP = false;
-  isWP = false;
-  isUP = false;
+  isCM = false;
+  isWM = false;
+  isNM = false;
   kFitVerbosity = false;
   kFitChi2 = 99.;
   kFitChi2Matched = 99.;
@@ -2937,7 +2937,7 @@ void FillCatsPlots(string catSuffix)
       histo1D["dR_lep_b_reco"]->Fill(reco_dRLepB_lep, widthSF);
     }
     histo1D["Reduced_top_mass_bkgd"]->Fill(redTopMass);
-    if ( isWP || isUP ) histo1D["Reduced_top_mass_TT_reco_WPUP"]->Fill(redTopMass, widthSF);
+    if ( isWM || isNM ) histo1D["Reduced_top_mass_TT_reco_WMNM"]->Fill(redTopMass, widthSF);
     histo1D[("Reduced_top_mass_TT_reco"+catSuffix).c_str()]->Fill(redTopMass, widthSF);
     histo1D[("minMlb_reco"+catSuffix).c_str()]->Fill(reco_minMlb, widthSF);
     histo1D[("dR_lep_b_lep_reco"+catSuffix).c_str()]->Fill(reco_dRLepB_lep, widthSF);

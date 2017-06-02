@@ -90,9 +90,9 @@ int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
-int nofCP = 0, nofWP = 0, nofUP = 0;
-int nofCP_TT = 0, nofWP_TT = 0, nofUP_TT = 0;
-double nofCP_weighted = 0, nofWP_weighted = 0, nofUP_weighted = 0;
+int nofCM = 0, nofWM = 0, nofNM = 0;
+int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
+double nofCM_weighted = 0, nofWM_weighted = 0, nofNM_weighted = 0;
 
 /// Lumi per data era
 double lumi_runBCDEF = 19.67550334113;  // 1/fb
@@ -106,8 +106,8 @@ double CSVv2Tight  = 0.9535;
 
 
 /// Average top mass
-// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WP/UP, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
-// also background in CP/WP/UP cats (unlike name suggests)
+// TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WM/NM, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
+// also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
 std::array<double, nofAveMasses> aveTopMass = {171.825, 169.751, 167.558, 193.812, 191.823, 198.213, 182.175, 252.030, 252.837, 233.056, 230.495, 214.340, 212.065, 185.199, 182.561, 182.876};
@@ -129,7 +129,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
-ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCP, txtMassRecoWPUP, txtMassRecoUP, txtMassRecoWP, txtMassReco;
+ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMNM, txtMassRecoNM, txtMassRecoWM, txtMassReco;
 
 /// Function prototypes
 struct HighestPt
@@ -440,7 +440,7 @@ double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
 int labelsReco[4];
 double massForWidth;
-bool isCP, isWP, isUP;
+bool isCM, isWM, isNM;
 
 
 /// Define TLVs
@@ -654,11 +654,11 @@ int main(int argc, char* argv[])
   
   if (makeTGraphs)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
   }
   if (calculateLikelihood)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, makeTGraphs, true, true);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, makeTGraphs, true, true);  // calculateGoodEvtLL, verbose
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
   }
@@ -1128,32 +1128,32 @@ int main(int argc, char* argv[])
           /// Correct match
           if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
           {
-            isCP = true;
+            isCM = true;
             nofCorrectlyMatched++;
           }  // end corr match
           else  // wrong permutation
           {
-            isWP = true;
+            isWM = true;
             nofNotCorrectlyMatched++;
           }  // end wrong perm
         }  // end hadrTopMatch
         else  // no match
         {
-          isUP = true;
+          isNM = true;
         }  // end no match
         
         
-        if ( (! isCP && ! isWP && ! isUP) || (isCP && isWP) || (isCP && isUP) || (isWP && isUP) )
-        cerr << "Something wrong with trigger logic CP/WP/UP !! " << endl;
+        if ( (! isCM && ! isWM && ! isNM) || (isCM && isWM) || (isCM && isNM) || (isWM && isNM) )
+        cerr << "Something wrong with trigger logic CM/WM/NM !! " << endl;
         
       }  // not Data
       
       
       string catSuffix = "";
-      string catSuffixList[] = {"_CP", "_WP", "_UP"};
-      if (isCP) catSuffix = catSuffixList[0];
-      else if (isWP) catSuffix = catSuffixList[1];
-      else if (isUP) catSuffix = catSuffixList[2];
+      string catSuffixList[] = {"_CM", "_WM", "_NM"};
+      if (isCM) catSuffix = catSuffixList[0];
+      else if (isWM) catSuffix = catSuffixList[1];
+      else if (isNM) catSuffix = catSuffixList[2];
       
       
       
@@ -1218,30 +1218,30 @@ int main(int argc, char* argv[])
       if (calculateLikelihood)
       {
         like->CalculateLikelihood(tempAveMass, massForWidth, scaleWidth, isTTbar, isData);
-        if (! isData) like->CalculateCPLikelihood(tempAveMass, massForWidth, scaleWidth, isTTbar, isData);
+        if (! isData) like->CalculateCMLikelihood(tempAveMass, massForWidth, scaleWidth, isTTbar, isData);
       }
       
       if ( tempAveMass > maxMtDivAveMt ) maxMtDivAveMt = tempAveMass;
       if ( tempAveMass < minMtDivAveMt ) minMtDivAveMt = tempAveMass;
       if ( tempAveMass > minCutRedTopMass && tempAveMass < maxCutRedTopMass )
       {
-        if (isCP)
+        if (isCM)
         {
-          nofCP++;
-          nofCP_weighted += widthSF;
-          if (isTTbar) nofCP_TT++;
+          nofCM++;
+          nofCM_weighted += widthSF;
+          if (isTTbar) nofCM_TT++;
         }
-        else if (isWP)
+        else if (isWM)
         {
-          nofWP++;
-          nofWP_weighted += widthSF;
-          if (isTTbar) nofWP_TT++;
+          nofWM++;
+          nofWM_weighted += widthSF;
+          if (isTTbar) nofWM_TT++;
         }
-        else if (isUP)
+        else if (isNM)
         {
-          nofUP++;
-          nofUP_weighted += widthSF;
-          if (isTTbar) nofUP_TT++;
+          nofNM++;
+          nofNM_weighted += widthSF;
+          if (isTTbar) nofNM_TT++;
         }
       }
       
@@ -1307,9 +1307,9 @@ int main(int argc, char* argv[])
   
   if (! doGenOnly && ! testTTbarOnly)
   {
-    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CP: " << nofCP << " (" << 100*(double)nofCP/((double)(nofCP+nofWP+nofUP)) << "%)   WP: " << nofWP << " (" << 100*(double)nofWP/((double)(nofCP+nofWP+nofUP)) << "%)   UP: " << nofUP << " (" << 100*(double)nofUP/((double)(nofCP+nofWP+nofUP)) << "%)   Total: " << nofCP+nofWP+nofUP << endl;
-    cout << "                                  weighted: CP: " << nofCP_weighted << " (" << 100*nofCP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   WP: " << nofWP_weighted << " (" << 100*nofWP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   UP: " << nofUP_weighted << " (" << 100*nofUP_weighted/(nofCP_weighted+nofWP_weighted+nofUP_weighted) << "%)   Total: " << (int)(nofCP_weighted+nofWP_weighted+nofUP_weighted) << endl;
-    cout << "                               (TTbar only) CP: " << nofCP_TT << "              WP: " << nofWP_TT << "              UP: " << nofUP_TT << endl;
+    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofNM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofNM)) << "%)   NM: " << nofNM << " (" << 100*(double)nofNM/((double)(nofCM+nofWM+nofNM)) << "%)   Total: " << nofCM+nofWM+nofNM << endl;
+    cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
+    cout << "                               (TTbar only) CM: " << nofCM_TT << "              WM: " << nofWM_TT << "              NM: " << nofNM_TT << endl;
   }
   
   
@@ -1330,7 +1330,7 @@ int main(int argc, char* argv[])
     
     /// Calculate output width
     like->GetOutputWidth(scaleWidth);
-    like->GetOutputWidth(scaleWidth, "CP");
+    like->GetOutputWidth(scaleWidth, "CM");
     like->GetOutputWidth(scaleWidth, "gen");
     like->GetOutputWidth(llFileName+".txt", scaleWidth);
   }
@@ -1667,10 +1667,10 @@ void InitHisto1D()
   histo1D["Reco_top_mass_reco"] = new TH1F("Reco_top_mass_reco","Reconstructed top mass; M_{t} [GeV]", 80, 0, 800);
     
   /// m_t/<m_t>
-  histo1D["mTop_div_aveMTop_TT_reco_CP"] = new TH1F("mTop_div_aveMTop_TT_reco_CP","Top mass divided by average top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WPUP"] = new TH1F("mTop_div_aveMTop_TT_reco_WPUP","Top mass divided by average top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_UP"] = new TH1F("mTop_div_aveMTop_TT_reco_UP","Top mass divided by average top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["mTop_div_aveMTop_TT_reco_WP"] = new TH1F("mTop_div_aveMTop_TT_reco_WP","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_TT_reco_CM"] = new TH1F("mTop_div_aveMTop_TT_reco_CM","Top mass divided by average top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_TT_reco_WMNM"] = new TH1F("mTop_div_aveMTop_TT_reco_WMNM","Top mass divided by average top mass for unmatched TT sample (reco, no top match & wrong permutations); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_TT_reco_NM"] = new TH1F("mTop_div_aveMTop_TT_reco_NM","Top mass divided by average top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["mTop_div_aveMTop_TT_reco_WM"] = new TH1F("mTop_div_aveMTop_TT_reco_WM","Top mass divided by average top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
   
   histo1D["mTop_div_aveMTop_bkgd"] = new TH1F("mTop_div_aveMTop_bkgd","Top mass divided by average top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
   histo1D["mTop_div_aveMTop_TT"] = new TH1F("mTop_div_aveMTop_TT","Top mass divided by average top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
@@ -1709,16 +1709,16 @@ void InitHisto1D()
     histo1D["KF_jet0_Et_diff_TT"] = new TH1F("KF_jet0_Et_diff_TT", "Et difference after kinFitter for jet0 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
     histo1D["KF_jet1_Et_diff_TT"] = new TH1F("KF_jet1_Et_diff_TT", "Et difference after kinFitter for jet1 (TT); E_{T,kf} - E_{T,orig} [GeV]", 400, -50, 50);
     
-    histo1D["KF_top_mass_corr_CP"] = new TH1F("KF_top_mass_corr_CP", "Top mass after kinFitter for correct match (CP); m_{t,kf} [GeV]", 400, 0, 800);
-    histo1D["KF_top_mass_corr_WP"] = new TH1F("KF_top_mass_corr_WP", "Top mass after kinFitter for wrong permutations (WP); m_{t,kf} [GeV]", 400, 0, 800);
-    histo1D["KF_top_mass_corr_UP"] = new TH1F("KF_top_mass_corr_UP", "Top mass after kinFitter for no match (UP); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_CM"] = new TH1F("KF_top_mass_corr_CM", "Top mass after kinFitter for correct match (CM); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_WM"] = new TH1F("KF_top_mass_corr_WM", "Top mass after kinFitter for wrong permutations (WM); m_{t,kf} [GeV]", 400, 0, 800);
+    histo1D["KF_top_mass_corr_NM"] = new TH1F("KF_top_mass_corr_NM", "Top mass after kinFitter for no match (NM); m_{t,kf} [GeV]", 400, 0, 800);
     
-    histo1D["KF_Chi2_CP"] = new TH1F("KF_Chi2_CP", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_WP"] = new TH1F("KF_Chi2_WP", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_UP"] = new TH1F("KF_Chi2_UP", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 5);
-    histo1D["KF_Chi2_CP_wide"] = new TH1F("KF_Chi2_CP_wide", "Chi2 value of kinFitter (CP); #chi^{2}", 200, 0, 20);
-    histo1D["KF_Chi2_WP_wide"] = new TH1F("KF_Chi2_WP_wide", "Chi2 value of kinFitter (WP); #chi^{2}", 200, 0, 20);
-    histo1D["KF_Chi2_UP_wide"] = new TH1F("KF_Chi2_UP_wide", "Chi2 value of kinFitter (UP); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_CM"] = new TH1F("KF_Chi2_CM", "Chi2 value of kinFitter (CM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_WM"] = new TH1F("KF_Chi2_WM", "Chi2 value of kinFitter (WM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_NM"] = new TH1F("KF_Chi2_NM", "Chi2 value of kinFitter (NM); #chi^{2}", 200, 0, 5);
+    histo1D["KF_Chi2_CM_wide"] = new TH1F("KF_Chi2_CM_wide", "Chi2 value of kinFitter (CM); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_WM_wide"] = new TH1F("KF_Chi2_WM_wide", "Chi2 value of kinFitter (WM); #chi^{2}", 200, 0, 20);
+    histo1D["KF_Chi2_NM_wide"] = new TH1F("KF_Chi2_NM_wide", "Chi2 value of kinFitter (NM); #chi^{2}", 200, 0, 20);
     
     histo1D["KF_top_mass_orig_match"] = new TH1F("KF_top_mass_orig_match", "Top mass before kinFitter for matched events; m_{t} [GeV]", 80, 0, 400);
     histo1D["KF_top_mass_corr_match"] = new TH1F("KF_top_mass_corr_match", "Top mass after kinFitter for matched events; m_{t,kf} [GeV]", 80, 0, 400);
@@ -2077,9 +2077,9 @@ void ClearVars()
     labelsReco[i] = -9999;
   }
   massForWidth = 0.01;
-  isCP = false;
-  isWP = false;
-  isUP = false;
+  isCM = false;
+  isWM = false;
+  isNM = false;
   kFitVerbosity = false;
   kFitChi2 = 99.;
   kFitChi2Matched = 99.;
@@ -2169,7 +2169,7 @@ void FillCatsPlots(string catSuffix)
   if (! isData)
   {
     histo1D["mTop_div_aveMTop_bkgd"]->Fill(tempAveMass);
-    if ( isWP || isUP ) histo1D["mTop_div_aveMTop_TT_reco_WPUP"]->Fill(tempAveMass, widthSF);
+    if ( isWM || isNM ) histo1D["mTop_div_aveMTop_TT_reco_WMNM"]->Fill(tempAveMass, widthSF);
     histo1D[("mTop_div_aveMTop_TT_reco"+catSuffix).c_str()]->Fill(tempAveMass, widthSF);
     
     if (doKinFit)
