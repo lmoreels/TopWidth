@@ -42,11 +42,11 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -93,7 +93,8 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170529_1844/";
+string inputDateLL = "170602_1355/";  // TT nominal
+//string inputDateLL = "170602_1304/";  // TT width x 4 --> WRONG!
 bool isData = false;
 bool isTTbar = false;
 
@@ -105,6 +106,7 @@ int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
 int nofCM = 0, nofWM = 0, nofNM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
+double nofCMl = 0, nofWMl = 0, nofNMl = 0;
 double nofCM_weighted = 0, nofWM_weighted = 0, nofNM_weighted = 0;
 
 /// Lumi per data era
@@ -543,16 +545,6 @@ double Wmass_reco_orig, Wmass_reco_kf, topmass_reco_orig, topmass_reco_kf, topma
 double toppt_reco_orig, toppt_reco_kf;
 
 /// Likelihood
-//Double_t widthArray[] = {0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2., 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.5, 2.55, 2.60, 2.65, 2.70, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8.};
-Double_t widthArray[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.};
-const int nWidthsLL = sizeof(widthArray)/sizeof(widthArray[0]);
-string stringWidthArray[nWidthsLL];
-
-
-//bool isGoodLL = false, isGoodLL_gen = false;
-//int nofGoodEvtsLL[20] = {0};
-//int nofGoodEvtsLL_gen[20] = {0};
-//int nofBadEvtsLL[20] = {0};
 Double_t aveTopMassLL = aveTopMass[2];
 Double_t redTopMass = -1.;
 Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
@@ -914,6 +906,8 @@ int main(int argc, char* argv[])
     {
       isTTbar = true;
       hasFoundTTbar = true;
+      if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
+        applyWidthSF = false;
     }
     
     if (! isData)
@@ -985,9 +979,13 @@ int main(int argc, char* argv[])
     /// Get data
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
     nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
-    cout << "                nEntries: " << nEntries << endl;
+    cout << "                nEntries    : " << nEntries << endl;
     if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
-    else cout << "                eqLumi  : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+    else
+    {
+      cout << "                eqLumi    : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+      cout << "                lumiWeight: " << lumiWeight << endl;
+    }
     
     if (isData)
     {
@@ -1535,10 +1533,10 @@ int main(int argc, char* argv[])
       
       /// Reduced top mass
       redTopMass = topmass_reco_kf/aveTopMassLL;
-      if (makeTGraphs) like->FillHistograms(redTopMass, massForWidth, isTTbar, isData, catSuffix);
+      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massForWidth, isTTbar, isData, catSuffix);
       if (calculateLikelihood)
       {
-        like->CalculateLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+        like->CalculateLikelihood(redTopMass, lumiWeight, massForWidth, scaleWidth, isTTbar, isData);
         if (isCM && ! doPseudoExps)  // isCM ensures ! isData
           like->CalculateCMLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
       }
@@ -1550,19 +1548,22 @@ int main(int argc, char* argv[])
         if (isCM)
         {
           nofCM++;
-          nofCM_weighted += widthSF;
+          nofCMl += lumiWeight;
+          nofCM_weighted += lumiWeight*widthSF;
           if (isTTbar) nofCM_TT++;
         }
         else if (isWM)
         {
           nofWM++;
-          nofWM_weighted += widthSF;
+          nofWMl += lumiWeight;
+          nofWM_weighted += lumiWeight*widthSF;
           if (isTTbar) nofWM_TT++;
         }
         else if (isNM)
         {
           nofNM++;
-          nofNM_weighted += widthSF;
+          nofNMl += lumiWeight;
+          nofNM_weighted += lumiWeight*widthSF;
           if (isTTbar) nofNM_TT++;
         }
       }
@@ -1721,8 +1722,9 @@ int main(int argc, char* argv[])
   if (! doGenOnly && ! testTTbarOnly)
   {
     cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofNM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofNM)) << "%)   NM: " << nofNM << " (" << 100*(double)nofNM/((double)(nofCM+nofWM+nofNM)) << "%)   Total: " << nofCM+nofWM+nofNM << endl;
+    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCMl << " (" << 100*nofCMl/(nofCMl+nofWMl+nofNMl) << "%)   WM: " << nofWMl << " (" << 100*nofWMl/(nofCMl+nofWMl+nofNMl) << "%)   NM: " << nofNMl << " (" << 100*nofNMl/(nofCMl+nofWMl+nofNMl) << "%)   Total: " << nofCMl+nofWMl+nofNMl << endl;
     cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
-    cout << "                               (TTbar only) CM: " << nofCM_TT << "              WM: " << nofWM_TT << "              NM: " << nofNM_TT << endl;
+    cout << "                               (TTbar only) CM: " << nofCM_TT << "               WM: " << nofWM_TT << "               NM: " << nofNM_TT << endl;
   }
   
   

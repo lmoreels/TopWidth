@@ -35,15 +35,15 @@ class Likelihood{
     ~Likelihood();
     /// Make TGraphs
     void BookHistograms();
-    void FillHistograms(double redMass, double massForWidthSF, bool isTTbar, bool isData, std::string catSuffix);
+    void FillHistograms(double redMass, double lumiWeight, double massForWidthSF, bool isTTbar, bool isData, std::string catSuffix);
     void WriteHistograms(std::string histoFileName);
     void ConstructTGraphsFromHisto(std::string name);
     /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
     /// Calculate likelihood
-    void CalculateLikelihood(double redMass, bool isData);
-    void CalculateLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
+    void CalculateLikelihood(double redMass, double lumiWeight, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
