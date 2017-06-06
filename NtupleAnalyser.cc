@@ -42,11 +42,12 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = false;
+bool makePlots = true;
+bool makeControlPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -102,8 +103,14 @@ int nofHardSelected = 0;
 int nofMETCleaned = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
+int nofHadrMatchedEventsAKF = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
+int nofCorrectlyMatchedAKF = 0;
+int nofNotCorrectlyMatchedAKF = 0;
+int nofCorrectlyMatchedAKFNoCut = 0;
+int nofNotCorrectlyMatchedAKFNoCut = 0;
+int nofNoMatchAKFNoCut = 0;
 int nofCM = 0, nofWM = 0, nofNM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
 double nofCMl = 0, nofWMl = 0, nofNMl = 0;
@@ -136,6 +143,7 @@ int nEventsAKF[] = {106005, 573511, 1401, 1366, 653, 412, 158, 49};
 map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
 map<string,MultiSamplePlot*> MSPlot;
+map<string,MultiSamplePlot*> MSPlotCP;
 map<string,TGraph*> graph;
 
 map<string,TFile*> tFileMap;
@@ -184,8 +192,8 @@ void ClearTLVs();
 void ClearMatching();
 void ClearVars();
 void ClearObjects();
-void FillGeneralPlots(vector<Dataset *> datasets, int d);
-void FillGeneralPlots(vector<Dataset *> datasets, int d, string suffix);
+void FillControlPlots(vector<Dataset *> datasets, int d);
+void FillControlPlots(vector<Dataset *> datasets, int d, string suffix);
 void FillMatchingPlots();
 void FillKinFitPlots();
 void FillCatsPlots(string catSuffix);
@@ -651,7 +659,9 @@ int main(int argc, char* argv[])
   if (calculateLikelihood) makeTGraphs = false;
   else doPseudoExps = false;
   if (doPseudoExps) makePlots = false;
-  //string pathOutput = "test/";
+  
+  if (! makePlots) makeControlPlots = false;
+  
   string pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
   if (makePlots)
@@ -740,25 +750,31 @@ int main(int argc, char* argv[])
     if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
     {
       datasets[d]->SetTitle("W#rightarrowl#nu");
-      datasets[d]->SetColor(kGreen-3);
+      //datasets[d]->SetColor(kGreen-3);
+      datasets[d]->SetColor(kBlue-2);
       datasetsMSP[d]->SetTitle("W#rightarrowl#nu");
-      datasetsMSP[d]->SetColor(kGreen-3);
+      //datasetsMSP[d]->SetColor(kGreen-3);
+      datasetsMSP[d]->SetColor(kBlue-2);
     }
     if ( dataSetName.find("ZJets") != std::string::npos || dataSetName.find("DY") != std::string::npos )
     {
-      datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
+      datasets[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{#font[122]{\55}}");
       //datasets[d]->SetColor(kAzure-2);
-      datasets[d]->SetColor(kMagenta);
-      datasetsMSP[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{-}");
+      //datasets[d]->SetColor(kMagenta);
+      datasets[d]->SetColor(kAzure+6);
+      datasetsMSP[d]->SetTitle("Z/#gamma*#rightarrowl^{+}l^{#font[122]{\55}}");
       //datasetsMSP[d]->SetColor(kAzure-2);
-      datasetsMSP[d]->SetColor(kMagenta);
+      //datasetsMSP[d]->SetColor(kMagenta);
+      datasetsMSP[d]->SetColor(kAzure+6);
     }
     if ( dataSetName.find("ST") != std::string::npos || dataSetName.find("SingleTop") != std::string::npos )
     {
       datasets[d]->SetTitle("ST");
-      datasets[d]->SetColor(kBlue-2);
+      //datasets[d]->SetColor(kBlue-2);
+      datasets[d]->SetColor(kOrange-4);  // 595, 615, 800
       datasetsMSP[d]->SetTitle("ST");
-      datasetsMSP[d]->SetColor(kBlue-2);
+      //datasetsMSP[d]->SetColor(kBlue-2);
+      datasetsMSP[d]->SetColor(kOrange-4);
       //if ( dataSetName.find("tW") != std::string::npos )
       //{
       //  datasets[d]->SetTitle("ST tW");
@@ -1455,7 +1471,7 @@ int main(int argc, char* argv[])
         if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
         else if (isTTbar && isWM) dMSP = d+1;
         else if (isTTbar && isNM) dMSP = d+2;
-        FillGeneralPlots(datasetsMSP, dMSP);
+        FillControlPlots(datasetsMSP, dMSP);
         
         MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
         for (int iJet = 0; iJet < selectedJets.size(); iJet++)
@@ -1483,11 +1499,18 @@ int main(int argc, char* argv[])
           continue;
         }
         
+        if (isCM) nofCorrectlyMatchedAKFNoCut++;
+        else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
+        else if (isNM) nofNoMatchAKFNoCut++;
+        
         kFitChi2 = kFitter->getS();
         if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
         if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
         nofAcceptedKFit++;
+        if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
+        if (isCM) nofCorrectlyMatchedAKF++;
+        else if (isWM) nofNotCorrectlyMatchedAKF++;
         
         selectedJetsKFcorrected.clear();
         selectedJetsKFcorrected = kf->getCorrectedJets();
@@ -1656,17 +1679,43 @@ int main(int argc, char* argv[])
     if (! isData && nofHadrMatchedEvents > 0 )
     {
       cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
-      cout << "Number of events with hadronic top matched: " << setw(8) << right << nofHadrMatchedEvents << endl;
+      cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofMETCleaned) << "%)" << endl;
+      if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
       if (! doGenOnly)
       {
         cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
         cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
         if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
           cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
-        if (doKinFit) cout << "                        " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofAcceptedKFit) << "% of all events accepted by kinfitter is correctly matched." << endl;
+        cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
+        
+        if (doKinFit)
+        {
+          cout << " --- Kinematic fit" << endl;
+          cout << " --- Before chi2 cut --- " << endl;
+          cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
+          cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
+          if ( nofCorrectlyMatchedAKFNoCut != 0 || nofNotCorrectlyMatchedAKFNoCut != 0 )
+            cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut + nofNotCorrectlyMatchedAKFNoCut) << "% of matched events is correctly matched after KF." << endl;
+          
+          cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofNotCorrectlyMatchedAKFNoCut+nofNoMatchAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
+          
+          cout << " --- After chi2 cut --- " << endl;
+          cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedAKF << endl;
+          cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKF << endl;
+          if ( nofCorrectlyMatchedAKF != 0 || nofNotCorrectlyMatchedAKF != 0 )
+            cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKF / (float)(nofCorrectlyMatchedAKF + nofNotCorrectlyMatchedAKF) << "% of matched events is correctly matched after KF." << endl;
+          
+          cout << "                        " << 100*(float)nofCorrectlyMatchedAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
+        }
         else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofMETCleaned) << "% of all events is correctly matched." << endl;
       }
-      if (doKinFit) cout << "Number of generated matched events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
+      
+      if (doKinFit)
+      {
+        cout << " --- Kinematic fit for gen events" << endl;
+        cout << "Number of generated matched events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
+      }
       
       /// Resolution functions
       if (isTTbar && calculateResolutionFunctions)
@@ -1815,7 +1864,11 @@ int main(int argc, char* argv[])
   if (makePlots)
   {
     string rootFileName = "NtuplePlots_"+systStr+".root";
-    if (! doGenOnly) mkdir((pathOutput+"MSPlot/").c_str(),0777);
+    if (! doGenOnly)
+    {
+      mkdir((pathOutput+"MSPlot/").c_str(),0777);
+      if (makeControlPlots) mkdir((pathOutput+"MSPlot/ControlPlots/").c_str(),0777);
+    }
     
     cout << " - Recreate output file ..." << endl;
     TFile *fout = new TFile ((pathOutput+rootFileName).c_str(), "RECREATE");
@@ -1833,6 +1886,15 @@ int main(int argc, char* argv[])
         string name = it->first;
         temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
         temp->Write(fout, name, true, pathOutput+"MSPlot", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
+      }
+      
+      for (map<string,MultiSamplePlot*>::const_iterator it = MSPlotCP.begin(); it != MSPlotCP.end(); it++)
+      {
+        //cout << "MSPlot: " << it->first << endl;
+        MultiSamplePlot *temp = it->second;
+        string name = it->first;
+        temp->Draw(name, 1, false, false, false, 1);  // string label, unsigned int RatioType, bool addRatioErrorBand, bool addErrorBand, bool ErrorBandAroundTotalInput, int scaleNPSignal
+        temp->Write(fout, name, true, pathOutput+"MSPlot/ControlPlots", "png");  // TFile* fout, string label, bool savePNG, string pathPNG, string ext
       }
     }
     
@@ -2126,70 +2188,74 @@ void InitTree(TTree* tree, bool isData)
 
 void InitMSPlots()
 {
-  MSPlot["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 22, 0, 440, "p_{T}", "GeV");
-  MSPlot["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
-  MSPlot["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
-  MSPlot["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
-  MSPlot["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
-  MSPlot["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T}", "GeV");
-  MSPlot["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T}", "GeV");
-  MSPlot["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-  MSPlot["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
-  MSPlot["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  MSPlot["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-  MSPlot["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
-  MSPlot["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  
-  MSPlot["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T}", "GeV");
-  MSPlot["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
-  MSPlot["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
-  MSPlot["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
-  MSPlot["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
-  MSPlot["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T}", "GeV");
-  MSPlot["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T}", "GeV");
-  MSPlot["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-  MSPlot["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
-  MSPlot["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  MSPlot["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-  MSPlot["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
-  MSPlot["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
-  
-
-  MSPlot["nJets"] = new MultiSamplePlot(datasetsMSP, "nJets", 13, -0.5, 12.5, "# jets");
-  MSPlot["nBJets"] = new MultiSamplePlot(datasetsMSP, "nBJets", 9, -0.5, 8.5, "# b jets");
-  MSPlot["CSVv2Discr_allJets"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
-  MSPlot["CSVv2Discr_jet2"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
-  MSPlot["CSVv2Discr_jet3"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
-  MSPlot["CSVv2Discr_jet4"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
-  MSPlot["CSVv2Discr_highest"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
-  
-  MSPlot["nJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nJets_aKF", 13, -0.5, 12.5, "# jets");
-  MSPlot["nBJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nBJets_aKF", 9, -0.5, 8.5, "# b jets");
-  MSPlot["CSVv2Discr_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_allJets_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_leadingJet_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_leadingJet_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
-  MSPlot["CSVv2Discr_jet2_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet2_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
-  MSPlot["CSVv2Discr_jet3_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet3_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
-  MSPlot["CSVv2Discr_jet4_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet4_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
-  MSPlot["CSVv2Discr_highest_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest_aKF", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
-  MSPlot["CSVv2Discr_jetNb_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb_aKF", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
-  
-  MSPlot["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3}", "GeV");
-  MSPlot["min_Mlb"] = new MultiSamplePlot(datasetsMSP, "min_Mlb", 40, 0, 400, "M_{lb}", "GeV");
-  MSPlot["dR_Lep_B"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
-  
-  MSPlot["M3_aKF"] = new MultiSamplePlot(datasetsMSP, "M3_aKF", 40, 60, 460, "M_{3}", "GeV");
-  MSPlot["min_Mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "min_Mlb_aKF", 40, 0, 400, "M_{lb}", "GeV");
-  MSPlot["dR_Lep_B_aKF"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B_aKF", 25, 0, 5, "#Delta R(l,b)");
+  /// Control plots
+  if (makeControlPlots)
+  {
+    MSPlotCP["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 22, 0, 440, "p_{T}", "GeV");
+    MSPlotCP["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
+    MSPlotCP["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
+    MSPlotCP["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
+    MSPlotCP["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
+    MSPlotCP["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T}", "GeV");
+    MSPlotCP["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T}", "GeV");
+    MSPlotCP["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
+    MSPlotCP["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
+    MSPlotCP["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
+    MSPlotCP["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
+    MSPlotCP["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    
+    MSPlotCP["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T}", "GeV");
+    MSPlotCP["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
+    MSPlotCP["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
+    MSPlotCP["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
+    MSPlotCP["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
+    MSPlotCP["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T}", "GeV");
+    MSPlotCP["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T}", "GeV");
+    MSPlotCP["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T}", "GeV");
+    MSPlotCP["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
+    MSPlotCP["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
+    MSPlotCP["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
+    MSPlotCP["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
+    MSPlotCP["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    
+    
+    MSPlotCP["nJets"] = new MultiSamplePlot(datasetsMSP, "nJets", 13, -0.5, 12.5, "# jets");
+    MSPlotCP["nBJets"] = new MultiSamplePlot(datasetsMSP, "nBJets", 9, -0.5, 8.5, "# b jets");
+    MSPlotCP["CSVv2Discr_allJets"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_allJets", 48, 0.0, 1.2, "CSVv2 discriminant value");
+    MSPlotCP["CSVv2Discr_leadingJet"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_leadingJet", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+    MSPlotCP["CSVv2Discr_jet2"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet2", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+    MSPlotCP["CSVv2Discr_jet3"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet3", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+    MSPlotCP["CSVv2Discr_jet4"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet4", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+    MSPlotCP["CSVv2Discr_highest"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
+    MSPlotCP["CSVv2Discr_jetNb"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
+    
+    MSPlotCP["nJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nJets_aKF", 13, -0.5, 12.5, "# jets");
+    MSPlotCP["nBJets_aKF"] = new MultiSamplePlot(datasetsMSP, "nBJets_aKF", 9, -0.5, 8.5, "# b jets");
+    MSPlotCP["CSVv2Discr_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_allJets_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value");
+    MSPlotCP["CSVv2Discr_leadingJet_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_leadingJet_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of leading jet");
+    MSPlotCP["CSVv2Discr_jet2_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet2_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet2");
+    MSPlotCP["CSVv2Discr_jet3_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet3_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet3");
+    MSPlotCP["CSVv2Discr_jet4_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jet4_aKF", 48, 0.0, 1.2, "CSVv2 discriminant value of jet4");
+    MSPlotCP["CSVv2Discr_highest_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_highest_aKF", 48, 0.0, 1.2, "Highest CSVv2 discriminant value");
+    MSPlotCP["CSVv2Discr_jetNb_aKF"] = new MultiSamplePlot(datasetsMSP, "CSVv2Discr_jetNb_aKF", 8, -0.5, 7.5, "Jet number (in order of decreasing p_{T}) with highest CSVv2 discriminant value");
+    
+    MSPlotCP["M3"] = new MultiSamplePlot(datasetsMSP, "M3", 40, 60, 460, "M_{3}", "GeV");
+    MSPlotCP["min_Mlb"] = new MultiSamplePlot(datasetsMSP, "min_Mlb", 40, 0, 400, "M_{lb}", "GeV");
+    MSPlotCP["dR_Lep_B"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B", 25, 0, 5, "#Delta R(l,b)");
+    
+    MSPlotCP["M3_aKF"] = new MultiSamplePlot(datasetsMSP, "M3_aKF", 40, 60, 460, "M_{3}", "GeV");
+    MSPlotCP["min_Mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "min_Mlb_aKF", 40, 0, 400, "M_{lb}", "GeV");
+    MSPlotCP["dR_Lep_B_aKF"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B_aKF", 25, 0, 5, "#Delta R(l,b)");
+  }
   
   /// Reco
   MSPlot["Reco_W_mass"] = new MultiSamplePlot(datasetsMSP, "Reco_W_mass", 100, 0, 400, "M_{W}", "GeV");
@@ -2545,8 +2611,14 @@ void ClearMetaData()
   nofMETCleaned = 0;
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
+  nofHadrMatchedEventsAKF = 0;
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
+  nofCorrectlyMatchedAKF = 0;
+  nofNotCorrectlyMatchedAKF = 0;
+  nofCorrectlyMatchedAKFNoCut = 0;
+  nofNotCorrectlyMatchedAKFNoCut = 0;
+  nofNoMatchAKFNoCut = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitMatched = 0;
   
@@ -2774,12 +2846,12 @@ void ClearObjects()
   ClearVars();
 }
 
-void FillGeneralPlots(vector<Dataset *> datasets, int d)
+void FillControlPlots(vector<Dataset *> datasets, int d)
 {
-  FillGeneralPlots(datasets, d, "");
+  FillControlPlots(datasets, d, "");
 }
 
-void FillGeneralPlots(vector<Dataset *> datasets, int d, string suffix)
+void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
 {
   double M3 = (selectedJets[0] + selectedJets[1] + selectedJets[2]).M();
   double Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
@@ -2795,49 +2867,49 @@ void FillGeneralPlots(vector<Dataset *> datasets, int d, string suffix)
     }
   }
   
-  MSPlot["muon_pT"+suffix]->Fill(selectedLepton[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["muon_eta"+suffix]->Fill(selectedLepton[0].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["muon_phi"+suffix]->Fill(selectedLepton[0].Phi(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["muon_relIso"+suffix]->Fill(muon_relIso[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["muon_d0"+suffix]->Fill(muon_d0[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["leadingJet_pT"+suffix]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["jet2_pT"+suffix]->Fill(selectedJets[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_pT"+suffix]->Fill(met_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_eta"+suffix]->Fill(met_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_phi"+suffix]->Fill(met_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_corr_pT"+suffix]->Fill(met_corr_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_corr_eta"+suffix]->Fill(met_corr_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["met_corr_phi"+suffix]->Fill(met_corr_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["muon_pT"+suffix]->Fill(selectedLepton[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["muon_eta"+suffix]->Fill(selectedLepton[0].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["muon_phi"+suffix]->Fill(selectedLepton[0].Phi(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["muon_relIso"+suffix]->Fill(muon_relIso[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["muon_d0"+suffix]->Fill(muon_d0[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["leadingJet_pT"+suffix]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["jet2_pT"+suffix]->Fill(selectedJets[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_pT"+suffix]->Fill(met_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_eta"+suffix]->Fill(met_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_phi"+suffix]->Fill(met_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_corr_pT"+suffix]->Fill(met_corr_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_corr_eta"+suffix]->Fill(met_corr_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["met_corr_phi"+suffix]->Fill(met_corr_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["min_Mlb"+suffix]->Fill(min_Mlb, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["dR_Lep_B"+suffix]->Fill(dRLepB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["min_Mlb"+suffix]->Fill(min_Mlb, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["dR_Lep_B"+suffix]->Fill(dRLepB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["nJets"+suffix]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["nBJets"+suffix]->Fill(selectedBJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["nJets"+suffix]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["nBJets"+suffix]->Fill(selectedBJets.size(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlot["CSVv2Discr_leadingJet"+suffix]->Fill(jet_bdiscr[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet2"+suffix]->Fill(jet_bdiscr[1], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet3"+suffix]->Fill(jet_bdiscr[2], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jet4"+suffix]->Fill(jet_bdiscr[3], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_leadingJet"+suffix]->Fill(jet_bdiscr[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_jet2"+suffix]->Fill(jet_bdiscr[1], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_jet3"+suffix]->Fill(jet_bdiscr[2], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_jet4"+suffix]->Fill(jet_bdiscr[3], datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
   int labelB = -1;
   double highestBDiscr = -999.;
   for (int iJet = 0; iJet < selectedJets.size(); iJet++)
   {
-    MSPlot["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-    MSPlot["CSVv2Discr_allJets"+suffix]->Fill(jet_bdiscr[iJet], datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["CSVv2Discr_allJets"+suffix]->Fill(jet_bdiscr[iJet], datasets[d], true, lumiWeight*scaleFactor*widthSF);
     if ( jet_bdiscr[iJet] > highestBDiscr )
     {
       highestBDiscr = jet_bdiscr[iJet];
       labelB = iJet;
     }
   }
-  MSPlot["CSVv2Discr_highest"+suffix]->Fill(highestBDiscr, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlot["CSVv2Discr_jetNb"+suffix]->Fill(labelB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_highest"+suffix]->Fill(highestBDiscr, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  MSPlotCP["CSVv2Discr_jetNb"+suffix]->Fill(labelB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
 }
 
 void FillMatchingPlots()
@@ -2977,7 +3049,7 @@ void FillCatsPlots(string catSuffix)
 
 void FillMSPlots(int d)
 {
-  FillGeneralPlots(datasetsMSP, d, "_aKF");
+  FillControlPlots(datasetsMSP, d, "_aKF");
   
   MSPlot["Reco_W_mass"]->Fill(Wmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlot["Reco_hadTop_mass"]->Fill(topmass_reco_kf, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
