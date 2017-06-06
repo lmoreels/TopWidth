@@ -7,7 +7,7 @@ then
 	cd test
 	for f in ./submit*.sh
 	do
-	    qsub $f
+	    qsub -q express $f
 	done
 	cd -
     fi
