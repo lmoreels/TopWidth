@@ -94,21 +94,21 @@ void Likelihood::BookHistograms()
     
     histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
     histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+//    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
     
     histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
     histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+//    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
     
     histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
     histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
+//    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_120b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 120, 0.5, 2.0);
   }
 }
 
 void Likelihood::FillHistograms(double redMass, double lumiWeight, double massForWidthSF, bool isTTbar, bool isData, std::string catSuffix)
 {
-  if ( ! isData && redMass > minRedMass_ && redMass < maxRedMass_ )
+  if ( ! isData )
   {
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
@@ -118,7 +118,7 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double massFo
       
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_120b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_120b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
     }
   }
 }
@@ -185,8 +185,8 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
         exit(1);
       }
       
-      binMin = histoSm_[histoName_]->FindBin(0.6);
-      binMax = histoSm_[histoName_]->FindBin(1.4)+1;
+      binMin = histoSm_[histoName_]->FindBin(minRedMass_);
+      binMax = histoSm_[histoName_]->FindBin(maxRedMass_)+1;
       for (int iBin = binMin; iBin < binMax+1; iBin++) { nEvents[iCat] += histoSm_[histoName_]->GetBinContent(iBin);}
       totEvents += nEvents[iCat];
       
