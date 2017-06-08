@@ -75,10 +75,10 @@ bool applyJER = true;
 bool applyJERup = false;
 bool applyJERdown = false;
 bool applyJEC = true;
-bool applyJESup = true;  // Check implementation
+bool applyJESup = false;  // Check implementation
 bool applyJESdown = false;
-bool calculateBTagSF = true;
-bool applyBTagSF = false;
+bool calculateBTagSF = false;
+bool applyBTagSF = true;
 bool applyJetLeptonCleaning = true;
 
 

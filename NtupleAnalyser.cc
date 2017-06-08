@@ -47,7 +47,7 @@ bool makeControlPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -76,14 +76,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170526","170522");
+    return pair<string,string>("170607","170522");
   }
   else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
   else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170526","170522");
+    return pair<string,string>("170607","170522");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -94,8 +94,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170602_1355/";  // TT nominal
-//string inputDateLL = "170602_1304/";  // TT width x 4 --> WRONG!
+string inputDateLL = "170608_1926/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -131,13 +130,15 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-std::array<double, nofAveMasses> aveTopMass = {171.825, 169.751, 167.558, 193.812, 191.823, 198.213, 182.175, 252.030, 252.837, 233.056, 230.495, 214.340, 212.065, 185.199, 182.561, 182.876};
+//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
+std::array<double, 14> aveTopMass = {171.826, 169.746, 167.593, 197.164, 196.687, 198.302, 181.984, 249.468, 247.437, 227.529, 226.099, 184.794, 184.693, 184.708};  // Res 170608 Single Gaus
+//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
 /// # events after kin fitter
 //  KF chi2 < 5
-int nEventsAKF[] = {106005, 573511, 1401, 1366, 653, 412, 158, 49};
+int nEventsAKF[] = {100949, 544305, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -646,6 +647,7 @@ int main(int argc, char* argv[])
     makePlots = false;
     calculateAverageMass = false;
     calculateLikelihood = false;
+    makeTGraphs = false;
     doPseudoExps = false;
     doKinFit = false;
   }
@@ -823,8 +825,8 @@ int main(int argc, char* argv[])
   
   if (! calculateResolutionFunctions)
   {
-    kf = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
-    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit.root", addWMassKF, addEqMassKF);
+    kf = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
   }
   
   if (makeTGraphs)
@@ -928,7 +930,13 @@ int main(int argc, char* argv[])
       isTTbar = true;
       hasFoundTTbar = true;
       if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
+      {
+        if ( dataSetName.find("x0p2") != std::string::npos ) scaleWidth = 0.2;
+        else if ( dataSetName.find("x0p5") != std::string::npos ) scaleWidth = 0.5;
+        else if ( dataSetName.find("x4") != std::string::npos ) scaleWidth = 4.;
+        else if ( dataSetName.find("x8") != std::string::npos ) scaleWidth = 8.;
         applyWidthSF = false;
+      }
     }
     
     if (! isData)
@@ -1000,7 +1008,7 @@ int main(int argc, char* argv[])
     /// Get data
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
     nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
-    cout << "                nEntries    : " << nEntries << endl;
+    cout << "                nEntries  : " << nEntries << endl;
     if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
     else
     {
@@ -1096,7 +1104,7 @@ int main(int argc, char* argv[])
       
       if (makePlots && passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
       
-      if ( selectedJets.size() > 4 ) continue;
+      if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
       nofHardSelected++;
       
       if (! passedMETFilter) continue;
@@ -3068,6 +3076,8 @@ void FillMSPlots(int d, bool doneKinFit)
   
   if (! doneKinFit)
   {
+    FillControlPlots(datasetsMSP, d, suffix);
+    
     MSPlot["W_mass"]->Fill(reco_W_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_bKF < 210 && reco_top_mass_bKF > 130 )
