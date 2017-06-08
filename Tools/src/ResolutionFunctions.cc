@@ -643,9 +643,6 @@ void ResolutionFunctions::makeFit()
       if (verbose) std::cout << "Integral of the histo is " << hp->Integral() << std::endl;
       /// Declare the fit function
       //  ! Its range depends on the jet/lepton energy range (hence, the Y-axis)
-      //TF1 *myfit = new TF1("myfit", "[2]*(TMath::Exp(-TMath::Power((x-[0]),2)/(2*TMath::Power([1],2)))+[5]*TMath::Exp(-TMath::Power((x-[3]),2)/(2*TMath::Power([4],2))))");
-      
-      //TF1 *myfit2 = new TF1("myfit", "([5]/([1]+[2]*[4]))*( TMath::Exp(-TMath::Power((x-[0])/[1],2)/2.) + [2]*TMath::Exp(-TMath::Power((x-[3])/[4],2)/2.) )/sqrt(2.*TMath::Pi())");  // FOUT: norm factor, zie dblGaus
       
       double maxX = 0.;
       double fitEdge = 100.;  // largest for Et
@@ -799,11 +796,24 @@ void ResolutionFunctions::makeFit()
         myfit->SetParameter(4, 0.00001); //sigma value of second, narrow gaussian
       }
 */      
-      //  Fit
+      ///  Fit
       std::string func_title = std::string(histo->GetName())+"_sliceXbin"+toStr(xBin)+"_Fitted";
       myfit->SetName(func_title.c_str());
       hp->Fit(myfit, "R");
       gStyle->SetOptFit(0111);
+      
+      if (! useSingleG && myfit->GetParameter(1) > myfit->GetParameter(4) )
+      {
+        double temp = myfit->GetParameter(1);
+        double tempErr = myfit->GetParError(1);
+        double addErr = 0.;
+        if (fitEt) addErr = 3.;
+        myfit->SetParameter(1, myfit->GetParameter(4));
+        myfit->SetParError(1, myfit->GetParError(4)+addErr);
+        myfit->SetParameter(4, temp);
+        myfit->SetParError(4, tempErr);
+      }
+      
       int npFits = myfit->GetNumberFitPoints();
       if (npFits > nPar && npFits >= cut)
       {
@@ -811,8 +821,10 @@ void ResolutionFunctions::makeFit()
         {
           //std::cout << "myfit->GetParameter("<<iPar<<") " << myfit->GetParameter(iPar) << std::endl;
           //std::cout << "myfit->GetParError("<<iPar<<") " << myfit->GetParError(iPar) << std::endl;
-          hlist[iPar]->SetBinContent(xBin,myfit->GetParameter(iPar)); // fill histogram for parameter i
-          hlist[iPar]->SetBinError(xBin,myfit->GetParError(iPar));
+          hlist[iPar]->SetBinContent(xBin, myfit->GetParameter(iPar)); // fill histogram for parameter i
+          if ( fitTheta && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 3.*myfit->GetParError(iPar));
+          else if ( fitPhi && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 0.0005);
+          else hlist[iPar]->SetBinError(xBin,myfit->GetParError(iPar));
         }
         //hchi2->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetChisquare()/(npfits-npar));
       }
@@ -833,10 +845,10 @@ void ResolutionFunctions::makeFit()
     //TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x+[2]*sqrt(x)", histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax());
     double minfit2 = histo->GetXaxis()->GetXmin();
     double maxfit2 = histo->GetXaxis()->GetXmax();
-    if ( fitEt && histoNames[f].find("_B") == std::string::npos )
-      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
-    else if ( fitPhi && histoNames[f].find("_E") != std::string::npos )
-      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
+    if (! useSingleG && fitEt && histoNames[f].find("_B") == std::string::npos )
+      maxfit2 = histo->GetXaxis()->GetBinUpEdge(5) - 1e-5;
+//    else if ( fitPhi && histoNames[f].find("_E") != std::string::npos )
+//      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
     
     TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
     // Give names to the parameters

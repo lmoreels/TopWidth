@@ -153,7 +153,9 @@ int main (int argc, char *argv[])
   }
   
   if (testRead)
-  { 
+  {
+    rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit_170608.root";
+    
     TF2* f2 = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f2, "b jet Et (barrel)", "RF_bjet_Et_B_fitF");
     
