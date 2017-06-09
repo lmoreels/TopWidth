@@ -17,6 +17,7 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <TLine.h>
 #include <TH1.h>
 #include <TF1.h>
 #include <TGraph.h>
@@ -50,10 +51,13 @@ class Likelihood{
     void GetOutputWidth(double inputWidth);
     void GetOutputWidth(double inputWidth, std::string type);
     void GetOutputWidth(std::string inputFileName, double inputWidth);
+    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
     void AddPsExp(int thisPsExp, bool isData);
     void CalculatePull(double inputWidth);
+    /// Calibration curve
+    std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Write output from likelihood calculation to file
     void PrintLikelihoodOutput(std::string llFileName);
     void PrintLikelihoodOutputData(std::string llFileName);
@@ -131,20 +135,18 @@ class Likelihood{
     /// Get output width for pseudo experiments
     std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
     /// Calculate output width (used in getters)
-    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string plotName);
+    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName);
     std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName);
     std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile);
     std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName);
     std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile);
-    /// Calibration curve
-    std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Draw functions
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);
     void DrawLikelihoods();
     void DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double maxX, double maxY, std::string name, bool writeToFile);
     /// Read file
-    void ReadLLValuesFromFile(std::string inputFileName);
+    void ReadLLValuesFromFile(std::string inputFileName, std::string inputDir);
     /// Write file
     void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim);
     void CombineOutput();

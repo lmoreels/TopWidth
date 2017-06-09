@@ -26,8 +26,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {0.028244, 0.974992};
-const double Likelihood::calCurveParUnc_[2] = {0.00620311, 0.00200199};
+const double Likelihood::calCurvePar_[2] = {-0.215924, 0.99706};
+const double Likelihood::calCurveParUnc_[2] = {0.00459526, 0.0217609};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -499,12 +499,17 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type)
 
 void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth)
 {
+  GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth);
+}
+
+void Likelihood::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth)
+{
   if (verbose_) std::cout << "Using LogLikelihood values from file" << std::endl;
   std::string loglikePlotName = "loglikelihood_vs_width_";
   //if (! type.empty() ) loglikePlotName += type+"_";
   loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth);
   
-  output_ = this->CalculateOutputWidth(inputFileName, loglikePlotName);
+  output_ = this->CalculateOutputWidth(inputFileName, inputDir, loglikePlotName);
   
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
 }
@@ -521,9 +526,9 @@ std::pair<double,double> Likelihood::GetOutputWidth(double inputWidth, int thisP
   return this->CalculateOutputWidth(nWidths_, loglike_pull_single_, loglikePlotName, true);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileName, std::string plotName)
+std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName)
 {
-  this->ReadLLValuesFromFile(inputFileName);
+  this->ReadLLValuesFromFile(inputFileName, inputDir);
   const int nn = vecWidthFromFile_.size();
   if ( nn == 0 )
     return std::pair<double,double>(-1.,-1.);
@@ -558,9 +563,13 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   int locMin = LocMinArray(nn, LLvalues);
   //std::cout << "Index of minimum LL value is " << locMin << std::endl;
   double centreVal = evalWidths[locMin];
-  double fitmax = centreVal + 0.8;
-  double fitmin = centreVal - 0.8;
-  if ( fitmin < 0. ) fitmin = 0.;
+  double interval = 0.5;
+  if ( centreVal <= interval ) interval = centreVal - 0.1;
+  if ( centreVal > 3.8 ) interval = 1.0;
+  double fitmax = centreVal + interval;
+  double fitmin = centreVal - interval;
+  if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
+  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   
@@ -572,6 +581,10 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin, outputWidth);
   double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax);
   double sigma = (upperSigma - lowerSigma)/2.;
+  if ( lowerSigma <= fitmin && upperSigma >= fitmax )
+    std::cerr << "Likelihood::CalculateOutputWidth: ERROR: Uncertainty calculation limited by fit boundaries. Do not trust..." << std::endl;
+  else if ( lowerSigma <= fitmin ) sigma = upperSigma - outputWidth;
+  else if ( upperSigma >= fitmax ) sigma = outputWidth - lowerSigma;
   
   double LLreduced[nn];
   for (int i = 0; i < nn; i++)
@@ -580,7 +593,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   g2->Fit(parabola,"R");
   
   
-  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-3., outputWidth+3., 1.5*g2->Eval(outputWidth+3.), plotName, writeToFile);
+  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-2., outputWidth+2., 1.5*g2->Eval(outputWidth+2.), plotName, writeToFile);
   this->DrawOutputLogLikelihood(g2, parabola, outputWidth-3.*sigma, outputWidth+3.*sigma, std::max(g2->Eval(outputWidth-3.*sigma),g2->Eval(outputWidth+3.*sigma)), plotName+"_zoom", writeToFile);
   
   delete g2;
@@ -765,6 +778,7 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   TCanvas* c1 = new TCanvas(name.c_str(), "-LogLikelihood vs. width");
   c1->cd();
   g->Draw("AP");
+  if ( minX < 0. ) minX = 0.;
   g->GetXaxis()->SetRangeUser(minX,maxX);
   g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
   g->GetXaxis()->SetTitle("#Gamma/#Gamma_{SM}");
@@ -776,6 +790,10 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   f->Draw("same");
   c1->Modified();
   c1->Update();
+  TLine l;
+  l.SetLineColor(921);
+  l.DrawLine(minX, 0.5, maxX, 0.5);
+  c1->Update();
   if (writeToFile) c1->Write();
   c1->SaveAs(outputFileName.c_str());
   c1->Close();
@@ -783,15 +801,15 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   delete c1;
 }
 
-void Likelihood::ReadLLValuesFromFile(std::string inputFileName)
+void Likelihood::ReadLLValuesFromFile(std::string inputFileName, std::string inputDir)
 {
-  if (! tls_->fexists((dirNameLLTxt_+inputFileName).c_str()) )
+  if (! tls_->fexists((inputDir+inputFileName).c_str()) )
   {
-    std::cerr << "WARNING: File " << dirNameLLTxt_+inputFileName << " does not exist." << std::endl;
+    std::cerr << "WARNING: File " << inputDir+inputFileName << " does not exist." << std::endl;
     exit(1);
   }
-  fileIn_.open((dirNameLLTxt_+inputFileName).c_str());
-  if (verbose_) std::cout << "Opening " << dirNameLLTxt_+inputFileName << "..." << std::endl;
+  fileIn_.open((inputDir+inputFileName).c_str());
+  if (verbose_) std::cout << "Opening " << inputDir+inputFileName << "..." << std::endl;
   
   vecWidthFromFile_.clear();
   vecLLValsFromFile_.clear();
@@ -907,14 +925,14 @@ void Likelihood::PrintLikelihoodOutputData(std::string llFileName)
   txtOutputLogLike << std::endl << "LLikelihood: ";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    txtOutputLogLike << std::setw(12) << std::right << loglike_data_[iWidth] << "  ";
+    txtOutputLogLike << std::setw(17) << std::right << std::setprecision(15) << loglike_data_[iWidth] << "  ";
   }
   if (calculateGoodEvtLL_)
   {
     txtOutputLogLike << std::endl << "GoodLLikelihood: ";
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      txtOutputLogLike << std::setw(12) << std::right << loglike_good_evts_data_[iWidth] << "  ";
+      txtOutputLogLike << std::setw(17) << std::right << std::setprecision(15) << loglike_good_evts_data_[iWidth] << "  ";
     }
   }
   txtOutputLogLike << std::endl;
@@ -927,14 +945,14 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
   txtOutputLogLike << "likelihood values (all MC) : {";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    txtOutputLogLike << loglike_[iWidth]/(1e+2);
+    txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_[iWidth];
     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
   }
-  txtOutputLogLike << "} *10^2;" << std::endl;
+  txtOutputLogLike << "};" << std::endl;
 //   txtOutputLogLike << "likelihood values (data-only) : {";
 //   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
 //   {
-//     txtOutputLogLike << loglike_data_[iWidth];
+//     txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_data_[iWidth];
 //     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
 //   }
 //   txtOutputLogLike << "};" << std::endl;
@@ -943,15 +961,15 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
     txtOutputLogLike << "likelihood values (only good MC events) : {";
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      txtOutputLogLike << loglike_good_evts_[iWidth]/(1e+2);
+      txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_good_evts_[iWidth];
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
     }
   }
-  txtOutputLogLike << "} *10^2;" << std::endl;
+  txtOutputLogLike << "};" << std::endl;
 //   txtOutputLogLike << "likelihood values (only good data events) : {";
 //   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
 //   {
-//     txtOutputLogLike << loglike_good_evts_data_[iWidth];
+//     txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_good_evts_data_[iWidth];
 //     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
 //   }
 //   txtOutputLogLike << "};" << std::endl;
@@ -960,20 +978,20 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
     txtOutputLogLike << "CM likelihood values : {";
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      txtOutputLogLike << loglike_CM_[iWidth]/(1e+2);
+      txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_CM_[iWidth];
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
     }
-    txtOutputLogLike << "} *10^2;";
+    txtOutputLogLike << "};";
     if (calculateGoodEvtLL_)
     {
       txtOutputLogLike << std::endl << "CM likelihood values (only good events) : {";
       for (int iWidth = 0; iWidth < nWidths_; iWidth++)
       {
-        txtOutputLogLike << loglike_CM_good_evts_[iWidth]/(1e+2);
+        txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_CM_good_evts_[iWidth];
         if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
       }
     }
-    txtOutputLogLike << "} *10^2;";
+    txtOutputLogLike << "};";
   }
   txtOutputLogLike << std::endl << "widths: ";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -986,19 +1004,19 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
     txtOutputLogLike << std::endl << "PARTON likelihood values (all matched MC) : {";
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      txtOutputLogLike << loglike_gen_[iWidth]/(1e+2);
+      txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_gen_[iWidth];
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
     }
     if (calculateGoodEvtLL_)
     {
-      txtOutputLogLike << "} *10^2;" << std::endl << "PARTON likelihood values (only good matched events) : {";
+      txtOutputLogLike << "};" << std::endl << "PARTON likelihood values (only good matched events) : {";
       for (int iWidth = 0; iWidth < nWidths_; iWidth++)
       {
-        txtOutputLogLike << loglike_gen_good_evts_[iWidth]/(1e+2);
+        txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_gen_good_evts_[iWidth];
         if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
       }
     }
-    txtOutputLogLike << "} *10^2;";
+    txtOutputLogLike << "};";
   }
   txtOutputLogLike << std::endl << std::endl;
 }
