@@ -42,13 +42,13 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool makeControlPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
 bool calculateLikelihood = true;
-bool doPseudoExps = false;
+bool doPseudoExps = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -94,7 +94,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170608_1926/";  // TT nominal
+string inputDateLL = "170611_1425/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -513,6 +513,7 @@ TLorentzVector WCandidate;
 vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
+vector<TLorentzVector> selectedJetsAKF;
 vector<TLorentzVector> selectedJetsKFcorrected;
 vector<TLorentzVector> selectedJetsKFMatched;
 vector<TLorentzVector> mcParticles;
@@ -555,7 +556,7 @@ Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
 ofstream txtDebugTopMass, txtDebugPUSF;
 
 /// Pseudo experiments
-const int nPseudoExps = 1000;
+const int nPseudoExps = 500;
 int nPsExps = nPseudoExps;
 TRandom3 random3;
 double toyValues[nPseudoExps]; // = random3.Uniform(0,1);
@@ -565,6 +566,7 @@ int nEvtsInPseudoExp[nPseudoExps][15] = {0}, nDataEvts;
 
 /// Variables
 double M3, Ht, min_Mlb, dRLepB;
+double M3_aKF, Ht_aKF;
 double reco_W_mass_bKF, reco_top_mass_bKF, reco_top_pt_bKF, reco_mlb_bKF, reco_dRLepB_lep_bKF, reco_dRLepB_had_bKF, reco_ttbar_mass_bKF, redTopMass_bKF;
 double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_pt_aKF, reco_mlb_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_ttbar_mass_aKF, redTopMass;
 
@@ -1557,6 +1559,12 @@ int main(int argc, char* argv[])
       }
       else if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
       
+      /// Make pT ordered jet collection after KF
+      selectedJetsAKF = selectedJetsKFcorrected;
+      selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
+      std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
+      
+      /// Define variables
       reco_W_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
       reco_top_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M();
       reco_top_pt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
@@ -1572,7 +1580,14 @@ int main(int argc, char* argv[])
       if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << endl;
       
       if ( doKinFit && makePlots )
-        FillKinFitPlots(doneKinFit);
+      {
+        if (isTTbar) FillKinFitPlots(doneKinFit);
+        if (! isData)
+        {
+          histo1D["allSim_top_mass"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
+          histo1D["allSim_red_top_mass"]->Fill(redTopMass, lumiWeight*scaleFactor*widthSF);
+        }
+      }
       
       
       
@@ -1680,12 +1695,11 @@ int main(int argc, char* argv[])
         
         FillMSPlots(dMSP, doneKinFit);
         
-        MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);  /// not correct, pt not corrected --> search AKF jet with highest pt, then fill
-        for (int iJet = 0; iJet < selectedJetsKFcorrected.size(); iJet++)
+        MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJetsAKF[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+        for (int iJet = 0; iJet < selectedJetsAKF.size(); iJet++)
         {
-          MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJetsKFcorrected[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJetsAKF[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
         }
-        MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJetsKFcorrected[labelsReco[3]].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
         
       }  // end makePlots
       
@@ -1827,10 +1841,10 @@ int main(int argc, char* argv[])
     like->GetOutputWidth(scaleWidth);
     if (! doPseudoExps)
     {
-      cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-      like->GetOutputWidth(scaleWidth, "CM");
-      cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-      like->GetOutputWidth(scaleWidth, "gen");
+      //cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+      //like->GetOutputWidth(scaleWidth, "CM");
+      //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
+      //like->GetOutputWidth(scaleWidth, "gen");
     }
     //cout << "Output width from file (standard calculation): " << endl;
     //like->GetOutputWidth(llFileName+".txt", scaleWidth);
@@ -2284,7 +2298,7 @@ void InitMSPlots()
   
   /// Reco
   MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 50, 0, 200, "m_{W}", "GeV");
-  MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 150, 0, 600, "m_{t}", "GeV");
+  MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 40, 0, 400, "m_{t}", "GeV");
   MSPlot["top_mass_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter (zoomed)", 40, 130, 210, "m_{t}", "GeV");
   MSPlot["red_top_mass_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   MSPlot["red_top_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
@@ -2299,7 +2313,7 @@ void InitMSPlots()
   if (doKinFit)
   {
     MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 50, 0, 200, "m_{W,kf}", "GeV");
-    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 150, 0, 600, "m_{t,kf}", "GeV");
+    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
     MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 130, 210, "m_{t,kf}", "GeV");
     MSPlot["red_top_mass_aKF_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
     MSPlot["red_top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
@@ -2325,6 +2339,10 @@ void InitHisto1D()
   
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
+  
+  /// Systematic comparison
+  histo1D["allSim_top_mass"] = new TH1F("allSim_top_mass","Reconstructed top mass for all simulated samples; m_{t}", 32, 130, 210);
+  histo1D["allSim_red_top_mass"] = new TH1F("allSim_red_top_mass","Reduced top mass for all simulated samples; m_{t}/<m_{t}>", 110, 0.2, 2.4);
   
   /// m_t/<m_t>
   histo1D["red_top_mass_TT_CM"] = new TH1F("red_top_mass_TT_CM","Reduced top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
@@ -2764,6 +2782,7 @@ void ClearTLVs()
   selectedLepton.clear();
   selectedJets.clear();
   selectedBJets.clear();
+  selectedJetsAKF.clear();
   selectedJetsKFcorrected.clear();
   selectedJetsKFMatched.clear();
   mcParticles.clear();
@@ -2842,7 +2861,9 @@ void ClearVars()
   }
   
   M3 = -1.;
+  M3_aKF = -1.;
   Ht = -1.;
+  Ht_aKF = -1;
   min_Mlb = 9999.;
   dRLepB = -1.;
   reco_W_mass_bKF = -1.;
@@ -2897,11 +2918,26 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
   MSPlotCP["muon_phi"+suffix]->Fill(selectedLepton[0].Phi(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["muon_relIso"+suffix]->Fill(muon_relIso[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["muon_d0"+suffix]->Fill(muon_d0[0], datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlotCP["leadingJet_pT"+suffix]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlotCP["jet2_pT"+suffix]->Fill(selectedJets[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlotCP["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlotCP["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-  MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  if (suffix.find("aKF") != std::string::npos )
+  {
+    MSPlotCP["leadingJet_pT"+suffix]->Fill(selectedJetsAKF[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet2_pT"+suffix]->Fill(selectedJetsAKF[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet3_pT"+suffix]->Fill(selectedJetsAKF[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet4_pT"+suffix]->Fill(selectedJetsAKF[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    Ht_aKF = selectedJetsAKF[0].Pt() + selectedJetsAKF[1].Pt() + selectedJetsAKF[2].Pt() + selectedJetsAKF[3].Pt();
+    MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht_aKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    M3_aKF = (selectedJetsAKF[0] + selectedJetsAKF[1] + selectedJetsAKF[2]).M();
+    MSPlotCP["M3"+suffix]->Fill(M3_aKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  }
+  else
+  {
+    MSPlotCP["leadingJet_pT"+suffix]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet2_pT"+suffix]->Fill(selectedJets[1].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  }
   MSPlotCP["met_pT"+suffix]->Fill(met_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["met_eta"+suffix]->Fill(met_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["met_phi"+suffix]->Fill(met_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
@@ -2909,7 +2945,6 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
   MSPlotCP["met_corr_eta"+suffix]->Fill(met_corr_eta, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["met_corr_phi"+suffix]->Fill(met_corr_phi, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
-  MSPlotCP["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["min_Mlb"+suffix]->Fill(min_Mlb, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["dR_Lep_B"+suffix]->Fill(dRLepB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   
@@ -2925,7 +2960,11 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
   double highestBDiscr = -999.;
   for (int iJet = 0; iJet < selectedJets.size(); iJet++)
   {
-    MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    if ( suffix.find("aKF") != std::string::npos )
+      MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJetsAKF[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    else
+      MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    
     MSPlotCP["CSVv2Discr_allJets"+suffix]->Fill(jet_bdiscr[iJet], datasets[d], true, lumiWeight*scaleFactor*widthSF);
     if ( jet_bdiscr[iJet] > highestBDiscr )
     {
