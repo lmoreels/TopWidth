@@ -107,6 +107,7 @@ class Likelihood{
     TFile *fileTGraphs_;
     TGraph2D *gLL2D_;
     std::ofstream txtOutput_;
+    std::ofstream txtOutputPsExp_;
     
     std::map<std::string,TH1D*> histo_;
     std::map<std::string,TH1D*> histoSm_;
@@ -148,6 +149,7 @@ class Likelihood{
     /// Read file
     void ReadLLValuesFromFile(std::string inputFileName, std::string inputDir);
     /// Write file
+    void WritePsExpOutput(std::pair<double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth);
     void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim);
     void CombineOutput();
 };

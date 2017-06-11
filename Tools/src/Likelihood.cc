@@ -1,6 +1,6 @@
 #include "../interface/Likelihood.h"
 
-const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10.};
+const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.,14.5, 15.};
 
 const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
 
@@ -26,8 +26,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.215924, 0.99706};
-const double Likelihood::calCurveParUnc_[2] = {0.00459526, 0.0217609};
+const double Likelihood::calCurvePar_[2] = {-0.200749, 0.990893};
+const double Likelihood::calCurveParUnc_[2] = {0.0230262, 0.00372333};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -661,9 +661,11 @@ void Likelihood::CalculatePull(double inputWidth)
     aveInputWidth += thisInputWidth[iPsExp].first;
   }
   aveInputWidth = aveInputWidth/nPsExp_;
-  std::cout << "Output width : " << thisOutputWidth[0].first << " ;   sigma : " << thisOutputWidth[0].second << std::endl;
-  std::cout << "Input width  : " << thisInputWidth[0].first << " ;   sigma : " << thisInputWidth[0].second << std::endl;
+  //std::cout << "Output width : " << thisOutputWidth[0].first << " ;   sigma : " << thisOutputWidth[0].second << std::endl;
+  //std::cout << "Input width  : " << thisInputWidth[0].first << " ;   sigma : " << thisInputWidth[0].second << std::endl;
   std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
+  
+  WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
   
   /// Fill histogram with (Gamma_j - <Gamma>)/sigma_j
   double fillValue;
@@ -857,6 +859,18 @@ void Likelihood::ReadLLValuesFromFile(std::string inputFileName, std::string inp
     vecLLValsFromFile_.clear();
     vecGoodLLValsFromFile_.clear();
   }
+}
+
+void Likelihood::WritePsExpOutput(std::pair<double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth)
+{
+  std::string outputTxtName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_output_widthx"+tls_->DotReplace(genWidth)+".txt";
+  txtOutputPsExp_.open(outputTxtName.c_str());
+  txtOutputPsExp_ << "iPsExp   output width        unc           input width        unc" << std::endl;
+  for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
+  {
+    txtOutputPsExp_ << std::setw(4) << std::right << iPsExp << "   " << std::setw(8) << std::left << outputWidth[iPsExp].first << "   " << std::setw(8) << std::left << outputWidth[iPsExp].second << "   " << std::setw(8) << std::left << inputWidth[iPsExp].first << std::setw(8) << std::left << inputWidth[iPsExp].second << std::endl;
+  }
+  txtOutputPsExp_.close();
 }
 
 void Likelihood::WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim)
