@@ -49,9 +49,10 @@ class Likelihood{
     void CalculateGenLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
     void GetOutputWidth(double inputWidth);
-    void GetOutputWidth(double inputWidth, std::string type);
-    void GetOutputWidth(std::string inputFileName, double inputWidth);
-    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth);
+    void GetOutputWidth(double inputWidth, bool writeToFile = false);
+    void GetOutputWidth(double inputWidth, std::string type, bool writeToFile = false);
+    void GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile = false);
+    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile = false);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
     void AddPsExp(int thisPsExp, bool isData);
@@ -105,6 +106,7 @@ class Likelihood{
     double thisWidthSF_;
     TFile *file_;
     TFile *fileTGraphs_;
+    TFile *filePlots_;
     TGraph2D *gLL2D_;
     std::ofstream txtOutput_;
     std::ofstream txtOutputPsExp_;
@@ -136,11 +138,10 @@ class Likelihood{
     /// Get output width for pseudo experiments
     std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
     /// Calculate output width (used in getters)
-    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile);
+    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false);
     std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile = false);
     /// Draw functions
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);
