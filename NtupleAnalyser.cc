@@ -48,7 +48,7 @@ bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
 bool calculateLikelihood = true;
-bool doPseudoExps = true;
+bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -94,7 +94,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170611_1425/";  // TT nominal
+string inputDateLL = "170613_1657/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -131,7 +131,7 @@ double CSVv2Tight  = 0.9535;
 const int nofAveMasses = 16;
 //  KF chi2 < 5
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
-std::array<double, 14> aveTopMass = {171.826, 169.746, 167.593, 197.164, 196.687, 198.302, 181.984, 249.468, 247.437, 227.529, 226.099, 184.794, 184.693, 184.708};  // Res 170608 Single Gaus
+std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688, 197.911, 181.895, 249.468, 247.437, 227.529, 226.099, 184.794, 184.594, 184.62};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
@@ -546,6 +546,7 @@ bool addEqMassKF = false;
 int kFitVerbosity = 0;
 double kFitChi2 = 99., kFitChi2Matched = 99.;
 int nofAcceptedKFit = 0, nofAcceptedKFitMatched = 0;
+bool passKFChi2MatchedCut = false;
 
 
 /// Likelihood
@@ -906,7 +907,7 @@ int main(int argc, char* argv[])
   }
   cout << "The muon scale factors will be scaled by " << fracDataEras[0] << " for eras B-F and " << fracDataEras[1] << " for eras G-H." << endl;
   
-  
+  int dMSP;
   bool hasFoundTTbar = false;
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
@@ -1361,21 +1362,24 @@ int main(int argc, char* argv[])
               kFitChi2Matched = kFitterMatched->getS();
               if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2Matched << endl;
               
-              if ( applyKinFitCut && kFitChi2Matched > kinFitCutValue ) continue;
-              nofAcceptedKFitMatched++;
-              
-              selectedJetsKFMatched.clear();
-              selectedJetsKFMatched = kfMatched->getCorrectedJets();
-              
-              if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
-              
-              matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
-              
-              if (calculateLikelihood)
+              if ( applyKinFitCut && kFitChi2Matched < kinFitCutValue ) passKFChi2MatchedCut = true;
+              if (passKFChi2MatchedCut)
               {
-                double temp = matched_top_mass_j_akF/aveTopMassLL;
-                like->CalculateGenLikelihood(temp, massForWidth, scaleWidth, isTTbar, isData);
-              }
+                nofAcceptedKFitMatched++;
+                
+                selectedJetsKFMatched.clear();
+                selectedJetsKFMatched = kfMatched->getCorrectedJets();
+                
+                if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
+                
+                matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+                
+                if (calculateLikelihood)
+                {
+                  double temp = matched_top_mass_j_akF/aveTopMassLL;
+                  like->CalculateGenLikelihood(temp, massForWidth, scaleWidth, isTTbar, isData);
+                }
+              }  // passKFChi2MatchedCut
             }  // end KF
             
             
@@ -1480,6 +1484,13 @@ int main(int argc, char* argv[])
       else if (isWM) catSuffix = catSuffixList[1];
       else if (isNM) catSuffix = catSuffixList[2];
       
+      dMSP = d;
+      if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+      else if (isTTbar && isWM) dMSP = d+1;
+      else if (isTTbar && isNM) dMSP = d+2;
+      
+      
+      /// Fill variables before performing kinFit
       reco_W_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
       reco_top_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
       reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
@@ -1493,10 +1504,6 @@ int main(int argc, char* argv[])
       {
         if (isTTbar && doKinFit) FillKinFitPlots(doneKinFit);
         
-        int dMSP = d;
-        if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-        else if (isTTbar && isWM) dMSP = d+1;
-        else if (isTTbar && isNM) dMSP = d+2;
         FillMSPlots(dMSP, doneKinFit);
         //FillControlPlots(datasetsMSP, dMSP);
         
@@ -1530,7 +1537,12 @@ int main(int argc, char* argv[])
         if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
         
         doneKinFit = true;
-        if (makePlots) MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+        if (makePlots)
+        {
+          MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[dMSP], true, lumiWeight*scaleFactor*widthSF);
+          if (! isData) histo1D["KF_Chi2"+catSuffix+"_wide"]->Fill(kFitChi2);
+          if (isTTbar) histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
+        }
         
         if (isCM) nofCorrectlyMatchedAKFNoCut++;
         else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
@@ -1688,11 +1700,6 @@ int main(int argc, char* argv[])
         
         FillCatsPlots(catSuffix);
         
-        int dMSP = d;
-        if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-        else if (isTTbar && isWM) dMSP = d+1;
-        else if (isTTbar && isNM) dMSP = d+2;
-        
         FillMSPlots(dMSP, doneKinFit);
         
         MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJetsAKF[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
@@ -1726,10 +1733,10 @@ int main(int argc, char* argv[])
         cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
         if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
           cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
-        cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
         
         if (doKinFit)
         {
+          cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
           cout << " --- Kinematic fit" << endl;
           cout << " --- Before chi2 cut --- " << endl;
           cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
@@ -1747,7 +1754,7 @@ int main(int argc, char* argv[])
           
           cout << "                        " << 100*(float)nofCorrectlyMatchedAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
         }
-        else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofMETCleaned) << "% of all events is correctly matched." << endl;
+        else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched." << endl;
       }
       
       if (doKinFit)
@@ -1838,7 +1845,7 @@ int main(int argc, char* argv[])
     
     /// Calculate output width
     cout << "Standard output width: " << endl;
-    like->GetOutputWidth(scaleWidth);
+    like->GetOutputWidth(scaleWidth, true);
     if (! doPseudoExps)
     {
       //cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
@@ -2854,6 +2861,7 @@ void ClearVars()
   kFitVerbosity = false;
   kFitChi2 = 99.;
   kFitChi2Matched = 99.;
+  passKFChi2MatchedCut = false;
   //toyValue = -1.;
   for (int i = 0; i < nPsExps; i++)
   {
@@ -3043,8 +3051,6 @@ void FillKinFitPlots(bool doneKinFit)
       histo1D["KF_jet0_Et_diff_TT"]->Fill((selectedJetsKFcorrected[0] - selectedJets[labelsReco[0]]).Et());
       histo1D["KF_jet1_Et_diff_TT"]->Fill((selectedJetsKFcorrected[1] - selectedJets[labelsReco[1]]).Et());
       histo2D["KF_jets_Et_diff_TT"]->Fill((selectedJetsKFcorrected[0] - selectedJets[labelsReco[0]]).Et(), (selectedJetsKFcorrected[1] - selectedJets[labelsReco[1]]).Et());
-      
-      histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
     }
     
     if ( kFitChi2 < 5. )
@@ -3101,9 +3107,8 @@ void FillCatsPlots(string catSuffix)
 //    }
     if (doKinFit)
     {
-      histo1D[("KF_Chi2"+catSuffix).c_str()]->Fill(kFitChi2);
-      histo1D[("KF_Chi2"+catSuffix+"_wide").c_str()]->Fill(kFitChi2);
-      histo1D[("KF_top_mass_corr"+catSuffix).c_str()]->Fill(reco_top_mass_aKF, widthSF);
+      histo1D["KF_Chi2"+catSuffix]->Fill(kFitChi2);
+      histo1D["KF_top_mass_corr"+catSuffix]->Fill(reco_top_mass_aKF, widthSF);
     }
   }
 }
