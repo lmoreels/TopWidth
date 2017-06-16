@@ -94,7 +94,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170613_1657/";  // TT nominal
+string inputDateLL = "170616_1005/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -131,7 +131,7 @@ double CSVv2Tight  = 0.9535;
 const int nofAveMasses = 16;
 //  KF chi2 < 5
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
-std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688, 197.911, 181.895, 249.468, 247.437, 227.529, 226.099, 184.794, 184.594, 184.62};  // Res 170608 Single Gaus
+std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688, 197.911, 181.895, 249.468, 247.437, 227.529, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
@@ -500,7 +500,7 @@ vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
 int labelsReco[4];
-double massForWidth;
+double massForWidth, massTopQ, massAntiTopQ;
 
 string catSuffix = "";
 string catSuffixList[] = {"_CM", "_WM", "_NM"};
@@ -1266,12 +1266,15 @@ int main(int argc, char* argv[])
         ///  Scale factor ttbar sample width  ///
         /////////////////////////////////////////
         
-        if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
-        else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
+        //if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
+        //else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
+        
+        massTopQ = (mcParticles[topQuark]).M();
+        massAntiTopQ =  (mcParticles[antiTopQuark]).M();
         
         if ( applyWidthSF && isTTbar )
         {
-          widthSF = rew->EventWeightCalculator(massForWidth, scaleWidth);
+          widthSF = rew->EventWeightCalculator(massTopQ, scaleWidth)*rew->EventWeightCalculator(massAntiTopQ, scaleWidth);
           
           if ( widthSF != widthSF )  // widthSF = NaN
           {
@@ -1377,7 +1380,7 @@ int main(int argc, char* argv[])
                 if (calculateLikelihood)
                 {
                   double temp = matched_top_mass_j_akF/aveTopMassLL;
-                  like->CalculateGenLikelihood(temp, massForWidth, scaleWidth, isTTbar, isData);
+                  like->CalculateGenLikelihood(temp, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
                 }
               }  // passKFChi2MatchedCut
             }  // end KF
@@ -1607,12 +1610,12 @@ int main(int argc, char* argv[])
       ///  Likelihood  ///
       ////////////////////
       
-      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massForWidth, isTTbar, isData, catSuffix);
+      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massTopQ, massAntiTopQ, isTTbar, isData, catSuffix);
       if (calculateLikelihood)
       {
-        like->CalculateLikelihood(redTopMass, lumiWeight, massForWidth, scaleWidth, isTTbar, isData);
+        like->CalculateLikelihood(redTopMass, lumiWeight, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
         if (isCM && ! doPseudoExps)  // isCM ensures ! isData
-          like->CalculateCMLikelihood(redTopMass, massForWidth, scaleWidth, isTTbar, isData);
+          like->CalculateCMLikelihood(redTopMass, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
       }
       
       if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
@@ -2853,6 +2856,8 @@ void ClearVars()
     labelsReco[i] = -9999;
   }
   massForWidth = 0.01;
+  massTopQ = 0.01;
+  massAntiTopQ = 0.01;
   catSuffix = "";
   isCM = false;
   isWM = false;

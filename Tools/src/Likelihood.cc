@@ -106,14 +106,14 @@ void Likelihood::BookHistograms()
   }
 }
 
-void Likelihood::FillHistograms(double redMass, double lumiWeight, double massForWidthSF, bool isTTbar, bool isData, std::string catSuffix)
+void Likelihood::FillHistograms(double redMass, double lumiWeight, double topMassForWidthSF, double antiTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix)
 {
   if ( ! isData )
   {
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
       thisWidth_ = stringWidthArray_[iWidth];
-      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(massForWidthSF, widthArray_[iWidth]);
+      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculator(antiTopMassForWidthSF, widthArray_[iWidth]);
       else thisWidthSF_ = 1.;
       
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
@@ -326,16 +326,16 @@ bool Likelihood::ConstructTGraphsFromFile(std::string name)
 
 void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, bool isData)
 {
-  this->CalculateLikelihood(redMass, lumiWeight, 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
+  this->CalculateLikelihood(redMass, lumiWeight, 1., 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
 }
 
-void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double massForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if ( redMass > minRedMass_ && redMass < maxRedMass_ )
   {
     if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(massForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -376,7 +376,7 @@ void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double m
   }
 }
 
-void Likelihood::CalculateCMLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateCMLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
   {
@@ -387,7 +387,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double massForWidthSF, do
   {
     if (! calledCMLLCalculation_) calledCMLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(massForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -426,7 +426,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double massForWidthSF, do
   }
 }
 
-void Likelihood::CalculateGenLikelihood(double redMass, double massForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateGenLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
   {
@@ -437,7 +437,7 @@ void Likelihood::CalculateGenLikelihood(double redMass, double massForWidthSF, d
   {
     if (! calledGenLLCalculation_) calledGenLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(massForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
