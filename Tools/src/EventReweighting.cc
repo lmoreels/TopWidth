@@ -15,15 +15,6 @@ EventReweighting::~EventReweighting()
   
 }
 
-double EventReweighting::BreitWignerNonRel(double topMass, double scale)
-{
-  double BWmass = genTopMass_;
-  double BWgamma = scale*genTopWidth_/2.;
-  double bw = BWgamma/( pow(topMass - BWmass, 2) + pow(BWgamma, 2) );
-  
-  return bw/(TMath::Pi());
-}
-
 double EventReweighting::BreitWigner(double topMass, double scale)
 {
   double BWmass = genTopMass_;
@@ -35,8 +26,23 @@ double EventReweighting::BreitWigner(double topMass, double scale)
   return numerator/denominator;
 }
 
+double EventReweighting::BreitWignerNonRel(double topMass, double scale)
+{
+  double BWmass = genTopMass_;
+  double BWgamma = scale*genTopWidth_/2.;
+  double bw = BWgamma/( pow(topMass - BWmass, 2) + pow(BWgamma, 2) );
+  
+  return bw/(TMath::Pi());
+}
+
 double EventReweighting::EventWeightCalculator(double topMass, double scale)
 {
   double corrNEvts = 1./(corr0_*scale+corr1_);
   return corrNEvts * BreitWigner(topMass, scale)/BreitWigner(topMass, 1.);
+}
+
+double EventReweighting::EventWeightCalculatorNonRel(double topMass, double scale)
+{
+  double corrNEvts = 1./(corr0_*scale+corr1_);
+  return corrNEvts * BreitWignerNonRel(topMass, scale)/BreitWignerNonRel(topMass, 1.);
 }
