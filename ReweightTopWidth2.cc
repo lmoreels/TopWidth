@@ -135,9 +135,9 @@ std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
-/// # events after kin fitter
-//  KF chi2 < 5
-int nEventsAKF[] = {100949, 544305, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
+/// # events
+vector<long> nEventsTot, nEventsSelc, nEventsHardSel, nEventsAKF;
+
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -439,7 +439,7 @@ int genneutrino = -9999;
 bool muonmatched = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 bool foundAllTTbarComponents = false;
-int bjjDecay[] = {-9999, -9999, -9999}, blvDecay[] = {-9999, -9999, -9999};
+int bqqDecay[] = {-9999, -9999, -9999}, blvDecay[] = {-9999, -9999, -9999};
 vector<unsigned int> partonId;
 
 
@@ -484,7 +484,7 @@ const int nReweightings = sizeof(reweightArray)/sizeof(reweightArray[0]);
 
 double m_top = -1.;
 double m_antitop = -1.;
-double m_bjj = -1.;
+double m_bqq = -1.;
 double m_blv = -1.;
 double m_hadr = -1;
 double m_lept = -1;
@@ -1012,13 +1012,13 @@ int main(int argc, char* argv[])
           if ( muMinusFromTop )
           {
             // hadronic decay  --> top
-            if ( mc_pdgId[partonId[i]] == 5 && mc_mother[partonId[i]] == pdgID_top ) bjjDecay[0] = partonId[i];
+            if ( mc_pdgId[partonId[i]] == 5 && mc_mother[partonId[i]] == pdgID_top ) bqqDecay[0] = partonId[i];
             else if ( abs(mc_pdgId[partonId[i]]) < 5 && mc_mother[partonId[i]] == 24 && mc_granny[partonId[i]] == pdgID_top )
             {
               //cout << "In hadronic loop: " << setw(3) << right << partonId[i] << "  pdgId: " << setw(3) << mc_pdgId[partonId[i]] << "  Mother: " << setw(4) << mc_mother[partonId[i]] << "  Granny: " << setw(4) << mc_granny[partonId[i]] << endl;
 
-              if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
-              else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+              if ( bqqDecay[1] == -9999 ) bqqDecay[1] = partonId[i];
+              else if ( bqqDecay[2] == -9999 ) bqqDecay[2] = partonId[i];
               else { cerr << "ERROR: Too many partons for hadronic top decay!  Event: " << ievt << endl; continue; }
             }
             
@@ -1027,13 +1027,13 @@ int main(int argc, char* argv[])
           else if ( muPlusFromTop )
           {
             // hadronic decay  --> antitop
-            if ( mc_pdgId[partonId[i]] == -5 && mc_mother[partonId[i]] == -pdgID_top ) bjjDecay[0] = partonId[i];
+            if ( mc_pdgId[partonId[i]] == -5 && mc_mother[partonId[i]] == -pdgID_top ) bqqDecay[0] = partonId[i];
             else if ( abs(mc_pdgId[partonId[i]]) < 5 && mc_mother[partonId[i]] == -24 && mc_granny[partonId[i]] == -pdgID_top )
             {
               //cout << "In hadronic loop: " << setw(3) << right << partonId[i] << "  pdgId: " << setw(3) << mc_pdgId[partonId[i]] << "  Mother: " << setw(4) << mc_mother[partonId[i]] << "  Granny: " << setw(4) << mc_granny[partonId[i]] << endl;
               
-              if ( bjjDecay[1] == -9999 ) bjjDecay[1] = partonId[i];
-              else if ( bjjDecay[2] == -9999 ) bjjDecay[2] = partonId[i];
+              if ( bqqDecay[1] == -9999 ) bqqDecay[1] = partonId[i];
+              else if ( bqqDecay[2] == -9999 ) bqqDecay[2] = partonId[i];
               else { cerr << "ERROR: Too many partons for hadronic antitop decay!  Event: " << ievt << endl; continue; }
             }
             
@@ -1043,7 +1043,7 @@ int main(int argc, char* argv[])
         blvDecay[1] = genmuon;
         blvDecay[2] = genneutrino;
         
-        if ( bjjDecay[0] != -9999 && bjjDecay[1] != -9999 && bjjDecay[2] != -9999 && blvDecay[0] != -9999 && blvDecay[1] != -9999 && blvDecay[2] != -9999)
+        if ( bqqDecay[0] != -9999 && bqqDecay[1] != -9999 && bqqDecay[2] != -9999 && blvDecay[0] != -9999 && blvDecay[1] != -9999 && blvDecay[2] != -9999)
         {
           foundAllTTbarComponents = true;
           if ( test && verbose > 2 ) cout << "All ttbar components found... Skipping event " << ievt << "..." << endl;
@@ -1058,7 +1058,7 @@ int main(int argc, char* argv[])
         {
           m_top = (mcParticles[topQuark]).M();
           m_antitop = (mcParticles[antiTopQuark]).M();
-          m_bjj = (mcParticles[bjjDecay[0]] + mcParticles[bjjDecay[1]] + mcParticles[bjjDecay[2]]).M();
+          m_bqq = (mcParticles[bqqDecay[0]] + mcParticles[bqqDecay[1]] + mcParticles[bqqDecay[2]]).M();
           m_blv = (mcParticles[blvDecay[0]] + mcParticles[blvDecay[1]] + mcParticles[blvDecay[2]]).M();
           
           m_hadr = -1.;
@@ -1086,19 +1086,19 @@ int main(int argc, char* argv[])
               histo1D[("top_mass_hadr_gen_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
               histo1D[("top_mass_hadr_gen_"+reweightString[s]+"_fewerBins").c_str()]->Fill(m_hadr, evWeight_hadr);
               histo1D[("top_mass_lept_gen_"+reweightString[s]).c_str()]->Fill(m_lept, evWeight_hadr);
-              histo1D[("bjj_mass_gen_"+reweightString[s]).c_str()]->Fill(m_bjj, evWeight_hadr);
+              histo1D[("bqq_mass_gen_"+reweightString[s]).c_str()]->Fill(m_bqq, evWeight_hadr);
               histo1D[("blv_mass_gen_"+reweightString[s]).c_str()]->Fill(m_blv, evWeight_hadr);
               
               histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_prod);
               histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]+"_fewerBins").c_str()]->Fill(m_hadr, evWeight_prod);
               histo1D[("top_mass_lept_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_lept, evWeight_prod);
-              histo1D[("bjj_mass_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_bjj, evWeight_prod);
+              histo1D[("bqq_mass_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_bqq, evWeight_prod);
               histo1D[("blv_mass_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_blv, evWeight_prod);
               
               histo1D[("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_prodsqrt);
               histo1D[("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]+"_fewerBins").c_str()]->Fill(m_hadr, evWeight_prodsqrt);
               histo1D[("top_mass_lept_gen_prodsqrtSF_"+reweightString[s]).c_str()]->Fill(m_lept, evWeight_prodsqrt);
-              histo1D[("bjj_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()]->Fill(m_bjj, evWeight_prodsqrt);
+              histo1D[("bqq_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()]->Fill(m_bqq, evWeight_prodsqrt);
               histo1D[("blv_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()]->Fill(m_blv, evWeight_prodsqrt);
               
               histo1D[("Width_SF_hadr_"+reweightString[s]).c_str()]->Fill(evWeight_hadr);
@@ -1111,6 +1111,8 @@ int main(int argc, char* argv[])
               histo2D[("Width_SF_hadr_prodsqrt_"+reweightString[s]).c_str()]->Fill(evWeight_hadr, evWeight_prodsqrt);
               histo2D[("top_mass_hadr_gen_vs_weight_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
               //histo2D[("top_mass_lept_gen_vs_weight_"+reweightString[s]).c_str()]->Fill(m_lept, evWeight_lept);
+              histo2D["top_mass_hadr_lept_gen_"+reweightString[s]]->Fill(m_hadr, m_lept, evWeight_hadr);
+              histo2D["top_mass_hadr_lept_gen_prodSF_"+reweightString[s]]->Fill(m_hadr, m_lept, evWeight_prod);
             }
           }
           if (makePlots)
@@ -1118,13 +1120,13 @@ int main(int argc, char* argv[])
             histo1D[("top_mass_hadr_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_hadr, numWeight);
             histo1D[("top_mass_hadr_gen_"+genWidthString[thisGenWidthId]+"_fewerBins").c_str()]->Fill(m_hadr, numWeight);
             histo1D[("top_mass_lept_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_lept, numWeight);
-            histo1D[("bjj_mass_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_bjj, numWeight);
+            histo1D[("bqq_mass_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_bqq, numWeight);
             histo1D[("blv_mass_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_blv, numWeight);
             
             histo2D["top_mass_hadr_lept_gen_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, m_lept, numWeight);
-            histo2D["top_mass_hadr_bjj_gen_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, m_bjj, numWeight);
+            histo2D["top_mass_hadr_bqq_gen_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, m_bqq, numWeight);
             histo2D["top_mass_lept_blv_gen_"+genWidthString[thisGenWidthId]]->Fill(m_lept, m_blv, numWeight);
-            histo2D["top_mass_bjj_blv_gen_"+genWidthString[thisGenWidthId]]->Fill(m_bjj, m_blv, numWeight);
+            histo2D["top_mass_bqq_blv_gen_"+genWidthString[thisGenWidthId]]->Fill(m_bqq, m_blv, numWeight);
           }
         }
         
@@ -1440,6 +1442,13 @@ int main(int argc, char* argv[])
             histo1D["red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]]->Fill(redTopMass, evWeight_prod);
             histo1D["red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(redTopMass, evWeight_prod);
             
+            if (foundAllTTbarComponents)
+            {
+              histo2D["top_mass_hadr_gen_reco_CM_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_CM_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+              histo2D["top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+            }
           }
           else if (isWM)
           {
@@ -1452,6 +1461,14 @@ int main(int argc, char* argv[])
             histo1D["top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(reco_top_mass_aKF, evWeight_prod);
             histo1D["red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]]->Fill(redTopMass, evWeight_prod);
             histo1D["red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(redTopMass, evWeight_prod);
+            
+            if (foundAllTTbarComponents)
+            {
+              histo2D["top_mass_hadr_gen_reco_WM_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_WM_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+              histo2D["top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+            }
           }
           else if (isNM)
           {
@@ -1464,6 +1481,22 @@ int main(int argc, char* argv[])
             histo1D["top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(reco_top_mass_aKF, evWeight_prod);
             histo1D["red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]]->Fill(redTopMass, evWeight_prod);
             histo1D["red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(redTopMass, evWeight_prod);
+            
+            if (foundAllTTbarComponents)
+            {
+              histo2D["top_mass_hadr_gen_reco_NM_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_NM_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+              histo2D["top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+              histo2D["top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+            }
+          }
+          
+          if (foundAllTTbarComponents)
+          {
+            histo2D["top_mass_hadr_gen_reco_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+            histo2D["top_mass_hadr_gen_reco_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_hadr);
+            histo2D["top_mass_hadr_gen_reco_prodSF_"+reweightString[s]]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
+            histo2D["top_mass_hadr_gen_reco_prodSF_"+reweightString[s]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, evWeight_prod);
           }
         }
       }
@@ -1475,6 +1508,16 @@ int main(int argc, char* argv[])
           histo1D["top_mass_hadr_reco_CM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(reco_top_mass_aKF, numWeight);
           histo1D["red_top_mass_hadr_reco_CM_"+genWidthString[thisGenWidthId]]->Fill(redTopMass, numWeight);
           histo1D["red_top_mass_hadr_reco_CM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(redTopMass, numWeight);
+          
+          if (foundAllTTbarComponents)
+          {
+            histo2D["top_mass_hadr_gen_reco_CM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_CM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_CM_"+genWidthString[thisGenWidthId]]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_CM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+          }
         }
         else if (isWM)
         {
@@ -1482,6 +1525,16 @@ int main(int argc, char* argv[])
           histo1D["top_mass_hadr_reco_WM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(reco_top_mass_aKF, numWeight);
           histo1D["red_top_mass_hadr_reco_WM_"+genWidthString[thisGenWidthId]]->Fill(redTopMass, numWeight);
           histo1D["red_top_mass_hadr_reco_WM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(redTopMass, numWeight);
+          
+          if (foundAllTTbarComponents)
+          {
+            histo2D["top_mass_hadr_gen_reco_WM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_WM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_WM_"+genWidthString[thisGenWidthId]]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_WM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+          }
         }
         else if (isNM)
         {
@@ -1489,6 +1542,26 @@ int main(int argc, char* argv[])
           histo1D["top_mass_hadr_reco_NM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(reco_top_mass_aKF, numWeight);
           histo1D["red_top_mass_hadr_reco_NM_"+genWidthString[thisGenWidthId]]->Fill(redTopMass, numWeight);
           histo1D["red_top_mass_hadr_reco_NM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(redTopMass, numWeight);
+          
+          if (foundAllTTbarComponents)
+          {
+            histo2D["top_mass_hadr_gen_reco_NM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_NM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_NM_"+genWidthString[thisGenWidthId]]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_bqq_gen_reco_NM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+            histo2D["top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+          }
+        }
+        
+        if (foundAllTTbarComponents)
+        {
+          histo2D["top_mass_hadr_gen_reco_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+          histo2D["top_mass_hadr_gen_reco_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_aKF, numWeight);
+          histo2D["top_mass_bqq_gen_reco_"+genWidthString[thisGenWidthId]]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+          histo2D["top_mass_bqq_gen_reco_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_bqq, reco_top_mass_aKF, numWeight);
+          histo2D["top_mass_hadr_gen_reco_bKF_"+genWidthString[thisGenWidthId]]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
+          histo2D["top_mass_hadr_gen_reco_bKF_"+genWidthString[thisGenWidthId]+"_fewerBins"]->Fill(m_hadr, reco_top_mass_bKF, numWeight);
         }
       }
       
@@ -1504,6 +1577,11 @@ int main(int argc, char* argv[])
       
       
     }  // end loop events
+    
+    nEventsTot.push_back(GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", false));
+    nEventsSelc.push_back(nEntries);
+    nEventsHardSel.push_back(nofMETCleaned);
+    nEventsAKF.push_back(nofAcceptedKFit);
     
     
     cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
@@ -1604,6 +1682,12 @@ int main(int argc, char* argv[])
   
   if (applyWidthSF) txtDebugTopMass.close();
   
+  cout << endl;
+  for (unsigned int d = 0; d < datasets.size(); d++)
+  {
+    cout << setw(13) << left << datasets[d]->Name() << ": Total # events " << setw(10) << right << nEventsTot[d] << ";  Sel " << setw(7) << right << nEventsSelc[d] << " (" << 100*(double)nEventsSelc[d]/(double)nEventsTot[d] << "%);  4 jets " << setw(8) << right << nEventsHardSel[d] << " (" << 100*(double)nEventsHardSel[d]/(double)nEventsSelc[d] << "%);  After KF " << setw(8) << right << nEventsAKF[d] << " (" << 100*(double)nEventsAKF[d]/(double)nEventsHardSel[d] << "%)" << endl;
+  }
+  cout << endl;
   
   cout << "Processing time per dataset: " << endl;
   for (unsigned int d = 0; d < datasets.size(); d++)
@@ -1898,7 +1982,7 @@ void InitHisto1DGen()
     histo1D[("top_mass_hadr_gen_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_gen_"+genWidthString[g]).c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
     histo1D[("top_mass_hadr_gen_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_gen_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 800, 120, 220);
     histo1D[("top_mass_lept_gen_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_lept_gen_"+genWidthString[g]).c_str(), "Mass of generated top quark with leptonic decay; M_{t_{lept}} [GeV]", 4000, 120, 220);
-    histo1D[("bjj_mass_gen_"+genWidthString[g]).c_str()] = new TH1F(("bjj_mass_gen_"+genWidthString[g]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D[("bqq_mass_gen_"+genWidthString[g]).c_str()] = new TH1F(("bqq_mass_gen_"+genWidthString[g]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_"+genWidthString[g]).c_str()] = new TH1F(("blv_mass_gen_"+genWidthString[g]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
     /// Matching
@@ -1917,19 +2001,19 @@ void InitHisto1DReweighted()
     histo1D[("top_mass_hadr_gen_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_gen_"+reweightString[s]).c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
     histo1D[("top_mass_hadr_gen_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_gen_"+reweightString[s]+"_fewerBins").c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 800, 120, 220);
     histo1D[("top_mass_lept_gen_"+reweightString[s]).c_str()] = new TH1F(("top_mass_lept_gen_"+reweightString[s]).c_str(), "Mass of generated top quark with leptonic decay; M_{t_{lept}} [GeV]", 4000, 120, 220);
-    histo1D[("bjj_mass_gen_"+reweightString[s]).c_str()] = new TH1F(("bjj_mass_gen_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D[("bqq_mass_gen_"+reweightString[s]).c_str()] = new TH1F(("bqq_mass_gen_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_"+reweightString[s]).c_str()] = new TH1F(("blv_mass_gen_"+reweightString[s]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
     histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_gen_prodSF_"+reweightString[s]).c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
     histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_gen_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 800, 120, 220);
     histo1D[("top_mass_lept_gen_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_lept_gen_prodSF_"+reweightString[s]).c_str(), "Mass of generated top quark with leptonic decay; M_{t_{lept}} [GeV]", 4000, 120, 220);
-    histo1D[("bjj_mass_gen_prodSF_"+reweightString[s]).c_str()] = new TH1F(("bjj_mass_gen_prodSF_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D[("bqq_mass_gen_prodSF_"+reweightString[s]).c_str()] = new TH1F(("bqq_mass_gen_prodSF_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_prodSF_"+reweightString[s]).c_str()] = new TH1F(("blv_mass_gen_prodSF_"+reweightString[s]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
     histo1D[("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]).c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
     histo1D[("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_gen_prodsqrtSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 800, 120, 220);
     histo1D[("top_mass_lept_gen_prodsqrtSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_lept_gen_prodsqrtSF_"+reweightString[s]).c_str(), "Mass of generated top quark with leptonic decay; M_{t_{lept}} [GeV]", 4000, 120, 220);
-    histo1D[("bjj_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()] = new TH1F(("bjj_mass_gen_prodsqrtSF_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D[("bqq_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()] = new TH1F(("bqq_mass_gen_prodsqrtSF_"+reweightString[s]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_prodsqrtSF_"+reweightString[s]).c_str()] = new TH1F(("blv_mass_gen_prodsqrtSF_"+reweightString[s]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
     /// Matching
@@ -1969,21 +2053,21 @@ void InitHisto1DRecoGen()
 {
   for (int g = 0; g < nGenWidths; g++)
   {
-    histo1D[("top_mass_hadr_reco_CM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_"+genWidthString[g]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+genWidthString[g]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 400, 120, 220);
     
-    histo1D[("top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 100, 120, 220);
     
-    histo1D[("red_top_mass_hadr_reco_CM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_"+genWidthString[g]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+genWidthString[g]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
     
-    histo1D[("red_top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
   }
 }
 
@@ -1992,38 +2076,38 @@ void InitHisto1DRecoReweighted()
   for (int s = 0; s < nReweightings; s++)
   {
     /// SF_h
-    histo1D[("top_mass_hadr_reco_CM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 400, 120, 220);
     
-    histo1D[("top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 100, 120, 220);
     
-    histo1D[("red_top_mass_hadr_reco_CM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
     
-    histo1D[("red_top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
     
     /// SF_h * SF_l
-    histo1D[("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 400, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 400, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 400, 120, 220);
     
-    histo1D[("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); M_{t_{hadr}} [GeV]", 100, 120, 220);
-    histo1D[("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); M_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (CM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (WM); m_{t_{hadr}} [GeV]", 100, 120, 220);
+    histo1D[("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed top quark with hadronic decay (NM); m_{t_{hadr}} [GeV]", 100, 120, 220);
     
-    histo1D[("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]).c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 880, 0.2, 2.4);
     
-    histo1D[("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
-    histo1D[("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); M_{t_{hadr}}/<M_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (CM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (WM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
+    histo1D[("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str()] = new TH1F(("red_top_mass_hadr_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str(), "Mass of reconstructed reduced top quark with hadronic decay (NM); m_{t_{hadr}}/<m_{t}>", 44, 0.2, 2.4);
   }
 }
 
@@ -2138,10 +2222,38 @@ void InitHisto2DGen()
 {
   for (int g = 0; g < nGenWidths; g++)
   {
-    histo2D["top_mass_hadr_lept_gen_"+genWidthString[g]] = new TH2F(("top_mass_hadr_lept_gen_"+genWidthString[g]).c_str(),("Mass of generated top quark with leptonic decay vs. hadronic decay ("+genWidthString[g]+"); M_{t_{hadr}} [GeV]; M_{t_{lept}} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
-    histo2D["top_mass_hadr_bjj_gen_"+genWidthString[g]] = new TH2F(("top_mass_hadr_bjj_gen_"+genWidthString[g]).c_str(),("Generated mass of bjj quarks vs. hadronically decaying top quark mass ("+genWidthString[g]+"); M_{t_{hadr}} [GeV]; M_{bjj} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
-    histo2D["top_mass_lept_blv_gen_"+genWidthString[g]] = new TH2F(("top_mass_lept_blv_gen_"+genWidthString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass ("+genWidthString[g]+"); M_{t_{lept}} [GeV]; M_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
-    histo2D["top_mass_bjj_blv_gen_"+genWidthString[g]] = new TH2F(("top_mass_bjj_blv_gen_"+genWidthString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. mass of bjj quarks ("+genWidthString[g]+"); M_{bjj} [GeV]; M_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_hadr_lept_gen_"+genWidthString[g]] = new TH2F(("top_mass_hadr_lept_gen_"+genWidthString[g]).c_str(),("Mass of generated top quark with leptonic decay vs. hadronic decay ("+genWidthString[g]+"); m_{t_{hadr}} [GeV]; m_{t_{lept}} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_hadr_bqq_gen_"+genWidthString[g]] = new TH2F(("top_mass_hadr_bqq_gen_"+genWidthString[g]).c_str(),("Generated mass of bqq quarks vs. hadronically decaying top quark mass ("+genWidthString[g]+"); m_{t_{hadr}} [GeV]; m_{bqq} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_lept_blv_gen_"+genWidthString[g]] = new TH2F(("top_mass_lept_blv_gen_"+genWidthString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass ("+genWidthString[g]+"); m_{t_{lept}} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_bqq_blv_gen_"+genWidthString[g]] = new TH2F(("top_mass_bqq_blv_gen_"+genWidthString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. mass of bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    
+    histo2D["top_mass_hadr_gen_reco_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_"+genWidthString[g]).c_str(),("Mass of reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_"+genWidthString[g]] = new TH2F(("top_mass_bqq_gen_reco_"+genWidthString[g]).c_str(),("Mass of reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_bqq_gen_reco_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_bKF_"+genWidthString[g]).c_str(),("Mass of reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_bKF_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    
+    histo2D["top_mass_hadr_gen_reco_CM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_CM_"+genWidthString[g]).c_str(),("Mass of CM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_WM_"+genWidthString[g]).c_str(),("Mass of WM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_NM_"+genWidthString[g]).c_str(),("Mass of NM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_CM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of CM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of WM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of NM reconstructed vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    
+    histo2D["top_mass_bqq_gen_reco_CM_"+genWidthString[g]] = new TH2F(("top_mass_bqq_gen_reco_CM_"+genWidthString[g]).c_str(),("Mass of CM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_WM_"+genWidthString[g]] = new TH2F(("top_mass_bqq_gen_reco_WM_"+genWidthString[g]).c_str(),("Mass of WM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_NM_"+genWidthString[g]] = new TH2F(("top_mass_bqq_gen_reco_NM_"+genWidthString[g]).c_str(),("Mass of NM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_CM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_bqq_gen_reco_CM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of CM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_WM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_bqq_gen_reco_WM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of WM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_bqq_gen_reco_NM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_bqq_gen_reco_NM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of NM reconstructed top vs. generated bqq quarks ("+genWidthString[g]+"); m_{bqq} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    
+    histo2D["top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[g]).c_str(),("Mass of CM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[g]).c_str(),("Mass of WM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[g]] = new TH2F(("top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[g]).c_str(),("Mass of NM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_bKF_CM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of CM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_bKF_WM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of WM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[g]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_bKF_NM_"+genWidthString[g]+"_fewerBins").c_str(),("Mass of NM reconstructed (before KF) vs. generated top quark ("+genWidthString[g]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
   }
 }
 
@@ -2153,10 +2265,32 @@ void InitHisto2DReweighted()
     histo2D[("Width_SF_hadr_prod_"+reweightString[s]).c_str()] = new TH2F(("Width_SF_hadr_prod_"+reweightString[s]).c_str(), "Product of hadronic and leptonic SF vs. hadronic scale factor to change the ttbar distribution width; SF_{h}; SF_{h} #times SF_{l}", 5001, -0.0005, 5.0005, 5001, -0.0005, 5.0005);
     histo2D[("Width_SF_hadr_prodsqrt_"+reweightString[s]).c_str()] = new TH2F(("Width_SF_hadr_prodsqrt_"+reweightString[s]).c_str(), "Sqrt of the product of hadronic and leptonic SF vs. hadronic scale factor to change the ttbar distribution width; SF_{h}; #sqrt{SF_{h} #times SF_{l}}", 5001, -0.0005, 5.0005, 5001, -0.0005, 5.0005);
     
-    histo2D[("top_mass_hadr_gen_vs_weight_"+reweightString[s]).c_str()] = new TH2F(("top_mass_hadr_gen_vs_weight_"+reweightString[s]).c_str(), "Weights vs. mass of generated top quark (hadronic decay); M_{t_{hadr}} [GeV]; SF_{h}", 1000, 120, 220, 5001, -0.0005, 5.0005);
-    //histo2D[("top_mass_lept_gen_vs_weight_"+reweightString[s]).c_str()] = new TH2F(("top_mass_lept_gen_vs_weight_"+reweightString[s]).c_str(), "Weights vs. mass of generated top quark (leptonic decay); M_{t_{lept}} [GeV]; SF_{l}", 1000, 120, 220, 5001, -0.0005, 5.0005);
+    histo2D[("top_mass_hadr_gen_vs_weight_"+reweightString[s]).c_str()] = new TH2F(("top_mass_hadr_gen_vs_weight_"+reweightString[s]).c_str(), "Weights vs. mass of generated top quark (hadronic decay); m_{t_{hadr}} [GeV]; SF_{h}", 1000, 120, 220, 5001, -0.0005, 5.0005);
+    //histo2D[("top_mass_lept_gen_vs_weight_"+reweightString[s]).c_str()] = new TH2F(("top_mass_lept_gen_vs_weight_"+reweightString[s]).c_str(), "Weights vs. mass of generated top quark (leptonic decay); m_{t_{lept}} [GeV]; SF_{l}", 1000, 120, 220, 5001, -0.0005, 5.0005);
+    
+    histo2D["top_mass_hadr_lept_gen_"+reweightString[s]] = new TH2F(("top_mass_hadr_lept_gen_"+reweightString[s]).c_str(),("Mass of generated top quark with leptonic decay vs. hadronic decay ("+reweightString[s]+"); m_{t_{hadr}} [GeV]; m_{t_{lept}} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_hadr_lept_gen_prodSF_"+reweightString[s]] = new TH2F(("top_mass_hadr_lept_gen_prodSF_"+reweightString[s]).c_str(),("Mass of generated top quark with leptonic decay vs. hadronic decay ("+reweightString[s]+"); m_{t_{hadr}} [GeV]; m_{t_{lept}} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    
+    histo2D["top_mass_hadr_gen_reco_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_"+reweightString[s]).c_str(),("Mass of reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_"+reweightString[s]+"_fewerBins").c_str(),("Mass of reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_prodSF_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_prodSF_"+reweightString[s]).c_str(),("Mass of reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_prodSF_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_prodSF_"+reweightString[s]+"_fewerBins").c_str(),("Mass of reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    
+    histo2D["top_mass_hadr_gen_reco_CM_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_CM_"+reweightString[s]).c_str(),("Mass of CM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_WM_"+reweightString[s]).c_str(),("Mass of WM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_NM_"+reweightString[s]).c_str(),("Mass of NM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_CM_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_CM_"+reweightString[s]+"_fewerBins").c_str(),("Mass of CM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_WM_"+reweightString[s]+"_fewerBins").c_str(),("Mass of WM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_NM_"+reweightString[s]+"_fewerBins").c_str(),("Mass of NM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    
+    histo2D["top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]).c_str(),("Mass of CM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]).c_str(),("Mass of WM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]] = new TH2F(("top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]).c_str(),("Mass of NM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 800, 60, 260, 400, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_CM_prodSF_"+reweightString[s]+"_fewerBins").c_str(),("Mass of CM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_WM_prodSF_"+reweightString[s]+"_fewerBins").c_str(),("Mass of WM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
+    histo2D["top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]+"_fewerBins"] = new TH2F(("top_mass_hadr_gen_reco_NM_prodSF_"+reweightString[s]+"_fewerBins").c_str(),("Mass of NM reconstructed vs. generated top quark ("+reweightString[s]+"); m_{t_{gen}} [GeV]; m_{t_{reco}} [GeV]").c_str(), 100, 60, 260, 100, 60, 260);
   }
-  }
+}
 
 void InitHisto2DMatch()
 {
@@ -2420,7 +2554,7 @@ void ClearMatching()
   foundAllTTbarComponents = false;
   for (int i = 0; i < 3; i++)
   {
-    bjjDecay[i] = -9999;
+    bqqDecay[i] = -9999;
     blvDecay[i] = -9999;
   }
   partonId.clear();
@@ -2448,7 +2582,7 @@ void ClearVars()
   antiTopPtSF = 1.;
   m_top = -1.;
   m_antitop = -1.;
-  m_bjj = -1.;
+  m_bqq = -1.;
   m_blv = -1.;
   m_hadr = -1;
   m_lept = -1;
