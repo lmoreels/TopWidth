@@ -94,7 +94,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170616_1005/";  // TT nominal
+string inputDateLL = "170623_1649/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -841,6 +841,7 @@ int main(int argc, char* argv[])
     like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, makeTGraphs, true, false);  // calculateGoodEvtLL, verbose
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
+    calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
   }
   if (doPseudoExps)
   {
@@ -1001,7 +1002,7 @@ int main(int argc, char* argv[])
       cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
       if (! isData)
       {
-        toyMax *= 0.93;  // small overshoot in MC --> scale down
+        toyMax *= 0.92;  // small overshoot in MC --> scale down
         cout << " x 0.92 = " << toyMax;
       }
       cout << endl;
@@ -1274,7 +1275,7 @@ int main(int argc, char* argv[])
         
         if ( applyWidthSF && isTTbar )
         {
-          widthSF = rew->EventWeightCalculator(massTopQ, scaleWidth)*rew->EventWeightCalculator(massAntiTopQ, scaleWidth);
+          widthSF = rew->EventWeightCalculatorNonRel(massTopQ, scaleWidth) * rew->EventWeightCalculatorNonRel(massAntiTopQ, scaleWidth);
           
           if ( widthSF != widthSF )  // widthSF = NaN
           {
@@ -1616,6 +1617,8 @@ int main(int argc, char* argv[])
         like->CalculateLikelihood(redTopMass, lumiWeight, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
         if (isCM && ! doPseudoExps)  // isCM ensures ! isData
           like->CalculateCMLikelihood(redTopMass, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
+        if ( ! doPseudoExps && ( isCM || isWM ) )
+          like->CalculateTempLikelihood(redTopMass, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
       }
       
       if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
@@ -1669,7 +1672,7 @@ int main(int argc, char* argv[])
           //if ( toyValue > toyMax ) continue;
           if ( toyValues[iPsExp] > toyMax ) continue;
           (nEvtsInPseudoExp[iPsExp][d])++;
-          like->AddPsExp(iPsExp, isData);
+          like->AddPsExp(iPsExp, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
           
           /// Fill plots only for first pseudo experiment
           if ( makePlots && iPsExp == 0 )
@@ -1851,13 +1854,15 @@ int main(int argc, char* argv[])
     like->GetOutputWidth(scaleWidth, true);
     if (! doPseudoExps)
     {
-      //cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-      //like->GetOutputWidth(scaleWidth, "CM");
+      cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+      like->GetOutputWidth(scaleWidth, "CM", true);
+      cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
+      like->GetOutputWidth(scaleWidth, "matched", true);
       //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-      //like->GetOutputWidth(scaleWidth, "gen");
+      //like->GetOutputWidth(scaleWidth, "gen", true);
     }
     //cout << "Output width from file (standard calculation): " << endl;
-    //like->GetOutputWidth(llFileName+".txt", scaleWidth);
+    //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
   }
   
   if (doPseudoExps)
