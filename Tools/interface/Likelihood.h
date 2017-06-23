@@ -46,6 +46,7 @@ class Likelihood{
     void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
     void CalculateLikelihood(double redMass, double lumiWeight, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void CalculateTempLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
     void GetOutputWidth(double inputWidth);
@@ -55,7 +56,7 @@ class Likelihood{
     void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile = false);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
-    void AddPsExp(int thisPsExp, bool isData);
+    void AddPsExp(int thisPsExp, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculatePull(double inputWidth);
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
@@ -95,6 +96,9 @@ class Likelihood{
     static double loglike_CM_[];
     static double loglike_CM_per_evt_[];
     static double loglike_CM_good_evts_[];
+    static double loglike_temp_[];
+    static double loglike_temp_per_evt_[];
+    static double loglike_temp_good_evts_[];
     static double loglike_gen_[];
     static double loglike_gen_per_evt_[];
     static double loglike_gen_good_evts_[];
@@ -121,6 +125,7 @@ class Likelihood{
     bool calculateGoodEvtLL_;
     bool calledLLCalculation_;
     bool calledCMLLCalculation_;
+    bool calledTempLLCalculation_;
     bool calledGenLLCalculation_;
     
     std::ifstream fileIn_;

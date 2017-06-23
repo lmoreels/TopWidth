@@ -17,6 +17,9 @@ double Likelihood::loglike_good_evts_data_[nWidths_] = {0};
 double Likelihood::loglike_CM_[nWidths_] = {0};
 double Likelihood::loglike_CM_per_evt_[nWidths_] = {0};
 double Likelihood::loglike_CM_good_evts_[nWidths_] = {0};
+double Likelihood::loglike_temp_[nWidths_] = {0};
+double Likelihood::loglike_temp_per_evt_[nWidths_] = {0};
+double Likelihood::loglike_temp_good_evts_[nWidths_] = {0};
 double Likelihood::loglike_gen_[nWidths_] = {0};
 double Likelihood::loglike_gen_per_evt_[nWidths_] = {0};
 double Likelihood::loglike_gen_good_evts_[nWidths_] = {0};
@@ -113,7 +116,7 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double topMas
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
       thisWidth_ = stringWidthArray_[iWidth];
-      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculator(antiTopMassForWidthSF, widthArray_[iWidth]);
+      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, widthArray_[iWidth]);
       else thisWidthSF_ = 1.;
       
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
@@ -143,10 +146,10 @@ void Likelihood::WriteHistograms(std::string histoFileName)
 
 void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
 {
-  int binMin, binMax, totEvents;
+  int binMin, binMax, totEvents, totEventsTemp;
   int nBins[nCats_] = {0};
   int nEvents[nCats_] = {0};
-  double fracCats[nCats_] = {0};
+  double fracCats[nCats_] = {0}, fracCatsTemp[nCats_-1] = {0};
   
   if ( gLL2D_ == NULL ) gLL2D_ = new TGraph2D();
   
@@ -157,6 +160,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
   {
     /// Clear vars
     totEvents = 0;
+    totEventsTemp = 0;
     for (int i = 0; i < nCats_; i++)
     {
       nBins[i] = 0;
@@ -189,6 +193,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       binMax = histoSm_[histoName_]->FindBin(maxRedMass_)+1;
       for (int iBin = binMin; iBin < binMax+1; iBin++) { nEvents[iCat] += histoSm_[histoName_]->GetBinContent(iBin);}
       totEvents += nEvents[iCat];
+      if ( iCat < nCats_-1) totEventsTemp += nEvents[iCat];
       
       if (verbose_) std::cout << "Likelihood::ConstructTGraphs: " << histoName_ << ": " << nEvents[iCat] << " events" << std::endl;
       
@@ -209,7 +214,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
     
     /// Make arrays as input for TGraph
     const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double binCentreArray[nPoints] = {0.}, binContentArray[nCats_][nPoints] = {0.}, likelihoodCMArray[nPoints] = {0.}, totalBinContentArray[nPoints] = {0.}, likelihoodArray[nPoints] = {0.};
+    double binCentreArray[nPoints] = {0.}, binContentArray[nCats_][nPoints] = {0.}, likelihoodCMArray[nPoints] = {0.}, totalBinContentArray[nPoints] = {0.}, totalBinContentTempArray[nPoints] = {0.}, likelihoodTempArray[nPoints] = {0.}, likelihoodArray[nPoints] = {0.};
     for (int i = 0; i < nPoints; i++)
     {
       binCentreArray[i] = (vecBinCentres_[listCats_[0]+"_"+suffix_]).at(i);
@@ -219,8 +224,15 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
         // For CM events
         if ( iCat == 0 ) { likelihoodCMArray[i] = -TMath::Log(binContentArray[iCat][i]);}
         // Calculate event fractions (one time)
-        if ( i == 0 ) { fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents;}
+        //if ( i == 0 ) { fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents; }
+        
+        if ( iCat < nCats_-1)
+        {
+          if ( i == 0 ) { fracCatsTemp[iCat] = (double)nEvents[iCat]/(double)totEventsTemp; }
+          totalBinContentTempArray[i] += fracCatsTemp[iCat] * binContentArray[iCat][i];
+        }
       }
+      likelihoodTempArray[i] = -TMath::Log(totalBinContentTempArray[i]);
     }
     
     /// Make TGraphs
@@ -241,6 +253,15 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
         graph_["likelihood_CM_"+suffix_]->Write();
         
         WriteOutput(nPoints, iWidth, binCentreArray, likelihoodCMArray, "CorrectMatchLikelihood_"+suffix_, 1);
+      }
+      if ( iCat < nCats_-1 )  //!NM
+      {
+        graph_["likelihood_CMWM_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodTempArray);
+        graph_["likelihood_CMWM_"+suffix_]->SetName(("likelihood_CMWM_"+suffix_).c_str());
+        graph_["likelihood_CMWM_"+suffix_]->SetTitle(("likelihood_CMWM_"+suffix_).c_str());
+        graph_["likelihood_CMWM_"+suffix_]->Write();
+        
+        WriteOutput(nPoints, iWidth, binCentreArray, likelihoodTempArray, "MatchLikelihood_"+suffix_, 1);
       }
       
       
@@ -335,7 +356,7 @@ void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double t
   {
     if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -387,7 +408,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double topMassForWidthSF,
   {
     if (! calledCMLLCalculation_) calledCMLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -426,6 +447,56 @@ void Likelihood::CalculateCMLikelihood(double redMass, double topMassForWidthSF,
   }
 }
 
+void Likelihood::CalculateTempLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+{
+  if (isData)
+  {
+    std::cerr << "Likelihood::Cannot calculate loglikelihood for correctly/wrondly matched events when running over data" << std::endl;
+    std::cerr << "            Something went wrong here... Check..." << std::endl;
+  }
+  else if ( redMass > minRedMass_ && redMass < maxRedMass_ )
+  {
+    if (! calledTempLLCalculation_) calledTempLLCalculation_ = true;
+    
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, inputWidth);
+    else thisWidthSF_ = 1.;
+    
+    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+    {
+      thisWidth_ = stringWidthArray_[iWidth];
+      
+      loglike_temp_per_evt_[iWidth] = graph_["MatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
+      loglike_temp_[iWidth] += loglike_temp_per_evt_[iWidth]*thisWidthSF_;
+    }
+    
+    if (calculateGoodEvtLL_)
+    {
+      bool isGoodLL = false;
+      for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
+      {
+        if ( loglike_temp_per_evt_[0] > loglike_temp_per_evt_[iWidth] && loglike_temp_per_evt_[iWidth] < loglike_temp_per_evt_[nWidths_-1] )
+        {
+          isGoodLL = true;
+          break;
+        }
+      }
+      if (isGoodLL)
+      {
+//        nofGoodEvtsLL[d]++;
+        for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+        {
+          loglike_temp_good_evts_[iWidth] += loglike_temp_per_evt_[iWidth]*thisWidthSF_;
+        }
+      }
+//       else
+//       {
+//         nofBadEvtsLL[d]++;
+//       }
+      
+    }
+  }
+}
+
 void Likelihood::CalculateGenLikelihood(double redMass, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
@@ -437,7 +508,7 @@ void Likelihood::CalculateGenLikelihood(double redMass, double topMassForWidthSF
   {
     if (! calledGenLLCalculation_) calledGenLLCalculation_ = true;
     
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculator(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculator(antiTopMassForWidthSF, inputWidth);
+    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, inputWidth);
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -489,6 +560,8 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   
   if ( type.find("CM") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile);
+  else if ( type.find("match") != std::string::npos || type.find("Match") != std::string::npos )
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile);
   else
@@ -631,13 +704,16 @@ int Likelihood::InitPull(int nPsExp)
   return nPsExp;
 }
 
-void Likelihood::AddPsExp(int thisPsExp, bool isData)
+void Likelihood::AddPsExp(int thisPsExp, double topMassForWidthSF, double antiTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData) std::cerr << "Likelihood::Pull: Will not use data for pseudo experiments..." << std::endl;
   else if (calledLLCalculation_)
   {
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
+      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(topMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(antiTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = 1.;
+      
       loglike_pull_[iWidth][thisPsExp] += loglike_per_evt_[iWidth]*thisWidthSF_;
     }
   }
