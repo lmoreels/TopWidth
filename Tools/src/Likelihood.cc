@@ -1,6 +1,6 @@
 #include "../interface/Likelihood.h"
 
-const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.,14.5, 15.};
+const double Likelihood::widthArray_[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8., 8.25, 8.5, 8.75, 9., 9.25, 9.5, 9.75, 10., 10.5, 11., 11.5, 12., 12.5, 13., 13.5, 14.,14.5, 15.};
 
 const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
 
@@ -69,6 +69,8 @@ verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"
     loglike_good_evts_data_[i] = 0.;
     loglike_CM_[i] = 0.;
     loglike_CM_good_evts_[i] = 0.;
+    loglike_temp_[i] = 0.;
+    loglike_temp_good_evts_[i] = 0.;
     loglike_gen_[i] = 0.;
     loglike_gen_good_evts_[i] = 0.;
   }
@@ -146,9 +148,10 @@ void Likelihood::WriteHistograms(std::string histoFileName)
 
 void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
 {
-  int binMin, binMax, totEvents, totEventsTemp;
+  int binMin, binMax;
+  double totEvents, totEventsTemp;
   int nBins[nCats_] = {0};
-  int nEvents[nCats_] = {0};
+  double nEvents[nCats_] = {0};
   double fracCats[nCats_] = {0}, fracCatsTemp[nCats_-1] = {0};
   
   if ( gLL2D_ == NULL ) gLL2D_ = new TGraph2D();
@@ -159,16 +162,17 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     /// Clear vars
-    totEvents = 0;
-    totEventsTemp = 0;
+    totEvents = 0.;
+    totEventsTemp = 0.;
     for (int i = 0; i < nCats_; i++)
     {
       nBins[i] = 0;
-      nEvents[i] = 0;
+      nEvents[i] = 0.;
       fracCats[i] = 0.;
-      //vecBinCentres_[i].clear();
-      //vecBinContents_[i].clear();
+      if ( i < nCats_-1 ) fracCatsTemp[i] = 0.;
     }
+    //vecBinCentres_.clear();
+    //vecBinContents_.clear();
     
     suffix_ = "widthx"+stringWidthArray_[iWidth];
     for (int iCat = 0; iCat < nCats_; iCat++)
@@ -626,13 +630,23 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   int locMin = LocMinArray(nn, LLvalues);
   //std::cout << "Index of minimum LL value is " << locMin << std::endl;
   double centreVal = evalWidths[locMin];
+  if ( centreVal == 0.3 )
+  {
+    double tempArray[nn-3];
+    for (int i = 0; i < nn-3; i++) { tempArray[i] = LLvalues[i+3]; }
+    int tempMin = LocMinArray(nn-3, tempArray); //std::cout << tempMin << "  " << evalWidths[tempMin] << std::endl;
+    if ( LLvalues[locMin+1] > tempArray[tempMin+1] ) centreVal = evalWidths[tempMin+3];
+  }
+  
   double interval = 0.5;
   if ( centreVal <= interval ) interval = centreVal - 0.1;
   if ( centreVal > 3.8 ) interval = 1.0;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
-  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
+  if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
+  if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
+  if ( centreVal > 0.8 && fitmin < 0.7 ) fitmin = 0.7;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   
@@ -641,8 +655,8 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   g->Fit(parabola,"R");
   
   double outputWidth = parabola->GetMinimumX(fitmin, fitmax);
-  double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin, outputWidth);
-  double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax);
+  double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin-interval, outputWidth);
+  double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax+interval);
   double sigma = (upperSigma - lowerSigma)/2.;
   if ( lowerSigma <= fitmin && upperSigma >= fitmax )
     std::cerr << "Likelihood::CalculateOutputWidth: ERROR: Uncertainty calculation limited by fit boundaries. Do not trust..." << std::endl;
@@ -661,8 +675,9 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
     filePlots_->cd();
   }
   
+  this->DrawOutputLogLikelihood(g2, parabola, 0, 15, 1200., plotName+"_full", writeToFile);
   this->DrawOutputLogLikelihood(g2, parabola, outputWidth-2., outputWidth+2., 1.5*g2->Eval(outputWidth+2.), plotName, writeToFile);
-  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-3.*sigma, outputWidth+3.*sigma, std::max(g2->Eval(outputWidth-3.*sigma),g2->Eval(outputWidth+3.*sigma)), plotName+"_zoom", writeToFile);
+  this->DrawOutputLogLikelihood(g2, parabola, outputWidth-0.5, outputWidth+0.5, std::max(g2->Eval(outputWidth-3.*sigma),g2->Eval(outputWidth+0.5)), plotName+"_zoom", writeToFile);
   
   if (writeToFile)
   {
@@ -861,7 +876,7 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   g->GetXaxis()->SetRangeUser(minX,maxX);
   g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
   g->GetXaxis()->SetTitle("#Gamma/#Gamma_{SM}");
-  g->GetYaxis()->SetTitle("-Log(likelihood)");
+  g->GetYaxis()->SetTitle("-#Delta Log(likelihood)");
   g->SetMarkerStyle(2);  //kPlus
   g->Draw("AP");
   //if (writeToFile) g->Write();
