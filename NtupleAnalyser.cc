@@ -94,7 +94,9 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170623_1649/";  // TT nominal
+string inputDateLL = "170627_1656/";  // non-rel BW, SF_h
+//string inputDateLL = "170627_1454/";  // non-rel BW, SF_h*SF_l
+//string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
 bool isData = false;
 bool isTTbar = false;
 
@@ -500,7 +502,7 @@ vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
 int labelsReco[4];
-double massForWidth, massTopQ, massAntiTopQ;
+double massHadTopQ, massLepTopQ;
 
 string catSuffix = "";
 string catSuffixList[] = {"_CM", "_WM", "_NM"};
@@ -838,7 +840,7 @@ int main(int argc, char* argv[])
   }
   if (calculateLikelihood)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, makeTGraphs, true, false);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
     calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
@@ -910,6 +912,7 @@ int main(int argc, char* argv[])
   
   int dMSP;
   bool hasFoundTTbar = false;
+  bool doReweighting = false;
   /// Loop over datasets
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
@@ -942,6 +945,9 @@ int main(int argc, char* argv[])
         applyWidthSF = false;
       }
     }
+    
+    doReweighting = false;
+    if ( isTTbar && applyWidthSF ) doReweighting = true;
     
     if (! isData)
     {
@@ -1144,8 +1150,8 @@ int main(int argc, char* argv[])
       }
       
       
-      if (! applyWidthSF ) widthSF = 1.;
-      else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
+      if (! doReweighting ) widthSF = 1.;
+      //else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
       
       
       
@@ -1267,15 +1273,21 @@ int main(int argc, char* argv[])
         ///  Scale factor ttbar sample width  ///
         /////////////////////////////////////////
         
-        //if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
-        //else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
-        
-        massTopQ = (mcParticles[topQuark]).M();
-        massAntiTopQ =  (mcParticles[antiTopQuark]).M();
-        
-        if ( applyWidthSF && isTTbar )
+        if ( muon_charge[0] > 0 )
         {
-          widthSF = rew->EventWeightCalculatorNonRel(massTopQ, scaleWidth) * rew->EventWeightCalculatorNonRel(massAntiTopQ, scaleWidth);
+          massHadTopQ = (mcParticles[antiTopQuark]).M();
+          massLepTopQ = (mcParticles[topQuark]).M();
+        }
+        else if ( muon_charge[0] < 0 )
+        {
+          massHadTopQ = (mcParticles[topQuark]).M();
+          massLepTopQ =  (mcParticles[antiTopQuark]).M();
+        }
+        
+        if ( doReweighting )
+        {
+          //widthSF = rew->EventWeightCalculator(massHadTopQ, scaleWidth) * rew->EventWeightCalculator(massLepTopQ, scaleWidth);
+          widthSF = rew->EventWeightCalculator(massHadTopQ, scaleWidth);
           
           if ( widthSF != widthSF )  // widthSF = NaN
           {
@@ -1381,7 +1393,7 @@ int main(int argc, char* argv[])
                 if (calculateLikelihood)
                 {
                   double temp = matched_top_mass_j_akF/aveTopMassLL;
-                  like->CalculateGenLikelihood(temp, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
+                  like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
                 }
               }  // passKFChi2MatchedCut
             }  // end KF
@@ -1611,14 +1623,14 @@ int main(int argc, char* argv[])
       ///  Likelihood  ///
       ////////////////////
       
-      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massTopQ, massAntiTopQ, isTTbar, isData, catSuffix);
+      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
       if (calculateLikelihood)
       {
-        like->CalculateLikelihood(redTopMass, lumiWeight, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
-        if (isCM && ! doPseudoExps)  // isCM ensures ! isData
-          like->CalculateCMLikelihood(redTopMass, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
+        like->CalculateLikelihood(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
+        if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
+          like->CalculateCMLikelihood(redTopMass, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
         if ( ! doPseudoExps && ( isCM || isWM ) )
-          like->CalculateTempLikelihood(redTopMass, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
+          like->CalculateTempLikelihood(redTopMass, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
       }
       
       if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
@@ -1672,7 +1684,7 @@ int main(int argc, char* argv[])
           //if ( toyValue > toyMax ) continue;
           if ( toyValues[iPsExp] > toyMax ) continue;
           (nEvtsInPseudoExp[iPsExp][d])++;
-          like->AddPsExp(iPsExp, massTopQ, massAntiTopQ, scaleWidth, isTTbar, isData);
+          like->AddPsExp(iPsExp, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
           
           /// Fill plots only for first pseudo experiment
           if ( makePlots && iPsExp == 0 )
@@ -2860,9 +2872,8 @@ void ClearVars()
   {
     labelsReco[i] = -9999;
   }
-  massForWidth = 0.01;
-  massTopQ = 0.01;
-  massAntiTopQ = 0.01;
+  massHadTopQ = 0.01;
+  massLepTopQ = 0.01;
   catSuffix = "";
   isCM = false;
   isWM = false;
