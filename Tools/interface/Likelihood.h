@@ -34,6 +34,7 @@ class Likelihood{
   public:
     Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
+    void ClearLikelihoods();
     /// Make TGraphs
     void BookHistograms();
     void FillHistograms(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix);

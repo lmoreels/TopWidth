@@ -61,19 +61,7 @@ verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"
     stringWidthArray_[iWidth] = tls_->DotReplace(widthArray_[iWidth]);
   }
   
-  for (int i = 0; i < nWidths_; i++)
-  {
-    loglike_[i] = 0.;
-    loglike_data_[i] = 0.;
-    loglike_good_evts_[i] = 0.;
-    loglike_good_evts_data_[i] = 0.;
-    loglike_CM_[i] = 0.;
-    loglike_CM_good_evts_[i] = 0.;
-    loglike_temp_[i] = 0.;
-    loglike_temp_good_evts_[i] = 0.;
-    loglike_gen_[i] = 0.;
-    loglike_gen_good_evts_[i] = 0.;
-  }
+  ClearLikelihoods();
   
   if (makeHistograms)
   {
@@ -89,6 +77,23 @@ Likelihood::~Likelihood()
   delete file_;
   delete rew_;
   delete tls_;
+}
+
+void Likelihood::ClearLikelihoods()
+{
+  for (int i = 0; i < nWidths_; i++)
+  {
+    loglike_[i] = 0.;
+    loglike_data_[i] = 0.;
+    loglike_good_evts_[i] = 0.;
+    loglike_good_evts_data_[i] = 0.;
+    loglike_CM_[i] = 0.;
+    loglike_CM_good_evts_[i] = 0.;
+    loglike_temp_[i] = 0.;
+    loglike_temp_good_evts_[i] = 0.;
+    loglike_gen_[i] = 0.;
+    loglike_gen_good_evts_[i] = 0.;
+  }
 }
 
 void Likelihood::BookHistograms()
@@ -660,7 +665,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 0.8 && fitmin < 0.7 ) fitmin = 0.7;
   if ( centreVal < 0.8 ) fitmax += 0.1;
-  if ( centreVal > 0.7 && fitmax > 1.1 ) fitmax = 1.1;
+  //if ( centreVal > 0.7 && fitmax > 1.1 ) fitmax = 1.1;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   
