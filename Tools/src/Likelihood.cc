@@ -661,11 +661,11 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
-  if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
-  if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
+  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
+  //if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
+  //if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 0.8 && fitmin < 0.7 ) fitmin = 0.7;
-  if ( centreVal < 0.8 ) fitmax += 0.1;
-  //if ( centreVal > 0.7 && fitmax > 1.1 ) fitmax = 1.1;
+  //if ( centreVal < 0.7 ) fitmax += 0.1;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   
