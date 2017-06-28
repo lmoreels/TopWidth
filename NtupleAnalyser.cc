@@ -71,6 +71,11 @@ bool applyTopPtReweighting = false;
 bool applyWidthSF = false;
 double scaleWidth = 1.;
 
+bool runListWidths = true;
+double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
+int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
+
+
 string systStr = "nominal";
 pair<string,string> whichDate(string syst)
 {
@@ -644,6 +649,7 @@ int main(int argc, char* argv[])
     doPseudoExps = false;
     makePlots = false;
     doGenOnly = false;
+    runListWidths = false;
   }
   if (calculateResolutionFunctions)
   {
@@ -655,6 +661,7 @@ int main(int argc, char* argv[])
     makeTGraphs = false;
     doPseudoExps = false;
     doKinFit = false;
+    runListWidths = false;
   }
   if (test) makePlots = false;
   if (testHistos)
@@ -662,15 +669,25 @@ int main(int argc, char* argv[])
     makePlots = true;
     doGenOnly = false;
     makeTGraphs = false;
+    runListWidths = false;
   }
   if (doGenOnly)
   {
     doPseudoExps = false;
   }
-  if (makeTGraphs) calculateLikelihood = false;
+  if (makeTGraphs)
+  {
+    runListWidths = false;
+    calculateLikelihood = false;
+  }
   if (calculateLikelihood) makeTGraphs = false;
   else doPseudoExps = false;
-  if (doPseudoExps) makePlots = false;
+  if (doPseudoExps)
+  {
+    makePlots = false;
+    runListWidths = false;
+  }
+  if (runListWidths) makePlots = false;
   
   if (! makePlots) makeControlPlots = false;
   
@@ -913,911 +930,1015 @@ int main(int argc, char* argv[])
   int dMSP;
   bool hasFoundTTbar = false;
   bool doReweighting = false;
-  /// Loop over datasets
-  for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
+  
+  /// Loop over widths
+  double thisWidth;
+  int endWidth = nWidths;
+  if (! runListWidths) endWidth = 1;
+  for (int iWidth = 0; iWidth < endWidth; iWidth++)
   {
-    clock_t startDataSet = clock();
-    
-    ClearMetaData();
-    
-    dataSetName = datasets[d]->Name();
-    if (verbose > 1)
+    if (runListWidths)
     {
-      cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
+      thisWidth = listWidths[iWidth];
+      cout << endl << "Running over widths... Now at width " << thisWidth << " x SM width... " << endl;
     }
-    
-    isData = false; isTTbar = false;
-    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
-    {
-      isData = true;
-      pathNtuples = pathNtuplesData;
-    }
-    else if ( dataSetName.find("TT") != std::string::npos )
-    {
-      isTTbar = true;
-      hasFoundTTbar = true;
-      if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
-      {
-        if ( dataSetName.find("x0p2") != std::string::npos ) scaleWidth = 0.2;
-        else if ( dataSetName.find("x0p5") != std::string::npos ) scaleWidth = 0.5;
-        else if ( dataSetName.find("x4") != std::string::npos ) scaleWidth = 4.;
-        else if ( dataSetName.find("x8") != std::string::npos ) scaleWidth = 8.;
-        applyWidthSF = false;
-      }
-    }
-    
-    doReweighting = false;
-    if ( isTTbar && applyWidthSF ) doReweighting = true;
-    
-    if (! isData)
-    {
-      pathNtuples = pathNtuplesMC;
-    }
-    
-    if (testTTbarOnly && ! isTTbar)
-    {
-      cout << "Skipping dataset..." << endl;
-      continue;
-    }
-    
-    if (calculateAverageMass)
-    {
-      txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
-    }
-    
-    
-    string ntupleFileName = "Ntuples_"+dataSetName+".root";
-    
-    
-    /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
-    if (isTTbar) dataSetName = "TT";
-    
-    tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
-    
-    string tTreeName = "tree";
-    string tStatsTreeName = "stats";
-    
-    /// Get meta data
-    tStatsTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tStatsTreeName.c_str());
-    GetMetaData(tStatsTree[dataSetName.c_str()], isData);
-    
-    tStatsTree[(dataSetName).c_str()]->GetEntry(0);
-    vJER.push_back(appliedJER);
-    vJES.push_back(appliedJES);
-    vPU.push_back(appliedPU);
-    
-    /// eqLumi calculation
-    if (isData) lumiWeight = 1.;
     else
     {
-      eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
-      lumiWeight = Luminosity/eqLumi;
+      thisWidth = scaleWidth;
+      cout << endl << "Width for ttbar sample is " << thisWidth << " x SM width..." << endl;
+    }
+    
+    if (calculateLikelihood) like->ClearLikelihoods();
+    
+    /// Clear counters
+    nofCM = 0; nofWM = 0; nofNM = 0;
+    nofCM_TT = 0; nofWM_TT = 0; nofNM_TT = 0;
+    nofCMl = 0; nofWMl = 0; nofNMl = 0;
+    nofCM_weighted = 0; nofWM_weighted = 0; nofNM_weighted = 0;
+    
+    
+    /// Loop over datasets
+    for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
+    {
+      clock_t startDataSet = clock();
+      
+      ClearMetaData();
+      
+      dataSetName = datasets[d]->Name();
+      if (verbose > 1)
+      {
+        cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
+      }
+      
+      isData = false; isTTbar = false;
+      if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
+      {
+        isData = true;
+        pathNtuples = pathNtuplesData;
+      }
+      else if ( dataSetName.find("TT") != std::string::npos )
+      {
+        isTTbar = true;
+        hasFoundTTbar = true;
+        if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
+        {
+          if ( dataSetName.find("x0p2") != std::string::npos ) thisWidth = 0.2;
+          else if ( dataSetName.find("x0p5") != std::string::npos ) thisWidth = 0.5;
+          else if ( dataSetName.find("x4") != std::string::npos ) thisWidth = 4.;
+          else if ( dataSetName.find("x8") != std::string::npos ) thisWidth = 8.;
+          applyWidthSF = false;
+          runListWidths = false;
+          endWidth = 1;
+        }
+      }
+      
+      doReweighting = false;
+      if ( isTTbar && (applyWidthSF || runListWidths) ) doReweighting = true;
+      
+      if (! isData)
+      {
+        pathNtuples = pathNtuplesMC;
+      }
+      
+      if (testTTbarOnly && ! isTTbar)
+      {
+        cout << "Skipping dataset..." << endl;
+        continue;
+      }
+      
+      if (calculateAverageMass)
+      {
+        txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
+      }
+      
+      
+      string ntupleFileName = "Ntuples_"+dataSetName+".root";
+      
+      
+      /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
+      if (isTTbar) dataSetName = "TT";
+      
+      tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
+      
+      string tTreeName = "tree";
+      string tStatsTreeName = "stats";
+      
+      /// Get meta data
+      tStatsTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tStatsTreeName.c_str());
+      GetMetaData(tStatsTree[dataSetName.c_str()], isData);
+      
+      tStatsTree[(dataSetName).c_str()]->GetEntry(0);
+      vJER.push_back(appliedJER);
+      vJES.push_back(appliedJES);
+      vPU.push_back(appliedPU);
+      
+      /// eqLumi calculation
+      if (isData) lumiWeight = 1.;
+      else
+      {
+        eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
+        lumiWeight = Luminosity/eqLumi;
+      }
+      
+      if (doPseudoExps)
+      {
+        lumiWeight = 1.;
+        
+        if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
+                                                   //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
+        else nDataEvts = nEventsAKF[d];
+        cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
+        
+        if (test)
+          cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
+        cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
+        if (! isData)
+        {
+          toyMax *= 0.92;  // small overshoot in MC --> scale down
+          cout << " x 0.92 = " << toyMax;
+        }
+        cout << endl;
+      }
+      
+      
+      /// Get data
+      tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
+      nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
+      cout << "                nEntries  : " << nEntries << endl;
+      if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
+      else
+      {
+        cout << "                eqLumi    : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+        cout << "                lumiWeight: " << lumiWeight << endl;
+      }
+      
+      if (test && isData)
+      {
+        cout << "NEvents data:   " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << endl;
+        cout << "NEvents Run B:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunB", isData) << endl;
+        cout << "NEvents Run CD: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunCD", isData) << endl;
+        cout << "NEvents Run EF: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunEF", isData) << endl;
+        cout << "NEvents Run G:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunG", isData) << endl;
+        cout << "NEvents Run H:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunH", isData) << endl;
+      }
+      
+      // Set branch addresses and branch pointers
+      InitTree(tTree[dataSetName.c_str()], isData);
+      
+      
+      
+      ////////////////////////////////////
+      ///  Loop on events
+      ////////////////////////////////////
+      
+      int endEvent = nEntries;
+      if (test || testHistos) endEvent = 2001;
+      for (int ievt = 0; ievt < endEvent; ievt++)
+      {
+        ClearObjects();
+        
+        if (ievt%10000 == 0)
+          std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
+        
+        //if (! isTTbar) continue;
+        //if (ievt > 588000) break;
+        //if (ievt != 2062 && ievt != 75831 && ievt != 113603 && ievt != 115687 && ievt != 155732 && ievt != 163161 && ievt != 186900 && ievt != 215759 && ievt != 233634 && ievt != 238021 && ievt != 243052 && ievt != 243674 && ievt != 266399 && ievt != 317190 && ievt != 317752 && ievt != 325854 && ievt != 330813 && ievt != 333620 && ievt != 347247 && ievt != 439571 && ievt != 450329 && ievt != 491328 && ievt != 510024 && ievt != 514196 && ievt != 538345 && ievt != 570225 && ievt != 576194 && ievt != 577278 && ievt != 587570) continue;
+        
+        
+        /// Load event
+        tTree[(dataSetName).c_str()]->GetEntry(ievt);
+        
+        
+        /// Scale factors
+        if (! isData)
+        {
+          if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
+          else if (applyLeptonSFup) { scaleFactor *= muonTrackSF_eta[0]*1.01 * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}  // CHECK syst muon track SF
+          else if (applyLeptonSFdown) { scaleFactor *= muonTrackSF_eta[0]*0.99 * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}  // CHECK syst muon track SF
+          if (applyBTagSF) { scaleFactor *= btagSF;}
+          else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
+          else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
+          
+          if (makePlots && passedMETFilter)
+          {
+            MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor);
+            MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF);
+            MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
+            MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
+          }
+          
+          if (applyPU) { scaleFactor *= puSF;}
+          else if (applyPUup) { scaleFactor *= puSF_up;}
+          else if (applyPUdown) { scaleFactor *= puSF_down;}
+          
+          //        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
+          if ( thisWidth == 1 && applyPU && puSF == 0 ) txtDebugPUSF << nvtx << "    " << npu << endl;
+        }
+        else if (makePlots && passedMETFilter)
+        {
+          MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+          MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+          MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+          MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], false, lumiWeight);
+        }
+        
+        
+        
+        //////////////////////
+        ///  Fill objects  ///
+        //////////////////////
+        
+        muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
+        selectedLepton.push_back(muon);
+        
+        for (int iJet = 0; iJet < nJets; iJet++)
+        {
+          jet.Clear();
+          jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
+          selectedJets.push_back(jet);
+        }
+        
+        if (makePlots && passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
+        
+        if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
+        nofHardSelected++;
+        
+        if (! passedMETFilter) continue;
+        nofMETCleaned++;
+        
+        for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+        {
+          if ( jet_bdiscr[iJet] > CSVv2Medium )
+          {
+            selectedBJets.push_back(selectedJets[iJet]);
+            bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
+          }
+        }
+        //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
+        
+        /// label jets with highest b discr
+        for (int iJet = 0; iJet < selectedBJets.size(); iJet++)
+        {
+          tempbdiscr = jet_bdiscr[bJetId[iJet]];
+          if ( tempbdiscr > bdiscrTop )
+          {
+            bdiscrTop2 = bdiscrTop;
+            bdiscrTop = tempbdiscr;
+            
+            labelB2 = labelB1;
+            labelB1 = iJet;
+          }
+          else if ( tempbdiscr > bdiscrTop2 )
+          {
+            bdiscrTop2 = tempbdiscr;
+            labelB2 = iJet;
+          }
+        }
+        
+        
+        if (! doReweighting ) widthSF = 1.;
+        //else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
+        
+        
+        
+        /////////////////////////////
+        ///  JET PARTON MATCHING  ///
+        /////////////////////////////
+        
+        //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
+        if (! isData)
+        {
+          for (int iMC = 0; iMC < nMCParticles; iMC++)
+          {
+            mcpart.Clear();
+            mcpart.SetPtEtaPhiE(mc_pt[iMC], mc_eta[iMC], mc_phi[iMC], mc_E[iMC]);
+            mcParticles.push_back(mcpart);
+          }
+          
+          foundTop62 = false; foundAntiTop62 = false;
+          for (unsigned int i = 0; i < mcParticles.size(); i++)
+          {
+            if ( test && verbose > 4 )
+              cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
+            
+            /// Find tops
+            if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
+            {
+              if ( mc_status[i] == 22 ) topQuark = i;
+              if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
+            }
+            else if ( mc_pdgId[i] == -pdgID_top )
+            {
+              if ( mc_status[i] == 22 ) antiTopQuark = i;
+              if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
+            }
+            
+            if ( mc_pdgId[i] == pdgID_top )  // top
+            {
+              if ( mc_status[i] == 62 )
+              {
+                foundTop62 = true;
+                if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+                else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+              }
+              else if (! foundTop62 )
+              {
+                if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+                else topPtSF = TMath::Exp(0.0615-0.0005*400.);
+              }
+            }
+            else if ( mc_pdgId[i] == -pdgID_top )  // antitop
+            {
+              if ( mc_status[i] == 62 )
+              {
+                foundAntiTop62 = true;
+                if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+                else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+              }
+              else if (! foundAntiTop62)
+              {
+                if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+                else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
+              }
+            }
+            
+            
+            /// Status restriction: Final state particle or particle from hardest process
+            if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
+            
+            /// Muons
+            if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
+            {
+              muMinusFromTop = true;
+              if ( mc_status[i] == 23 ) genmuon = i;
+              else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
+            }
+            if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
+            {
+              muPlusFromTop = true;
+              if ( mc_status[i] == 23 ) genmuon = i;
+              else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
+            }
+            
+            /// Partons/gluons
+            if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
+            {
+              partons.push_back(mcParticles[i]);
+              partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
+            }
+            
+          }  // end loop mcParticles
+          
+          if (verbose > 3)
+          {
+            cout << "Size mcParticles:   " << mcParticles.size() << endl;
+            cout << "Size partons:       " << partons.size() << endl;
+            cout << "Size selectedJets:  " << selectedJets.size() << endl;
+          }
+          
+          if ( muMinusFromTop && muPlusFromTop )
+          {
+            if (test) cout << "Both tops decay leptonically... Event " << ievt << " will not be matched." << endl;
+            doMatching = false;
+          }
+          
+          if ( isTTbar && (topQuark == -9999 || antiTopQuark == -9999) )
+          {
+            if ( thisWidth == 1 )
+            {
+              txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
+              txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
+            }
+            continue;
+          }
+          
+          if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
+          else topPtRewSF = 1.;
+          if (applyTopPtReweighting) scaleFactor *= topPtRewSF;
+          
+          
+          
+          /////////////////////////////////////////
+          ///  Scale factor ttbar sample width  ///
+          /////////////////////////////////////////
+          
+          if ( muon_charge[0] > 0 )
+          {
+            massHadTopQ = (mcParticles[antiTopQuark]).M();
+            massLepTopQ = (mcParticles[topQuark]).M();
+          }
+          else if ( muon_charge[0] < 0 )
+          {
+            massHadTopQ = (mcParticles[topQuark]).M();
+            massLepTopQ =  (mcParticles[antiTopQuark]).M();
+          }
+          
+          if ( doReweighting )
+          {
+            //widthSF = rew->EventWeightCalculator(massHadTopQ, thisWidth) * rew->EventWeightCalculator(massLepTopQ, thisWidth);
+            widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, thisWidth);
+            
+            if ( widthSF != widthSF )  // widthSF = NaN
+            {
+              cout << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
+              cout << "Top mass: " << (mcParticles[topQuark]).M() << "; antiTop mass: " << (mcParticles[antiTopQuark]).M() << "; Lepton charge: " << muon_charge[0] << "; width SF: " << widthSF << endl;
+              
+              continue;
+            }
+            
+            if (makePlots) histo1D["width_SF"]->Fill(widthSF);
+          }  // end applyWidthSF
+          
+          
+          
+          //////////////////
+          ///  Matching  ///
+          //////////////////
+          
+          if (doMatching)
+          {
+            TruthMatching(partons, selectedJets, MCPermutation);
+            
+            if (test && verbose > 3 && all4PartonsMatched)
+            {
+              for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
+              {
+                cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Pt: " << setw(7) << left << mc_pt[partonId[MCPermutation[iMatch].second]] << "  Eta: " << mc_eta[partonId[MCPermutation[iMatch].second]] << "  Phi: " << mc_phi[partonId[MCPermutation[iMatch].second]] << endl;
+                cout << "Event  " << right << setw(4) << ievt << ";  Matched jet    " << iMatch << "  Pt: " << setw(7) << left << jet_pt[MCPermutation[iMatch].first] << "  Eta: " << jet_eta[MCPermutation[iMatch].first] << "  Phi: " << jet_phi[MCPermutation[iMatch].first] << endl;
+              }
+            }
+            
+            
+            ///////////////////
+            ///  Resolution functions
+            ///////////////////
+            
+            if (hadronicTopJetsMatched)
+            {
+              
+              for (unsigned int iMatch = 0; iMatch < 3; iMatch++)
+              {
+                /// MCPermutation[i].first  = jet number
+                /// MCPermutation[i].second = parton number
+                /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+                
+                partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
+                jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
+              }
+              if (all4PartonsMatched)
+              {
+                partonsMatched.push_back(partons[MCPermutation[3].second]);
+                jetsMatched.push_back(selectedJets[MCPermutation[3].first]);
+              }
+              
+              if (isTTbar && all4PartonsMatched && calculateResolutionFunctions)
+              {
+                rf->fillJets(partonsMatched, jetsMatched);
+                
+                if (muonmatched) rf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
+                //if (electronmatched) rf->fillElectron(...)
+                
+              }  // end rf
+              
+              
+              matched_W_mass_j = (jetsMatched[0] + jetsMatched[1]).M();
+              matched_W_mass_q = (partonsMatched[0] + partonsMatched[1]).M();
+              matched_top_mass_j = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
+              matched_top_mass_q = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
+              
+              if (calculateAverageMass)
+              {
+                txtMassGenPMatched << ievt << "  " << matched_top_mass_q << endl;
+                txtMassGenJMatched << ievt << "  " << matched_top_mass_j << endl;
+              }
+              
+              
+              /// KF for matched jets
+              if (doKinFit && ! doPseudoExps)
+              {
+                kFitterMatched = kfMatched->doFit(jetsMatched[0], jetsMatched[1], kFitVerbosity);
+                
+                if ( kFitterMatched->getStatus() != 0 )  // did not converge
+                {
+                  if (test && verbose > 2) cout << "Event " << ievt << ": Fit for matched events did not converge..." << endl;
+                  continue;
+                }
+                
+                kFitChi2Matched = kFitterMatched->getS();
+                if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2Matched << endl;
+                
+                if ( applyKinFitCut && kFitChi2Matched < kinFitCutValue ) passKFChi2MatchedCut = true;
+                if (passKFChi2MatchedCut)
+                {
+                  nofAcceptedKFitMatched++;
+                  
+                  selectedJetsKFMatched.clear();
+                  selectedJetsKFMatched = kfMatched->getCorrectedJets();
+                  
+                  if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
+                  
+                  matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+                  
+                  if (calculateLikelihood)
+                  {
+                    double temp = matched_top_mass_j_akF/aveTopMassLL;
+                    like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+                  }
+                }  // passKFChi2MatchedCut
+              }  // end KF
+              
+              
+              if (isTTbar && makePlots)
+              {
+                FillMatchingPlots();
+              }
+              
+            }  // end hadronicTopJetsMatched
+            
+          }  // end doMatching
+          
+          
+        }  // end if not data
+        
+        
+        
+        if (doGenOnly) continue;
+        
+        
+        
+        /////////////////////////////////////
+        ///  Reconstruction of Top quark  ///
+        /////////////////////////////////////
+        
+        //int labelsReco[4] = {-9999, -9999, -9999, -9999};  // 0,1: light jets; 2: hadronic b; 3: leptonic b
+        double deltaR;
+        double minDeltaR = 9999.;
+        
+        for (int kjet = 0; kjet < selectedBJets.size(); kjet++)
+        {
+          if ( selectedBJets.size() > 2 && kjet != labelB1 && kjet != labelB2 ) continue;
+          
+          deltaR = ROOT::Math::VectorUtil::DeltaR(selectedBJets[kjet], selectedLepton[0]);
+          
+          if (deltaR < minDeltaR)
+          {
+            minDeltaR = deltaR;
+            labelsReco[3] = bJetId[kjet];
+          }
+        }
+        
+        if ( labelsReco[3] == -9999 ) continue;
+        
+        if ( labelsReco[3] == bJetId[labelB1] ) labelsReco[2] = bJetId[labelB2];
+        else if ( labelsReco[3] == bJetId[labelB2] ) labelsReco[2] = bJetId[labelB1];
+        else cerr << endl << "Seems like something went wrong with the b jets..." << endl;
+        
+        for (int ijet = 0; ijet < selectedJets.size(); ijet++)
+        {
+          if ( ijet == labelsReco[2] || ijet == labelsReco[3] ) continue;
+          
+          if ( labelsReco[0] == -9999 ) labelsReco[0] = ijet;
+          else if ( labelsReco[1] == -9999 ) labelsReco[1] = ijet;
+          else cerr << endl << "Seems like there are too many jets..." << endl;
+        }
+        
+        if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
+        
+        
+        
+        ///////////////////////////////////
+        ///  CHECK MATCHED COMBINATION  ///
+        ///////////////////////////////////
+        
+        ///
+        // 3 possibilities:
+        // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
+        // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
+        // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
+        
+        
+        if (! isData)
+        {
+          if (hadronicTopJetsMatched)
+          {
+            /// Correct match
+            if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+            {
+              isCM = true;
+              nofCorrectlyMatched++;
+            }
+            else  // wrong permutation
+            {
+              isWM = true;
+              nofNotCorrectlyMatched++;
+            }
+          }  // end hadrTopMatch
+          else  // no match
+          {
+            isNM = true;
+          }
+          
+          
+          if ( (! isCM && ! isWM && ! isNM) || (isCM && isWM) || (isCM && isNM) || (isWM && isNM) )
+            cerr << "Something wrong with trigger logic CM/WM/NM !! " << endl;
+          
+        }  // not Data
+        
+        
+        if (isCM) catSuffix = catSuffixList[0];
+        else if (isWM) catSuffix = catSuffixList[1];
+        else if (isNM) catSuffix = catSuffixList[2];
+        
+        dMSP = d;
+        if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+        else if (isTTbar && isWM) dMSP = d+1;
+        else if (isTTbar && isNM) dMSP = d+2;
+        
+        
+        /// Fill variables before performing kinFit
+        reco_W_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
+        reco_top_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
+        reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
+        reco_mlb_bKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
+        reco_dRLepB_lep_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
+        reco_dRLepB_had_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
+        reco_ttbar_mass_bKF = reco_mlb_bKF + reco_top_mass_bKF;
+        redTopMass_bKF = reco_top_mass_bKF/aveTopMassLL;
+        
+        if (makePlots)
+        {
+          if (isTTbar && doKinFit) FillKinFitPlots(doneKinFit);
+          
+          FillMSPlots(dMSP, doneKinFit);
+          //FillControlPlots(datasetsMSP, dMSP);
+          
+          MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+          {
+            MSPlot["jet_pT_allJets_"]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          }
+        }
+        
+        
+        
+        ////////////////////////////
+        ///   Kinematic Fit      ///
+        ////////////////////////////
+        
+        if (doKinFit)
+        {
+          /*if (addEqMassKF)
+           kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
+           else if (addWMassKF)*/
+          kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
+          
+          if ( kFitter->getStatus() != 0 )  // did not converge
+          {
+            if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
+            continue;
+          }
+          
+          kFitChi2 = kFitter->getS();
+          if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
+          
+          doneKinFit = true;
+          if (makePlots)
+          {
+            MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[dMSP], true, lumiWeight*scaleFactor*widthSF);
+            if (! isData) histo1D["KF_Chi2"+catSuffix+"_wide"]->Fill(kFitChi2);
+            if (isTTbar) histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
+          }
+          
+          if (isCM) nofCorrectlyMatchedAKFNoCut++;
+          else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
+          else if (isNM) nofNoMatchAKFNoCut++;
+          
+          if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
+          nofAcceptedKFit++;
+          if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
+          if (isCM) nofCorrectlyMatchedAKF++;
+          else if (isWM) nofNotCorrectlyMatchedAKF++;
+          
+          selectedJetsKFcorrected.clear();
+          selectedJetsKFcorrected = kf->getCorrectedJets();
+          
+        }
+        
+        
+        /// Reconstruct event
+        //  Hadronic variables  // OBS: only W mass constraint ! Jet3 = selectedJets[labelsReco[2]] !
+        if (! doKinFit)
+        {
+          selectedJetsKFcorrected.clear();
+          selectedJetsKFcorrected.push_back(selectedJets[labelsReco[0]]);
+          selectedJetsKFcorrected.push_back(selectedJets[labelsReco[1]]);
+          selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
+        }
+        else if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
+        
+        /// Make pT ordered jet collection after KF
+        selectedJetsAKF = selectedJetsKFcorrected;
+        selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
+        std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
+        
+        /// Define variables
+        reco_W_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
+        reco_top_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M();
+        reco_top_pt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
+        reco_mlb_aKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
+        reco_dRLepB_lep_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
+        reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
+        reco_ttbar_mass_aKF = reco_mlb_aKF + reco_top_mass_aKF;
+        redTopMass = reco_top_mass_aKF/aveTopMassLL;
+        
+        if ( reco_top_mass_aKF < 0. )
+          PrintKFDebug(ievt);
+        
+        if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << endl;
+        
+        if ( doKinFit && makePlots )
+        {
+          if (isTTbar) FillKinFitPlots(doneKinFit);
+          if (! isData)
+          {
+            histo1D["allSim_top_mass"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
+            histo1D["allSim_red_top_mass"]->Fill(redTopMass, lumiWeight*scaleFactor*widthSF);
+          }
+        }
+        
+        
+        
+        ////////////////////
+        ///  Likelihood  ///
+        ////////////////////
+        
+        if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
+        if (calculateLikelihood)
+        {
+          like->CalculateLikelihood(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+          if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
+            like->CalculateCMLikelihood(redTopMass, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+          if ( ! doPseudoExps && ( isCM || isWM ) )
+            like->CalculateTempLikelihood(redTopMass, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+        }
+        
+        if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
+        if ( redTopMass < minRedTopMass ) minRedTopMass = redTopMass;
+        if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
+        {
+          if (isCM)
+          {
+            nofCM++;
+            nofCMl += lumiWeight;
+            nofCM_weighted += lumiWeight*widthSF;
+            if (isTTbar) nofCM_TT++;
+          }
+          else if (isWM)
+          {
+            nofWM++;
+            nofWMl += lumiWeight;
+            nofWM_weighted += lumiWeight*widthSF;
+            if (isTTbar) nofWM_TT++;
+          }
+          else if (isNM)
+          {
+            nofNM++;
+            nofNMl += lumiWeight;
+            nofNM_weighted += lumiWeight*widthSF;
+            if (isTTbar) nofNM_TT++;
+          }
+        }
+        
+        if (calculateAverageMass && ! isData)
+        {
+          if (isCM) txtMassRecoCM << ievt << "  " << reco_top_mass_aKF << endl;
+          else
+          {
+            txtMassRecoWMNM << ievt << "  " << reco_top_mass_aKF << endl;
+            if (isWM)
+              txtMassRecoWM << ievt << "  " << reco_top_mass_aKF << endl;
+            else if (isNM)
+              txtMassRecoNM << ievt << "  " << reco_top_mass_aKF << endl;
+          }
+        }  // end aveMassCalc
+        
+        
+        /// Pseudo experiments
+        if (doPseudoExps && ! isData)
+        {
+          random3.RndmArray(nPsExps, toyValues);
+          for (int iPsExp = 0; iPsExp < nPsExps; iPsExp++)
+          {
+            //toyValue = random3.Rndm();
+            //if ( toyValue > toyMax ) continue;
+            if ( toyValues[iPsExp] > toyMax ) continue;
+            (nEvtsInPseudoExp[iPsExp][d])++;
+            like->AddPsExp(iPsExp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+            
+            /// Fill plots only for first pseudo experiment
+            if ( makePlots && iPsExp == 0 )
+            {
+              /// Combine DY & W+jets
+              if ( dataSetName.find("DY") != std::string::npos ) histo1D["red_top_mass_DYJets"]->Fill(redTopMass);
+              else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
+                histo1D["red_top_mass_WJets"]->Fill(redTopMass);
+              else histo1D[("red_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
+              
+              FillCatsPlots(catSuffix);
+              
+              int dMSP = d;
+              if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
+              else if (isTTbar && isWM) dMSP = d+1;
+              else if (isTTbar && isNM) dMSP = d+2;
+              
+              FillMSPlots(dMSP, doneKinFit);
+            }
+          }
+        }
+        
+        //Fill histos
+        if ( makePlots && (! doPseudoExps || isData) )
+        {
+          /// Combine DY & W+jets
+          if ( dataSetName.find("DY") != std::string::npos ) histo1D["red_top_mass_DYJets"]->Fill(redTopMass);
+          else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
+            histo1D["red_top_mass_WJets"]->Fill(redTopMass);
+          else histo1D[("red_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
+          
+          FillCatsPlots(catSuffix);
+          
+          FillMSPlots(dMSP, doneKinFit);
+          
+          MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJetsAKF[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          for (int iJet = 0; iJet < selectedJetsAKF.size(); iJet++)
+          {
+            MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJetsAKF[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          }
+          
+        }  // end makePlots
+        
+        
+        
+        
+      }  // end loop events
+      
+      
+      cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
+      cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
+      cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
+      if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
+      
+      //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
+      if (! isData && nofHadrMatchedEvents > 0 )
+      {
+        cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
+        cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofMETCleaned) << "%)" << endl;
+        if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
+        if (! doGenOnly)
+        {
+          cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
+          cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
+          if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
+            cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
+          
+          if (doKinFit)
+          {
+            cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
+            cout << " --- Kinematic fit --- Before chi2 cut --- " << endl;
+            cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
+            cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
+            if ( nofCorrectlyMatchedAKFNoCut != 0 || nofNotCorrectlyMatchedAKFNoCut != 0 )
+              cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut + nofNotCorrectlyMatchedAKFNoCut) << "% of matched events is correctly matched after KF." << endl;
+            
+            cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofNotCorrectlyMatchedAKFNoCut+nofNoMatchAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
+            
+            cout << " --- Kinematic fit --- After chi2 cut --- " << endl;
+            cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedAKF << endl;
+            cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKF << endl;
+            if ( nofCorrectlyMatchedAKF != 0 || nofNotCorrectlyMatchedAKF != 0 )
+              cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKF / (float)(nofCorrectlyMatchedAKF + nofNotCorrectlyMatchedAKF) << "% of matched events is correctly matched after KF." << endl;
+            
+            cout << "                        " << 100*(float)nofCorrectlyMatchedAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
+          }
+          else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched." << endl;
+        }
+        
+        if (doKinFit)
+        {
+          cout << " --- Kinematic fit --- Gen events" << endl;
+          cout << "Number of generated matched events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
+        }
+        
+        /// Resolution functions
+        if (isTTbar && calculateResolutionFunctions)
+        {
+          string rfFileName = "PlotsForResolutionFunctions.root";
+          string rfFitFileName = "PlotsForResolutionFunctions_Fitted.root";
+          TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
+          foutRF->cd();
+          
+          rf->writeHistograms();
+          
+          foutRF->Close();
+          
+          rf->makeFit(rfFileName, rfFitFileName);
+          rf->writeTable(rfFitFileName);
+          
+          delete foutRF;
+        }
+        
+      }  // end ! isData
+      
+      
+      
+      if (calculateAverageMass) txtMassReco.close();
+      
+      tFileMap[dataSetName.c_str()]->Close();
+      
+      timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
+      
+    }  // end loop datasets
+    
+    if (! doGenOnly && ! testTTbarOnly)
+    {
+      cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofNM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofNM)) << "%)   NM: " << nofNM << " (" << 100*(double)nofNM/((double)(nofCM+nofWM+nofNM)) << "%)   Total: " << nofCM+nofWM+nofNM << endl;
+      cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCMl << " (" << 100*nofCMl/(nofCMl+nofWMl+nofNMl) << "%)   WM: " << nofWMl << " (" << 100*nofWMl/(nofCMl+nofWMl+nofNMl) << "%)   NM: " << nofNMl << " (" << 100*nofNMl/(nofCMl+nofWMl+nofNMl) << "%)   Total: " << nofCMl+nofWMl+nofNMl << endl;
+      cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
+      cout << "                               (TTbar only) CM: " << nofCM_TT << "               WM: " << nofWM_TT << "               NM: " << nofNM_TT << endl;
+    }
+    
+    
+    if (makeTGraphs)
+    {
+      like->WriteHistograms("ReducedTopMassPlots.root");
+      like->ConstructTGraphsFromHisto("TGraphFunctions.root");
+    }
+    
+    if (calculateLikelihood)
+    {
+      cout << "Minimum reduced top mass: " << minRedTopMass << endl;
+      cout << "Maximum reduced top mass: " << maxRedTopMass << endl;
+      
+      /// Print output to file
+      string llFileName = "output_loglikelihood_widthx1";
+      if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
+      if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
+      //if (useToys) llFileName = "output_loglikelihood_toys";
+      like->PrintLikelihoodOutput(llFileName+".txt");
+      //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
+      like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
+      
+      /// Calculate output width
+      cout << "Standard output width: " << endl;
+      like->GetOutputWidth(thisWidth, true);
+      if (! doPseudoExps)
+      {
+        cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+        like->GetOutputWidth(thisWidth, "CM", true);
+        cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
+        like->GetOutputWidth(thisWidth, "matched", true);
+        //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
+        //like->GetOutputWidth(scaleWidth, "gen", true);
+      }
+      //cout << "Output width from file (standard calculation): " << endl;
+      //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
     }
     
     if (doPseudoExps)
     {
-      lumiWeight = 1.;
-      
-      if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
-      //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
-      else nDataEvts = nEventsAKF[d];
-      cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
-      
-      if (test)
-        cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
-      cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
-      if (! isData)
-      {
-        toyMax *= 0.92;  // small overshoot in MC --> scale down
-        cout << " x 0.92 = " << toyMax;
-      }
-      cout << endl;
+      like->CalculatePull(thisWidth);
     }
     
     
-    /// Get data
-    tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
-    nEntries = (int)tTree[dataSetName.c_str()]->GetEntries();
-    cout << "                nEntries  : " << nEntries << endl;
-    if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
-    else
+    cout << endl << "Processing time per dataset: " << endl;
+    for (unsigned int d = 0; d < datasets.size(); d++)
     {
-      cout << "                eqLumi    : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
-      cout << "                lumiWeight: " << lumiWeight << endl;
+      cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
     }
     
-    if (isData)
+    if (doPseudoExps)
     {
-      cout << "NEvents data:   " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << endl;
-      cout << "NEvents Run B:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunB", isData) << endl;
-      cout << "NEvents Run CD: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunCD", isData) << endl;
-      cout << "NEvents Run EF: " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunEF", isData) << endl;
-      cout << "NEvents Run G:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunG", isData) << endl;
-      cout << "NEvents Run H:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunH", isData) << endl;
+      cout << endl << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
+      double totMCPsExp;
+      for (int i = 0; i < 3; i++)
+      {
+        totMCPsExp = 0;
+        cout << "PseudoExperiment " << std::setw(3) << std::right << i << endl;
+        for (unsigned int d = 1; d < datasets.size(); d++)
+        {
+          totMCPsExp += nEvtsInPseudoExp[i][d];
+          cout << "                      " << datasets[d]->Name() << ": " << nEvtsInPseudoExp[i][d] << endl;
+        }
+        cout << "                                            " << "Total MC: " << totMCPsExp << endl;
+      }
     }
     
-    // Set branch addresses and branch pointers
-    InitTree(tTree[dataSetName.c_str()], isData);
+    
+    ///  Check Shape Changing Systematics
+    if (! testTTbarOnly) CheckSystematics(vJER, vJES, vPU);
     
     
-    
-    ////////////////////////////////////
-    ///  Loop on events
-    ////////////////////////////////////
-    
-    int endEvent = nEntries;
-    if (test || testHistos) endEvent = 2001;
-    for (int ievt = 0; ievt < endEvent; ievt++)
-    {
-      ClearObjects();
-      
-      if (ievt%10000 == 0)
-        std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
-      
-      //if (! isTTbar) continue;
-      //if (ievt > 588000) break;
-      //if (ievt != 2062 && ievt != 75831 && ievt != 113603 && ievt != 115687 && ievt != 155732 && ievt != 163161 && ievt != 186900 && ievt != 215759 && ievt != 233634 && ievt != 238021 && ievt != 243052 && ievt != 243674 && ievt != 266399 && ievt != 317190 && ievt != 317752 && ievt != 325854 && ievt != 330813 && ievt != 333620 && ievt != 347247 && ievt != 439571 && ievt != 450329 && ievt != 491328 && ievt != 510024 && ievt != 514196 && ievt != 538345 && ievt != 570225 && ievt != 576194 && ievt != 577278 && ievt != 587570) continue;
-      
-      
-      /// Load event
-      tTree[(dataSetName).c_str()]->GetEntry(ievt);
-      
-      
-      /// Scale factors
-      if (! isData)
-      {
-        if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
-        else if (applyLeptonSFup) { scaleFactor *= muonTrackSF_eta[0]*1.01 * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}  // CHECK syst muon track SF
-        else if (applyLeptonSFdown) { scaleFactor *= muonTrackSF_eta[0]*0.99 * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}  // CHECK syst muon track SF
-        if (applyBTagSF) { scaleFactor *= btagSF;}
-        else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
-        else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
-      
-        if (makePlots && passedMETFilter)
-        {
-          MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor);
-          MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF);
-          MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
-          MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
-        }
-        
-        if (applyPU) { scaleFactor *= puSF;}
-        else if (applyPUup) { scaleFactor *= puSF_up;}
-        else if (applyPUdown) { scaleFactor *= puSF_down;}
-        
-//        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
-        if (applyPU && puSF == 0) txtDebugPUSF << nvtx << "    " << npu << endl;
-      }
-      else if (makePlots && passedMETFilter)
-      {
-        MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
-        MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
-        MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], false, lumiWeight);
-        MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], false, lumiWeight);
-      }
-      
-      
-      
-      //////////////////////
-      ///  Fill objects  ///
-      //////////////////////
-      
-      muon.SetPtEtaPhiE(muon_pt[0], muon_eta[0], muon_phi[0], muon_E[0]);
-      selectedLepton.push_back(muon);
-      
-      for (int iJet = 0; iJet < nJets; iJet++)
-      {
-        jet.Clear();
-        jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-        selectedJets.push_back(jet);
-      }
-      
-      if (makePlots && passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
-      
-      if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
-      nofHardSelected++;
-      
-      if (! passedMETFilter) continue;
-      nofMETCleaned++;
-      
-      for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-      {
-        if ( jet_bdiscr[iJet] > CSVv2Medium )
-        {
-          selectedBJets.push_back(selectedJets[iJet]);
-          bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
-        }
-      }
-      //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
-      
-      /// label jets with highest b discr
-      for (int iJet = 0; iJet < selectedBJets.size(); iJet++)
-      {
-        tempbdiscr = jet_bdiscr[bJetId[iJet]];
-        if ( tempbdiscr > bdiscrTop )
-        {
-          bdiscrTop2 = bdiscrTop;
-          bdiscrTop = tempbdiscr;
-
-          labelB2 = labelB1;
-          labelB1 = iJet;
-        }
-        else if ( tempbdiscr > bdiscrTop2 )
-        {
-          bdiscrTop2 = tempbdiscr;
-          labelB2 = iJet;
-        }
-      }
-      
-      
-      if (! doReweighting ) widthSF = 1.;
-      //else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
-      
-      
-      
-      /////////////////////////////
-      ///  JET PARTON MATCHING  ///
-      /////////////////////////////
-      
-      //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
-      if (! isData)
-      {
-        for (int iMC = 0; iMC < nMCParticles; iMC++)
-        {
-          mcpart.Clear();
-          mcpart.SetPtEtaPhiE(mc_pt[iMC], mc_eta[iMC], mc_phi[iMC], mc_E[iMC]);
-          mcParticles.push_back(mcpart);
-        }
-        
-        foundTop62 = false; foundAntiTop62 = false;
-        for (unsigned int i = 0; i < mcParticles.size(); i++)
-        {
-          if ( test && verbose > 4 )
-            cout << setw(3) << right << i << "  Status: " << setw(2) << mc_status[i] << "  pdgId: " << setw(3) << mc_pdgId[i] << "  Mother: " << setw(4) << mc_mother[i] << "  Granny: " << setw(4) << mc_granny[i] << "  Pt: " << setw(7) << left << mc_pt[i] << "  Eta: " << mc_eta[i] << endl;
-          
-          /// Find tops
-          if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
-          {
-            if ( mc_status[i] == 22 ) topQuark = i;
-            if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
-          }
-          else if ( mc_pdgId[i] == -pdgID_top )
-          {
-            if ( mc_status[i] == 22 ) antiTopQuark = i;
-            if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
-          }
-          
-          if ( mc_pdgId[i] == pdgID_top )  // top
-          {
-            if ( mc_status[i] == 62 )
-            {
-              foundTop62 = true;
-              if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-              else topPtSF = TMath::Exp(0.0615-0.0005*400.);
-            }
-            else if (! foundTop62 )
-            {
-              if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-              else topPtSF = TMath::Exp(0.0615-0.0005*400.);
-            }
-          }
-          else if ( mc_pdgId[i] == -pdgID_top )  // antitop
-          {
-            if ( mc_status[i] == 62 )
-            {
-              foundAntiTop62 = true;
-              if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-              else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
-            }
-            else if (! foundAntiTop62)
-            {
-              if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-              else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
-            }
-          }
-          
-          
-          /// Status restriction: Final state particle or particle from hardest process
-          if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
-          
-          /// Muons
-          if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
-          {
-            muMinusFromTop = true;
-            if ( mc_status[i] == 23 ) genmuon = i;
-            else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
-          }
-          if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
-          {
-            muPlusFromTop = true;
-            if ( mc_status[i] == 23 ) genmuon = i;
-            else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
-          }
-          
-          /// Partons/gluons
-          if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
-          {
-            partons.push_back(mcParticles[i]);
-            partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
-          }
-          
-        }  // end loop mcParticles
-
-        if (verbose > 3)
-        {
-          cout << "Size mcParticles:   " << mcParticles.size() << endl;
-          cout << "Size partons:       " << partons.size() << endl;
-          cout << "Size selectedJets:  " << selectedJets.size() << endl;
-        }
-        
-        if ( muMinusFromTop && muPlusFromTop )
-        {
-          if (test) cout << "Both tops decay leptonically... Event " << ievt << " will not be matched." << endl;
-          doMatching = false;
-        }
-        
-        if ( isTTbar && (topQuark == -9999 || antiTopQuark == -9999) )
-        {
-          txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
-          txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
-          continue;
-        }
-        
-        if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
-        else topPtRewSF = 1.;
-        if (applyTopPtReweighting) scaleFactor *= topPtRewSF;
-        
-        
-        
-        /////////////////////////////////////////
-        ///  Scale factor ttbar sample width  ///
-        /////////////////////////////////////////
-        
-        if ( muon_charge[0] > 0 )
-        {
-          massHadTopQ = (mcParticles[antiTopQuark]).M();
-          massLepTopQ = (mcParticles[topQuark]).M();
-        }
-        else if ( muon_charge[0] < 0 )
-        {
-          massHadTopQ = (mcParticles[topQuark]).M();
-          massLepTopQ =  (mcParticles[antiTopQuark]).M();
-        }
-        
-        if ( doReweighting )
-        {
-          //widthSF = rew->EventWeightCalculator(massHadTopQ, scaleWidth) * rew->EventWeightCalculator(massLepTopQ, scaleWidth);
-          widthSF = rew->EventWeightCalculator(massHadTopQ, scaleWidth);
-          
-          if ( widthSF != widthSF )  // widthSF = NaN
-          {
-            cout << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
-            cout << "Top mass: " << (mcParticles[topQuark]).M() << "; antiTop mass: " << (mcParticles[antiTopQuark]).M() << "; Lepton charge: " << muon_charge[0] << "; width SF: " << widthSF << endl;
-            
-            continue;
-          }
-          
-          if (makePlots) histo1D["width_SF"]->Fill(widthSF);
-        }  // end applyWidthSF
-        
-        
-        
-        //////////////////
-        ///  Matching  ///
-        //////////////////
-        
-        if (doMatching)
-        {
-          TruthMatching(partons, selectedJets, MCPermutation);
-          
-          if (test && verbose > 3 && all4PartonsMatched)
-          {
-            for (unsigned int iMatch = 0; iMatch < 4; iMatch++)
-            {
-              cout << "Event  " << right << setw(4) << ievt << ";  Matched parton " << iMatch << "  Pt: " << setw(7) << left << mc_pt[partonId[MCPermutation[iMatch].second]] << "  Eta: " << mc_eta[partonId[MCPermutation[iMatch].second]] << "  Phi: " << mc_phi[partonId[MCPermutation[iMatch].second]] << endl;
-              cout << "Event  " << right << setw(4) << ievt << ";  Matched jet    " << iMatch << "  Pt: " << setw(7) << left << jet_pt[MCPermutation[iMatch].first] << "  Eta: " << jet_eta[MCPermutation[iMatch].first] << "  Phi: " << jet_phi[MCPermutation[iMatch].first] << endl;
-            }
-          }
-          
-          
-          ///////////////////
-          ///  Resolution functions
-          ///////////////////
-          
-          if (hadronicTopJetsMatched)
-          {
-            
-            for (unsigned int iMatch = 0; iMatch < 3; iMatch++)
-            {
-              /// MCPermutation[i].first  = jet number
-              /// MCPermutation[i].second = parton number
-              /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
-              
-              partonsMatched.push_back(partons[MCPermutation[iMatch].second]);
-              jetsMatched.push_back(selectedJets[MCPermutation[iMatch].first]);
-            }
-            if (all4PartonsMatched)
-            {
-              partonsMatched.push_back(partons[MCPermutation[3].second]);
-              jetsMatched.push_back(selectedJets[MCPermutation[3].first]);
-            }
-            
-            if (isTTbar && all4PartonsMatched && calculateResolutionFunctions)
-            {
-              rf->fillJets(partonsMatched, jetsMatched);
-              
-              if (muonmatched) rf->fillMuon(mcParticles[genmuon], selectedLepton[0]);
-              //if (electronmatched) rf->fillElectron(...)
-
-            }  // end rf
-            
-            
-            matched_W_mass_j = (jetsMatched[0] + jetsMatched[1]).M();
-            matched_W_mass_q = (partonsMatched[0] + partonsMatched[1]).M();
-            matched_top_mass_j = (jetsMatched[0] + jetsMatched[1] + jetsMatched[2]).M();
-            matched_top_mass_q = (partonsMatched[0] + partonsMatched[1] + partonsMatched[2]).M();
-            
-            if (calculateAverageMass)
-            {
-              txtMassGenPMatched << ievt << "  " << matched_top_mass_q << endl;
-              txtMassGenJMatched << ievt << "  " << matched_top_mass_j << endl;
-            }
-            
-            
-            /// KF for matched jets
-            if (doKinFit && ! doPseudoExps)
-            {
-              kFitterMatched = kfMatched->doFit(jetsMatched[0], jetsMatched[1], kFitVerbosity);
-              
-              if ( kFitterMatched->getStatus() != 0 )  // did not converge
-              {
-                if (test && verbose > 2) cout << "Event " << ievt << ": Fit for matched events did not converge..." << endl;
-                continue;
-              }
-              
-              kFitChi2Matched = kFitterMatched->getS();
-              if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2Matched << endl;
-              
-              if ( applyKinFitCut && kFitChi2Matched < kinFitCutValue ) passKFChi2MatchedCut = true;
-              if (passKFChi2MatchedCut)
-              {
-                nofAcceptedKFitMatched++;
-                
-                selectedJetsKFMatched.clear();
-                selectedJetsKFMatched = kfMatched->getCorrectedJets();
-                
-                if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
-                
-                matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
-                
-                if (calculateLikelihood)
-                {
-                  double temp = matched_top_mass_j_akF/aveTopMassLL;
-                  like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
-                }
-              }  // passKFChi2MatchedCut
-            }  // end KF
-            
-            
-            if (isTTbar && makePlots)
-            {
-              FillMatchingPlots();
-            }
-
-          }  // end hadronicTopJetsMatched
-        
-        }  // end doMatching
-        
-        
-      }  // end if not data
-      
-      
-      
-      if (doGenOnly) continue;
-      
-      
-      
-      /////////////////////////////////////
-      ///  Reconstruction of Top quark  ///
-      /////////////////////////////////////
-      
-      //int labelsReco[4] = {-9999, -9999, -9999, -9999};  // 0,1: light jets; 2: hadronic b; 3: leptonic b
-      double deltaR;
-      double minDeltaR = 9999.;
-      
-      for (int kjet = 0; kjet < selectedBJets.size(); kjet++)
-      {
-        if ( selectedBJets.size() > 2 && kjet != labelB1 && kjet != labelB2 ) continue;
-        
-        deltaR = ROOT::Math::VectorUtil::DeltaR(selectedBJets[kjet], selectedLepton[0]);
-        
-        if (deltaR < minDeltaR)
-        {
-          minDeltaR = deltaR;
-          labelsReco[3] = bJetId[kjet];
-        }
-      }
-      
-      if ( labelsReco[3] == -9999 ) continue;
-      
-      if ( labelsReco[3] == bJetId[labelB1] ) labelsReco[2] = bJetId[labelB2];
-      else if ( labelsReco[3] == bJetId[labelB2] ) labelsReco[2] = bJetId[labelB1];
-      else cerr << endl << "Seems like something went wrong with the b jets..." << endl;
-      
-      for (int ijet = 0; ijet < selectedJets.size(); ijet++)
-      {
-        if ( ijet == labelsReco[2] || ijet == labelsReco[3] ) continue;
-        
-        if ( labelsReco[0] == -9999 ) labelsReco[0] = ijet;
-        else if ( labelsReco[1] == -9999 ) labelsReco[1] = ijet;
-        else cerr << endl << "Seems like there are too many jets..." << endl;
-      }
-      
-      if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
-      
-      
-      
-      ///////////////////////////////////
-      ///  CHECK MATCHED COMBINATION  ///
-      ///////////////////////////////////
-      
-      ///
-      // 3 possibilities:
-      // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
-      // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
-      // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
-      
-      
-      if (! isData)
-      {
-        if (hadronicTopJetsMatched)
-        {
-          /// Correct match
-          if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
-          {
-            isCM = true;
-            nofCorrectlyMatched++;
-          }
-          else  // wrong permutation
-          {
-            isWM = true;
-            nofNotCorrectlyMatched++;
-          }
-        }  // end hadrTopMatch
-        else  // no match
-        {
-          isNM = true;
-        }
-        
-        
-        if ( (! isCM && ! isWM && ! isNM) || (isCM && isWM) || (isCM && isNM) || (isWM && isNM) )
-          cerr << "Something wrong with trigger logic CM/WM/NM !! " << endl;
-        
-      }  // not Data
-      
-      
-      if (isCM) catSuffix = catSuffixList[0];
-      else if (isWM) catSuffix = catSuffixList[1];
-      else if (isNM) catSuffix = catSuffixList[2];
-      
-      dMSP = d;
-      if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-      else if (isTTbar && isWM) dMSP = d+1;
-      else if (isTTbar && isNM) dMSP = d+2;
-      
-      
-      /// Fill variables before performing kinFit
-      reco_W_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
-      reco_top_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
-      reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
-      reco_mlb_bKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
-      reco_dRLepB_lep_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
-      reco_dRLepB_had_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
-      reco_ttbar_mass_bKF = reco_mlb_bKF + reco_top_mass_bKF;
-      redTopMass_bKF = reco_top_mass_bKF/aveTopMassLL;
-      
-      if (makePlots)
-      {
-        if (isTTbar && doKinFit) FillKinFitPlots(doneKinFit);
-        
-        FillMSPlots(dMSP, doneKinFit);
-        //FillControlPlots(datasetsMSP, dMSP);
-        
-        MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-        for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-        {
-          MSPlot["jet_pT_allJets_"]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-        }
-      }
-      
-      
-      
-      ////////////////////////////
-      ///   Kinematic Fit      ///
-      ////////////////////////////
-      
-      if (doKinFit)
-      {
-        /*if (addEqMassKF)
-          kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
-        else if (addWMassKF)*/
-          kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
-        
-        if ( kFitter->getStatus() != 0 )  // did not converge
-        {
-          if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
-          continue;
-        }
-        
-        kFitChi2 = kFitter->getS();
-        if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
-        
-        doneKinFit = true;
-        if (makePlots)
-        {
-          MSPlot["KF_Chi2_wide"]->Fill(kFitChi2, datasetsMSP[dMSP], true, lumiWeight*scaleFactor*widthSF);
-          if (! isData) histo1D["KF_Chi2"+catSuffix+"_wide"]->Fill(kFitChi2);
-          if (isTTbar) histo1D["KF_Chi2_TT"]->Fill(kFitChi2);
-        }
-        
-        if (isCM) nofCorrectlyMatchedAKFNoCut++;
-        else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
-        else if (isNM) nofNoMatchAKFNoCut++;
-        
-        if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
-        nofAcceptedKFit++;
-        if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
-        if (isCM) nofCorrectlyMatchedAKF++;
-        else if (isWM) nofNotCorrectlyMatchedAKF++;
-        
-        selectedJetsKFcorrected.clear();
-        selectedJetsKFcorrected = kf->getCorrectedJets();
-        
-      }
-      
-      
-      /// Reconstruct event
-      //  Hadronic variables  // OBS: only W mass constraint ! Jet3 = selectedJets[labelsReco[2]] !
-      if (! doKinFit)
-      {
-        selectedJetsKFcorrected.clear();
-        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[0]]);
-        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[1]]);
-        selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
-      }
-      else if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
-      
-      /// Make pT ordered jet collection after KF
-      selectedJetsAKF = selectedJetsKFcorrected;
-      selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
-      std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
-      
-      /// Define variables
-      reco_W_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
-      reco_top_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M();
-      reco_top_pt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
-      reco_mlb_aKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
-      reco_dRLepB_lep_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
-      reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
-      reco_ttbar_mass_aKF = reco_mlb_aKF + reco_top_mass_aKF;
-      redTopMass = reco_top_mass_aKF/aveTopMassLL;
-      
-      if ( reco_top_mass_aKF < 0. )
-        PrintKFDebug(ievt);
-      
-      if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << endl;
-      
-      if ( doKinFit && makePlots )
-      {
-        if (isTTbar) FillKinFitPlots(doneKinFit);
-        if (! isData)
-        {
-          histo1D["allSim_top_mass"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
-          histo1D["allSim_red_top_mass"]->Fill(redTopMass, lumiWeight*scaleFactor*widthSF);
-        }
-      }
-      
-      
-      
-      ////////////////////
-      ///  Likelihood  ///
-      ////////////////////
-      
-      if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
-      if (calculateLikelihood)
-      {
-        like->CalculateLikelihood(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
-        if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
-          like->CalculateCMLikelihood(redTopMass, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
-        if ( ! doPseudoExps && ( isCM || isWM ) )
-          like->CalculateTempLikelihood(redTopMass, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
-      }
-      
-      if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
-      if ( redTopMass < minRedTopMass ) minRedTopMass = redTopMass;
-      if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
-      {
-        if (isCM)
-        {
-          nofCM++;
-          nofCMl += lumiWeight;
-          nofCM_weighted += lumiWeight*widthSF;
-          if (isTTbar) nofCM_TT++;
-        }
-        else if (isWM)
-        {
-          nofWM++;
-          nofWMl += lumiWeight;
-          nofWM_weighted += lumiWeight*widthSF;
-          if (isTTbar) nofWM_TT++;
-        }
-        else if (isNM)
-        {
-          nofNM++;
-          nofNMl += lumiWeight;
-          nofNM_weighted += lumiWeight*widthSF;
-          if (isTTbar) nofNM_TT++;
-        }
-      }
-      
-      if (calculateAverageMass && ! isData)
-      {
-        if (isCM) txtMassRecoCM << ievt << "  " << reco_top_mass_aKF << endl;
-        else
-        {
-          txtMassRecoWMNM << ievt << "  " << reco_top_mass_aKF << endl;
-          if (isWM)
-            txtMassRecoWM << ievt << "  " << reco_top_mass_aKF << endl;
-          else if (isNM)
-            txtMassRecoNM << ievt << "  " << reco_top_mass_aKF << endl;
-        }
-      }  // end aveMassCalc
-      
-      
-      /// Pseudo experiments
-      if (doPseudoExps && ! isData)
-      {
-        random3.RndmArray(nPsExps, toyValues);
-        for (int iPsExp = 0; iPsExp < nPsExps; iPsExp++)
-        {
-          //toyValue = random3.Rndm();
-          //if ( toyValue > toyMax ) continue;
-          if ( toyValues[iPsExp] > toyMax ) continue;
-          (nEvtsInPseudoExp[iPsExp][d])++;
-          like->AddPsExp(iPsExp, massHadTopQ, massLepTopQ, scaleWidth, doReweighting, isData);
-          
-          /// Fill plots only for first pseudo experiment
-          if ( makePlots && iPsExp == 0 )
-          {
-            /// Combine DY & W+jets
-            if ( dataSetName.find("DY") != std::string::npos ) histo1D["red_top_mass_DYJets"]->Fill(redTopMass);
-            else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
-              histo1D["red_top_mass_WJets"]->Fill(redTopMass);
-            else histo1D[("red_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
-            
-            FillCatsPlots(catSuffix);
-            
-            int dMSP = d;
-            if (hasFoundTTbar && ! isTTbar) dMSP = d+2;
-            else if (isTTbar && isWM) dMSP = d+1;
-            else if (isTTbar && isNM) dMSP = d+2;
-            
-            FillMSPlots(dMSP, doneKinFit);
-          }
-        }
-      }
-      
-      //Fill histos
-      if ( makePlots && (! doPseudoExps || isData) )
-      {
-        /// Combine DY & W+jets
-        if ( dataSetName.find("DY") != std::string::npos ) histo1D["red_top_mass_DYJets"]->Fill(redTopMass);
-        else if ( dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos )
-          histo1D["red_top_mass_WJets"]->Fill(redTopMass);
-        else histo1D[("red_top_mass_"+dataSetName).c_str()]->Fill(redTopMass);
-        
-        FillCatsPlots(catSuffix);
-        
-        FillMSPlots(dMSP, doneKinFit);
-        
-        MSPlot["leadingJet_pT_aKF_"]->Fill(selectedJetsAKF[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-        for (int iJet = 0; iJet < selectedJetsAKF.size(); iJet++)
-        {
-          MSPlot["jet_pT_allJets_aKF_"]->Fill(selectedJetsAKF[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
-        }
-        
-      }  // end makePlots
-      
-      
-      
-      
-    }  // end loop events
-    
-    
-    cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
-    cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
-    cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
-    if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
-    
-    //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
-    if (! isData && nofHadrMatchedEvents > 0 )
-    {
-      cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
-      cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofMETCleaned) << "%)" << endl;
-      if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
-      if (! doGenOnly)
-      {
-        cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
-        cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
-        if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
-          cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
-        
-        if (doKinFit)
-        {
-          cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
-          cout << " --- Kinematic fit" << endl;
-          cout << " --- Before chi2 cut --- " << endl;
-          cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
-          cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
-          if ( nofCorrectlyMatchedAKFNoCut != 0 || nofNotCorrectlyMatchedAKFNoCut != 0 )
-            cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut + nofNotCorrectlyMatchedAKFNoCut) << "% of matched events is correctly matched after KF." << endl;
-          
-          cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofNotCorrectlyMatchedAKFNoCut+nofNoMatchAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
-          
-          cout << " --- After chi2 cut --- " << endl;
-          cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedAKF << endl;
-          cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKF << endl;
-          if ( nofCorrectlyMatchedAKF != 0 || nofNotCorrectlyMatchedAKF != 0 )
-            cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKF / (float)(nofCorrectlyMatchedAKF + nofNotCorrectlyMatchedAKF) << "% of matched events is correctly matched after KF." << endl;
-          
-          cout << "                        " << 100*(float)nofCorrectlyMatchedAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
-        }
-        else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched." << endl;
-      }
-      
-      if (doKinFit)
-      {
-        cout << " --- Kinematic fit for gen events" << endl;
-        cout << "Number of generated matched events accepted by kinFitter: " << nofAcceptedKFitMatched << " (" << 100*((float)nofAcceptedKFitMatched/(float)nofHardSelected) << "%)" << endl;
-      }
-      
-      /// Resolution functions
-      if (isTTbar && calculateResolutionFunctions)
-      {
-        string rfFileName = "PlotsForResolutionFunctions.root";
-        string rfFitFileName = "PlotsForResolutionFunctions_Fitted.root";
-        TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
-        foutRF->cd();
-
-        rf->writeHistograms();
-
-        foutRF->Close();
-        
-        rf->makeFit(rfFileName, rfFitFileName);
-        rf->writeTable(rfFitFileName);
-
-        delete foutRF;
-      }
-      
-    }  // end ! isData
-    
-//     if (calculateLikelihood)
-//     {
-//       cout << "Number of events with min in likelihood    " << setw(8) << right << nofGoodEvtsLL[d] << endl;
-//       cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
-//       if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
-//         cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
-//       if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
-//     }
-    
-    
-    if (calculateAverageMass) txtMassReco.close();
-    
-    tFileMap[dataSetName.c_str()]->Close();
-    
-    timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
-    
-  }  // end loop datasets
+  }  // end loop widths
   
   
   if (calculateAverageMass)
@@ -1832,83 +1953,6 @@ int main(int argc, char* argv[])
   
   if (applyWidthSF) txtDebugTopMass.close();
   
-  if (! doGenOnly && ! testTTbarOnly)
-  {
-    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofNM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofNM)) << "%)   NM: " << nofNM << " (" << 100*(double)nofNM/((double)(nofCM+nofWM+nofNM)) << "%)   Total: " << nofCM+nofWM+nofNM << endl;
-    cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCMl << " (" << 100*nofCMl/(nofCMl+nofWMl+nofNMl) << "%)   WM: " << nofWMl << " (" << 100*nofWMl/(nofCMl+nofWMl+nofNMl) << "%)   NM: " << nofNMl << " (" << 100*nofNMl/(nofCMl+nofWMl+nofNMl) << "%)   Total: " << nofCMl+nofWMl+nofNMl << endl;
-    cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
-    cout << "                               (TTbar only) CM: " << nofCM_TT << "               WM: " << nofWM_TT << "               NM: " << nofNM_TT << endl;
-  }
-  
-  
-  if (makeTGraphs)
-  {
-    like->WriteHistograms("ReducedTopMassPlots.root");
-    like->ConstructTGraphsFromHisto("TGraphFunctions.root");
-  }
-  
-  if (calculateLikelihood)
-  {
-    cout << "Minimum reduced top mass: " << minRedTopMass << endl;
-    cout << "Maximum reduced top mass: " << maxRedTopMass << endl;
-    
-    /// Print output to file
-    string llFileName = "output_loglikelihood_widthx1";
-    if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(scaleWidth);
-    if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(scaleWidth);
-    //if (useToys) llFileName = "output_loglikelihood_toys";
-    like->PrintLikelihoodOutput(llFileName+".txt");
-    //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
-    like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
-    
-    /// Calculate output width
-    cout << "Standard output width: " << endl;
-    like->GetOutputWidth(scaleWidth, true);
-    if (! doPseudoExps)
-    {
-      cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-      like->GetOutputWidth(scaleWidth, "CM", true);
-      cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-      like->GetOutputWidth(scaleWidth, "matched", true);
-      //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-      //like->GetOutputWidth(scaleWidth, "gen", true);
-    }
-    //cout << "Output width from file (standard calculation): " << endl;
-    //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
-  }
-  
-  if (doPseudoExps)
-  {
-    like->CalculatePull(scaleWidth);
-  }
-  
-  
-  cout << "Processing time per dataset: " << endl;
-  for (unsigned int d = 0; d < datasets.size(); d++)
-  {
-    cout << datasets[d]->Name() << ": " << timePerDataSet[d] << " s" << endl;
-  }
-  
-  if (doPseudoExps)
-  {
-    cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
-    double totMCPsExp;
-    for (int i = 0; i < 3; i++)
-    {
-      totMCPsExp = 0;
-      cout << "PseudoExperiment " << std::setw(3) << std::right << i << endl;
-      for (unsigned int d = 1; d < datasets.size(); d++)
-      {
-        totMCPsExp += nEvtsInPseudoExp[i][d];
-        cout << "                      " << datasets[d]->Name() << ": " << nEvtsInPseudoExp[i][d] << endl;
-      }
-      cout << "                                            " << "Total MC: " << totMCPsExp << endl;
-    }
-  }
-  
-  
-  ///  Check Shape Changing Systematics
-  if (! testTTbarOnly) CheckSystematics(vJER, vJES, vPU);
   
   
   if (test)
@@ -2015,7 +2059,7 @@ int main(int argc, char* argv[])
     else
       cout << "(This corresponds to " << mins << " min and " << secs << " s)" << endl;
   }
-    
+  
   cout << "********************************************" << endl;
   cout << "           End of the program !!            " << endl;
   cout << "********************************************" << endl;
@@ -2099,32 +2143,32 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
   if (isData)
   {
-   tree->SetBranchAddress("nofEventsRunB", &nofEventsRunB, &b_nofEventsRunB);
-   tree->SetBranchAddress("nofEventsRunCD", &nofEventsRunCD, &b_nofEventsRunCD);
-   tree->SetBranchAddress("nofEventsRunEF", &nofEventsRunEF, &b_nofEventsRunEF);
-   tree->SetBranchAddress("nofEventsRunG", &nofEventsRunG, &b_nofEventsRunG);
-   tree->SetBranchAddress("nofEventsRunH", &nofEventsRunH, &b_nofEventsRunH);
-   tree->SetBranchAddress("nofSelEventsRunB", &nofSelEventsRunB, &b_nofEventsRunB);
-   tree->SetBranchAddress("nofSelEventsRunCD", &nofSelEventsRunCD, &b_nofSelEventsRunCD);
-   tree->SetBranchAddress("nofSelEventsRunEF", &nofSelEventsRunEF, &b_nofSelEventsRunEF);
-   tree->SetBranchAddress("nofSelEventsRunG", &nofSelEventsRunG, &b_nofSelEventsRunG);
-   tree->SetBranchAddress("nofSelEventsRunH", &nofSelEventsRunH, &b_nofSelEventsRunH);
+    tree->SetBranchAddress("nofEventsRunB", &nofEventsRunB, &b_nofEventsRunB);
+    tree->SetBranchAddress("nofEventsRunCD", &nofEventsRunCD, &b_nofEventsRunCD);
+    tree->SetBranchAddress("nofEventsRunEF", &nofEventsRunEF, &b_nofEventsRunEF);
+    tree->SetBranchAddress("nofEventsRunG", &nofEventsRunG, &b_nofEventsRunG);
+    tree->SetBranchAddress("nofEventsRunH", &nofEventsRunH, &b_nofEventsRunH);
+    tree->SetBranchAddress("nofSelEventsRunB", &nofSelEventsRunB, &b_nofEventsRunB);
+    tree->SetBranchAddress("nofSelEventsRunCD", &nofSelEventsRunCD, &b_nofSelEventsRunCD);
+    tree->SetBranchAddress("nofSelEventsRunEF", &nofSelEventsRunEF, &b_nofSelEventsRunEF);
+    tree->SetBranchAddress("nofSelEventsRunG", &nofSelEventsRunG, &b_nofSelEventsRunG);
+    tree->SetBranchAddress("nofSelEventsRunH", &nofSelEventsRunH, &b_nofSelEventsRunH);
   }
   else if (isTTbar)
   {
-   tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
-   tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
-   tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
-   tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
-   tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
-   tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
-   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
-   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
-   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
-   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
-   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
-   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
-   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
+    tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
+    tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
+    tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
+    tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
+    tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+    tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
+    tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
+    tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
+    tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
+    tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
+    tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
+    tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
+    tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
   }
 }
 
@@ -2333,7 +2377,7 @@ void InitMSPlots()
   
   MSPlot["mlb"] = new MultiSamplePlot(datasetsMSP, "mlb before kinFitter", 80, 0, 800, "m_{lb}", "GeV");
   MSPlot["ttbar_mass"] = new MultiSamplePlot(datasetsMSP, "ttbar mass before kinFitter", 50, 0, 1000, "m_{t#bar{t}}", "GeV");
-
+  
   MSPlot["dR_lep_b_min"] = new MultiSamplePlot(datasetsMSP, "Minimum dR(lep,b) before kinFitter", 25, 0, 5, "#Delta R(l,b_{l})");
   MSPlot["dR_lep_b_max"] = new MultiSamplePlot(datasetsMSP, "Maximum dR(lep,b) before kinFitter", 25, 0, 5, "#Delta R(l,b_{h})");
   
@@ -2461,26 +2505,26 @@ void InitHisto2D()
   histo2D["ttbar_mass_vs_minMlb_WM"] = new TH2F("ttbar_mass_vs_minMlb_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   histo2D["ttbar_mass_vs_minMlb_NM"] = new TH2F("ttbar_mass_vs_minMlb_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-//  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
+  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_NM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_NM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
   /// KinFitter
   if (doKinFit)
@@ -2544,7 +2588,7 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
     if (matchedJetNumber > -1)
       JetPartonPair.push_back( pair<unsigned int, unsigned int> (matchedJetNumber, i) );
   }
-
+  
   if (verbose > 2)
     cout << "Matching done" << endl;
   
@@ -2590,7 +2634,7 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
         MCPermutation[2] = JetPartonPair[i];
       }
       else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
-        || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
+               || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
       {
         if (verbose > 3)
           cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
@@ -2911,7 +2955,7 @@ void ClearVars()
   reco_dRLepB_had_aKF = -1.;
   reco_ttbar_mass_aKF = -1.;
   redTopMass = -1.;
-
+  
 }
 
 void ClearObjects()
@@ -3266,20 +3310,20 @@ void PrintKFDebug(int ievt)
   cout << "Mass jet 1 & jet 2: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M() << "; Mass jet 1 & jet 3: " << (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[2]).M() << "; Mass jet 2 & jet 3: " << (selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M() << endl;
   //if (test)
   //{
-    cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << "; Jet 3: pT " << selectedJets[labelsReco[2]].Pt() << endl;
-    cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << "; Jet 3: pT " << selectedJetsKFcorrected[2].Pt() << endl;
-    cout << "Original:   Jet 1: px " << selectedJets[labelsReco[0]].Px() << "; py " << selectedJets[labelsReco[0]].Py() << "; pz " << selectedJets[labelsReco[0]].Pz() << "; E " << selectedJets[labelsReco[0]].E() << endl;
-    cout << "Corrected:  Jet 1: px " << selectedJetsKFcorrected[0].Px() << "; py " << selectedJetsKFcorrected[0].Py() << "; pz " << selectedJetsKFcorrected[0].Pz() << "; E " << selectedJetsKFcorrected[0].E() << endl;
-    cout << "Original:   Jet 2: px " << selectedJets[labelsReco[1]].Px() << "; py " << selectedJets[labelsReco[1]].Py() << "; pz " << selectedJets[labelsReco[1]].Pz() << "; E " << selectedJets[labelsReco[1]].E() << endl;
-    cout << "Corrected:  Jet 2: px " << selectedJetsKFcorrected[1].Px() << "; py " << selectedJetsKFcorrected[1].Py() << "; pz " << selectedJetsKFcorrected[1].Pz() << "; E " << selectedJetsKFcorrected[1].E() << endl;
-    cout << "Original:   Jet 1: pt " << selectedJets[labelsReco[0]].Pt() << "; eta " << selectedJets[labelsReco[0]].Eta() << "; phi " << selectedJets[labelsReco[0]].Phi() << "; M " << selectedJets[labelsReco[0]].M() << endl;
-    cout << "Corrected:  Jet 1: pt " << selectedJetsKFcorrected[0].Pt() << "; eta " << selectedJetsKFcorrected[0].Eta() << "; phi " << selectedJetsKFcorrected[0].Phi() << "; M " << selectedJetsKFcorrected[0].M() << endl;
-    cout << "Original:   Jet 2: pt " << selectedJets[labelsReco[1]].Pt() << "; eta " << selectedJets[labelsReco[1]].Eta() << "; phi " << selectedJets[labelsReco[1]].Phi() << "; M " << selectedJets[labelsReco[1]].M() << endl;
-    cout << "Corrected:  Jet 2: pt " << selectedJetsKFcorrected[1].Pt() << "; eta " << selectedJetsKFcorrected[1].Eta() << "; phi " << selectedJetsKFcorrected[1].Phi() << "; M " << selectedJetsKFcorrected[1].M() << endl;
-    cout << "Original:   Jet 1: x " << selectedJets[labelsReco[0]].X() << "; y " << selectedJets[labelsReco[0]].Y() << "; z " << selectedJets[labelsReco[0]].Z() << "; t " << selectedJets[labelsReco[0]].T() << endl;
-    cout << "Corrected:  Jet 1: x " << selectedJetsKFcorrected[0].X() << "; y " << selectedJetsKFcorrected[0].Y() << "; z " << selectedJetsKFcorrected[0].Z() << "; t " << selectedJetsKFcorrected[0].T() << endl;
-    cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
-    cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
+  cout << "Original:   Jet 1: pT " << selectedJets[labelsReco[0]].Pt() << "; Jet 2: pT " << selectedJets[labelsReco[1]].Pt() << "; Jet 3: pT " << selectedJets[labelsReco[2]].Pt() << endl;
+  cout << "Corrected:  Jet 1: pT " << selectedJetsKFcorrected[0].Pt() << "; Jet 2: pT " << selectedJetsKFcorrected[1].Pt() << "; Jet 3: pT " << selectedJetsKFcorrected[2].Pt() << endl;
+  cout << "Original:   Jet 1: px " << selectedJets[labelsReco[0]].Px() << "; py " << selectedJets[labelsReco[0]].Py() << "; pz " << selectedJets[labelsReco[0]].Pz() << "; E " << selectedJets[labelsReco[0]].E() << endl;
+  cout << "Corrected:  Jet 1: px " << selectedJetsKFcorrected[0].Px() << "; py " << selectedJetsKFcorrected[0].Py() << "; pz " << selectedJetsKFcorrected[0].Pz() << "; E " << selectedJetsKFcorrected[0].E() << endl;
+  cout << "Original:   Jet 2: px " << selectedJets[labelsReco[1]].Px() << "; py " << selectedJets[labelsReco[1]].Py() << "; pz " << selectedJets[labelsReco[1]].Pz() << "; E " << selectedJets[labelsReco[1]].E() << endl;
+  cout << "Corrected:  Jet 2: px " << selectedJetsKFcorrected[1].Px() << "; py " << selectedJetsKFcorrected[1].Py() << "; pz " << selectedJetsKFcorrected[1].Pz() << "; E " << selectedJetsKFcorrected[1].E() << endl;
+  cout << "Original:   Jet 1: pt " << selectedJets[labelsReco[0]].Pt() << "; eta " << selectedJets[labelsReco[0]].Eta() << "; phi " << selectedJets[labelsReco[0]].Phi() << "; M " << selectedJets[labelsReco[0]].M() << endl;
+  cout << "Corrected:  Jet 1: pt " << selectedJetsKFcorrected[0].Pt() << "; eta " << selectedJetsKFcorrected[0].Eta() << "; phi " << selectedJetsKFcorrected[0].Phi() << "; M " << selectedJetsKFcorrected[0].M() << endl;
+  cout << "Original:   Jet 2: pt " << selectedJets[labelsReco[1]].Pt() << "; eta " << selectedJets[labelsReco[1]].Eta() << "; phi " << selectedJets[labelsReco[1]].Phi() << "; M " << selectedJets[labelsReco[1]].M() << endl;
+  cout << "Corrected:  Jet 2: pt " << selectedJetsKFcorrected[1].Pt() << "; eta " << selectedJetsKFcorrected[1].Eta() << "; phi " << selectedJetsKFcorrected[1].Phi() << "; M " << selectedJetsKFcorrected[1].M() << endl;
+  cout << "Original:   Jet 1: x " << selectedJets[labelsReco[0]].X() << "; y " << selectedJets[labelsReco[0]].Y() << "; z " << selectedJets[labelsReco[0]].Z() << "; t " << selectedJets[labelsReco[0]].T() << endl;
+  cout << "Corrected:  Jet 1: x " << selectedJetsKFcorrected[0].X() << "; y " << selectedJetsKFcorrected[0].Y() << "; z " << selectedJetsKFcorrected[0].Z() << "; t " << selectedJetsKFcorrected[0].T() << endl;
+  cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
+  cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
   //}
 }
 
