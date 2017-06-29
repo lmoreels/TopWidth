@@ -29,8 +29,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.200749, 0.990893};
-const double Likelihood::calCurveParUnc_[2] = {0.0230262, 0.00372333};
+const double Likelihood::calCurvePar_[2] = {-0.25575, 0.994677};
+const double Likelihood::calCurveParUnc_[2] = {0.0290638, 0.00732933};
 
 
 int Likelihood::LocMinArray(int n, double* array)
