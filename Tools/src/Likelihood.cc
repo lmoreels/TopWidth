@@ -29,8 +29,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.25575, 0.994677};
-const double Likelihood::calCurveParUnc_[2] = {0.0290638, 0.00732933};
+const double Likelihood::calCurvePar_[2] = {-0.242291, 0.989073};
+const double Likelihood::calCurveParUnc_[2] = {0.0299445, 0.00683805};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -561,25 +561,25 @@ void Likelihood::CalculateGenLikelihood(double redMass, double hadTopMassForWidt
   }
 }
 
-void Likelihood::GetOutputWidth(double inputWidth, bool writeToFile)
+void Likelihood::GetOutputWidth(double inputWidth, bool writeToFile, bool makeNewFile)
 {
-  this->GetOutputWidth(inputWidth, "", writeToFile);
+  this->GetOutputWidth(inputWidth, "", writeToFile, makeNewFile);
 }
 
-void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeToFile)
+void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeToFile, bool makeNewFile)
 {
   std::string loglikePlotName = "loglikelihood_vs_width_";
   if (! type.empty() ) loglikePlotName += type+"_";
   loglikePlotName += "widthx"+tls_->DotReplace(inputWidth);
   
   if ( type.find("CM") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("match") != std::string::npos || type.find("Match") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile);
   else
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile);
   
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
   
@@ -591,19 +591,19 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   txtOutputLL_.close();
 }
 
-void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile)
+void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile, bool makeNewFile)
 {
-  GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, writeToFile);
+  GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, writeToFile, makeNewFile);
 }
 
-void Likelihood::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile)
+void Likelihood::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile, bool makeNewFile)
 {
   if (verbose_) std::cout << "Using LogLikelihood values from file" << std::endl;
   std::string loglikePlotName = "loglikelihood_vs_width_";
   //if (! type.empty() ) loglikePlotName += type+"_";
   loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth);
   
-  output_ = this->CalculateOutputWidth(inputFileName, inputDir, loglikePlotName, writeToFile);
+  output_ = this->CalculateOutputWidth(inputFileName, inputDir, loglikePlotName, writeToFile, makeNewFile);
   
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
 }
@@ -617,10 +617,10 @@ std::pair<double,double> Likelihood::GetOutputWidth(double inputWidth, int thisP
     loglike_pull_single_[iWidth] = loglike_pull_[iWidth][thisPsExp];
   }
   
-  return this->CalculateOutputWidth(nWidths_, loglike_pull_single_, loglikePlotName, true);
+  return this->CalculateOutputWidth(nWidths_, loglike_pull_single_, loglikePlotName, true, false);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile)
+std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile, bool makeNewFile)
 {
   this->ReadLLValuesFromFile(inputFileName, inputDir);
   const int nn = vecWidthFromFile_.size();
@@ -632,15 +632,15 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileN
     arrWidth[i] = vecWidthFromFile_.at(i);
     arrLLVals[i] = vecLLValsFromFile_.at(i);
   }
-  return this->CalculateOutputWidth(nn, arrWidth, arrLLVals, plotName, writeToFile);
+  return this->CalculateOutputWidth(nn, arrWidth, arrLLVals, plotName, writeToFile, makeNewFile);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile)
+std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile)
 {
-  return this->CalculateOutputWidth(nn, (double*)widthArray_, LLvalues, plotName, writeToFile);
+  return this->CalculateOutputWidth(nn, (double*)widthArray_, LLvalues, plotName, writeToFile, makeNewFile);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile)
+std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile)
 {
   TGraph *g = new TGraph(nn, evalWidths, LLvalues);
   
@@ -660,6 +660,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 3.8 ) interval = 1.0;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
+  if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
   if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
@@ -688,7 +689,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   TGraph *g2 = new TGraph(nn, evalWidths, LLreduced);
   g2->Fit(parabola,"R");
   
-  if (writeToFile)
+  if (makeNewFile)
   {
     filePlots_ = new TFile((dirNameLLTxt_+"File_"+plotName+".root").c_str(), "RECREATE");
     filePlots_->cd();
@@ -698,7 +699,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   this->DrawOutputLogLikelihood(g2, parabola, outputWidth-2., outputWidth+2., 1.5*g2->Eval(outputWidth+2.), plotName, writeToFile);
   this->DrawOutputLogLikelihood(g2, parabola, outputWidth-0.5, outputWidth+0.5, std::max(g2->Eval(outputWidth-3.*sigma),g2->Eval(outputWidth+0.5)), plotName+"_zoom", writeToFile);
   
-  if (writeToFile)
+  if (makeNewFile)
   {
     filePlots_->Close();
     delete filePlots_;
