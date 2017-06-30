@@ -48,32 +48,30 @@ bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
 bool calculateLikelihood = true;
-bool doPseudoExps = false;
+bool doPseudoExps = true;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
-bool applyLeptonSFup = false;
-bool applyLeptonSFdown = false;
 bool applyPU = true;
-bool applyPUup = false;
-bool applyPUdown = false;
 bool applyBTagSF = true;
-bool applyBTagSFup = false;
-bool applyBTagSFdown = false;
-bool applyTopPtReweighting = false;
-//bool applyJER = true;
-//bool applyJEC = true;
 
 
 bool applyWidthSF = false;
 double scaleWidth = 1.;
 
-bool runListWidths = true;
+bool runListWidths = false;
 double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
+double thisWidth;
+
+bool runSystematics = false;
+string listSyst[] = {"leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup, btagSFdown", "topPtReweighting"};
+int nSystematics = sizeof(listSyst)/sizeof(listSyst[0]);
+
+TFile *fileWidths;
 
 
 string systStr = "nominal";
@@ -99,7 +97,8 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170627_1656/";  // non-rel BW, SF_h
+string inputDateLL = "170629_1157/";
+//string inputDateLL = "170627_1656/";  // non-rel BW, SF_h
 //string inputDateLL = "170627_1454/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
 bool isData = false;
@@ -501,6 +500,7 @@ TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 
 
 double lumiWeight, scaleFactor, widthSF;
+double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
 double topPtRewSF, topPtSF, antiTopPtSF;
 bool foundTop62, foundAntiTop62;
 vector<unsigned int> bJetId;
@@ -615,24 +615,14 @@ int main(int argc, char* argv[])
   cout << "*   - Jet Energy Resolution: ";
   if ( systStr.find("JERdown") != std::string::npos )    cout << "scale down     *" << endl;
   else if ( systStr.find("JERup") != std::string::npos ) cout << "scale up       *" << endl;
-  else                                                 cout << "nominal        *" << endl;
+  else                                                   cout << "nominal        *" << endl;
   cout << "*   - Jet/lepton Cleaning                   *" << endl;
   if (doMETCleaning) cout << "*   - MET Cleaning                          *" << endl;
   cout << "*********************************************" << endl;
   cout << "* The following scale factors are applied:  *" << endl;
-  cout << "*   - Lepton scale factors: ";
-  if (applyLeptonSF)          cout << "nominal         *" << endl;
-  else if (applyLeptonSFup)   cout << "scale down      *" << endl;
-  else if (applyLeptonSFdown) cout << "scale up        *" << endl;
-  cout << "*   - Pile up: ";
-  if (applyPU)          cout << "nominal                      *" << endl;
-  else if (applyPUup)   cout << "scale up                     *" << endl;
-  else if (applyPUdown) cout << "scale down                   *" << endl;
-  cout << "*   - B tag scale factors: ";
-  if (applyBTagSF)     cout << "nominal          *" << endl;
-  if (applyBTagSFup)   cout << "scale down       *" << endl;
-  if (applyBTagSFdown) cout << "scale up         *" << endl;
-  if (applyTopPtReweighting) cout << "*   - Top pT reweighting                    *" << endl;
+  if (applyLeptonSF) cout << "*   - Lepton scale factors: nominal         *" << endl;
+  if (applyPU)       cout << "*   - Pile up: nominal                      *" << endl;
+  if (applyBTagSF)   cout << "*   - B tag scale factors: nominal          *" << endl;
   cout << "*********************************************" << endl;
   
   clock_t start = clock();
@@ -650,6 +640,7 @@ int main(int argc, char* argv[])
     makePlots = false;
     doGenOnly = false;
     runListWidths = false;
+    runSystematics = false;
   }
   if (calculateResolutionFunctions)
   {
@@ -662,6 +653,7 @@ int main(int argc, char* argv[])
     doPseudoExps = false;
     doKinFit = false;
     runListWidths = false;
+    runSystematics = false;
   }
   if (test) makePlots = false;
   if (testHistos)
@@ -670,10 +662,12 @@ int main(int argc, char* argv[])
     doGenOnly = false;
     makeTGraphs = false;
     runListWidths = false;
+    runSystematics = false;
   }
   if (doGenOnly)
   {
     doPseudoExps = false;
+    runSystematics = false;
   }
   if (makeTGraphs)
   {
@@ -688,6 +682,13 @@ int main(int argc, char* argv[])
     runListWidths = false;
   }
   if (runListWidths) makePlots = false;
+  if (runSystematics)
+  {
+    runListWidths = false;
+    makeTGraphs = false;
+    calculateLikelihood = true;
+    doPseudoExps = false;
+  }
   
   if (! makePlots) makeControlPlots = false;
   
@@ -861,6 +862,9 @@ int main(int argc, char* argv[])
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
     calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
+    
+    if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"OutputWidths_syst.root").c_str(), "RECREATE");
+    else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"OutputWidths.root").c_str(), "RECREATE");
   }
   if (doPseudoExps)
   {
@@ -931,15 +935,15 @@ int main(int argc, char* argv[])
   bool hasFoundTTbar = false;
   bool doReweighting = false;
   
-  /// Loop over widths
-  double thisWidth;
-  int endWidth = nWidths;
-  if (! runListWidths) endWidth = 1;
-  for (int iWidth = 0; iWidth < endWidth; iWidth++)
+  /// Loop over systematics or widths
+  int endSys = nSystematics;
+  if (runListWidths) endSys = nWidths;
+  if (! runSystematics && ! runListWidths) endSys = 1;
+  for (int iSys = 0; iSys < endSys; iSys++)
   {
     if (runListWidths)
     {
-      thisWidth = listWidths[iWidth];
+      thisWidth = listWidths[iSys];
       cout << endl << "Running over widths... Now at width " << thisWidth << " x SM width... " << endl;
     }
     else
@@ -948,16 +952,31 @@ int main(int argc, char* argv[])
       cout << endl << "Width for ttbar sample is " << thisWidth << " x SM width..." << endl;
     }
     
-    if (calculateLikelihood) like->ClearLikelihoods();
+    if (runSystematics)
+    {
+      cout << endl << "Running over systematics...  " << listSyst[iSys] << endl;
+      if (! applyLeptonSF && listSyst[iSys].find("lepton") != std::string::npos ) continue;
+      else if (! applyBTagSF && listSyst[iSys].find("btag") != std::string::npos ) continue;
+      else if (! applyPU && listSyst[iSys].find("pu") != std::string::npos ) continue;
+    }
     
-    /// Clear counters
+    
+    /// Clear counters and likelihood
     nofCM = 0; nofWM = 0; nofNM = 0;
     nofCM_TT = 0; nofWM_TT = 0; nofNM_TT = 0;
     nofCMl = 0; nofWMl = 0; nofNMl = 0;
     nofCM_weighted = 0; nofWM_weighted = 0; nofNM_weighted = 0;
     
+    if (calculateLikelihood) like->ClearLikelihoods();
     
+    hasFoundTTbar = false;
+    doReweighting = false;
+    
+    
+    ////////////////////////////////////
     /// Loop over datasets
+    ////////////////////////////////////
+    
     for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
     {
       clock_t startDataSet = clock();
@@ -987,8 +1006,21 @@ int main(int argc, char* argv[])
           else if ( dataSetName.find("x4") != std::string::npos ) thisWidth = 4.;
           else if ( dataSetName.find("x8") != std::string::npos ) thisWidth = 8.;
           applyWidthSF = false;
+          if (runListWidths)
+          {
+            runListWidths = false;
+            endSys = 1;
+          }
+          else if (runSystematics)
+          {
+            cerr << "ERROR: Trying to run systematics on ttbar sample with non-nominal width... Exiting..." << endl;
+            exit(1);
+          }
+        }
+        if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos )
+        {
+          applyWidthSF = false;
           runListWidths = false;
-          endWidth = 1;
         }
       }
       
@@ -1054,8 +1086,8 @@ int main(int argc, char* argv[])
         cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
         if (! isData)
         {
-          toyMax *= 0.92;  // small overshoot in MC --> scale down
-          cout << " x 0.92 = " << toyMax;
+          toyMax *= 0.90;  // small overshoot in MC --> scale down
+          cout << " x 0.90 = " << toyMax;
         }
         cout << endl;
       }
@@ -1112,27 +1144,63 @@ int main(int argc, char* argv[])
         /// Scale factors
         if (! isData)
         {
-          if (applyLeptonSF) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0]) * (fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0]) * (fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0]);}
-          else if (applyLeptonSFup) { scaleFactor *= muonTrackSF_eta[0]*1.01 * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}  // CHECK syst muon track SF
-          else if (applyLeptonSFdown) { scaleFactor *= muonTrackSF_eta[0]*0.99 * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}  // CHECK syst muon track SF
-          if (applyBTagSF) { scaleFactor *= btagSF;}
-          else if (applyBTagSFup) { scaleFactor *= btagSF_up;}
-          else if (applyBTagSFdown) { scaleFactor *= btagSF_down;}
-          
-          if (makePlots && passedMETFilter)
+          thisLeptonIdSF = fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0];
+          thisLeptonIsoSF = fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0];
+          thisLeptonTrigSF = fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0];
+          thisLeptonSF = muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * thisLeptonTrigSF;
+          if (runSystematics)
           {
-            MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor);
-            MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF);
-            MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_up);
-            MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*scaleFactor*puSF_down);
+            if ( listSyst[iSys].find("lepton") != std::string::npos )  // apply some lepton SF systematic
+            {
+              if (applyBTagSF) { scaleFactor *= btagSF;}
+              if (applyPU) { scaleFactor *= puSF;}
+              if ( listSyst[iSys].find("IdSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
+              else if ( listSyst[iSys].find("IdSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
+              else if ( listSyst[iSys].find("IsoSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * thisLeptonTrigSF;}
+              else if ( listSyst[iSys].find("IsoSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * thisLeptonTrigSF;}
+              else if ( listSyst[iSys].find("TrigSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}
+              else if ( listSyst[iSys].find("TrigSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}
+              else if ( listSyst[iSys].find("TrkSFup") != std::string::npos ) { scaleFactor *= 1.01*thisLeptonSF;}
+              else if ( listSyst[iSys].find("TrkSFdown") != std::string::npos ) { scaleFactor *= 0.99*thisLeptonSF;}
+            }
+            else if ( listSyst[iSys].find("btag") != std::string::npos )
+            {
+              if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+              if (applyPU) { scaleFactor *= puSF;}
+              if ( listSyst[iSys].find("up") != std::string::npos ) { scaleFactor *= btagSF_up;}
+              else if ( listSyst[iSys].find("down") != std::string::npos ) { scaleFactor *= btagSF_down;}
+            }
+            else if ( listSyst[iSys].find("pu") != std::string::npos )
+            {
+              if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+              if (applyBTagSF) { scaleFactor *= btagSF;}
+              if ( listSyst[iSys].find("up") != std::string::npos ) { scaleFactor *= puSF_up;}
+              else if ( listSyst[iSys].find("down") != std::string::npos ) { scaleFactor *= puSF_down;}
+            }
+            else
+            {
+              if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+              if (applyBTagSF) { scaleFactor *= btagSF;}
+              if (applyPU) { scaleFactor *= puSF;}
+            }
           }
-          
-          if (applyPU) { scaleFactor *= puSF;}
-          else if (applyPUup) { scaleFactor *= puSF_up;}
-          else if (applyPUdown) { scaleFactor *= puSF_down;}
-          
-          //        cout << "Scalefactor: " << setw(6) << scaleFactor << "  btag SF: " << setw(6) << btagSF << "  pu SF: " << setw(6) << puSF << "  muonId: " << setw(6) << fracDataEras[0]*muonIdSF_BCDEF[0] + fracDataEras[1]*muonIdSF_GH[0] << "  muonIso: " << setw(6) << fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0] << "  muonTrig: " << setw(6) << fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0] << endl;
-          if ( thisWidth == 1 && applyPU && puSF == 0 ) txtDebugPUSF << nvtx << "    " << npu << endl;
+          else
+          {
+            if (makePlots && passedMETFilter)
+            {
+              MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF);
+              MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF);
+              MSPlot["nPVs_afterPU_up_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF_up);
+              MSPlot["nPVs_afterPU_down_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF_down);
+            }
+            
+            if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+            if (applyBTagSF) { scaleFactor *= btagSF;}
+            if (applyPU) { scaleFactor *= puSF;}
+            
+            
+            if ( thisWidth == 1 && applyPU && puSF == 0 ) txtDebugPUSF << nvtx << "    " << npu << endl;
+          }
         }
         else if (makePlots && passedMETFilter)
         {
@@ -1312,9 +1380,12 @@ int main(int argc, char* argv[])
             continue;
           }
           
-          if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
-          else topPtRewSF = 1.;
-          if (applyTopPtReweighting) scaleFactor *= topPtRewSF;
+          if ( runSystematics && listSyst[iSys].find("topPtRew") != std::string::npos )
+          {
+            if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
+            else topPtRewSF = 1.;
+            scaleFactor *= topPtRewSF;
+          }
           
           
           
@@ -1881,27 +1952,42 @@ int main(int argc, char* argv[])
       
       /// Print output to file
       string llFileName = "output_loglikelihood_widthx1";
-      if (applyWidthSF) llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
+      if (applyWidthSF || runListWidths) llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
       if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
       //if (useToys) llFileName = "output_loglikelihood_toys";
+      if (runSystematics) llFileName = "output_loglikelihood_"+listSyst[iSys];
       like->PrintLikelihoodOutput(llFileName+".txt");
       //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
       like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
       
       /// Calculate output width
-      cout << "Standard output width: " << endl;
-      like->GetOutputWidth(thisWidth, true);
-      if (! doPseudoExps)
+      if ( runSystematics || runListWidths)
       {
+        if (runSystematics) cout << "Output width for " << listSyst[iSys] << ": " << endl;
+        else cout << "Standard output width: " << endl;
+        fileWidths->cd();
+        like->GetOutputWidth(thisWidth, true, false);
         cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-        like->GetOutputWidth(thisWidth, "CM", true);
+        like->GetOutputWidth(thisWidth, "CM", true, false);
         cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-        like->GetOutputWidth(thisWidth, "matched", true);
-        //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-        //like->GetOutputWidth(scaleWidth, "gen", true);
+        like->GetOutputWidth(thisWidth, "matched", true, false);
       }
-      //cout << "Output width from file (standard calculation): " << endl;
-      //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
+      else
+      {
+        cout << "Standard output width: " << endl;
+        like->GetOutputWidth(thisWidth, true, true);
+        if (! doPseudoExps)
+        {
+          cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+          like->GetOutputWidth(thisWidth, "CM", true, true);
+          cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
+          like->GetOutputWidth(thisWidth, "matched", true, true);
+          //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
+          //like->GetOutputWidth(scaleWidth, "gen", true);
+        }
+        //cout << "Output width from file (standard calculation): " << endl;
+        //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
+      }
     }
     
     if (doPseudoExps)
@@ -1938,8 +2024,13 @@ int main(int argc, char* argv[])
     if (! testTTbarOnly) CheckSystematics(vJER, vJES, vPU);
     
     
-  }  // end loop widths
+  }  // end loop systematics/widths
   
+  if (runSystematics || runListWidths)
+  {
+    fileWidths->Close();
+    delete fileWidths;
+  }
   
   if (calculateAverageMass)
   {
@@ -2903,6 +2994,10 @@ void ClearVars()
   
   scaleFactor = 1.;
   widthSF = 1.;
+  thisLeptonSF = 1.;
+  thisLeptonIdSF = 1.;
+  thisLeptonIsoSF = 1.;
+  thisLeptonTrigSF = 1.;
   topPtRewSF = 1.;
   topPtSF = 1.;
   antiTopPtSF = 1.;
