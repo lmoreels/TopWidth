@@ -30,6 +30,7 @@ fillBhisto = 0;
 JES = 0;
 JER = 0;
 isData = False
+runSyst = True
 
 # loop over channels
 for chan in channels:
@@ -38,6 +39,8 @@ for chan in channels:
     if "mu" in chan:
         if isData:
             tree = ET.ElementTree(file='../config/topWidth_data_loc.xml')
+        elif runSyst:
+            tree = ET.ElementTree(file='../config/topWidth_syst_loc.xml')
         else:
             tree = ET.ElementTree(file='../config/topWidth_MC_loc.xml')
     elif "el" in chan:

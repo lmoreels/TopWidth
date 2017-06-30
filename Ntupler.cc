@@ -64,6 +64,9 @@ map<string,TH2F*> histo2D;
 
 bool test = false;
 bool fillLooseTree = false;
+bool makeCutFlow = true;
+bool runData = false;
+bool runSystematics = true;
 
 
 /// Configuration
@@ -82,6 +85,12 @@ bool applyBTagSF = true;
 bool applyJetLeptonCleaning = true;
 
 
+double lumi_runBCDEF = 19.67550334113;  // 1/fb
+double lumi_runGH = 16.146177597883;  // 1/fb
+double fracBCDEF = lumi_runBCDEF/(lumi_runBCDEF+lumi_runGH);
+double fracGH = lumi_runGH/(lumi_runBCDEF+lumi_runGH);
+
+
 /// Process arguments
 string dName, dTitle, channel;
 int color, ls, lw, jobNum = 0, startEvent = 0, endEvent = 200, JES, JER, fillBtagHisto;
@@ -91,6 +100,7 @@ vector<string> vecfileNames;
 int ndatasets;
 bool localgridSubmission = false;
 int verbose;
+double tempSF = 1.;
 
 TRootEvent* event = 0;
 TRootRun *runInfos = new TRootRun();
@@ -156,6 +166,8 @@ Int_t nofNegWeights;
 Double_t sumW;
 Int_t cutFlow[10];
 Int_t cutFlow2[10];
+Double_t cutFlowWeighted[10];
+Double_t cutFlow2Weighted[10];
 Int_t appliedJER;
 Int_t appliedJES;
 Int_t appliedPU;
@@ -458,6 +470,8 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   statTree->Branch("nEventsSel" , &nEventsSel, "nEventsSel/L");
   statTree->Branch("cutFlow",&cutFlow,"cutFlow[10]/I");
   statTree->Branch("cutFlow2",&cutFlow2,"cutFlow2[10]/I");
+  statTree->Branch("cutFlowWeighted",&cutFlowWeighted,"cutFlowWeighted[10]/D");
+  statTree->Branch("cutFlow2Weighted",&cutFlow2Weighted,"cutFlow2Weighted[10]/D");
   statTree->Branch("appliedJER",&appliedJER,"appliedJER/I");
   statTree->Branch("appliedJES", &appliedJES, "appliedJES/I");
   statTree->Branch("appliedPU", &appliedPU, "appliedPU/I");
@@ -1362,8 +1376,13 @@ int main (int argc, char *argv[])
   string pathOutput = "NtupleOutput/";
   mkdir(pathOutput.c_str(),0777);
   
-//  string xmlFileName ="config/topWidth_data.xml";
+  if (runData || runSystematics) makeCutFlow = false;
+  if (makeCutFlow) cout << "Making cutflow with event weights..." << endl;
+  
+  
   string xmlFileName ="config/topWidth_MC.xml";
+  if (runData) xmlFileName ="config/topWidth_data.xml";
+  else if (runSystematics) xmlFileName ="config/topWidth_syst.xml";
   
   
   
@@ -2014,16 +2033,34 @@ int main (int argc, char *argv[])
       ////// Selection
       cutFlow[0]++;
       cutFlow2[0]++;
+      if (makeCutFlow)
+      {
+        cutFlowWeighted[0] += 1.;
+        cutFlow2Weighted[0] += 1.;
+      }
       if (isTrigged)
       {
         cutFlow[1]++;
         cutFlow2[1]++;
+        if (makeCutFlow)
+        {
+          cutFlowWeighted[1] += 1.;
+          cutFlow2Weighted[1] += 1.;
+        }
         if (isGoodPV)
         {
           if (! isData && ! calculateBTagSF) FillPUScaleFactors();
           
           cutFlow[2]++;
           cutFlow2[2]++;
+          if (makeCutFlow)
+          {
+            if (isData) tempSF = 1.;
+            else tempSF = puSF;
+            
+            cutFlowWeighted[2] += tempSF;
+            cutFlow2Weighted[2] += tempSF;
+          }
           
           /// Fill tree with loose objects before event selection
           if ( fillLooseTree && ! calculateBTagSF && selectedMuons.size() > 0)
@@ -2047,25 +2084,50 @@ int main (int argc, char *argv[])
             if (! isData && ! calculateBTagSF) FillMuonScaleFactors(selectedMuons);
             cutFlow[3]++;
             cutFlow2[3]++;
+            if (makeCutFlow)
+            {
+              if (! isData) tempSF *= muonTrackSF_eta[0] * (fracBCDEF*muonIdSF_BCDEF[0] + fracGH*muonIdSF_GH[0]) * (fracBCDEF*muonIsoSF_BCDEF[0] + fracGH*muonIsoSF_GH[0]) * (fracBCDEF*muonTrigSF_BCDEF[0] + fracGH*muonTrigSF_GH[0]);
+              
+              cutFlowWeighted[3] += tempSF;
+              cutFlow2Weighted[3] += tempSF;
+            }
             
             if ( vetoMuons.size() == 1 )
             {
               cutFlow[4]++;
               cutFlow2[4]++;
+              if (makeCutFlow)
+              {
+                cutFlowWeighted[4] += tempSF;
+                cutFlow2Weighted[4] += tempSF;
+              }
               
               if ( vetoElectrons.size() == 0 )
               {
                 cutFlow[5]++;
                 cutFlow2[5]++;
                 
+                if (makeCutFlow)
+                {
+                  cutFlowWeighted[5] += tempSF;
+                  cutFlow2Weighted[5] += tempSF;
+                }
+                
                 if ( selectedJets.size() >= 4 )
                 {
                   cutFlow[6]++;
                   cutFlow2[6]++;
                   
+                  if (makeCutFlow)
+                  {
+                    cutFlowWeighted[6] += tempSF;
+                    cutFlow2Weighted[6] += tempSF;
+                  }
+                  
                   if ( selectedJets.size() == 4 )
                   {
                     cutFlow2[7]++;
+                    if (makeCutFlow) cutFlow2Weighted[7] += tempSF;
                     hasExactly4Jets = true;
                   }
                   
@@ -2073,17 +2135,34 @@ int main (int argc, char *argv[])
                   {
                     if (! isData && applyBTagSF) FillBTagScaleFactors();
                     cutFlow[7]++;
-                    if (hasExactly4Jets) cutFlow2[8]++;
+                    if (makeCutFlow)
+                    {
+                      if (! isData) tempSF *= btagSF;
+                      
+                      cutFlowWeighted[7] += tempSF;
+                    }
+                    
+                    if (hasExactly4Jets)
+                    {
+                      cutFlow2[8]++;
+                      if (makeCutFlow) cutFlow2Weighted[8] += tempSF;
+                    }
                     
                     if ( selectedBJets.size() > 1 )
                     {
                       cutFlow[8]++;
+                      if (makeCutFlow) cutFlowWeighted[8] += tempSF;
                       isSelected = true;
                       
                       if (hasExactly4Jets)
                       {
                         cutFlow[9]++;
                         cutFlow2[9]++;
+                        if (makeCutFlow)
+                        {
+                          cutFlowWeighted[9] += tempSF;
+                          cutFlow2Weighted[9] += tempSF;
+                        }
                       }
                     }  // at least 2 b-tagged jets
                   }  // at least 1 b-tagged jet
