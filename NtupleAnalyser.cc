@@ -42,13 +42,13 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = false;
+bool makePlots = true;
 bool makeControlPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = true;
-bool doPseudoExps = true;
+bool calculateLikelihood = false;
+bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
@@ -56,7 +56,7 @@ double kinFitCutValue = 5.;
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
-bool applyBTagSF = true;
+bool applyBTagSF = true;  // something wrong!!
 
 
 bool applyWidthSF = false;
@@ -68,7 +68,7 @@ int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
 bool runSystematics = false;
-string listSyst[] = {"leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup, btagSFdown", "topPtReweighting"};
+string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting"};
 int nSystematics = sizeof(listSyst)/sizeof(listSyst[0]);
 
 TFile *fileWidths;
@@ -97,7 +97,7 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170629_1157/";
+string inputDateLL = "170704_1525/";
 //string inputDateLL = "170627_1656/";  // non-rel BW, SF_h
 //string inputDateLL = "170627_1454/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
@@ -863,8 +863,8 @@ int main(int argc, char* argv[])
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
     calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
     
-    if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"OutputWidths_syst.root").c_str(), "RECREATE");
-    else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"OutputWidths.root").c_str(), "RECREATE");
+    if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths_syst.root").c_str(), "RECREATE");
+    else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths.root").c_str(), "RECREATE");
   }
   if (doPseudoExps)
   {
@@ -876,15 +876,16 @@ int main(int argc, char* argv[])
     if (! doGenOnly) InitMSPlots();
     InitHisto1D();
     InitHisto2D();
-    MSPlot["nPVs_beforePU_"] =  new MultiSamplePlot(datasets, "nPVs_beforePU_", 46, -0.5, 45.5, "# PVs");
-    MSPlot["nPVs_afterPU_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_", 46, -0.5, 45.5, "# PVs");
-    MSPlot["nPVs_afterPU_up_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
-    MSPlot["nPVs_afterPU_down_"] =  new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_beforePU_"] = new MultiSamplePlot(datasets, "nPVs_beforePU_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_up_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_down_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
     MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
+    MSPlot["btag_SF_"] = new MultiSamplePlot(datasets, "btag_SF_", 80, 0., 2., "btag SF");
   }
   
   vJER.clear(); vJES.clear(); vPU.clear();
@@ -1021,6 +1022,7 @@ int main(int argc, char* argv[])
         {
           applyWidthSF = false;
           runListWidths = false;
+          endSys = 1;
         }
       }
       
@@ -1086,8 +1088,8 @@ int main(int argc, char* argv[])
         cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
         if (! isData)
         {
-          toyMax *= 0.90;  // small overshoot in MC --> scale down
-          cout << " x 0.90 = " << toyMax;
+          toyMax *= 0.908;  // small overshoot in MC --> scale down
+          cout << " x 0.908 = " << toyMax;
         }
         cout << endl;
       }
@@ -1198,7 +1200,10 @@ int main(int argc, char* argv[])
             if (applyBTagSF) { scaleFactor *= btagSF;}
             if (applyPU) { scaleFactor *= puSF;}
             
-            
+            if (makePlots)
+            {
+              MSPlot["btag_SF_"]->Fill(btagSF, datasets[d], true, lumiWeight*scaleFactor);
+            }
             if ( thisWidth == 1 && applyPU && puSF == 0 ) txtDebugPUSF << nvtx << "    " << npu << endl;
           }
         }
@@ -1743,10 +1748,10 @@ int main(int argc, char* argv[])
         ///  Likelihood  ///
         ////////////////////
         
-        if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
+        if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
         if (calculateLikelihood)
         {
-          like->CalculateLikelihood(redTopMass, lumiWeight, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+          like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
             like->CalculateCMLikelihood(redTopMass, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ( isCM || isWM ) )
@@ -1760,22 +1765,22 @@ int main(int argc, char* argv[])
           if (isCM)
           {
             nofCM++;
-            nofCMl += lumiWeight;
-            nofCM_weighted += lumiWeight*widthSF;
+            nofCMl += lumiWeight*scaleFactor;
+            nofCM_weighted += lumiWeight*scaleFactor*widthSF;
             if (isTTbar) nofCM_TT++;
           }
           else if (isWM)
           {
             nofWM++;
-            nofWMl += lumiWeight;
-            nofWM_weighted += lumiWeight*widthSF;
+            nofWMl += lumiWeight*scaleFactor;
+            nofWM_weighted += lumiWeight*scaleFactor*widthSF;
             if (isTTbar) nofWM_TT++;
           }
           else if (isNM)
           {
             nofNM++;
-            nofNMl += lumiWeight;
-            nofNM_weighted += lumiWeight*widthSF;
+            nofNMl += lumiWeight*scaleFactor;
+            nofNM_weighted += lumiWeight*scaleFactor*widthSF;
             if (isTTbar) nofNM_TT++;
           }
         }
@@ -1966,7 +1971,8 @@ int main(int argc, char* argv[])
         if (runSystematics) cout << "Output width for " << listSyst[iSys] << ": " << endl;
         else cout << "Standard output width: " << endl;
         fileWidths->cd();
-        like->GetOutputWidth(thisWidth, true, false);
+        if (runSystematics) like->GetOutputWidth(thisWidth, listSyst[iSys], true, false);
+        else like->GetOutputWidth(thisWidth, true, false);
         cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
         like->GetOutputWidth(thisWidth, "CM", true, false);
         cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
@@ -2458,6 +2464,9 @@ void InitMSPlots()
     MSPlotCP["dR_Lep_B_aKF"] = new MultiSamplePlot(datasetsMSP, "dR_Lep_B_aKF", 25, 0, 5, "#Delta R(l,b)");
   }
   
+  /// SFs
+  MSPlot["btag_SF"] = new MultiSamplePlot(datasetsMSP, "btag_SF", 80, 0.5, 2.5, "btag SF");
+  
   /// Reco
   MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 50, 0, 200, "m_{W}", "GeV");
   MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 40, 0, 400, "m_{t}", "GeV");
@@ -2474,6 +2483,7 @@ void InitMSPlots()
   
   if (doKinFit)
   {
+    MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0.5, 2.5, "btag SF");
     MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 50, 0, 200, "m_{W,kf}", "GeV");
     MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
     MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 130, 210, "m_{t,kf}", "GeV");
@@ -2501,6 +2511,7 @@ void InitHisto1D()
   
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
+  //histo1D["btag_SF"] = new TH1F("btag_SF", "b tag scale factor; btag SF", 80, 0, 2);
   
   /// Systematic comparison
   histo1D["allSim_top_mass"] = new TH1F("allSim_top_mass","Reconstructed top mass for all simulated samples; m_{t}", 32, 130, 210);
@@ -3282,6 +3293,7 @@ void FillMSPlots(int d, bool doneKinFit)
   {
     FillControlPlots(datasetsMSP, d, suffix);
     
+    if (! isData) MSPlot["btag_SF"]->Fill(btagSF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["W_mass"]->Fill(reco_W_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_bKF < 210 && reco_top_mass_bKF > 130 )
@@ -3310,6 +3322,7 @@ void FillMSPlots(int d, bool doneKinFit)
         MSPlot["KF_Chi2_narrow"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     }
     
+    if (! isData) MSPlot["btag_SF"+suffix]->Fill(btagSF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["W_mass"+suffix]->Fill(reco_W_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"+suffix]->Fill(reco_top_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_aKF < 210 && reco_top_mass_aKF > 130 )
