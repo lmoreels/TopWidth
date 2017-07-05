@@ -16,11 +16,12 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170607"
+date = "170705"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
 isData = False
+runSyst = False
 
 for chan in channels:
     
@@ -35,6 +36,8 @@ for chan in channels:
     if "mu" in chan:
         if isData:
             tree = ET.ElementTree(file='config/topWidth_data_loc.xml')
+        elif runSyst:
+            tree = ET.ElementTree(file='config/topWidth_syst_loc.xml')
         else:
             tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
     elif "el" in chan:

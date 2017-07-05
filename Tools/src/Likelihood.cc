@@ -29,8 +29,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.242291, 0.989073};
-const double Likelihood::calCurveParUnc_[2] = {0.0299445, 0.00683805};
+const double Likelihood::calCurvePar_[2] = {-0.226101, 0.95563};
+const double Likelihood::calCurveParUnc_[2] = {0.0263112, 0.00645349};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -277,6 +277,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       
       /// Calculate total probability
       fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents;
+      if ( verbose_ && iCat == 2 ) std::cout << "Width: " << widthArray_[iWidth] << "   # CM: " << fracCats[0] << "%   # WM: " << fracCats[1] << "%   # NM: " << fracCats[2] << "%  " << std::endl;
       for (int i = 0; i < nPoints; i++) { totalBinContentArray[i] += fracCats[iCat]*binContentArray[iCat][i];}
       
       histoSm_[histoName_]->Scale(fracCats[iCat]);
@@ -587,7 +588,9 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   if (! type.empty() ) fileName += type+"_";
   fileName += "widthx"+tls_->DotReplace(inputWidth)+".txt";
   txtOutputLL_.open(fileName.c_str());
-  txtOutputLL_ << std::setw(5) << std::left << inputWidth << "   " << std::setw(9) << std::right << output_.first << "  " << std::setw(9) << std::right << output_.second << std::endl;
+  if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
+  else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
+  txtOutputLL_ << std::setw(5) << std::left << inputWidth << "   " << std::setw(16) << std::right << std::fixed << std::setprecision(15) << output_.first << "  " << std::setw(16) << std::right << std::fixed << std::setprecision(15) << output_.second << std::endl;
   txtOutputLL_.close();
 }
 
