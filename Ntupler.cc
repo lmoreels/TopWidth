@@ -66,7 +66,7 @@ bool test = false;
 bool fillLooseTree = false;
 bool makeCutFlow = true;
 bool runData = false;
-bool runSystematics = true;
+bool runSystematics = false;
 
 
 /// Configuration
@@ -239,6 +239,22 @@ Bool_t hasGenTopWithStatus62;
 Bool_t hasGenAntiTop;
 Bool_t hasGenAntiTopWithStatus22;
 Bool_t hasGenAntiTopWithStatus62;
+
+/// Renormalisation/factorisation
+Double_t weight1001;
+Double_t weight1002;
+Double_t weight1003;
+Double_t weight1004;
+Double_t weight1005;
+Double_t weight1007;
+Double_t weight1009;
+Double_t sumWeight1001;
+Double_t sumWeight1002;
+Double_t sumWeight1003;
+Double_t sumWeight1004;
+Double_t sumWeight1005;
+Double_t sumWeight1007;
+Double_t sumWeight1009;
 
 Double_t nloWeight; // for amc@nlo samples
 Double_t btagSF;
@@ -505,6 +521,14 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
       statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
+      
+      statTree->Branch("sumWeight1001", &sumWeight1001, "sumWeight1001/D");
+      statTree->Branch("sumWeight1002", &sumWeight1002, "sumWeight1002/D");
+      statTree->Branch("sumWeight1003", &sumWeight1003, "sumWeight1003/D");
+      statTree->Branch("sumWeight1004", &sumWeight1004, "sumWeight1004/D");
+      statTree->Branch("sumWeight1005", &sumWeight1005, "sumWeight1005/D");
+      statTree->Branch("sumWeight1007", &sumWeight1007, "sumWeight1007/D");
+      statTree->Branch("sumWeight1009", &sumWeight1009, "sumWeight1009/D");
     }
   }
   if (isAmc)
@@ -678,6 +702,16 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   /// SFs
   if (! isData)
   {
+    if (isTTbar)
+    {
+      myTree->Branch("weight1001", &weight1001, "weight1001/D");
+      myTree->Branch("weight1002", &weight1002, "weight1002/D");
+      myTree->Branch("weight1003", &weight1003, "weight1003/D");
+      myTree->Branch("weight1004", &weight1004, "weight1004/D");
+      myTree->Branch("weight1005", &weight1005, "weight1005/D");
+      myTree->Branch("weight1007", &weight1007, "weight1007/D");
+      myTree->Branch("weight1009", &weight1009, "weight1009/D");
+    }
     if (isAmc) myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
     myTree->Branch("btagSF",&btagSF,"btagSF/D");
     myTree->Branch("btagSF_up",&btagSF_up,"btagSF_up/D");
@@ -766,10 +800,20 @@ void ClearMeta()
   nofTTEventsWithoutGenTopWithStatus62 = 0;
   nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
   
+  sumWeight1001 = 0.;
+  sumWeight1002 = 0.;
+  sumWeight1003 = 0.;
+  sumWeight1004 = 0.;
+  sumWeight1005 = 0.;
+  sumWeight1007 = 0.;
+  sumWeight1009 = 0.;
+  
   for (Int_t i = 0; i < 10; i++)
   {
     cutFlow[i] = 0;
     cutFlow2[i] = 0;
+    cutFlowWeighted[i] = 0;
+    cutFlow2Weighted[i] = 0;
   }
 }
 
@@ -833,6 +877,14 @@ void ClearObjects()
   hasGenAntiTop = false;
   hasGenAntiTopWithStatus22 = false;
   hasGenAntiTopWithStatus62 = false;
+  
+  weight1001 = 1.;
+  weight1002 = 1.;
+  weight1003 = 1.;
+  weight1004 = 1.;
+  weight1005 = 1.;
+  weight1007 = 1.;
+  weight1009 = 1.;
   
   nloWeight = 1.; // for amc@nlo samples
   btagSF = 1.;
@@ -1318,6 +1370,28 @@ void FillLooseMuonScaleFactors(vector<TRootMuon*> selectedLooseMuons)
     looseMuonTrackSF_eta[iMuon] = h_muonSFWeightTrackEta->Eval(selectedLooseMuons[iMuon]->Eta());
     looseMuonTrackSF_aeta[iMuon] = h_muonSFWeightTrackAEta->Eval(fabs(selectedLooseMuons[iMuon]->Eta()));
     looseMuonTrackSF_nPV[iMuon] = h_muonSFWeightTrackPV->Eval(npu);
+  }
+}
+
+void FillRenFacScaleFactors()
+{
+  if ( isTTbar && event->getWeight(1001) != -9999. )
+  {
+    weight1001 = event->getWeight(1001);
+    weight1002 = event->getWeight(1002);
+    weight1003 = event->getWeight(1003);
+    weight1004 = event->getWeight(1004);
+    weight1005 = event->getWeight(1005);
+    weight1007 = event->getWeight(1007);
+    weight1009 = event->getWeight(1009);
+    
+    sumWeight1001 += weight1001;
+    sumWeight1002 += weight1002;
+    sumWeight1003 += weight1003;
+    sumWeight1004 += weight1004;
+    sumWeight1005 += weight1005;
+    sumWeight1007 += weight1007;
+    sumWeight1009 += weight1009;
   }
 }
 
@@ -2216,6 +2290,7 @@ int main (int argc, char *argv[])
       FillMetVars(mets, mets_corrected);
       FillFilters(isData);
       if (! isData) FillMCParticles(isTTbar);
+      if (isTTbar) FillRenFacScaleFactors();
       
       
       if (! calculateBTagSF)
