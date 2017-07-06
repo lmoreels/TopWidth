@@ -1811,16 +1811,16 @@ int main (int argc, char *argv[])
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
       //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_comb_central.root", false, 20., 600., 2.4);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 600., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 250., 2.4);
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 250., 2.4);
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 250., 2.4);
     }
     else if (calculateBTagSF && ! isData)
     {
       mkdir(("BTagHistos/"+dateString).c_str(),0777);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_central.root", true, 30., 600., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_up.root", false, 30., 600., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_down.root", false, 30., 600., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_central.root", true, 30., 250., 2.4);
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_up.root", false, 30., 250., 2.4);
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_down.root", false, 30., 250., 2.4);
     }
     
     
