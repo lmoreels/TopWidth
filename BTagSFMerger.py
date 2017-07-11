@@ -8,13 +8,13 @@ from datetime import datetime
 
 # Define time variable
 #date = "test"
-date = "170705"
+date = "170711"
 
 scalesys = "nominal"
 #scalesys = "JERup"
 
 sys = ["central","up","down"]
-systype = "comb"
+systype = "mujets"
 
 
 #Define path where btag histos are stored

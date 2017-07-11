@@ -1311,9 +1311,9 @@ void FillFilters(bool isData)
 
 void FillBTagScaleFactors()
 {
-  btagSF = bTagHistoTool_M->getMCEventWeight(selectedJets, false);
-  btagSF_up = bTagHistoTool_M_up->getMCEventWeight(selectedJets, false);
-  btagSF_down = bTagHistoTool_M_down->getMCEventWeight(selectedJets, false);
+  btagSF = bTagHistoTool_M->getMCEventWeight(selectedJets, false, "central");
+  btagSF_up = bTagHistoTool_M_up->getMCEventWeight(selectedJets, false, "up");
+  btagSF_down = bTagHistoTool_M_down->getMCEventWeight(selectedJets, false, "down");
 }
 
 void FillPUScaleFactors()
@@ -1721,9 +1721,9 @@ int main (int argc, char *argv[])
   cout << " - Loading b tag scale factors ...";
   if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis" << endl;}
   bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2Moriond17_2017_1_26_BtoH.csv");
-  bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "central");
-  bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "up");
-  bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "down");
+  bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "central");
+  bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "up");
+  bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "down");
   
   
   /// Pile-up
@@ -1811,16 +1811,16 @@ int main (int argc, char *argv[])
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
       //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_comb_central.root", false, 20., 600., 2.4);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 250., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 250., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 250., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 250., 2.4, "central");
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 250., 2.4, "up");
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 250., 2.4, "down");
     }
     else if (calculateBTagSF && ! isData)
     {
       mkdir(("BTagHistos/"+dateString).c_str(),0777);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_central.root", true, 30., 250., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_up.root", false, 30., 250., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_comb_down.root", false, 30., 250., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_central.root", true, 30., 250., 2.4, "central");
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_up.root", false, 30., 250., 2.4, "up");
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_down.root", false, 30., 250., 2.4, "down");
     }
     
     
@@ -2205,6 +2205,18 @@ int main (int argc, char *argv[])
                     hasExactly4Jets = true;
                   }
                   
+                  /// B-tagging
+                  if (calculateBTagSF && ! isData)
+                  {
+                    bTagHistoTool_M->FillMCEfficiencyHistos(selectedJets, "central");
+                    bTagHistoTool_M_up->FillMCEfficiencyHistos(selectedJets, "up");
+                    bTagHistoTool_M_down->FillMCEfficiencyHistos(selectedJets, "down");
+                    continue;
+                  }
+                  
+                  /// The next part is not run when b-tag SFs are calculated
+                  /// The tree is not written
+                  
                   if ( selectedBJets.size() > 0 )
                   {
                     if (! isData && applyBTagSF) FillBTagScaleFactors();
@@ -2255,19 +2267,6 @@ int main (int argc, char *argv[])
       }
       
       nEventsSel++;
-      
-      
-      /// B-tagging
-      if (calculateBTagSF && ! isData)
-      {
-        bTagHistoTool_M->FillMCEfficiencyHistos(selectedJets);
-        bTagHistoTool_M_up->FillMCEfficiencyHistos(selectedJets);
-        bTagHistoTool_M_down->FillMCEfficiencyHistos(selectedJets);
-        continue;
-      }
-      
-      /// The next part is not run when b-tag SFs are calculated
-      /// The tree is not written
       
       
       if (isData)
