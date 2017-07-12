@@ -68,7 +68,7 @@ int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
 bool runSystematics = false;
-string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting"};
+string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "renFac1002"/*, "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009"*/};
 int nSystematics = sizeof(listSyst)/sizeof(listSyst[0]);
 
 TFile *fileWidths;
@@ -79,7 +79,7 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170607","170522");
+    return pair<string,string>("170711","170522");
   }
   else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
   else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
@@ -97,8 +97,8 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170704_1525/";
-//string inputDateLL = "170627_1656/";  // non-rel BW, SF_h
+//string inputDateLL = "170706_1307/"; // btagSF < 1.5
+string inputDateLL = "170712_1401/";  // non-rel BW, SF_h
 //string inputDateLL = "170627_1454/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
 bool isData = false;
@@ -296,6 +296,13 @@ Bool_t          hasGenTopWithStatus62;
 Bool_t          hasGenAntiTop;
 Bool_t          hasGenAntiTopWithStatus22;
 Bool_t          hasGenAntiTopWithStatus62;
+Double_t        weight1001;
+Double_t        weight1002;
+Double_t        weight1003;
+Double_t        weight1004;
+Double_t        weight1005;
+Double_t        weight1007;
+Double_t        weight1009;
 Double_t        btagSF;
 Double_t        btagSF_up;
 Double_t        btagSF_down;
@@ -328,6 +335,8 @@ Long64_t        nEvents;
 Long64_t        nEventsSel;
 Int_t           cutFlow[10];
 Int_t           cutFlow2[10];
+Double_t        cutFlowWeighted[10];
+Double_t        cutFlow2Weighted[10];
 Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
@@ -354,6 +363,13 @@ Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
 Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
 Long64_t        nofTTEventsWithoutGenTopWithStatus62;
 Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
+Double_t        sumWeight1001;
+Double_t        sumWeight1002;
+Double_t        sumWeight1003;
+Double_t        sumWeight1004;
+Double_t        sumWeight1005;
+Double_t        sumWeight1007;
+Double_t        sumWeight1009;
 
 // List of branches
 TBranch        *b_run_num;   //!
@@ -439,6 +455,13 @@ TBranch        *b_hasGenTopWithStatus62;   //!
 TBranch        *b_hasGenAntiTop;   //!
 TBranch        *b_hasGenAntiTopWithStatus22;   //!
 TBranch        *b_hasGenAntiTopWithStatus62;   //!
+TBranch        *b_weight1001;   //!
+TBranch        *b_weight1002;   //!
+TBranch        *b_weight1003;   //!
+TBranch        *b_weight1004;   //!
+TBranch        *b_weight1005;   //!
+TBranch        *b_weight1007;   //!
+TBranch        *b_weight1009;   //!
 TBranch        *b_btagSF;   //!
 TBranch        *b_btagSF_up;   //!
 TBranch        *b_btagSF_down;   //!
@@ -471,6 +494,8 @@ TBranch        *b_nEvents;   //!
 TBranch        *b_nEventsSel;   //!
 TBranch        *b_cutFlow;   //!
 TBranch        *b_cutFlow2;   //!
+TBranch        *b_cutFlowWeighted;   //!
+TBranch        *b_cutFlow2Weighted;   //!
 TBranch        *b_appliedJER;   //!
 TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
@@ -497,6 +522,13 @@ TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
 TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
 TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
 TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
+TBranch        *b_sumWeight1001;   //!
+TBranch        *b_sumWeight1002;   //!
+TBranch        *b_sumWeight1003;   //!
+TBranch        *b_sumWeight1004;   //!
+TBranch        *b_sumWeight1005;   //!
+TBranch        *b_sumWeight1007;   //!
+TBranch        *b_sumWeight1009;   //!
 
 
 double lumiWeight, scaleFactor, widthSF;
@@ -1071,6 +1103,13 @@ int main(int argc, char* argv[])
       else
       {
         eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
+//         if (isTTbar)
+//         {
+//           long nEventsNoGenTop = GetNEvents(tStatsTree[(dataSetName).c_str()], "nofTTEventsWithoutBothGenTops", isData);  // Ntuples > 170711 : Change to nofTTEventsWithoutAGenTop !!
+//           cout << "                eqLumi (b): " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+//           eqLumi -= (double)nEventsNoGenTop/datasets[d]->Xsection();
+//         }
+        
         lumiWeight = Luminosity/eqLumi;
       }
       
@@ -2235,6 +2274,8 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
   tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
   tree->SetBranchAddress("cutFlow2", cutFlow2, &b_cutFlow2);
+  tree->SetBranchAddress("cutFlowWeighted", cutFlowWeighted, &b_cutFlowWeighted);
+  tree->SetBranchAddress("cutFlow2Weighted", cutFlow2Weighted, &b_cutFlow2Weighted);
   tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
@@ -2266,6 +2307,13 @@ void GetMetaData(TTree* tree, bool isData)
     tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
     tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
     tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
+    tree->SetBranchAddress("sumWeight1001", &sumWeight1001, &b_sumWeight1001);
+    tree->SetBranchAddress("sumWeight1002", &sumWeight1002, &b_sumWeight1002);
+    tree->SetBranchAddress("sumWeight1003", &sumWeight1003, &b_sumWeight1003);
+    tree->SetBranchAddress("sumWeight1004", &sumWeight1004, &b_sumWeight1004);
+    tree->SetBranchAddress("sumWeight1005", &sumWeight1005, &b_sumWeight1005);
+    tree->SetBranchAddress("sumWeight1007", &sumWeight1007, &b_sumWeight1007);
+    tree->SetBranchAddress("sumWeight1009", &sumWeight1009, &b_sumWeight1009);
   }
 }
 
@@ -2353,6 +2401,16 @@ void InitTree(TTree* tree, bool isData)
     tree->SetBranchAddress("hasGenAntiTop", &hasGenAntiTop, &b_hasGenAntiTop);
     tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
     tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
+    if (isTTbar)
+    {
+      tree->SetBranchAddress("weight1001", &weight1001, &b_weight1001);
+      tree->SetBranchAddress("weight1002", &weight1002, &b_weight1002);
+      tree->SetBranchAddress("weight1003", &weight1003, &b_weight1003);
+      tree->SetBranchAddress("weight1004", &weight1004, &b_weight1004);
+      tree->SetBranchAddress("weight1005", &weight1005, &b_weight1005);
+      tree->SetBranchAddress("weight1007", &weight1007, &b_weight1007);
+      tree->SetBranchAddress("weight1009", &weight1009, &b_weight1009);
+    }
     tree->SetBranchAddress("btagSF", &btagSF, &b_btagSF);
     tree->SetBranchAddress("btagSF_up", &btagSF_up, &b_btagSF_up);
     tree->SetBranchAddress("btagSF_down", &btagSF_down, &b_btagSF_down);
@@ -2776,6 +2834,8 @@ void ClearMetaData()
   {
     cutFlow[i] = 0;
     cutFlow2[i] = 0;
+    cutFlowWeighted[i] = 0;
+    cutFlow2Weighted[i] = 0;
   }
   appliedJER = 999;
   appliedJES = 999;
@@ -2808,6 +2868,13 @@ void ClearMetaData()
     nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
     nofTTEventsWithoutGenTopWithStatus62 = 0;
     nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+    sumWeight1001 = 0;
+    sumWeight1002 = 0;
+    sumWeight1003 = 0;
+    sumWeight1004 = 0;
+    sumWeight1005 = 0;
+    sumWeight1007 = 0;
+    sumWeight1009 = 0;
   }
   
   strSyst = "";
@@ -2828,6 +2895,7 @@ void ClearMetaData()
   nofNoMatchAKFNoCut = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitMatched = 0;
+  
   
   toyMax = 1.;
 }
@@ -2906,6 +2974,13 @@ void ClearLeaves()
     hasGenAntiTopWithStatus22 = false;
     hasGenAntiTopWithStatus62 = false;
     
+    weight1001 = 1.;
+    weight1002 = 1.;
+    weight1003 = 1.;
+    weight1004 = 1.;
+    weight1005 = 1.;
+    weight1007 = 1.;
+    weight1009 = 1.;
     btagSF = 1.;
     btagSF_up = 1.;
     btagSF_down = 1.;
