@@ -188,12 +188,15 @@ Long64_t nofEventsWithGenTopWithStatus22or62;
 Long64_t nofEventsWithGenAntiTop;
 Long64_t nofEventsWithGenAntiTopWithStatus22or62;
 Long64_t nofTTEventsWithoutBothGenTops;
+Long64_t nofTTEventsWithoutAGenTop;
 Long64_t nofTTEventsWithoutGenTop;
 Long64_t nofTTEventsWithoutGenAntiTop;
 Long64_t nofTTEventsWithoutBothGenTopsWithStatus22;
+Long64_t nofTTEventsWithoutAGenTopWithStatus22;
 Long64_t nofTTEventsWithoutGenTopWithStatus22;
 Long64_t nofTTEventsWithoutGenAntiTopWithStatus22;
 Long64_t nofTTEventsWithoutBothGenTopsWithStatus62;
+Long64_t nofTTEventsWithoutAGenTopWithStatus62;
 Long64_t nofTTEventsWithoutGenTopWithStatus62;
 Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
 
@@ -513,12 +516,15 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     if (isTTbar)
     {
       statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
+      statTree->Branch("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, "nofTTEventsWithoutAGenTop/L");
       statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
       statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
+      statTree->Branch("nofTTEventsWithoutAGenTopWithStatus22", &nofTTEventsWithoutAGenTopWithStatus22, "nofTTEventsWithoutAGenTopWithStatus22/L");
       statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
+      statTree->Branch("nofTTEventsWithoutAGenTopWithStatus62", &nofTTEventsWithoutAGenTopWithStatus62, "nofTTEventsWithoutAGenTopWithStatus62/L");
       statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
       
@@ -1280,17 +1286,20 @@ void FillMCParticles(bool isTTbar)
   
   if (isTTbar)
   {
-    if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
+    if (! hasGenTop && ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
     else if (! hasGenTop) nofTTEventsWithoutGenTop++;
     else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
+    //if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
     
-    if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
+    if (! hasGenTopWithStatus22 && ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
     else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
     else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
+    if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutAGenTopWithStatus22++;
     
-    if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
+    if (! hasGenTopWithStatus62 && ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
     else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
     else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
+    if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutAGenTopWithStatus62++;
   }
 }
 
@@ -1431,6 +1440,17 @@ void FillaMCScaleFactors()
   }
   
   sumW += nloWeight;
+}
+
+void CheckHasGenTop()
+{
+  for (Int_t iMC = 0; iMC < mcParticles.size(); iMC++)
+  {
+    if ( mcParticles[iMC]->type() == 6) hasGenTop = true;
+    else if ( mcParticles[iMC]->type() == -6) hasGenAntiTop = true;
+  }
+  
+  if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
 }
 
 
@@ -2103,6 +2123,8 @@ int main (int argc, char *argv[])
       
       if (! isData && ! calculateBTagSF && isAmc) FillaMCScaleFactors();
       
+      if (! calculateBTagSF && isTTbar) CheckHasGenTop();
+      
       
       ////// Selection
       cutFlow[0]++;
@@ -2300,7 +2322,8 @@ int main (int argc, char *argv[])
       
     }  // end loop events
     
-    if (! isData && ! calculateBTagSF) cout << "Max MCParticles: " << maxMCParticles << endl << endl;
+    if (! isData && ! calculateBTagSF) cout << "Max MCParticles: " << maxMCParticles << endl;
+    if (isTTbar) cout << "Number of TT events without generated top quark: " << nofTTEventsWithoutAGenTop << endl << endl;
     
     if (! calculateBTagSF)
     {
