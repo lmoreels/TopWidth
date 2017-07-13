@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#PBS -q localgrid
+#PBS -q express
 #PBS -l walltime=00:30:00
 
 source /user/lmoreels/.bashrc
