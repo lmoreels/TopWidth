@@ -42,12 +42,12 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool makeControlPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -56,9 +56,10 @@ double kinFitCutValue = 5.;
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
-bool applyBTagSF = true;  // something wrong!!
+bool applyBTagSF = true;
 
 
+bool rewHadTopOnly = true;
 bool applyWidthSF = false;
 double scaleWidth = 1.;
 
@@ -79,14 +80,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170711","170522");
+    return pair<string,string>("170712","170522");
   }
   else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
   else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170607","170522");
+    return pair<string,string>("170712","170522");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -98,8 +99,8 @@ string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
 //string inputDateLL = "170706_1307/"; // btagSF < 1.5
-string inputDateLL = "170712_1401/";  // non-rel BW, SF_h
-//string inputDateLL = "170627_1454/";  // non-rel BW, SF_h*SF_l
+string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
+//string inputDateLL = "170713_1656/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
 bool isData = false;
 bool isTTbar = false;
@@ -137,14 +138,14 @@ double CSVv2Tight  = 0.9535;
 const int nofAveMasses = 16;
 //  KF chi2 < 5
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
-std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688, 197.911, 181.895, 249.468, 247.437, 227.529, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
+std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
 //  no KF chi2 cut
 //std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
 /// # events after kin fitter
 //  KF chi2 < 5
-int nEventsAKF[] = {100949, 544305, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
+int nEventsAKF[] = {100949, 547108, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -355,6 +356,7 @@ Long64_t        nofEventsWithGenTopWithStatus22or62;
 Long64_t        nofEventsWithGenAntiTop;
 Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
 Long64_t        nofTTEventsWithoutBothGenTops;
+Long64_t        nofTTEventsWithoutAGenTop;
 Long64_t        nofTTEventsWithoutGenTop;
 Long64_t        nofTTEventsWithoutGenAntiTop;
 Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
@@ -514,6 +516,7 @@ TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
 TBranch        *b_nofEventsWithGenAntiTop;   //!
 TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
 TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
+TBranch        *b_nofTTEventsWithoutAGenTop;   //!
 TBranch        *b_nofTTEventsWithoutGenTop;   //!
 TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
 TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
@@ -531,6 +534,8 @@ TBranch        *b_sumWeight1007;   //!
 TBranch        *b_sumWeight1009;   //!
 
 
+long nEventsDataSet;
+double xSection;
 double lumiWeight, scaleFactor, widthSF;
 double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
 double topPtRewSF, topPtSF, antiTopPtSF;
@@ -886,11 +891,11 @@ int main(int argc, char* argv[])
   
   if (makeTGraphs)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
   }
   if (calculateLikelihood)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
     calculateLikelihood = like->ConstructTGraphsFromFile();
     calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
     calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
@@ -1102,13 +1107,13 @@ int main(int argc, char* argv[])
       if (isData) lumiWeight = 1.;
       else
       {
-        eqLumi = (double)GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData)/datasets[d]->Xsection();  // 1/pb
-//         if (isTTbar)
-//         {
-//           long nEventsNoGenTop = GetNEvents(tStatsTree[(dataSetName).c_str()], "nofTTEventsWithoutBothGenTops", isData);  // Ntuples > 170711 : Change to nofTTEventsWithoutAGenTop !!
-//           cout << "                eqLumi (b): " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
-//           eqLumi -= (double)nEventsNoGenTop/datasets[d]->Xsection();
-//         }
+        nEventsDataSet = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData);
+        if (isTTbar)
+        {
+          nEventsDataSet -= GetNEvents(tStatsTree[(dataSetName).c_str()], "nofTTEventsWithoutAGenTop", isData);
+        }
+        xSection = datasets[d]->Xsection();  // pb
+        eqLumi = (double)nEventsDataSet/xSection;  // 1/pb
         
         lumiWeight = Luminosity/eqLumi;
       }
@@ -1125,11 +1130,11 @@ int main(int argc, char* argv[])
         if (test)
           cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
         cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
-        if (! isData)
-        {
-          toyMax *= 0.908;  // small overshoot in MC --> scale down
-          cout << " x 0.908 = " << toyMax;
-        }
+//         if (! isData)
+//         {
+//           toyMax *= 0.908;  // small overshoot in MC --> scale down --> fixed now
+//           cout << " x 0.908 = " << toyMax;
+//         }
         cout << endl;
       }
       
@@ -1141,7 +1146,9 @@ int main(int argc, char* argv[])
       if (isData) cout << "                Lumi    : " << Luminosity << "/pb" << endl;
       else
       {
-        cout << "                eqLumi    : " << eqLumi << "/pb = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " / " << datasets[d]->Xsection() << " pb" << endl;
+        cout << "                eqLumi    : " << eqLumi << "/pb = " << nEventsDataSet << " / " << xSection << " pb" << endl;
+        if (isTTbar)
+          cout << "                              ( " << nEventsDataSet << " = " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData) << " - " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofTTEventsWithoutAGenTop", isData) << " )" << endl;
         cout << "                lumiWeight: " << lumiWeight << endl;
       }
       
@@ -1450,8 +1457,8 @@ int main(int argc, char* argv[])
           
           if ( doReweighting )
           {
-            //widthSF = rew->EventWeightCalculator(massHadTopQ, thisWidth) * rew->EventWeightCalculator(massLepTopQ, thisWidth);
-            widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, thisWidth);
+            if (rewHadTopOnly) widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, thisWidth);
+            else widthSF = rew->EventWeightCalculator(massHadTopQ, thisWidth) * rew->EventWeightCalculator(massLepTopQ, thisWidth);
             
             if ( widthSF != widthSF )  // widthSF = NaN
             {
@@ -2274,8 +2281,8 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
   tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
   tree->SetBranchAddress("cutFlow2", cutFlow2, &b_cutFlow2);
-  tree->SetBranchAddress("cutFlowWeighted", cutFlowWeighted, &b_cutFlowWeighted);
-  tree->SetBranchAddress("cutFlow2Weighted", cutFlow2Weighted, &b_cutFlow2Weighted);
+  if (! isData) tree->SetBranchAddress("cutFlowWeighted", cutFlowWeighted, &b_cutFlowWeighted);     // temporarily!
+  if (! isData) tree->SetBranchAddress("cutFlow2Weighted", cutFlow2Weighted, &b_cutFlow2Weighted);  // temporarily!
   tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
@@ -2299,6 +2306,7 @@ void GetMetaData(TTree* tree, bool isData)
     tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
     tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
     tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+    tree->SetBranchAddress("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, &b_nofTTEventsWithoutAGenTop);
     tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
     tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
     tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
@@ -2860,6 +2868,7 @@ void ClearMetaData()
     nofEventsWithGenAntiTop = 0;
     nofEventsWithGenAntiTopWithStatus22or62 = 0;
     nofTTEventsWithoutBothGenTops = 0;
+    nofTTEventsWithoutAGenTop = 0;
     nofTTEventsWithoutGenTop = 0;
     nofTTEventsWithoutGenAntiTop = 0;
     nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
@@ -2878,6 +2887,8 @@ void ClearMetaData()
   }
   
   strSyst = "";
+  nEventsDataSet = 0;
+  xSection = 1.;
   eqLumi = 1.;
   lumiWeight = 1.;
   
