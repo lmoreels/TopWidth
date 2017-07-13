@@ -50,8 +50,8 @@ int Likelihood::LocMinArray(int n, double* array)
   return locmin;
 }
 
-Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
-verbose_(verbose), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
+Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
@@ -123,8 +123,11 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double hadTop
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
       thisWidth_ = stringWidthArray_[iWidth];
-      //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, widthArray_[iWidth]);
-      if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]);
+      if (isTTbar)
+      {
+        if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]);
+        else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, widthArray_[iWidth]);
+      }
       else thisWidthSF_ = 1.;
       
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
@@ -367,8 +370,11 @@ void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double h
   {
     if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
     
-    //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+    }
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -420,8 +426,11 @@ void Likelihood::CalculateCMLikelihood(double redMass, double hadTopMassForWidth
   {
     if (! calledCMLLCalculation_) calledCMLLCalculation_ = true;
     
-    //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+    }
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -471,8 +480,11 @@ void Likelihood::CalculateTempLikelihood(double redMass, double hadTopMassForWid
   {
     if (! calledTempLLCalculation_) calledTempLLCalculation_ = true;
     
-    //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+    }
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -522,8 +534,11 @@ void Likelihood::CalculateGenLikelihood(double redMass, double hadTopMassForWidt
   {
     if (! calledGenLLCalculation_) calledGenLLCalculation_ = true;
     
-    //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+    }
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -747,8 +762,11 @@ void Likelihood::AddPsExp(int thisPsExp, double hadTopMassForWidthSF, double lep
   if (isData) std::cerr << "Likelihood::Pull: Will not use data for pseudo experiments..." << std::endl;
   else if (calledLLCalculation_)
   {
-    //if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-    if (isTTbar) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
+      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+    }
     else thisWidthSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)

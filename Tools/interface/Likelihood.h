@@ -32,7 +32,7 @@
 
 class Likelihood{
   public:
-    Likelihood(double min, double max, std::string outputDirName, std::string date, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
+    Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
     void ClearLikelihoods();
     /// Make TGraphs
@@ -67,6 +67,7 @@ class Likelihood{
       
   private:
     bool verbose_;
+    bool rewHadOnly_;
     std::string outputDirName_;
     std::string dirNameTGraphTxt_;
     std::string dirNameLLTxt_;
