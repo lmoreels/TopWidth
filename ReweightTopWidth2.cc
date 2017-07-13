@@ -54,17 +54,9 @@ double kinFitCutValue = 5.;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
-bool applyLeptonSFup = false;
-bool applyLeptonSFdown = false;
 bool applyPU = true;
-bool applyPUup = false;
-bool applyPUdown = false;
 bool applyBTagSF = true;
-bool applyBTagSFup = false;
-bool applyBTagSFdown = false;
 bool applyTopPtReweighting = false;
-//bool applyJER = true;
-//bool applyJEC = true;
 
 bool doReweighting = false;
 bool applyWidthSF = false;
@@ -75,14 +67,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170607","170522");
+    return pair<string,string>("170712","170522");
   }
   else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
   else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170607","170522");
+    return pair<string,string>("170712","170522");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -91,9 +83,10 @@ int verbose = 2;
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
+string dateString = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170613_1657/";  // TT nominal
+string inputDateLL = "170713_1105/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -129,11 +122,7 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
-std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.688, 197.911, 181.895, 249.468, 247.437, 227.529, 226.099, 184.794, 184.594, 184.62};  // Res 170608 Single Gaus
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
-//  no KF chi2 cut
-//std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
+std::array<double, 5> aveTopMass = {171.791, 169.728, 185.155, 181.914, 167.723};  // Res 170608 Single Gaus
 
 /// # events
 vector<long> nEventsTot, nEventsSelc, nEventsHardSel, nEventsAKF;
@@ -153,7 +142,7 @@ map<string,TTree*> tStatsTree;
 
 vector < Dataset* > datasets;
 
-ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMNM, txtMassRecoNM, txtMassRecoWM, txtMassReco;
+ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoBKF, txtMassRecoAKF, txtMassRecoAKFMatched;
 
 /// Function prototypes
 struct HighestPt
@@ -203,6 +192,7 @@ void FillKinFitPlots(bool doneKinFit);
 void FillCatsPlots(string catSuffix);
 long GetNEvents(TTree* fChain, string var, bool isData);
 void GetEraFraction(double* fractions);
+void CalculateAverageTopMass();
 void PrintKFDebug(int ievt);
 
 
@@ -292,6 +282,7 @@ Long64_t        nofEventsWithGenTopWithStatus22or62;
 Long64_t        nofEventsWithGenAntiTop;
 Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
 Long64_t        nofTTEventsWithoutBothGenTops;
+Long64_t        nofTTEventsWithoutAGenTop;
 Long64_t        nofTTEventsWithoutGenTop;
 Long64_t        nofTTEventsWithoutGenAntiTop;
 Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
@@ -386,6 +377,7 @@ TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
 TBranch        *b_nofEventsWithGenAntiTop;   //!
 TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
 TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
+TBranch        *b_nofTTEventsWithoutAGenTop;   //!
 TBranch        *b_nofTTEventsWithoutGenTop;   //!
 TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
 TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
@@ -403,7 +395,7 @@ vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
 int labelsReco[4];
-double massForWidth;
+double massHadTopQ, massLepTopQ;
 
 string catSuffix = "";
 string catSuffixList[] = {"_CM", "_WM", "_NM"};
@@ -509,7 +501,7 @@ bool CharSearch( char str[], char substr[] )
 
 int main(int argc, char* argv[])
 {
-  string dateString = MakeTimeStamp();
+  dateString = MakeTimeStamp();
   cout << "*********************************************" << endl;
   cout << "***         Beginning of program          ***" << endl;
   cout << "*********************************************" << endl;
@@ -636,12 +628,11 @@ int main(int argc, char* argv[])
   if (calculateAverageMass)
   {
     mkdir("averageMass/",0777);
-    txtMassGenPMatched.open(("averageMass/mass_genp_matched_TT_"+dateString+".txt").c_str());
-    txtMassGenJMatched.open(("averageMass/mass_genj_matched_TT_"+dateString+".txt").c_str());
-    txtMassRecoCM.open(("averageMass/mass_reco_matched_TT_"+dateString+".txt").c_str());
-    txtMassRecoWMNM.open(("averageMass/mass_reco_notCorrectMatch_TT_"+dateString+".txt").c_str());
-    txtMassRecoNM.open(("averageMass/mass_reco_notMatched_TT_"+dateString+".txt").c_str());
-    txtMassRecoWM.open(("averageMass/mass_reco_wrongPerm_TT_"+dateString+".txt").c_str());
+    txtMassGenPMatched.open(("averageMass/mass_genp_matched_"+dateString+".txt").c_str());
+    txtMassGenJMatched.open(("averageMass/mass_genj_matched_"+dateString+".txt").c_str());
+    txtMassRecoBKF.open(("averageMass/mass_recoBKF_"+dateString+".txt").c_str());
+    txtMassRecoAKF.open(("averageMass/mass_recoAKF_"+dateString+".txt").c_str());
+    txtMassRecoAKFMatched.open(("averageMass/mass_recoAKF_matched_"+dateString+".txt").c_str());
   }
   
   txtDebugTopMass.open("debug_missing_topQ.txt");
@@ -717,11 +708,6 @@ int main(int argc, char* argv[])
       }
     }
     
-    
-    if (calculateAverageMass)
-    {
-      txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
-    }
     
     
     string ntupleFileName = "Ntuples_"+dataSetName+".root";
@@ -966,12 +952,20 @@ int main(int argc, char* argv[])
       ///  Scale factor ttbar sample width  ///
       /////////////////////////////////////////
       
-      if ( muon_charge[0] > 0 ) massForWidth = (mcParticles[antiTopQuark]).M();
-      else if ( muon_charge[0] < 0 ) massForWidth = (mcParticles[topQuark]).M();
+      if ( muon_charge[0] > 0 )
+      {
+        massHadTopQ = (mcParticles[antiTopQuark]).M();
+        massLepTopQ = (mcParticles[topQuark]).M();
+      }
+      else if ( muon_charge[0] < 0 )
+      {
+        massHadTopQ = (mcParticles[topQuark]).M();
+        massLepTopQ =  (mcParticles[antiTopQuark]).M();
+      }
       
       if ( applyWidthSF && isTTbar )
       {
-        widthSF = rew->EventWeightCalculatorNonRel(massForWidth, scaleWidth);
+        widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, scaleWidth);
         
         if ( widthSF != widthSF )  // widthSF = NaN
         {
@@ -1067,11 +1061,13 @@ int main(int argc, char* argv[])
           {
             m_hadr = m_top;
             m_lept = m_antitop;
+            if (makePlots) histo1D["muon_charge_reco_muMinusFromTop"]->Fill(muon_charge[0]);
           }
           else if ( muPlusFromTop )
           {
             m_hadr = m_antitop;
             m_lept = m_top;
+            if (makePlots) histo1D["muon_charge_reco_muPlusFromTop"]->Fill(muon_charge[0]);
           }
           
           if (doReweighting && makeReweightedPlots)
@@ -1200,6 +1196,9 @@ int main(int argc, char* argv[])
               if ( selectedJetsKFMatched.size() == 2 ) selectedJetsKFMatched.push_back(jetsMatched[2]);
               
               matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
+              
+              if (calculateAverageMass)
+                txtMassRecoAKFMatched << ievt << "  " << matched_top_mass_j_akF << endl;
               
             }  // passKFChi2MatchedCut
           }  // end KF
@@ -1393,7 +1392,11 @@ int main(int argc, char* argv[])
       if ( reco_top_mass_aKF < 0. )
         PrintKFDebug(ievt);
       
-      if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << endl;
+      if (calculateAverageMass)
+      {
+        txtMassRecoBKF << ievt << "  " << reco_top_mass_bKF << endl;
+        txtMassRecoAKF << ievt << "  " << reco_top_mass_aKF << endl;
+      }
       
       if ( doKinFit && makeRecoPlots )
       {
@@ -1406,19 +1409,6 @@ int main(int argc, char* argv[])
       }
       
       
-      
-      if (calculateAverageMass && ! isData)
-      {
-        if (isCM) txtMassRecoCM << ievt << "  " << reco_top_mass_aKF << endl;
-        else
-        {
-          txtMassRecoWMNM << ievt << "  " << reco_top_mass_aKF << endl;
-          if (isWM)
-            txtMassRecoWM << ievt << "  " << reco_top_mass_aKF << endl;
-          else if (isNM)
-            txtMassRecoNM << ievt << "  " << reco_top_mass_aKF << endl;
-        }
-      }  // end aveMassCalc
       
             
       //Fill histos
@@ -1651,17 +1641,7 @@ int main(int argc, char* argv[])
       
     }  // end ! isData
     
-//     if (calculateLikelihood)
-//     {
-//       cout << "Number of events with min in likelihood    " << setw(8) << right << nofGoodEvtsLL[d] << endl;
-//       cout << "Number of events without min in likelihood " << setw(8) << right << nofBadEvtsLL[d] << endl;
-//       if ( nofGoodEvtsLL[d] != 0 || nofBadEvtsLL[d] != 0 )
-//         cout << "   ===> " << 100*(float)nofGoodEvtsLL[d] / (float)(nofGoodEvtsLL[d] + nofBadEvtsLL[d]) << "% are 'good'." << endl;
-//       if (! isData) cout << "Number of events with min in parton likelihood    " << setw(8) << right << nofGoodEvtsLL_gen[d] << endl;
-//     }
     
-    
-    if (calculateAverageMass) txtMassReco.close();
     
     tFileMap[dataSetName.c_str()]->Close();
     
@@ -1674,10 +1654,9 @@ int main(int argc, char* argv[])
   {
     txtMassGenPMatched.close();
     txtMassGenJMatched.close();
-    txtMassRecoCM.close();
-    txtMassRecoWMNM.close();
-    txtMassRecoNM.close();
-    txtMassRecoWM.close();
+    txtMassRecoBKF.close();
+    txtMassRecoAKF.close();
+    txtMassRecoAKFMatched.close();
   }
   
   if (applyWidthSF) txtDebugTopMass.close();
@@ -1704,6 +1683,7 @@ int main(int argc, char* argv[])
   }
   else if (calculateAverageMass)
   {
+    CalculateAverageTopMass();
     cout << "Average mass calculated. Exiting..." << endl;
     exit(1);
   }
@@ -1857,6 +1837,7 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
   tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
   tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+  tree->SetBranchAddress("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, &b_nofTTEventsWithoutAGenTop);
   tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
@@ -1972,6 +1953,8 @@ void InitHisto1D()
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
   
+  histo1D["muon_charge_reco_muPlusFromTop"] = new TH1F("muon_charge_reco_muPlusFromTop", "muon_charge_reco_muPlusFromTop", 5, -2.5, 2.5);
+  histo1D["muon_charge_reco_muMinusFromTop"] = new TH1F("muon_charge_reco_muMinusFromTop", "muon_charge_reco_muMinusFromTop", 5, -2.5, 2.5);
   
 }
 
@@ -2600,7 +2583,8 @@ void ClearVars()
   {
     labelsReco[i] = -9999;
   }
-  massForWidth = 0.01;
+  massHadTopQ = 0.01;
+  massLepTopQ = 0.01;
   catSuffix = "";
   isCM = false;
   isWM = false;
@@ -2801,6 +2785,62 @@ void GetEraFraction(double* fractions)
   
   file->Close();
   ClearMetaData();
+}
+
+void CalculateAverageTopMass()
+{
+  ifstream fileIn;
+  streampos currentPosition;
+  ofstream fileOut;
+  
+  string pathInput = "averageMass/";
+  string outputFileName = pathInput+"averageMass_"+dateString+".txt";
+  fileOut.open(outputFileName.c_str());
+  string inputFiles[] = {"genp_matched", "genj_matched", "recoBKF", "recoAKF", "recoAKF_matched"};
+  int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
+  
+  char dataLine[1024];
+  int nEntries, eventId;
+  double massTop, sumTop, meanTop;
+  
+  for (int iFile = 0; iFile < nInputs; iFile++)
+  {
+    nEntries = 0; sumTop = 0.; meanTop = 0.;
+    
+    string inputFileName = pathInput+"mass_"+inputFiles[iFile]+"_"+dateString+".txt";
+    fileIn.open(inputFileName.c_str());
+    cout << "Opening " << inputFileName << "..." << endl;
+    fileIn.getline(dataLine,sizeof(dataLine));
+    currentPosition = fileIn.tellg();
+    
+    /// Loop over input file
+    while ( fileIn.good() )
+    {
+      eventId = -1; massTop = 0.;
+      
+      fileIn.seekg(currentPosition);
+      fileIn.getline(dataLine,sizeof(dataLine));
+      istringstream iss(dataLine);
+      iss >> eventId >> massTop;
+      currentPosition = fileIn.tellg();
+      
+      nEntries++;
+      sumTop += massTop;
+    }
+    
+    /// Calculate mean
+    meanTop = sumTop/((double)nEntries);
+    
+    fileOut << left << setw(18) << inputFiles[iFile];
+    cout.setf(ios::fixed,ios::floatfield);
+    fileOut << "   " << fixed << showpoint << setprecision(3) << meanTop << endl;
+    
+    /// Close input file
+    fileIn.close();
+  }
+  
+  fileOut.close();
+  cout << "Average masses can be found in " << outputFileName << endl;
 }
 
 void PrintKFDebug(int ievt)
