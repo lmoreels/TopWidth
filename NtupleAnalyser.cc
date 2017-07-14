@@ -98,10 +98,10 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-//string inputDateLL = "170706_1307/"; // btagSF < 1.5
 string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
 //string inputDateLL = "170713_1656/";  // non-rel BW, SF_h*SF_l
-//string inputDateLL = "170626_1940/";  // rel BW, SF_h*SF_l
+//string inputDateLL = "170714_1001/";  // rel BW, SF_h
+//string inputDateLL = "170714_1010/";  // rel BW, SF_h*SF_l
 bool isData = false;
 bool isTTbar = false;
 
@@ -1458,7 +1458,7 @@ int main(int argc, char* argv[])
           if ( doReweighting )
           {
             if (rewHadTopOnly) widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, thisWidth);
-            else widthSF = rew->EventWeightCalculator(massHadTopQ, thisWidth) * rew->EventWeightCalculator(massLepTopQ, thisWidth);
+            else widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, thisWidth) * rew->EventWeightCalculatorNonRel(massLepTopQ, thisWidth);
             
             if ( widthSF != widthSF )  // widthSF = NaN
             {
