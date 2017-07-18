@@ -29,8 +29,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.226101, 0.95563};
-const double Likelihood::calCurveParUnc_[2] = {0.0263112, 0.00645349};
+const double Likelihood::calCurvePar_[2] = {-0.23913, 0.982538};
+const double Likelihood::calCurveParUnc_[2] = {0.0613898, 0.0158178};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -366,10 +366,10 @@ void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, bool isD
 
 void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
+  if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
+  
   if ( redMass > minRedMass_ && redMass < maxRedMass_ )
   {
-    if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
-    
     if (isTTbar)
     {
       if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
@@ -415,7 +415,7 @@ void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double h
   }
 }
 
-void Likelihood::CalculateCMLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
   {
@@ -438,7 +438,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double hadTopMassForWidth
       thisWidth_ = stringWidthArray_[iWidth];
       
       loglike_CM_per_evt_[iWidth] = graph_["CorrectMatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
-      loglike_CM_[iWidth] += loglike_CM_per_evt_[iWidth]*thisWidthSF_;
+      loglike_CM_[iWidth] += loglike_CM_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
     
     if (calculateGoodEvtLL_)
@@ -457,7 +457,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double hadTopMassForWidth
 //        nofGoodEvtsLL[d]++;
         for (int iWidth = 0; iWidth < nWidths_; iWidth++)
         {
-          loglike_CM_good_evts_[iWidth] += loglike_CM_per_evt_[iWidth]*thisWidthSF_;
+          loglike_CM_good_evts_[iWidth] += loglike_CM_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
         }
       }
 //       else
@@ -469,7 +469,7 @@ void Likelihood::CalculateCMLikelihood(double redMass, double hadTopMassForWidth
   }
 }
 
-void Likelihood::CalculateTempLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData)
   {
@@ -492,7 +492,7 @@ void Likelihood::CalculateTempLikelihood(double redMass, double hadTopMassForWid
       thisWidth_ = stringWidthArray_[iWidth];
       
       loglike_temp_per_evt_[iWidth] = graph_["MatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
-      loglike_temp_[iWidth] += loglike_temp_per_evt_[iWidth]*thisWidthSF_;
+      loglike_temp_[iWidth] += loglike_temp_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
     
     if (calculateGoodEvtLL_)
@@ -511,7 +511,7 @@ void Likelihood::CalculateTempLikelihood(double redMass, double hadTopMassForWid
 //        nofGoodEvtsLL[d]++;
         for (int iWidth = 0; iWidth < nWidths_; iWidth++)
         {
-          loglike_temp_good_evts_[iWidth] += loglike_temp_per_evt_[iWidth]*thisWidthSF_;
+          loglike_temp_good_evts_[iWidth] += loglike_temp_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
         }
       }
 //       else
@@ -678,12 +678,14 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 3.8 ) interval = 1.0;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
+  if ( centreVal < 1.6 ) fitmin += 0.1;
   if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
   if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
   //if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 0.8 && fitmin < 0.7 ) fitmin = 0.7;
+  if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
   //if ( centreVal < 0.7 ) fitmax += 0.1;
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
@@ -757,7 +759,7 @@ int Likelihood::InitPull(int nPsExp)
   return nPsExp;
 }
 
-void Likelihood::AddPsExp(int thisPsExp, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData) std::cerr << "Likelihood::Pull: Will not use data for pseudo experiments..." << std::endl;
   else if (calledLLCalculation_)
@@ -771,10 +773,10 @@ void Likelihood::AddPsExp(int thisPsExp, double hadTopMassForWidthSF, double lep
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      loglike_pull_[iWidth][thisPsExp] += loglike_per_evt_[iWidth]*thisWidthSF_;
+      loglike_pull_[iWidth][thisPsExp] += loglike_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
   }
-  else std::cerr << "Likelihood::Pull: Did not calculate likelihoods! Cannot get input for pseudo experiments..." << std::endl;
+  else std::cerr << "Likelihood::Pull: Did not calculate likelihoods! Cannot get input for pseudo experiments..." << thisPsExp << std::endl;
 }
 
 void Likelihood::CalculatePull(double inputWidth)
@@ -804,7 +806,7 @@ void Likelihood::CalculatePull(double inputWidth)
   /// Fill histogram with (Gamma_j - <Gamma>)/sigma_j
   double fillValue;
   filePull->cd();
-  TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 50, -5., 5.);
+  TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 40, -5., 5.);
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {

@@ -46,8 +46,8 @@ class Likelihood{
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
     void CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
-    void CalculateCMLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
-    void CalculateTempLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
     void GetOutputWidth(double inputWidth, bool writeToFile = false, bool makeNewFile = false);
@@ -56,7 +56,7 @@ class Likelihood{
     void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile = false, bool makeNewFile = false);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
-    void AddPsExp(int thisPsExp, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    void AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculatePull(double inputWidth);
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
