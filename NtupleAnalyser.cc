@@ -43,7 +43,7 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
-bool makeControlPlots = true;
+bool makeControlPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
@@ -98,7 +98,11 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
+string inputDateLL = "170718_1747/";  // without W+1/2jets
+//string inputDateLL = "170718_1945/";  // without W+1/2jets, no lepton SFs
+//string inputDateLL = "170718_1925/";  // without W+1/2jets, no pu SFs
+//string inputDateLL = "170718_1758/";  // without W+1/2jets, no b tag SFs
+//string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
 //string inputDateLL = "170713_1656/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170714_1001/";  // rel BW, SF_h
 //string inputDateLL = "170714_1010/";  // rel BW, SF_h*SF_l
@@ -607,6 +611,7 @@ TRandom3 random3;
 double toyValues[nPseudoExps]; // = random3.Uniform(0,1);
 double toyMax;
 int nEvtsInPseudoExp[nPseudoExps][15] = {0}, nDataEvts;
+double nEvtsInPseudoExpW[nPseudoExps][15] = {0.};
 
 
 /// Variables
@@ -766,7 +771,7 @@ int main(int argc, char* argv[])
   pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
-  if (calculateLikelihood) cout << "Calculating -loglikelihood values..." << endl;
+  if (calculateLikelihood) cout << "Calculating -loglikelihood values using templates from " << inputDateLL << endl;
   if (doPseudoExps)       cout << "              for pseudo experiments" << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
@@ -1120,7 +1125,7 @@ int main(int argc, char* argv[])
       
       if (doPseudoExps)
       {
-        lumiWeight = 1.;
+        lumiWeight = 1.;  // select same amount as in data, so no reweighting necessary
         
         if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
                                                    //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
@@ -1390,13 +1395,13 @@ int main(int argc, char* argv[])
             {
               muMinusFromTop = true;
               if ( mc_status[i] == 23 ) genmuon = i;
-              else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
+              else if ( genmuon == -9999 ) genmuon = i;
             }
             if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
             {
               muPlusFromTop = true;
               if ( mc_status[i] == 23 ) genmuon = i;
-              else if ( mc_status[i] != 23 && genmuon == -9999 ) genmuon = i;
+              else if ( genmuon == -9999 ) genmuon = i;
             }
             
             /// Partons/gluons
@@ -1462,9 +1467,6 @@ int main(int argc, char* argv[])
             
             if ( widthSF != widthSF )  // widthSF = NaN
             {
-              cout << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
-              cout << "Top mass: " << (mcParticles[topQuark]).M() << "; antiTop mass: " << (mcParticles[antiTopQuark]).M() << "; Lepton charge: " << muon_charge[0] << "; width SF: " << widthSF << endl;
-              
               continue;
             }
             
@@ -1799,9 +1801,9 @@ int main(int argc, char* argv[])
         {
           like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
-            like->CalculateCMLikelihood(redTopMass, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+            like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ( isCM || isWM ) )
-            like->CalculateTempLikelihood(redTopMass, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+            like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
         }
         
         if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
@@ -1855,7 +1857,9 @@ int main(int argc, char* argv[])
             //if ( toyValue > toyMax ) continue;
             if ( toyValues[iPsExp] > toyMax ) continue;
             (nEvtsInPseudoExp[iPsExp][d])++;
-            like->AddPsExp(iPsExp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+            nEvtsInPseudoExpW[iPsExp][d] += scaleFactor;
+            if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
+              like->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
             
             /// Fill plots only for first pseudo experiment
             if ( makePlots && iPsExp == 0 )
@@ -2057,17 +2061,20 @@ int main(int argc, char* argv[])
     if (doPseudoExps)
     {
       cout << endl << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
-      double totMCPsExp;
+      double totMCPsExp, totMCPsExpW;
       for (int i = 0; i < 3; i++)
       {
         totMCPsExp = 0;
+        totMCPsExpW = 0.;
         cout << "PseudoExperiment " << std::setw(3) << std::right << i << endl;
         for (unsigned int d = 1; d < datasets.size(); d++)
         {
           totMCPsExp += nEvtsInPseudoExp[i][d];
+          totMCPsExpW += nEvtsInPseudoExpW[i][d];
           cout << "                      " << datasets[d]->Name() << ": " << nEvtsInPseudoExp[i][d] << endl;
         }
-        cout << "                                            " << "Total MC: " << totMCPsExp << endl;
+        cout << "                                            Total MC: " << totMCPsExp << endl;
+        cout << "                                           (weighted: " << totMCPsExpW << ")" << endl;
       }
     }
     
