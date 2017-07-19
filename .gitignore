@@ -1,6 +1,7 @@
 *.d
 *.dylib
 *.o
+*.pcm
 *.png
 *.root
 *.root.bk
@@ -51,6 +52,7 @@ testGenJets
 testLikelihood
 testMatching
 testMCParts_ntuples
+testPU
 testSkims
 testRFs
 testTGraphs

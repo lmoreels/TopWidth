@@ -157,6 +157,7 @@ class Likelihood{
     void ReadLLValuesFromFile(std::string inputFileName, std::string inputDir);
     /// Write file
     void WritePsExpOutput(std::pair<double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth);
+    void WriteFuncOutput(int nPoints, double *arrayCentre, double *arrayContent, std::string name);
     void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim);
     void CombineOutput();
 };

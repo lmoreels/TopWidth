@@ -1174,6 +1174,8 @@ void InitHisto2D()
   
   histo2D["puSF_vs_nTruePU"] = new TH2F("puSF_vs_nTruePU","nTruePU vs. pu SF (TT); pu SF; nTruePU", 80, 0, 2, 60, 0, 60);
   histo2D["puSF_vs_nVtx"] = new TH2F("puSF_vs_nVtx","nVtx vs. pu SF (TT); pu SF; nVtx", 80, 0, 2, 60, 0, 60);
+  histo2D["nTruePU_vs_puSF"] = new TH2F("nTruePU_vs_puSF","pu SF vs. nTruePU (TT); nTruePU; pu SF", 60, 0, 60, 80, 0, 2);
+  histo2D["nVtx_vs_puSF"] = new TH2F("nVtx_vs_puSF","pu SF vs. nVtx (TT); nVtx; pu SF", 60, 0, 60, 80, 0, 2);
   histo2D["nVtx_vs_nTruePU"] = new TH2F("nVtx_vs_nTruePU","nTruePU vs. nVtx (TT); nVtx; nTruePU", 60, 0, 60, 60, 0, 60);
   
 }
@@ -1363,6 +1365,8 @@ void FillCatsPlots()
   {
     histo2D["puSF_vs_nTruePU"]->Fill(puSF_nTruePU,npu);
     histo2D["puSF_vs_nVtx"]->Fill(puSF_nVtx,nvtx);
+    histo2D["nTruePU_vs_puSF"]->Fill(npu,puSF_nTruePU);
+    histo2D["nVtx_vs_puSF"]->Fill(nvtx,puSF_nVtx);
     histo2D["nVtx_vs_nTruePU"]->Fill(nvtx,npu);
   }
   

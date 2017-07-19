@@ -42,11 +42,11 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = true;
+bool makePlots = false;
 bool makeControlPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool makeTGraphs = false;
+bool makeTGraphs = true;
 bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
@@ -98,10 +98,18 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170718_1747/";  // without W+1/2jets
-//string inputDateLL = "170718_1945/";  // without W+1/2jets, no lepton SFs
-//string inputDateLL = "170718_1925/";  // without W+1/2jets, no pu SFs
-//string inputDateLL = "170718_1758/";  // without W+1/2jets, no b tag SFs
+string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
+//string inputDateLL = "170719_1802/";  // without W+1/2jets, all SFs
+string whichTemplates()
+{
+  if      (! applyLeptonSF && ! applyBTagSF && ! applyPU ) return "170719_1800/";
+  else if (  applyLeptonSF && ! applyBTagSF &&   applyPU ) return "170719_1803/";
+  else if (  applyLeptonSF &&   applyBTagSF && ! applyPU ) return "170719_1804/";
+  else if (  applyLeptonSF &&   applyBTagSF &&   applyPU ) return "170719_1802/";
+}
+//string inputDateLL = "170719_1800/";  // without W+1/2jets, no SFs
+//string inputDateLL = "170719_1804/";  // without W+1/2jets, no pu SFs
+//string inputDateLL = "170719_1803/";  // without W+1/2jets, no b tag SFs
 //string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
 //string inputDateLL = "170713_1656/";  // non-rel BW, SF_h*SF_l
 //string inputDateLL = "170714_1001/";  // rel BW, SF_h
@@ -1069,6 +1077,9 @@ int main(int argc, char* argv[])
           endSys = 1;
         }
       }
+      
+      /// Temporarily, to make templates
+      if (! isTTbar) continue;
       
       doReweighting = false;
       if ( isTTbar && (applyWidthSF || runListWidths) ) doReweighting = true;

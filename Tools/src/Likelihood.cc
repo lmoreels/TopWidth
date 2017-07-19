@@ -1,6 +1,6 @@
 #include "../interface/Likelihood.h"
 
-const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8., 8.25, 8.5, 8.75, 9., 9.25, 9.5, 9.75, 10., 10.5, 11., 11.5, 12.};
+const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8., 8.25, 8.5, 8.75, 9., 9.25, 9.5, 9.75, 10., 10.5, 11., 11.5, 12.};
 
 const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
 
@@ -234,6 +234,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
         binContentArray[iCat][i] = (vecBinContents_[listCats_[iCat]+"_"+suffix_]).at(i);
+        WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+suffix_);
         // For CM events
         if ( iCat == 0 ) { likelihoodCMArray[i] = -TMath::Log(binContentArray[iCat][i]);}
         // Calculate event fractions (one time)
@@ -1007,6 +1008,19 @@ void Likelihood::WritePsExpOutput(std::pair<double,double> *outputWidth, std::pa
     txtOutputPsExp_ << std::setw(4) << std::right << iPsExp << "   " << std::setw(8) << std::left << outputWidth[iPsExp].first << "   " << std::setw(8) << std::left << outputWidth[iPsExp].second << "   " << std::setw(8) << std::left << inputWidth[iPsExp].first << std::setw(8) << std::left << inputWidth[iPsExp].second << std::endl;
   }
   txtOutputPsExp_.close();
+}
+
+void Likelihood::WriteFuncOutput(int nPoints, double *arrayCentre, double *arrayContent, std::string name)
+{
+  std::string outputTxtName = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+".txt";
+  txtOutput_.open(outputTxtName.c_str());
+  
+  for (int i = 0; i < nPoints; i++)
+  {
+    txtOutput_ << std::setw(8) << std::right << arrayCentre[i];
+    txtOutput_ << "  " << std::setw(8) << std::right << arrayContent[i] << std::endl;
+  }
+  txtOutput_.close();
 }
 
 void Likelihood::WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim)
