@@ -42,12 +42,12 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = false;
+bool makePlots = true;
 bool makeControlPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -581,6 +581,7 @@ pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned 
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
 bool muonmatched = false;
+bool foundMuPlus = false, foundMuMinus = false;
 bool muPlusFromTop = false, muMinusFromTop = false;
 vector<unsigned int> partonId;
 
@@ -701,6 +702,7 @@ int main(int argc, char* argv[])
   if (testHistos)
   {
     makePlots = true;
+    makeControlPlots = true;
     doGenOnly = false;
     makeTGraphs = false;
     runListWidths = false;
@@ -1390,16 +1392,20 @@ int main(int argc, char* argv[])
             /// Status restriction: Final state particle or particle from hardest process
             if ( (mc_status[i] > 1 && mc_status[i] <= 20) || mc_status[i] >= 30 ) continue;
             
-            /// Muons
-            if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 && mc_granny[i] == -pdgID_top )		// mu-, W-, tbar
+            /// Muons   // from top or from W (in ST tW channel)
+            if ( mc_pdgId[i] == 13 && mc_mother[i] == -24 )		// mu-, W-
             {
-              muMinusFromTop = true;
+              foundMuMinus = true;
+              if ( mc_granny[i] == -pdgID_top ) muMinusFromTop = true;  // t~
+              
               if ( mc_status[i] == 23 ) genmuon = i;
               else if ( genmuon == -9999 ) genmuon = i;
             }
-            if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 && mc_granny[i] == pdgID_top )		// mu+, W+, t
+            if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 )		// mu+, W+
             {
-              muPlusFromTop = true;
+              foundMuPlus = true;
+              if ( mc_granny[i] == pdgID_top ) muPlusFromTop = true;  // t
+              
               if ( mc_status[i] == 23 ) genmuon = i;
               else if ( genmuon == -9999 ) genmuon = i;
             }
@@ -1425,6 +1431,11 @@ int main(int argc, char* argv[])
             if (test) cout << "Both tops decay leptonically... Event " << ievt << " will not be matched." << endl;
             doMatching = false;
           }
+          else if ( foundMuMinus && foundMuPlus )
+          {
+            if (test) cout << "Found fully leptonic decay of ST tW... Event " << ievt << " will not be matched." << endl;
+            doMatching = false;
+          }
           
           if ( isTTbar && (topQuark == -9999 || antiTopQuark == -9999) )
           {
@@ -1435,6 +1446,15 @@ int main(int argc, char* argv[])
             }
             continue;
           }
+//           else if ( dataSetName.find("ST_tW") != std::string::npos && ( (foundMuMinus && topQuark == -9999) || (foundMuPlus && antiTopQuark == -9999) ) )
+//           {
+//             if ( thisWidth == 1 )
+//             {
+//               txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
+//               txtDebugTopMass << "Top mass id: " << topQuark << "; antiTop mass id: " << antiTopQuark << "; Lepton charge: " << muon_charge[0] << endl;
+//             }
+//             continue;
+//           }
           
           if ( runSystematics && listSyst[iSys].find("topPtRew") != std::string::npos )
           {
@@ -1532,8 +1552,8 @@ int main(int argc, char* argv[])
               
               if (calculateAverageMass)
               {
-                txtMassGenPMatched << ievt << "  " << matched_top_mass_q << endl;
-                txtMassGenJMatched << ievt << "  " << matched_top_mass_j << endl;
+                txtMassGenPMatched << ievt << "  " << matched_top_mass_q << "  " << scaleFactor << "  " << lumiWeight << endl;
+                txtMassGenJMatched << ievt << "  " << matched_top_mass_j << "  " << scaleFactor << "  " << lumiWeight << endl;
               }
               
               
@@ -1778,7 +1798,7 @@ int main(int argc, char* argv[])
         if ( reco_top_mass_aKF < 0. )
           PrintKFDebug(ievt);
         
-        if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << endl;
+        if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
         
         if ( doKinFit && makePlots )
         {
@@ -1835,14 +1855,14 @@ int main(int argc, char* argv[])
         
         if (calculateAverageMass && ! isData)
         {
-          if (isCM) txtMassRecoCM << ievt << "  " << reco_top_mass_aKF << endl;
+          if (isCM) txtMassRecoCM << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
           else
           {
-            txtMassRecoWMNM << ievt << "  " << reco_top_mass_aKF << endl;
+            txtMassRecoWMNM << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
             if (isWM)
-              txtMassRecoWM << ievt << "  " << reco_top_mass_aKF << endl;
+              txtMassRecoWM << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
             else if (isNM)
-              txtMassRecoNM << ievt << "  " << reco_top_mass_aKF << endl;
+              txtMassRecoNM << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
           }
         }  // end aveMassCalc
         
@@ -2538,7 +2558,9 @@ void InitMSPlots()
   }
   
   /// SFs
-  MSPlot["btag_SF"] = new MultiSamplePlot(datasetsMSP, "btag_SF", 80, 0.5, 2.5, "btag SF");
+  MSPlot["scaleFactor"] = new MultiSamplePlot(datasetsMSP, "scaleFactor", 80, 0., 2., "SF");
+  MSPlot["btag_SF"] = new MultiSamplePlot(datasetsMSP, "btag_SF", 80, 0., 2., "btag SF");
+  MSPlot["pu_SF"] = new MultiSamplePlot(datasetsMSP, "pu_SF", 80, 0., 2., "pu SF");
   
   /// Reco
   MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 50, 0, 200, "m_{W}", "GeV");
@@ -2556,7 +2578,9 @@ void InitMSPlots()
   
   if (doKinFit)
   {
-    MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0.5, 2.5, "btag SF");
+    MSPlot["scaleFactor_aKF"] = new MultiSamplePlot(datasetsMSP, "scaleFactor_aKF", 80, 0., 2., "SF");
+    MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0., 2., "btag SF");
+    MSPlot["pu_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "pu_SF_aKF", 80, 0., 2., "pu SF");
     MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 50, 0, 200, "m_{W,kf}", "GeV");
     MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
     MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 130, 210, "m_{t,kf}", "GeV");
@@ -2671,6 +2695,10 @@ void InitHisto2D()
   
   InitHisto2DMatch();
   
+  histo2D["puSF_vs_nTruePU"] = new TH2F("puSF_vs_nTruePU","nTruePU vs. pu SF (TT); pu SF; nTruePU", 80, 0, 2, 60, 0, 60);
+  histo2D["puSF_vs_nVtx"] = new TH2F("puSF_vs_nVtx","nVtx vs. pu SF (TT); pu SF; nVtx", 80, 0, 2, 60, 0, 60);
+  histo2D["nVtx_vs_nTruePU"] = new TH2F("nVtx_vs_nTruePU","nTruePU vs. nVtx (TT); nVtx; nTruePU", 60, 0, 60, 60, 0, 60);
+  
   /// Reco
   histo2D["dR_lep_b_lep_vs_had_CM"] = new TH2F("dR_lep_b_lep_vs_had_CM","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, correct match); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
   histo2D["dR_lep_b_lep_vs_had_WM"] = new TH2F("dR_lep_b_lep_vs_had_WM","#DeltaR(l,b_{had}) vs. #Delta R(l,b_{l}) (reco, wrong permutations); #Delta R(l,b_{lep}); #Delta R(l,b_{had})", 25, 0, 5, 25, 0, 5);
@@ -2774,42 +2802,68 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
     
     if ( fabs(mc_pdgId[partonId[j]]) < 6 )  //light/b quarks, 6 should stay hardcoded
     {
-      if ( ( muPlusFromTop && mc_mother[partonId[j]] == -24 && mc_granny[partonId[j]] == -pdgID_top )
-          || ( muMinusFromTop && mc_mother[partonId[j]] == 24 && mc_granny[partonId[j]] == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
+      if (isTTbar)
       {
-        if (verbose > 3)
-          cout << "Light jet: " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
-        
-        if (MCPermutation[0].first == 9999)
+        if ( ( muPlusFromTop && mc_mother[partonId[j]] == -24 /*&& mc_granny[partonId[j]] == -pdgID_top*/ )
+          || ( muMinusFromTop && mc_mother[partonId[j]] == 24 /*&& mc_granny[partonId[j]] == pdgID_top*/ ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
         {
-          MCPermutation[0] = JetPartonPair[i];
-        }
-        else if (MCPermutation[1].first == 9999)
-        {
-          MCPermutation[1] = JetPartonPair[i];
-        }
-        else
-        {
-          cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
-          cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
-          cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
-//          cerr << " -- ievt: " << ievt << endl;
-          exit(1);
+          if (verbose > 3)
+            cout << "Light jet: " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
+
+          if (MCPermutation[0].first == 9999)
+          {
+            MCPermutation[0] = JetPartonPair[i];
+          }
+          else if (MCPermutation[1].first == 9999)
+          {
+            MCPermutation[1] = JetPartonPair[i];
+          }
+          else
+          {
+            cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
+            cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
+            cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
+  //          cerr << " -- ievt: " << ievt << endl;
+            exit(1);
+          }
         }
       }
+//       else   /// normally only ST tW should give results
+//       {
+//         if ( ( foundMuPlus && mc_mother[partonId[j]] == -24 && mc_granny[partonId[j]] == -pdgID_top )
+//           || ( foundMuMinus && mc_mother[partonId[j]] == 24 && mc_granny[partonId[j]] == pdgID_top ) )  // if mu+, check if mother of particle is W- and granny tbar --> then it is a quark from W- decay
+//         {
+//           if (MCPermutation[0].first == 9999)
+//           {
+//             MCPermutation[0] = JetPartonPair[i];
+//           }
+//           else if (MCPermutation[1].first == 9999)
+//           {
+//             MCPermutation[1] = JetPartonPair[i];
+//           }
+//           else
+//           {
+//             cerr << "Found a third jet coming from a W boson which comes from a top quark..." << endl;
+//             cerr << " -- muMinusFromMtop: " << muMinusFromTop << " muPlusFromMtop: " << muPlusFromTop << endl;
+//             cerr << " -- pdgId: " << mc_pdgId[partonId[j]] << " mother: " << mc_mother[partonId[j]] << " granny: " << mc_granny[partonId[j]] << " Pt: " << mc_pt[partonId[j]] << endl;
+//   //          cerr << " -- ievt: " << ievt << endl;
+//             exit(1);
+//           }
+//         }
+//       }
     }
     if ( fabs(mc_pdgId[partonId[j]]) == 5 )
     {
-      if ( ( muPlusFromTop && mc_mother[partonId[j]] == -pdgID_top )
-          || ( muMinusFromTop && mc_mother[partonId[j]] == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
+      if ( ( (muPlusFromTop || foundMuPlus) && mc_mother[partonId[j]] == -pdgID_top )
+          || ( (muMinusFromTop || foundMuMinus) && mc_mother[partonId[j]] == pdgID_top ) )  // if mu+ (top decay leptonic) and mother is antitop ---> hadronic b
       {
         if (verbose > 3)
           cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
         
         MCPermutation[2] = JetPartonPair[i];
       }
-      else if ( ( muPlusFromTop && mc_mother[partonId[j]] == pdgID_top )
-               || ( muMinusFromTop && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
+      else if ( ( (muPlusFromTop || foundMuPlus) && mc_mother[partonId[j]] == pdgID_top )
+               || ( (muMinusFromTop || foundMuMinus) && mc_mother[partonId[j]] == -pdgID_top ) )  // if mu+ (top decay leptonic) and mother is top ---> leptonic b
       {
         if (verbose > 3)
           cout << "b jet:     " << j << "  Status: " << mc_status[partonId[j]] << "  pdgId: " << mc_pdgId[partonId[j]] << "  Mother: " << mc_mother[partonId[j]] << "  Granny: " << mc_granny[partonId[j]] << "  Pt: " << mc_pt[partonId[j]] << "  Eta: " << mc_eta[partonId[j]] << "  Phi: " << mc_phi[partonId[j]] << "  Mass: " << mc_M[partonId[j]] << endl;
@@ -3076,6 +3130,8 @@ void ClearMatching()
   antiTopQuark = -9999;
   genmuon = -9999;
   muonmatched = false;
+  foundMuPlus = false;
+  foundMuMinus = false;
   muPlusFromTop = false;
   muMinusFromTop = false;
   partonId.clear();
@@ -3339,6 +3395,13 @@ void FillKinFitPlots(bool doneKinFit)
 
 void FillCatsPlots(string catSuffix)
 {
+  if (isTTbar)
+  {
+    histo2D["puSF_vs_nTruePU"]->Fill(puSF,npu);
+    histo2D["puSF_vs_nVtx"]->Fill(puSF,nvtx);
+    histo2D["nVtx_vs_nTruePU"]->Fill(nvtx,npu);
+  }
+  
   if (! isData)
   {
     histo1D["red_top_mass_bkgd"]->Fill(redTopMass);
@@ -3382,11 +3445,17 @@ void FillMSPlots(int d, bool doneKinFit)
   string suffix = "";
   if (doneKinFit) suffix = "_aKF";
   
+  if (makeControlPlots) FillControlPlots(datasetsMSP, d, suffix);
+  
+  if (! isData)
+  {
+    MSPlot["scaleFactor"+suffix]->Fill(scaleFactor, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
+    MSPlot["btag_SF"+suffix]->Fill(btagSF, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
+    MSPlot["pu_SF"+suffix]->Fill(puSF, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
+  }
+  
   if (! doneKinFit)
   {
-    FillControlPlots(datasetsMSP, d, suffix);
-    
-    if (! isData) MSPlot["btag_SF"]->Fill(btagSF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["W_mass"]->Fill(reco_W_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_bKF < 210 && reco_top_mass_bKF > 130 )
@@ -3406,8 +3475,6 @@ void FillMSPlots(int d, bool doneKinFit)
   }
   else if (doKinFit)
   {
-    FillControlPlots(datasetsMSP, d, suffix);
-    
     if ( kFitChi2 < 5 )
     {
       MSPlot["KF_Chi2"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
@@ -3415,7 +3482,6 @@ void FillMSPlots(int d, bool doneKinFit)
         MSPlot["KF_Chi2_narrow"]->Fill(kFitChi2, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     }
     
-    if (! isData) MSPlot["btag_SF"+suffix]->Fill(btagSF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["W_mass"+suffix]->Fill(reco_W_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"+suffix]->Fill(reco_top_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_aKF < 210 && reco_top_mass_aKF > 130 )
