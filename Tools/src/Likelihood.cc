@@ -133,17 +133,13 @@ void Likelihood::BookHistograms()
   {
     thisWidth_ = stringWidthArray_[iWidth];
     
-    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_CM_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_CM_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", CM; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
-    
-    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_WM_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_WM_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", WM; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
-    
-    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
-    histo_[("Red_top_mass_NM_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_NM_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", NM; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
+    for (int iCat = 0; iCat < nCats_; iCat++)
+    {
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 900, 0.5, 2.0);
+    }
   }
 }
 
@@ -164,6 +160,7 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double hadTop
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_450b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
+      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_900b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
     }
   }
 }
@@ -219,7 +216,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       
       /// Get histo to smooth
       histoName_ = listCats_[iCat]+"_"+suffix_;
-      histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_450b"]->Clone(histoName_.c_str());
+      histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_900b"]->Clone(histoName_.c_str());
       histoSm_[histoName_]->Smooth();
       
       nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
@@ -234,7 +231,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
       for (int iBin = binMin; iBin < binMax+1; iBin++)
       {
         nEvents[iCat] += histoSm_[histoName_]->GetBinContent(iBin);
-        nEventsBS[iCat] += histo_["Red_top_mass_"+histoName_+"_450b"]->GetBinContent(iBin);
+        nEventsBS[iCat] += histo_["Red_top_mass_"+histoName_+"_900b"]->GetBinContent(iBin);
       }
       totEvents += nEvents[iCat];
       if ( iCat < nCats_-1) totEventsTemp += nEvents[iCat];
@@ -258,7 +255,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
     
     /// Make arrays as input for TGraph
     const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double binCentreArray[nPoints], binContentArray[nCats_][nPoints] = {0.}, totalBinContentArray[nPoints], totalBinContentTempArray[nPoints], likelihoodCMArray[nPoints], likelihoodTempArray[nPoints], likelihoodArray[nPoints];
+    double binCentreArray[nPoints], binContentArray[nCats_][nPoints], totalBinContentArray[nPoints], totalBinContentTempArray[nPoints], likelihoodCMArray[nPoints], likelihoodTempArray[nPoints], likelihoodArray[nPoints];
     ClearArray(nPoints, binCentreArray);
     for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
     ClearArray(nPoints, totalBinContentArray); ClearArray(nPoints, totalBinContentTempArray);
