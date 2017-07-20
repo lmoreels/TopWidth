@@ -122,7 +122,7 @@ void Likelihood::ClearArray2D(int size, double (*array)[3])
   {
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-      array[iCat][i] = 0.;
+      array[i][iCat] = 0.;
     }
   }
 }
@@ -258,7 +258,11 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
     
     /// Make arrays as input for TGraph
     const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double binCentreArray[nPoints] = {0.}, binContentArray[nCats_][nPoints] = {0.}, likelihoodCMArray[nPoints] = {0.}, totalBinContentArray[nPoints] = {0.}, totalBinContentTempArray[nPoints] = {0.}, likelihoodTempArray[nPoints] = {0.}, likelihoodArray[nPoints] = {0.};
+    double binCentreArray[nPoints], binContentArray[nCats_][nPoints] = {0.}, totalBinContentArray[nPoints], totalBinContentTempArray[nPoints], likelihoodCMArray[nPoints], likelihoodTempArray[nPoints], likelihoodArray[nPoints];
+    ClearArray(nPoints, binCentreArray);
+    for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
+    ClearArray(nPoints, totalBinContentArray); ClearArray(nPoints, totalBinContentTempArray);
+    ClearArray(nPoints, likelihoodCMArray); ClearArray(nPoints, likelihoodTempArray); ClearArray(nPoints, likelihoodArray);
     for (int i = 0; i < nPoints; i++)
     {
       binCentreArray[i] = (vecBinCentres_[listCats_[0]+"_"+suffix_]).at(i);
