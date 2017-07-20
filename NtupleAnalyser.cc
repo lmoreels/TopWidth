@@ -46,8 +46,10 @@ bool makePlots = false;
 bool makeControlPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
-bool makeTGraphs = true;
-bool calculateLikelihood = false;
+bool calculateFractions = false;
+bool makeTGraphs = false;
+bool calculateLikelihood = true;
+bool useTTTemplates = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -62,6 +64,7 @@ bool applyBTagSF = true;
 bool rewHadTopOnly = true;
 bool applyWidthSF = false;
 double scaleWidth = 1.;
+
 
 bool runListWidths = false;
 double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
@@ -98,7 +101,9 @@ string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
+string inputDateLL = "170720_1838/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 450b
+//string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
+//string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
 //string inputDateLL = "170719_1802/";  // without W+1/2jets, all SFs
 string whichTemplates()
 {
@@ -131,8 +136,8 @@ int nofNotCorrectlyMatchedAKFNoCut = 0;
 int nofNoMatchAKFNoCut = 0;
 int nofCM = 0, nofWM = 0, nofNM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
-double nofCMl = 0, nofWMl = 0, nofNMl = 0;
-double nofCM_weighted = 0, nofWM_weighted = 0, nofNM_weighted = 0;
+double nofCMl = 0., nofWMl = 0., nofNMl = 0.;
+double nofCM_weighted = 0., nofWM_weighted = 0., nofNM_weighted = 0.;
 
 /// Lumi per data era
 double lumi_runBCDEF = 19.67550334113;  // 1/fb
@@ -174,6 +179,8 @@ map<string,TTree*> tStatsTree;
 //map<string,TNtuple*> ntuple;
 
 vector < Dataset* > datasets, datasetsMSP, datasetsTemp;
+vector<string> dataSetNames;
+vector<int> includeDataSets;
 
 ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMNM, txtMassRecoNM, txtMassRecoWM, txtMassReco;
 
@@ -721,6 +728,14 @@ int main(int argc, char* argv[])
     doPseudoExps = false;
     runSystematics = false;
   }
+  if (calculateFractions)
+  {
+    makeTGraphs = false;
+    calculateLikelihood = false;
+    doPseudoExps = false;
+    runListWidths = false;
+    runSystematics = false;
+  }
   if (makeTGraphs)
   {
     runListWidths = false;
@@ -810,8 +825,17 @@ int main(int argc, char* argv[])
   for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
   {
     string dataSetName = datasets[d]->Name();
-//    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
+    
+    dataSetNames.push_back(dataSetName);
+    
+    
+    if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
+      includeDataSets.push_back(0);
 //      Luminosity = datasets[d]->EquivalentLumi();
+    else if ( dataSetName.find("TT") != std::string::npos )
+      includeDataSets.push_back(1);
+    else
+      includeDataSets.push_back(1);
     
     if ( dataSetName.find("QCD") != std::string::npos )
     {
@@ -906,17 +930,28 @@ int main(int argc, char* argv[])
   
   if (makeTGraphs)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
   }
   if (calculateLikelihood)
   {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
-    calculateLikelihood = like->ConstructTGraphsFromFile();
-    calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
-    calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
+    if (useTTTemplates)
+    {
+      calculateLikelihood = like->ConstructTGraphsFromFile("OutputNEvents/", dataSetNames, includeDataSets);
+    }
+    else
+    {
+      calculateLikelihood = like->ConstructTGraphsFromFile();
+      calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
+      calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
+    }
     
     if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths_syst.root").c_str(), "RECREATE");
     else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths.root").c_str(), "RECREATE");
+  }
+  if (calculateFractions)
+  {
+    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
   }
   if (doPseudoExps)
   {
@@ -1079,7 +1114,12 @@ int main(int argc, char* argv[])
       }
       
       /// Temporarily, to make templates
-      if (! isTTbar) continue;
+      //if (! isTTbar) continue;
+      if (! isData && useTTTemplates && includeDataSets[d] == 0 )
+      {
+        cout << "Skipping dataset, because not included in likelihood calculation" << endl;
+        continue;
+      }
       
       doReweighting = false;
       if ( isTTbar && (applyWidthSF || runListWidths) ) doReweighting = true;
@@ -1093,11 +1133,6 @@ int main(int argc, char* argv[])
       {
         cout << "Skipping dataset..." << endl;
         continue;
-      }
-      
-      if (calculateAverageMass)
-      {
-        txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
       }
       
       
@@ -1154,6 +1189,11 @@ int main(int argc, char* argv[])
 //           cout << " x 0.908 = " << toyMax;
 //         }
         cout << endl;
+      }
+      
+      if (calculateAverageMass)
+      {
+        txtMassReco.open(("averageMass/mass_reco_"+dataSetName+"_"+dateString+".txt").c_str());
       }
       
       
@@ -1597,7 +1637,8 @@ int main(int argc, char* argv[])
                   if (calculateLikelihood)
                   {
                     double temp = matched_top_mass_j_akF/aveTopMassLL;
-                    like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+                    if (! useTTTemplates)
+                      like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
                   }
                 }  // passKFChi2MatchedCut
               }  // end KF
@@ -1831,9 +1872,9 @@ int main(int argc, char* argv[])
         if (calculateLikelihood)
         {
           like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && isCM )  // isCM ensures ! isData
+          if ( ! doPseudoExps && ! useTTTemplates && isCM )  // isCM ensures ! isData
             like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && ( isCM || isWM ) )
+          if ( ! doPseudoExps && ! useTTTemplates && ( isCM || isWM ) )
             like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
         }
         
@@ -1861,6 +1902,11 @@ int main(int argc, char* argv[])
             nofNMl += lumiWeight*scaleFactor;
             nofNM_weighted += lumiWeight*scaleFactor*widthSF;
             if (isTTbar) nofNM_TT++;
+          }
+          
+          if (calculateFractions)
+          {
+            like->AddToFraction(d, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, doReweighting, isCM, isWM, isNM);
           }
         }
         
@@ -2054,16 +2100,19 @@ int main(int argc, char* argv[])
         fileWidths->cd();
         if (runSystematics) like->GetOutputWidth(thisWidth, listSyst[iSys], true, false);
         else like->GetOutputWidth(thisWidth, true, false);
-        cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-        like->GetOutputWidth(thisWidth, "CM", true, false);
-        cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-        like->GetOutputWidth(thisWidth, "matched", true, false);
+        if (! useTTTemplates)
+        {
+          cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+          like->GetOutputWidth(thisWidth, "CM", true, false);
+          cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
+          like->GetOutputWidth(thisWidth, "matched", true, false);
+        }
       }
       else
       {
         cout << "Standard output width: " << endl;
         like->GetOutputWidth(thisWidth, true, true);
-        if (! doPseudoExps)
+        if (! doPseudoExps && ! useTTTemplates)
         {
           cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
           like->GetOutputWidth(thisWidth, "CM", true, true);
@@ -2075,6 +2124,10 @@ int main(int argc, char* argv[])
         //cout << "Output width from file (standard calculation): " << endl;
         //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
       }
+    }
+    if (calculateFractions)
+    {
+      like->CalculateFractions("OutputNEvents/", dataSetNames);
     }
     
     if (doPseudoExps)
@@ -2111,7 +2164,7 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths

@@ -43,6 +43,7 @@ class Likelihood{
     /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
+    bool ConstructTGraphsFromFile(std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
     void CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
@@ -60,6 +61,9 @@ class Likelihood{
     void CalculatePull(double inputWidth);
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
+    /// Calculate fractions
+    void AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isNM);
+    void CalculateFractions(std::string dirName, std::vector<std::string> datasetNames);
     /// Write output from likelihood calculation to file
     void PrintLikelihoodOutput(std::string llFileName);
     void PrintLikelihoodOutputData(std::string llFileName);
@@ -116,6 +120,7 @@ class Likelihood{
     std::ofstream txtOutput_;
     std::ofstream txtOutputLL_;
     std::ofstream txtOutputPsExp_;
+    std::ofstream txtOutputFractions_;
     
     std::map<std::string,TH1D*> histo_;
     std::map<std::string,TH1D*> histoSm_;
@@ -140,14 +145,22 @@ class Likelihood{
     static const double calCurveParUnc_[2];
     
     int nPsExp_;
+    static double nEventsCMFractions_[][25];
+    static double nEventsWMFractions_[][25];
+    static double nEventsNMFractions_[][25];
     
     int LocMinArray(int n, double* array);
+    void ClearArray(int size, int* array);
+    void ClearArray(int size, double* array);
+    void ClearArray2D(int size, double (*array)[3]);
     /// Get output width for pseudo experiments
     std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
     /// Calculate output width (used in getters)
     std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
+    /// Calculate & get fractions for TGraphs
+    void GetFractions(double *fractions, std::string width, std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Draw functions
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);
