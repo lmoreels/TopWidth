@@ -35,6 +35,7 @@ class Likelihood{
     Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
     void ClearLikelihoods();
+    std::vector<double> GetWidths();
     /// Make TGraphs
     void BookHistograms();
     void FillHistograms(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix);
@@ -46,7 +47,7 @@ class Likelihood{
     bool ConstructTGraphsFromFile(std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
-    void CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
+    std::vector<double> CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
@@ -110,6 +111,9 @@ class Likelihood{
     
     static double loglike_pull_[][1000];
     static double loglike_pull_single_[];
+    
+    std::vector<double> vecWidths_;
+    std::vector<double> vecLogLike_;
     
     std::string thisWidth_;
     double thisWidthSF_;

@@ -40,10 +40,13 @@ using namespace TopTree;
 
 bool test = false;
 bool testHistos = false;
-bool testTTbarOnly = false;
+bool testTTbarOnly = true;
+bool runSTOnly = false;
+bool runOtherOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
 bool makeControlPlots = false;
+bool makeLikelihoodPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
@@ -63,11 +66,11 @@ bool applyBTagSF = true;
 
 bool rewHadTopOnly = true;
 bool applyWidthSF = false;
-double scaleWidth = 1.;
+double scaleWidth = 0.8;
 
 
 bool runListWidths = false;
-double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
+double listWidths[] = {0.2, 0.4, /*0.5, */0.6, 0.8, 1./*, 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.*/};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
@@ -99,11 +102,15 @@ int verbose = 2;
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
+string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170720_2235/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 900b
+//string inputDateLL = "170721_1212/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 60b
+//string inputDateLL = "170721_1018/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 45b
+//string inputDateLL = "170721_0937/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 20b
+//string inputDateLL = "170720_2235/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 900b
 //string inputDateLL = "170720_1838/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 450b
-//string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
+string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
 //string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
 //string inputDateLL = "170719_1802/";  // without W+1/2jets, all SFs
 string whichTemplates()
@@ -122,6 +129,8 @@ string whichTemplates()
 //string inputDateLL = "170714_1010/";  // rel BW, SF_h*SF_l
 bool isData = false;
 bool isTTbar = false;
+bool isST = false;
+bool isOther = false;
 
 int nofHardSelected = 0;
 int nofMETCleaned = 0;
@@ -170,6 +179,7 @@ map<string,TH1F*> histo1D;
 map<string,TH2F*> histo2D;
 map<string,MultiSamplePlot*> MSPlot;
 map<string,MultiSamplePlot*> MSPlotCP;
+map<string,TH1D*> histo1DLike;
 map<string,TGraph*> graph;
 
 map<string,TFile*> tFileMap;
@@ -213,6 +223,7 @@ void InitHisto1D();
 void InitHisto2D();
 void InitHisto1DMatch();
 void InitHisto2DMatch();
+void InitLikelihoodPlots();
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation);
 void ClearMetaData();
 void ClearLeaves();
@@ -226,6 +237,8 @@ void FillMatchingPlots();
 void FillKinFitPlots(bool doneKinFit);
 void FillCatsPlots(string catSuffix);
 void FillMSPlots(int d, bool doneKinFit);
+void FillLikelihoodPlots();
+void WriteLikelihoodPlots();
 long GetNEvents(TTree* fChain, string var, bool isData);
 void GetEraFraction(double* fractions);
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
@@ -618,6 +631,13 @@ bool passKFChi2MatchedCut = false;
 Double_t aveTopMassLL = aveTopMass[2];
 Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
 Double_t minCutRedTopMass = 0.6, maxCutRedTopMass = 1.4;
+int nWidthsLike = 0;
+vector<double> widthsLike;
+vector<double> loglike_per_evt;
+double redTopMassArray[] = {0.65, 0.7, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1., 1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07, 1.08, 1.09, 1.1, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.2, 1.21, 1.22, 1.23, 1.24, 1.25, 1.26, 1.27, 1.28, 1.29, 1.3, 1.4};
+int nLikeMasses = sizeof(redTopMassArray)/sizeof(redTopMassArray[0]) - 1;
+Likelihood *like;
+
 
 ofstream txtDebugTopMass, txtDebugPUSF;
 
@@ -743,7 +763,11 @@ int main(int argc, char* argv[])
     calculateLikelihood = false;
   }
   if (calculateLikelihood) makeTGraphs = false;
-  else doPseudoExps = false;
+  else
+  {
+    makeLikelihoodPlots = false;
+    doPseudoExps = false;
+  }
   if (doPseudoExps)
   {
     makePlots = false;
@@ -760,9 +784,9 @@ int main(int argc, char* argv[])
   
   if (! makePlots) makeControlPlots = false;
   
-  string pathOutput = "OutputPlots/";
+  pathOutput = "OutputPlots/";
   mkdir(pathOutput.c_str(),0777);
-  if (makePlots)
+  if (makePlots || makeLikelihoodPlots)
   {
     // Add channel to output path
     pathOutput += channel+"/";
@@ -804,6 +828,11 @@ int main(int argc, char* argv[])
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   else scaleWidth = 1.;
   
+  if (testTTbarOnly) cout << "Only running ttbar events..." << endl;
+  else if (runSTOnly) cout << "Only running single top events..." << endl;
+  else if (runOtherOnly) cout << "Only running DY+jets and W+jets events... " << endl;
+  
+  
   /// xml file
   string xmlFileName ="config/topWidth.xml";
   
@@ -834,6 +863,8 @@ int main(int argc, char* argv[])
       includeDataSets.push_back(0);
 //      Luminosity = datasets[d]->EquivalentLumi();
     else if ( dataSetName.find("TT") != std::string::npos )
+      includeDataSets.push_back(1);
+    else if ( dataSetName.find("ST") != std::string::npos )
       includeDataSets.push_back(1);
     else
       includeDataSets.push_back(1);
@@ -921,7 +952,7 @@ int main(int argc, char* argv[])
   ResolutionFunctions* rf = new ResolutionFunctions(calculateResolutionFunctions, true);
   KinFitter *kf;
   KinFitter *kfMatched;
-  Likelihood *like;
+//  Likelihood *like;
   
   if (! calculateResolutionFunctions)
   {
@@ -946,6 +977,9 @@ int main(int argc, char* argv[])
       calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
       calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
     }
+    widthsLike.clear();
+    widthsLike = like->GetWidths();
+    nWidthsLike = widthsLike.size();
     
     if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths_syst.root").c_str(), "RECREATE");
     else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths.root").c_str(), "RECREATE");
@@ -974,6 +1008,10 @@ int main(int argc, char* argv[])
     MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["btag_SF_"] = new MultiSamplePlot(datasets, "btag_SF_", 80, 0., 2., "btag SF");
+  }
+  if (makeLikelihoodPlots)
+  {
+    InitLikelihoodPlots();
   }
   
   vJER.clear(); vJES.clear(); vPU.clear();
@@ -1066,6 +1104,7 @@ int main(int argc, char* argv[])
     /// Loop over datasets
     ////////////////////////////////////
     
+    //for (int d = 0; d < 1; d++)
     for (int d = 0; d < datasets.size(); d++)   //Loop through datasets
     {
       clock_t startDataSet = clock();
@@ -1078,7 +1117,7 @@ int main(int argc, char* argv[])
         cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
       }
       
-      isData = false; isTTbar = false;
+      isData = false; isTTbar = false; isST = false; isOther = false;
       if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
       {
         isData = true;
@@ -1113,6 +1152,14 @@ int main(int argc, char* argv[])
           endSys = 1;
         }
       }
+      else if ( dataSetName.find("ST") != std::string::npos )
+      {
+        isST = true;
+      }
+      else
+      {
+        isOther = true;
+      }
       
       /// Temporarily, to make templates
       //if (! isTTbar) continue;
@@ -1131,6 +1178,16 @@ int main(int argc, char* argv[])
       }
       
       if (testTTbarOnly && ! isTTbar)
+      {
+        cout << "Skipping dataset..." << endl;
+        continue;
+      }
+      else if (runSTOnly && ! isST)
+      {
+        cout << "Skipping dataset..." << endl;
+        continue;
+      }
+      else if (runOtherOnly && ! isOther)
       {
         cout << "Skipping dataset..." << endl;
         continue;
@@ -1872,7 +1929,7 @@ int main(int argc, char* argv[])
         if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
         if (calculateLikelihood)
         {
-          like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+          loglike_per_evt = like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ! useTTTemplates && isCM )  // isCM ensures ! isData
             like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ! useTTTemplates && ( isCM || isWM ) )
@@ -1909,6 +1966,11 @@ int main(int argc, char* argv[])
           {
             like->AddToFraction(d, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, doReweighting, isCM, isWM, isNM);
           }
+          
+//           if (isTTbar && makeLikelihoodPlots)
+//           {
+//             FillLikelihoodPlots();
+//           }
         }
         
         if (calculateAverageMass && ! isData)
@@ -2165,7 +2227,7 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && ! runSTOnly && ! runOtherOnly && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths
@@ -2275,7 +2337,7 @@ int main(int argc, char* argv[])
     
     delete fout;
   }
-  
+  if (makeLikelihoodPlots) WriteLikelihoodPlots();
   
   
   double time = ((double)clock() - start) / CLOCKS_PER_SEC;
@@ -2838,6 +2900,17 @@ void InitHisto2DMatch()
   histo2D["matched_mlb_dR_lep_b_wrong"] = new TH2F("matched_mlb_dR_lep_b_wrong","dR(l,b) vs. M_{lb}, both wrongly matched; M_{lb_{had}}; #Delta R(l,b_{had})", 80, 0, 800, 25, 0, 5);
 }
 
+void InitLikelihoodPlots()
+{
+  for (int iMass = 0; iMass < nLikeMasses; iMass++)
+  {
+    histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
+//     histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
+//     histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
+//     histo1DLike["loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
+  }
+}
+
 void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> selectedJets, pair<unsigned int, unsigned int> *MCPermutation)  /// MCPermutation: 0,1 hadronic W jet; 2 hadronic b jet; 3 leptonic b jet
 {
   JetPartonMatching matching = JetPartonMatching(partons, selectedJets, 2, true, true, 0.3);  // partons, jets, choose algorithm, use maxDist, use dR, set maxDist=0.3
@@ -3275,7 +3348,7 @@ void ClearVars()
   reco_dRLepB_had_aKF = -1.;
   reco_ttbar_mass_aKF = -1.;
   redTopMass = -1.;
-  
+  loglike_per_evt.clear();
 }
 
 void ClearObjects()
@@ -3564,6 +3637,58 @@ void FillMSPlots(int d, bool doneKinFit)
     MSPlot["dR_lep_b_min"+suffix]->Fill(reco_dRLepB_lep_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["dR_lep_b_max"+suffix]->Fill(reco_dRLepB_had_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
   }
+}
+
+void FillLikelihoodPlots()
+{
+  for (int iMass = 0; iMass < nLikeMasses; iMass++)
+  {
+    loglike_per_evt.clear();
+    loglike_per_evt = like->CalculateLikelihood(redTopMassArray[iMass], 1., 172.5, 172.5, 1., false, false);
+    //if (redTopMass >= redTopMassArray[iMass] && redTopMass < redTopMassArray[iMass+1])
+    //{
+      for (int iWidth = 0; iWidth < nWidthsLike; iWidth++)  // Deliberately filling iWidth and not actual width
+      {
+        histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//         if (isCM) histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//         if (isWM) histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//         if (isNM) histo1DLike["loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+      }  // end width
+
+//      break;  // only fill once per event (because only one redTopMass)
+    //}
+  }  // end masses
+}
+
+void WriteLikelihoodPlots()
+{
+  FillLikelihoodPlots();
+  
+  mkdir((pathOutput+"Likelihood/").c_str(),0777);
+  string fileName = pathOutput+"Likelihood/LikelihoodPlots.root";
+  cout << " - Recreate output file ..." << endl;
+  TFile *foutLike = new TFile (fileName.c_str(), "RECREATE");
+  cout << "   Output file is " << fileName << endl;
+  foutLike->cd();
+  
+  //gStyle->SetOptStat(1111);
+  for (std::map<std::string,TH1D*>::const_iterator it = histo1DLike.begin(); it != histo1DLike.end(); it++)
+  {
+    TH1D *temp = it->second;
+    for (int iBin = 0; iBin < temp->GetNbinsX(); iBin++)
+    {
+      temp->GetXaxis()->SetBinLabel(iBin+1, (DotReplace(widthsLike[iBin])).c_str());
+    }
+    temp->SetStats(0);
+    temp->Write();
+//     TCanvas* tempCanvas = new TCanvas((it->first).c_str(), (it->first).c_str());
+//     tempCanvas->cd();
+//     temp->Draw();
+//     tempCanvas->SaveAs( (pathOutput+"Likelihood/"+it->first+".png").c_str() );
+  }
+  
+  foutLike->Close();
+  delete foutLike;
 }
 
 long GetNEvents(TTree* fChain, string var, bool isData)
