@@ -52,7 +52,7 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool calculateLikelihood = true;
-bool useTTTemplates = true;
+bool useTTTemplates = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -105,12 +105,15 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
+//string inputDateLL = "170727_1950/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(1) & supsmu bass = 0
+//string inputDateLL = "170727_2029/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 0
+string inputDateLL = "170727_2054/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 3
 //string inputDateLL = "170721_1212/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 60b
 //string inputDateLL = "170721_1018/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 45b
 //string inputDateLL = "170721_0937/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 20b
 //string inputDateLL = "170720_2235/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 900b
 //string inputDateLL = "170720_1838/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 450b
-string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
+//string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
 //string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
 //string inputDateLL = "170719_1802/";  // without W+1/2jets, all SFs
 string whichTemplates()
@@ -969,7 +972,7 @@ int main(int argc, char* argv[])
     like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
     if (useTTTemplates)
     {
-      calculateLikelihood = like->ConstructTGraphsFromFile("OutputNEvents/", dataSetNames, includeDataSets);
+      calculateLikelihood = like->ConstructTGraphsFromFile(dataSetNames, includeDataSets);
     }
     else
     {
@@ -2137,7 +2140,7 @@ int main(int argc, char* argv[])
     if (makeTGraphs)
     {
       like->WriteHistograms("ReducedTopMassPlots.root");
-      like->ConstructTGraphsFromHisto("TGraphFunctions.root");
+      like->ConstructTGraphsFromHisto("TGraphFunctions.root", dataSetNames, includeDataSets);
     }
     
     if (calculateLikelihood)
@@ -2190,7 +2193,7 @@ int main(int argc, char* argv[])
     }
     if (calculateFractions)
     {
-      like->CalculateFractions("OutputNEvents/", dataSetNames);
+      like->CalculateFractions(dataSetNames);
     }
     
     if (doPseudoExps)

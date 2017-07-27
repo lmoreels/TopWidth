@@ -22,6 +22,7 @@
 #include <TF1.h>
 #include <TGraph.h>
 #include <TGraph2D.h>
+#include <TGraphSmooth.h>
 #include <TCanvas.h>
 #include <TFile.h>
 
@@ -40,11 +41,11 @@ class Likelihood{
     void BookHistograms();
     void FillHistograms(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix);
     void WriteHistograms(std::string histoFileName);
-    void ConstructTGraphsFromHisto(std::string name);
+    void ConstructTGraphsFromHisto(std::string tGraphFileName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
-    bool ConstructTGraphsFromFile(std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
+    bool ConstructTGraphsFromFile(std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double lumiWeight, bool isData);
     std::vector<double> CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
@@ -64,7 +65,7 @@ class Likelihood{
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Calculate fractions
     void AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isNM);
-    void CalculateFractions(std::string dirName, std::vector<std::string> datasetNames);
+    void CalculateFractions(std::vector<std::string> datasetNames);
     /// Write output from likelihood calculation to file
     void PrintLikelihoodOutput(std::string llFileName);
     void PrintLikelihoodOutputData(std::string llFileName);
@@ -75,11 +76,14 @@ class Likelihood{
     bool rewHadOnly_;
     std::string outputDirName_;
     std::string dirNameTGraphTxt_;
+    std::string dirNameNEvents_;
     std::string dirNameLLTxt_;
     std::string dirNamePull_;
     std::string inputFileName_;
     std::string suffix_;
     std::string histoName_;
+    std::string histoNameSm_;
+    std::string rangeRedMass_;
     double minRedMass_;
     double maxRedMass_;
     
@@ -93,6 +97,7 @@ class Likelihood{
     static const int nCats_;
     
     static std::string stringWidthArray_[];
+    static std::string stringSuffix_[];
     
     static double loglike_[];
     static double loglike_data_[];
@@ -157,6 +162,11 @@ class Likelihood{
     void ClearArray(int size, int* array);
     void ClearArray(int size, double* array);
     void ClearArray2D(int size, double (*array)[3]);
+    void MakeTable(double* array, int n, double min, double max);
+    void GetHistogram(int iCat);
+    void MakeGraph(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
+    void MakeGraphSmooth(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
+    bool ReadInput(std::string name);
     /// Get output width for pseudo experiments
     std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
     /// Calculate output width (used in getters)
@@ -164,7 +174,8 @@ class Likelihood{
     std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     /// Calculate & get fractions for TGraphs
-    void GetFractions(double *fractions, std::string width, std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
+    void GetFractions(double *fractions, int nCats, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
+    void GetFractions(double *fractions, int nCats, std::string width, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Draw functions
     void DrawGraph(TH1D* h, TGraph* g, std::string name);
     void DrawGraph(TGraph2D* g, std::string name);

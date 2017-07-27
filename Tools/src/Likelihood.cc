@@ -8,6 +8,7 @@ const int Likelihood::nWidths_ = sizeof(widthArray_)/sizeof(widthArray_[0]);
 const int Likelihood::nCats_ = sizeof(listCats_)/sizeof(listCats_[0]);
 
 std::string Likelihood::stringWidthArray_[nWidths_] = {""};
+std::string Likelihood::stringSuffix_[nCats_] = {""};
 
 double Likelihood::loglike_[nWidths_] = {0.};
 double Likelihood::loglike_data_[nWidths_] = {0.};
@@ -81,11 +82,23 @@ void Likelihood::ClearArray2D(int size, double (*array)[3])
   }
 }
 
+void Likelihood::MakeTable(double* array, int n, double min, double max)
+{
+  double dist = (max - min)/((double)(n-1));
+  for (int i = 0; i < n; i++)
+  {
+    array[i] = min + i * dist;
+  }
+}
+
 Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
-verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
+verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
+  
+  rangeRedMass_ = tls_->DotReplace(minRedMass_)+"To"+tls_->DotReplace(maxRedMass_);
+  dirNameNEvents_ += rangeRedMass_+"/";
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
@@ -148,8 +161,9 @@ void Likelihood::BookHistograms()
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_20b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_20b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 20, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_45b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_45b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 45, 0.5, 2.0);
       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 60, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 75, 0.5, 2.0);
       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
+//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 900, 0.5, 2.0);
     }
@@ -173,8 +187,9 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double hadTop
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_20b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_45b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
+      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_450b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_900b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
     }
@@ -199,174 +214,183 @@ void Likelihood::WriteHistograms(std::string histoFileName)
   delete file_;
 }
 
-void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName)
+void Likelihood::GetHistogram(int iCat)
 {
-  int binMin, binMax;
-  double totEvents, totEventsTemp;
-  int nBins[nCats_] = {0};
-  double nEvents[nCats_] = {0.}, nEventsBS[nCats_] = {0.};
-  double fracCats[nCats_] = {0.}, fracCatsTemp[nCats_-1] = {0.};
+  int binMin = 0;
+  int binMax = 1000;
+
+  /// Get histo to smooth
+  histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
+  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_60b"]->Clone(histoName_.c_str());
+  histoSm_[histoName_]->Smooth(3);
+
+  //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
+  binMin = histoSm_[histoName_]->FindBin(minRedMass_);
+  binMax = histoSm_[histoName_]->FindBin(maxRedMass_)+1;
   
+  /// Normalise histo on relevant subdomain
+  Double_t integral = histoSm_[histoName_]->Integral(binMin, binMax);
+  histoSm_[histoName_]->Scale(1./integral);
+
+  /// Get bin centres & contents
+  for (int iBin = binMin; iBin < binMax+1; iBin++)
+  {
+    (vecBinCentres_[histoName_]).push_back(histoSm_[histoName_]->GetBinCenter(iBin));
+    (vecBinContents_[histoName_]).push_back(histoSm_[histoName_]->GetBinContent(iBin));
+  }
+}
+
+void Likelihood::MakeGraph(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph)
+{
+  histoName_ = name+"_"+stringSuffix_[iCat];
+  graph_[histoName_] = new TGraph(nPoints, centres, contents);
+  graph_[histoName_]->SetName(("g"+histoName_).c_str());
+  graph_[histoName_]->SetTitle(histoName_.c_str());
+  graph_[histoName_]->Write();
+  if (drawGraph) this->DrawGraph(histoSm_[histoName_], graph_[histoName_], "Graph_Red_top_mass_"+histoName_);
+}
+
+void Likelihood::MakeGraphSmooth(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph)
+{
+  this->MakeGraph(iCat, nPoints, centres, contents, name, drawGraph);
+  
+  histoName_ = name+"_"+stringSuffix_[iCat];
+  histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
+  TGraphSmooth* gs = new TGraphSmooth(histoName_.c_str());
+  //graph_[histoNameSm_] = gs->SmoothSuper(graph_[histoName_],"",0,0);
+  graph_[histoNameSm_] = gs->SmoothSuper(graph_[histoName_],"",3);
+  graph_[histoNameSm_]->SetName(("g"+histoNameSm_).c_str());
+  graph_[histoNameSm_]->SetTitle(histoNameSm_.c_str());
+  graph_[histoNameSm_]->Write();
+  if (drawGraph) this->DrawGraph(histoSm_[histoName_], graph_[histoNameSm_], "Graph_Red_top_mass_"+histoNameSm_);
+}
+
+void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
+{
   if ( gLL2D_ == NULL ) gLL2D_ = new TGraph2D();
   
+  /// Define vars for likelihood calculation
+  const int nEval = 50;
+  double evalPoints[nEval], outputValues[nEval], outputValuesTemp[nEval], likelihoodValues[nEval], likelihoodValuesTemp[nEval];
+  ClearArray(nEval, evalPoints);
+  MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
+  
+  /// Determine fractions based on number of events within reduced top mass range
+  //  (is not dependent on number of bins, so the same for all widths)
+  double fracCats[nCats_] = {0.}, fracCatsTemp[nCats_-1] = {0.};
+  this->GetFractions(fracCats, nCats_, datasetNames, includeDataset);
+  this->GetFractions(fracCatsTemp, nCats_-1, datasetNames, includeDataset);
+  if (verbose_) std::cout << "   # CM: " << fracCats[0] << "%   # WM: " << fracCats[1] << "%   # NM: " << fracCats[2] << "%  " << std::endl;
+  
+  /// Make output file
   fileTGraphs_ = new TFile((outputDirName_+tGraphFileName).c_str(), "RECREATE");
   fileTGraphs_->cd();
   
+  /// WM & NM distribution are independent of the width
+  for (int iCat = 1; iCat < nCats_; iCat++)
+  {
+    stringSuffix_[iCat] = "widthx1";
+    this->GetHistogram(iCat);
+  }
+  
+  /// Make arrays as input for TGraph
+  const int nPoints = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).size();
+  double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
+  ClearArray(nPoints, binCentreArray);
+  for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
+  
+  for (int i = 0; i < nPoints; i++)
+  {
+    binCentreArray[i] = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).at(i);
+    for (int iCat = 1; iCat < nCats_; iCat++)
+    {
+      binContentArray[iCat][i] = (vecBinContents_[listCats_[iCat]+"_"+stringSuffix_[iCat]]).at(i);
+    }
+  }
+  
+  for (int iCat = 1; iCat < nCats_; iCat++)
+  {
+    WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
+    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat], true);
+  }
+  
+  
+  /// Loop over widths
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    /// Clear vars
-    totEvents = 0.;
-    totEventsTemp = 0.;
-    ClearArray(nCats_, nBins);
-    ClearArray(nCats_, nEvents);
-    ClearArray(nCats_, nEventsBS);
-    ClearArray(nCats_, fracCats);
-    ClearArray(nCats_-1, fracCatsTemp);
+    stringSuffix_[0] = "widthx"+stringWidthArray_[iWidth];
+    this->GetHistogram(0);
     
-    suffix_ = "widthx"+stringWidthArray_[iWidth];
+    ClearArray(nPoints, binContentArray[0]);
+    for (int i = 0; i < nPoints; i++)
+      binContentArray[0][i] = (vecBinContents_[listCats_[0]+"_"+stringSuffix_[0]]).at(i);
+    
+    WriteFuncOutput(nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_"+stringSuffix_[0]);
+    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0], true);
+    
+    /// Make likelihood functions
+    ClearArray(nEval, outputValues);
+    ClearArray(nEval, outputValuesTemp);
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-      /// Clear vars
-      binMin = 0;
-      binMax = 100;
+      histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
+      histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
       
-      /// Get histo to smooth
-      histoName_ = listCats_[iCat]+"_"+suffix_;
-      histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
-      histoSm_[histoName_]->Smooth();
+      histoSm_[histoName_]->Scale(fracCats[iCat]);
       
-      nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
-      if ( iCat > 0 && nBins[iCat] != nBins[iCat-1] )
+      ClearArray(nEval, likelihoodValues);
+      for (int i = 0; i < nEval; i++)
       {
-        std::cerr << "Likelihood::ConstructTGraphs: Histograms should have the same number of bins! Exiting..." << std::endl;
-        exit(1);
+        outputValues[i] += fracCats[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
+        if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log((outputValues[i]/fracCats[iCat]));
+        else likelihoodValues[i] = -TMath::Log(outputValues[i]);
+        if ( iCat != nCats_-1)
+        {
+          outputValuesTemp[i] += fracCatsTemp[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
+          likelihoodValuesTemp[i] = -TMath::Log(outputValuesTemp[i]);
+        }
       }
       
-      binMin = histoSm_[histoName_]->FindBin(minRedMass_);
-      binMax = histoSm_[histoName_]->FindBin(maxRedMass_)+1;
-      for (int iBin = binMin; iBin < binMax+1; iBin++)
+      if ( iCat == 0 )  // outputValues = CM
       {
-        nEvents[iCat] += histoSm_[histoName_]->GetBinContent(iBin);
-        nEventsBS[iCat] += histo_["Red_top_mass_"+histoName_+"_90b"]->GetBinContent(iBin);
+        histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
+        histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x|#Gamma) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x|#Gamma)");
+        
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM", false);
+        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
       }
-      totEvents += nEvents[iCat];
-      if ( iCat < nCats_-1) totEventsTemp += nEvents[iCat];
-      
-      if (verbose_) std::cout << "Likelihood::ConstructTGraphs: " << histoName_ << ": " << nEvents[iCat] << " events" << " (before smoothing: " << nEventsBS[iCat] << ")" << std::endl;
-      
-      /// Normalise histo on relevant subdomain
-      Double_t integral = histoSm_[histoName_]->Integral(binMin, binMax);
-      histoSm_[histoName_]->Scale(1./integral);
-      
-      /// Get bin centres & contents
-      for (int iBin = binMin; iBin < binMax+1; iBin++)
+      else if ( iCat == 1 )  // outputValues = CM + WM
       {
-        (vecBinCentres_[histoName_]).push_back(histoSm_[histoName_]->GetBinCenter(iBin));
-        (vecBinContents_[histoName_]).push_back(histoSm_[histoName_]->GetBinContent(iBin));
+        histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
+        
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM", false);
+        WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0], 1);
+      }
+      else  // outputValues = CM + WM + NM
+      {
+        histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
+        if (verbose_) std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[stringSuffix_[0]]->Integral(histoTotal_[stringSuffix_[0]]->FindBin(minRedMass_), histoTotal_[stringSuffix_[0]]->FindBin(maxRedMass_)+1) << std::endl;
+        this->MakeGraph(0, nEval, evalPoints, outputValues, "TotalProbability", false);
+        this->DrawGraph(histoTotal_[stringSuffix_[0]], graph_["TotalProbability_"+stringSuffix_[0]], "Graph_totalProbability_"+stringSuffix_[0]);
+        if (verbose_)
+        {
+          graph_["TotalProbability_"+stringSuffix_[0]+"_test"] = graph_["TotalProbability_"+stringSuffix_[0]];
+          graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->SetPoint(graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->GetN(), maxRedMass_, 0.);
+          graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->SetPoint(graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->GetN(), minRedMass_, 0.);
+          std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability graph is " << graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->Integral() << std::endl;
+        }
+        
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood", false);
+        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 1);  // for TGraph
+        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 2);  // for TGraph2D
       }
       
     }  // end cats
     
-    if (verbose_) std::cout << "Likelihood::ConstructTGraphs: Total: " << totEvents << " events" << std::endl;
-    
-    /// Make arrays as input for TGraph
-    const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double binCentreArray[nPoints], binContentArray[nCats_][nPoints], totalBinContentArray[nPoints], totalBinContentTempArray[nPoints], likelihoodCMArray[nPoints], likelihoodTempArray[nPoints], likelihoodArray[nPoints];
-    ClearArray(nPoints, binCentreArray);
-    for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
-    ClearArray(nPoints, totalBinContentArray); ClearArray(nPoints, totalBinContentTempArray);
-    ClearArray(nPoints, likelihoodCMArray); ClearArray(nPoints, likelihoodTempArray); ClearArray(nPoints, likelihoodArray);
-    for (int i = 0; i < nPoints; i++)
-    {
-      binCentreArray[i] = (vecBinCentres_[listCats_[0]+"_"+suffix_]).at(i);
-      for (int iCat = 0; iCat < nCats_; iCat++)
-      {
-        binContentArray[iCat][i] = (vecBinContents_[listCats_[iCat]+"_"+suffix_]).at(i);
-        WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+suffix_);
-        // For CM events
-        if ( iCat == 0 ) { likelihoodCMArray[i] = -TMath::Log(binContentArray[iCat][i]);}
-        
-        if ( iCat < nCats_-1)
-        {
-          if ( i == 0 ) { fracCatsTemp[iCat] = (double)nEvents[iCat]/(double)totEventsTemp; }
-          totalBinContentTempArray[i] += fracCatsTemp[iCat] * binContentArray[iCat][i];
-        }
-      }
-      likelihoodTempArray[i] = -TMath::Log(totalBinContentTempArray[i]);
-    }
-    
-    /// Make TGraphs
-    for (int iCat = 0; iCat < nCats_; iCat++)
-    {
-      histoName_ = listCats_[iCat]+"_"+suffix_;
-      
-      graph_[histoName_] = new TGraph(nPoints, binCentreArray, binContentArray[iCat]);
-      graph_[histoName_]->SetName(("g"+histoName_).c_str());
-      graph_[histoName_]->SetTitle(histoName_.c_str());
-      graph_[histoName_]->Write();
-      DrawGraph(histoSm_[histoName_], graph_[histoName_], "Graph_Red_top_mass_"+histoName_);
-      if ( iCat == 0 )  //CM
-      {
-        graph_["likelihood_CM_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodCMArray);
-        graph_["likelihood_CM_"+suffix_]->SetName(("likelihood_CM_"+suffix_).c_str());
-        graph_["likelihood_CM_"+suffix_]->SetTitle(("likelihood_CM_"+suffix_).c_str());
-        graph_["likelihood_CM_"+suffix_]->Write();
-        
-        WriteOutput(nPoints, iWidth, binCentreArray, likelihoodCMArray, "CorrectMatchLikelihood_"+suffix_, 1);
-      }
-      if ( iCat < nCats_-1 )  //!NM
-      {
-        graph_["likelihood_CMWM_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodTempArray);
-        graph_["likelihood_CMWM_"+suffix_]->SetName(("likelihood_CMWM_"+suffix_).c_str());
-        graph_["likelihood_CMWM_"+suffix_]->SetTitle(("likelihood_CMWM_"+suffix_).c_str());
-        graph_["likelihood_CMWM_"+suffix_]->Write();
-        
-        WriteOutput(nPoints, iWidth, binCentreArray, likelihoodTempArray, "MatchLikelihood_"+suffix_, 1);
-      }
-      
-      
-      /// Calculate total probability
-      fracCats[iCat] = (double)nEvents[iCat]/(double)totEvents;
-      if ( verbose_ && iCat == 2 && widthArray_[iWidth] == 1. ) std::cout << "Width: " << widthArray_[iWidth] << "   # CM: " << fracCats[0] << "%   # WM: " << fracCats[1] << "%   # NM: " << fracCats[2] << "%  " << std::endl;
-      for (int i = 0; i < nPoints; i++) { totalBinContentArray[i] += fracCats[iCat]*binContentArray[iCat][i];}
-      
-      histoSm_[histoName_]->Scale(fracCats[iCat]);
-      if ( iCat == 0 )
-      {
-        histoTotal_[suffix_] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
-        histoTotal_[suffix_]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x|#Gamma) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x|#Gamma)");
-      }
-      else histoTotal_[suffix_]->Add(histoSm_[histoName_]);
-    }
-    
-    if (verbose_) std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[suffix_]->Integral(binMin, binMax) << std::endl;
-    
-    graph_["TotalProbability_"+suffix_] = new TGraph(nPoints, binCentreArray, totalBinContentArray);
-    graph_["TotalProbability_"+suffix_]->SetName(("TotalProbability_"+suffix_).c_str());
-    graph_["TotalProbability_"+suffix_]->SetTitle(("TotalProbability_"+suffix_).c_str());
-    graph_["TotalProbability_"+suffix_]->Write();
-    DrawGraph(histoTotal_[suffix_], graph_["TotalProbability_"+suffix_], "Graph_totalProbability_"+suffix_);
-    
-    
-    /// Negative log(likelihood)
-    for (int i = 0; i < nPoints; i++)
-    {
-      likelihoodArray[i] = -TMath::Log(totalBinContentArray[i]); 
-    }
-    
-    /// Make likelihood function
-    graph_["likelihood_"+suffix_] = new TGraph(nPoints, binCentreArray, likelihoodArray);
-    graph_["likelihood_"+suffix_]->SetName(("likelihood_"+suffix_).c_str());
-    graph_["likelihood_"+suffix_]->SetTitle(("likelihood_"+suffix_).c_str());
-    graph_["likelihood_"+suffix_]->Write();
-    
-    WriteOutput(nPoints, widthArray_[iWidth], binCentreArray, likelihoodArray, suffix_, 1);  // for TGraph
-    WriteOutput(nPoints, widthArray_[iWidth], binCentreArray, likelihoodArray, suffix_, 2);  // for TGraph2D
-    
     /// Fill TGraph2D
-    for (int iCentre = 0; iCentre < nPoints; iCentre++)
+    for (int iCentre = 0; iCentre < nEval; iCentre++)
     {
-      gLL2D_->SetPoint(gLL2D_->GetN(), binCentreArray[iCentre], widthArray_[iWidth], likelihoodArray[iCentre]);
+      gLL2D_->SetPoint(gLL2D_->GetN(), evalPoints[iCentre], widthArray_[iWidth], likelihoodValues[iCentre]);
     }
   }  // end widths
   
@@ -406,60 +430,104 @@ bool Likelihood::ConstructTGraphsFromFile(std::string name)
   return true;
 }
 
-bool Likelihood::ConstructTGraphsFromFile(std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
+bool Likelihood::ReadInput(std::string name)
 {
   std::string line;
   double thisCentre, thisContent;
+  (vecBinCentres_[name]).clear();
+  (vecBinContents_[name]).clear();
+  
+  inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+".txt";
+  if ( ! tls_->fexists(inputFileName_.c_str()) )
+  {
+    std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
+    //std::cerr << "                          Aborting the likelihood calculation..." << std::endl;
+    return false;
+  }
+  
+  fileIn_.open(inputFileName_.c_str());
+  if (verbose_) std::cout << "Opening " << inputFileName_ << "..." << std::endl;
+  while( getline(fileIn_, line) )
+  {
+    std::istringstream iss(line);
+    iss >> thisCentre >> thisContent;
+    (vecBinCentres_[name]).push_back(thisCentre);
+    (vecBinContents_[name]).push_back(thisContent);
+  }
+  fileIn_.close();
+  return true;
+}
+
+bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames, std::vector<int> includeDataset)
+{
+  const int nEval = 50;
+  double evalPoints[nEval], outputValues[nEval], likelihoodValues[nEval];
+  ClearArray(nEval, evalPoints);
+  MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
+  
+  /// Get fractions
   double fracs[nCats_];
   ClearArray(nCats_, fracs);
+  this->GetFractions(fracs, nCats_, datasetNames, includeDataset);
+  
+  /// WM & NM distribution are independent of the width
+  for (int iCat = 1; iCat < nCats_; iCat++)
+  {
+    stringSuffix_[iCat] = "widthx1";
+    histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
+    
+    if (! this->ReadInput(histoName_)) return false;
+  }
+  
+  /// Make arrays as input for TGraph
+  const int nPoints = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).size();
+  double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
+  ClearArray(nPoints, binCentreArray);
+  for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
+  
+  for (int i = 0; i < nPoints; i++)
+  {
+    binCentreArray[i] = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).at(i);
+    for (int iCat = 1; iCat < nCats_; iCat++)
+    {
+      binContentArray[iCat][i] = (vecBinContents_[listCats_[iCat]+"_"+stringSuffix_[iCat]]).at(i);
+    }
+  }
+  
+  /// Make TGraphs
+  for (int iCat = 1; iCat < nCats_; iCat++)
+    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]);
+  
+  
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    suffix_ = "widthx"+stringWidthArray_[iWidth];
-    for (int iCat = 0; iCat < nCats_; iCat++)
-    {
-      histoName_ = listCats_[iCat]+"_"+suffix_;
-      (vecBinCentres_[histoName_]).clear();
-      (vecBinContents_[histoName_]).clear();
-      
-      inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_func_"+histoName_+".txt";
-      if ( ! tls_->fexists(inputFileName_.c_str()) )
-      {
-        std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
-        //std::cerr << "                          Aborting the likelihood calculation..." << std::endl;
-        return false;
-      }
-      fileIn_.open(inputFileName_.c_str());
-      if (verbose_) std::cout << "Opening " << inputFileName_ << "..." << std::endl;
-      while( getline(fileIn_, line) )
-      {
-        std::istringstream iss(line);
-        iss >> thisCentre >> thisContent;
-        (vecBinCentres_[histoName_]).push_back(thisCentre);
-        (vecBinContents_[histoName_]).push_back(thisContent);
-      }
-      fileIn_.close();
-    }
+    stringSuffix_[0] = "widthx"+stringWidthArray_[iWidth];
+    histoName_ = listCats_[0]+"_"+suffix_;
     
-    /// Get fractions
-    this->GetFractions(fracs, stringWidthArray_[iWidth], dirName, datasetNames, includeDataset);
+    if (! this->ReadInput(histoName_)) return false;
     
-    const int nPoints = (vecBinCentres_[listCats_[0]+"_"+suffix_]).size();
-    double arrCentres[nPoints], arrContents[nPoints][nCats_], arrTotalContent[nPoints], arrLikelihood[nPoints];
-    ClearArray(nPoints, arrCentres); ClearArray2D(nPoints, arrContents); ClearArray(nPoints, arrTotalContent); ClearArray(nPoints, arrLikelihood);
-    
+    ClearArray(nPoints, binContentArray[0]);
     for (int i = 0; i < nPoints; i++)
+      binContentArray[0][i] = (vecBinContents_[listCats_[0]+"_"+stringSuffix_[0]]).at(i);
+    
+    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]);
+    
+    /// Make likelihood functions
+    ClearArray(nEval, outputValues);
+    ClearArray(nEval, likelihoodValues);
+    for (int i = 0; i < nEval; i++)
     {
-      arrCentres[i] = (vecBinCentres_[listCats_[0]+"_"+suffix_]).at(i);
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
-        arrContents[i][iCat] = (vecBinContents_[listCats_[iCat]+"_"+suffix_]).at(i);
-        arrTotalContent[i] += fracs[iCat] * arrContents[i][iCat];
+        histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
+        outputValues[i] += fracs[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
+        
       }
-      arrLikelihood[i] = -TMath::Log(arrTotalContent[i]);
+      likelihoodValues[i] = -TMath::Log(outputValues[i]);
     }
     
+    this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_");
     
-    graph_[suffix_] = new TGraph(nPoints, arrCentres, arrLikelihood);
   }  // end widths
   
   std::cout << "Likelihood::ConstructTGraphs: Constructed TGraphs for likelihood measurements (using " << nWidths_ << " widths)" << std::endl;
@@ -971,7 +1039,7 @@ void Likelihood::AddToFraction(int d, double scaleFactor, double hadTopMassForWi
   }
 }
 
-void Likelihood::CalculateFractions(std::string dirName, std::vector<std::string> datasetNames)
+void Likelihood::CalculateFractions(std::vector<std::string> datasetNames)
 {
   std::string fileName = "";
   int nDatasets = datasetNames.size();
@@ -979,7 +1047,7 @@ void Likelihood::CalculateFractions(std::string dirName, std::vector<std::string
   {
     for (int d = 0; d < nDatasets; d++)
     {
-      fileName = dirName+"nEvents_"+datasetNames[d]+"_widthx"+stringWidthArray_[iWidth]+".txt";
+      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_widthx"+stringWidthArray_[iWidth]+".txt";
       txtOutputFractions_.open(fileName.c_str());
       txtOutputFractions_ << nEventsCMFractions_[iWidth][d] << "   " << nEventsWMFractions_[iWidth][d] << "   " << nEventsNMFractions_[iWidth][d] << std::endl;
       txtOutputFractions_.close();
@@ -987,7 +1055,12 @@ void Likelihood::CalculateFractions(std::string dirName, std::vector<std::string
   }  // end widths
 }
 
-void Likelihood::GetFractions(double *fractions, std::string width, std::string dirName, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
+void Likelihood::GetFractions(double *fractions, int nCats, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
+{
+  Likelihood::GetFractions(fractions, nCats, "1", datasetNames, includeDataset);
+}
+
+void Likelihood::GetFractions(double *fractions, int nCats, std::string width, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
 {
   std::string line;
   std::string fileName;
@@ -1001,7 +1074,7 @@ void Likelihood::GetFractions(double *fractions, std::string width, std::string 
   for (int d = 0; d < nDatasets; d++)
   {
     nEvents[d].clear();
-    fileName = dirName+"nEvents_"+datasetNames[d]+"_widthx"+width+".txt";
+    fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_widthx"+width+".txt";
     if (! tls_->fexists(fileName.c_str()) )
     {
       std::cerr << "WARNING: File " << fileName << " does not exist." << std::endl;
@@ -1027,14 +1100,19 @@ void Likelihood::GetFractions(double *fractions, std::string width, std::string 
     }
   }  // end datsets
   
-  for (int iCat = 0; iCat < nCats_; iCat++)
+  for (int iCat = 0; iCat < nCats; iCat++)
   {
     totalNbEvents += totEvents[iCat];
   }
-  for (int iCat = 0; iCat < nCats_; iCat++)
+  for (int iCat = 0; iCat < nCats; iCat++)
   {
     fractions[iCat] = totEvents[iCat] / totalNbEvents;
-    if ( verbose_ && iCat == 2 ) std::cout << "Width: " << width << "   # CM: " << 100.*fractions[0] << "%   # WM: " << 100.*fractions[1] << "%   # NM: " << 100.*fractions[2] << "%  " << std::endl;
+    if ( verbose_ && iCat == nCats-1 )
+    {
+      std::cout << "Width: " << width << "   # CM: " << 100.*fractions[0] << "%   # WM: " << 100.*fractions[1];
+      if ( nCats > 2 ) std::cout << "%   # NM: " << 100.*fractions[2];
+      std::cout << "%  " << std::endl;
+    }
   }
 }
 

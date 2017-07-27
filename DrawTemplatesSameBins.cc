@@ -26,11 +26,11 @@ using namespace std;
 
 bool runLocally = false;
 bool combineTemplatesByReading = true;
-bool combineTemplatesByAdding = false;
+bool combineTemplatesByAdding = true;
 
 
 ifstream fileIn;
-map<string,TGraph*> graph, graphSm;
+map<string,TGraph*> graph, graphSm, graphSmAdd;
 map<string,vector<double>> vecBinCentres;
 map<string,vector<double>> vecBinContents;
 
@@ -52,6 +52,23 @@ const int sizeWidths = sizeof(widths)/sizeof(widths[0]);
 Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen+2, kCyan+1, kBlue+2, kMagenta};
 
 
+void ClearArray(int size, double* array)
+{
+  for (int i = 0; i < size; i++)
+  {
+    array[i] = 0.;
+  }
+}
+
+void MakeTable(double* array, int n, double min, double max)
+{
+  double dist = (max - min)/((double)(n-1));
+  for (int i = 0; i < n; i++)
+  {
+    array[i] = min + i * dist;
+  }
+}
+
 void DrawGraphs(map<string,TGraph*> graph, string type, string plotName)
 {
   string graphName = "";
@@ -66,7 +83,7 @@ void DrawGraphs(map<string,TGraph*> graph, string type, string plotName)
     graph[graphName]->SetLineColor(colours[iWidth]);
     if ( iWidth == 0 )
     {
-      graph[graphName]->SetTitle(plotName.c_str());
+      graph[graphName]->SetTitle(name.c_str());
       graph[graphName]->Draw();
     }
     else graph[graphName]->Draw("same");
@@ -122,8 +139,31 @@ void DrawTemplatesSameBins()
     
     if (combineTemplatesByAdding)
     {
-      /// To do
-      //  Use graph->Eval
+      const int nPoints = 50;
+      double evalPoints[nPoints], binContents[nPoints];
+      ClearArray(nPoints, evalPoints);
+      MakeTable(evalPoints, nPoints, 0.6, 1.4);
+      for (int iWidth = 0; iWidth < sizeWidths; iWidth++)
+      {
+        ClearArray(nPoints, binContents);
+        for (int i = 0; i < nPoints; i++)
+        {
+          for (int iCat = 0; iCat < sizeCats; iCat++)
+          {
+            graphNameSm = fileType[iFile]+"_"+cats[iCat]+"_Sm_widthx"+widths[iWidth];
+            binContents[i] += fracs[iCat] * graphSm[graphNameSm]->Eval(evalPoints[i]);
+          }
+          
+        }  // end nPoints
+        
+        graphName = fileType[iFile]+"_TotalProb_SmAdd_"+"widthx"+widths[iWidth];
+        graphSmAdd[graphName] = new TGraph(nPoints, evalPoints, binContents);
+        
+        
+      }  // end widths
+      
+      DrawGraphs(graphSmAdd, fileType[iFile], "TotalProb_SmAdd");
+      
     }
     
     fileIn->Close();
