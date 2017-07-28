@@ -221,8 +221,8 @@ void Likelihood::GetHistogram(int iCat)
 
   /// Get histo to smooth
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
-  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_60b"]->Clone(histoName_.c_str());
-  histoSm_[histoName_]->Smooth(3);
+  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
+  if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
   binMin = histoSm_[histoName_]->FindBin(minRedMass_);
@@ -280,7 +280,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   double fracCats[nCats_] = {0.}, fracCatsTemp[nCats_-1] = {0.};
   this->GetFractions(fracCats, nCats_, datasetNames, includeDataset);
   this->GetFractions(fracCatsTemp, nCats_-1, datasetNames, includeDataset);
-  if (verbose_) std::cout << "   # CM: " << fracCats[0] << "%   # WM: " << fracCats[1] << "%   # NM: " << fracCats[2] << "%  " << std::endl;
+  if (verbose_) std::cout << "   # CM: " << fracCats[0] << "*100%   # WM: " << fracCats[1] << "*100%   # NM: " << fracCats[2] << "*100%  " << std::endl;
   
   /// Make output file
   fileTGraphs_ = new TFile((outputDirName_+tGraphFileName).c_str(), "RECREATE");
@@ -312,6 +312,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   {
     WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
     this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat], true);
+    histoSm_[histoName_]->Scale(fracCats[iCat]);
   }
   
   
@@ -336,17 +337,17 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
       histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
       
-      histoSm_[histoName_]->Scale(fracCats[iCat]);
+      if ( iCat == 0 ) histoSm_[histoName_]->Scale(fracCats[iCat]);
       
       ClearArray(nEval, likelihoodValues);
       for (int i = 0; i < nEval; i++)
       {
-        outputValues[i] += fracCats[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
-        if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log((outputValues[i]/fracCats[iCat]));
+        outputValues[i] += fracCats[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
+        if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log(graph_[histoName_]->Eval(evalPoints[i]));
         else likelihoodValues[i] = -TMath::Log(outputValues[i]);
         if ( iCat != nCats_-1)
         {
-          outputValuesTemp[i] += fracCatsTemp[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
+          outputValuesTemp[i] += fracCatsTemp[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
           likelihoodValuesTemp[i] = -TMath::Log(outputValuesTemp[i]);
         }
       }
@@ -354,7 +355,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       if ( iCat == 0 )  // outputValues = CM
       {
         histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
-        histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x|#Gamma) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x|#Gamma)");
+        histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x)");
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
@@ -392,6 +393,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
     {
       gLL2D_->SetPoint(gLL2D_->GetN(), evalPoints[iCentre], widthArray_[iWidth], likelihoodValues[iCentre]);
     }
+    
   }  // end widths
   
   CombineOutput();
@@ -502,13 +504,13 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     stringSuffix_[0] = "widthx"+stringWidthArray_[iWidth];
-    histoName_ = listCats_[0]+"_"+suffix_;
+    histoName_ = listCats_[0]+"_"+stringSuffix_[0];
     
     if (! this->ReadInput(histoName_)) return false;
     
     ClearArray(nPoints, binContentArray[0]);
     for (int i = 0; i < nPoints; i++)
-      binContentArray[0][i] = (vecBinContents_[listCats_[0]+"_"+stringSuffix_[0]]).at(i);
+      binContentArray[0][i] = (vecBinContents_[histoName_]).at(i);
     
     this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]);
     
@@ -520,7 +522,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
         histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
-        outputValues[i] += fracs[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]);
+        outputValues[i] += fracs[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
         
       }
       likelihoodValues[i] = -TMath::Log(outputValues[i]);

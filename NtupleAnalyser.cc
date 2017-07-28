@@ -40,13 +40,11 @@ using namespace TopTree;
 
 bool test = false;
 bool testHistos = false;
-bool testTTbarOnly = true;
-bool runSTOnly = false;
-bool runOtherOnly = false;
+bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
 bool makeControlPlots = false;
-bool makeLikelihoodPlots = true;
+bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
@@ -63,14 +61,19 @@ bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyBTagSF = true;
 
+bool runTTbar = true;
+bool runSTtW = true;
+bool runSTt = true;
+bool runOther = true;
 
-bool rewHadTopOnly = true;
+
+bool rewHadTopOnly = false;
 bool applyWidthSF = false;
 double scaleWidth = 0.8;
 
 
 bool runListWidths = false;
-double listWidths[] = {0.2, 0.4, /*0.5, */0.6, 0.8, 1./*, 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.*/};
+double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2./*, 2.5, 3., 4., 5., 6., 7., 8., 9.*/};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
@@ -105,9 +108,11 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
+string inputDateLL = "170728_1418/";  // without W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had & lep
+//string inputDateLL = "170728_1324/";  // without W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had-only
 //string inputDateLL = "170727_1950/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(1) & supsmu bass = 0
 //string inputDateLL = "170727_2029/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 0
-string inputDateLL = "170727_2054/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 3
+//string inputDateLL = "170727_2054/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 3
 //string inputDateLL = "170721_1212/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 60b
 //string inputDateLL = "170721_1018/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 45b
 //string inputDateLL = "170721_0937/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 20b
@@ -133,6 +138,8 @@ string whichTemplates()
 bool isData = false;
 bool isTTbar = false;
 bool isST = false;
+bool isSTtW = false;
+bool isSTt = false;
 bool isOther = false;
 
 int nofHardSelected = 0;
@@ -831,9 +838,27 @@ int main(int argc, char* argv[])
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   else scaleWidth = 1.;
   
-  if (testTTbarOnly) cout << "Only running ttbar events..." << endl;
-  else if (runSTOnly) cout << "Only running single top events..." << endl;
-  else if (runOtherOnly) cout << "Only running DY+jets and W+jets events... " << endl;
+  bool runAll = false;
+  if (runTTbar && runSTtW && runSTt && runOther) runAll = true;
+  
+  if (testTTbarOnly || (runTTbar && ! runSTtW && ! runSTt && ! runOther) )
+    cout << "Only running ttbar events..." << endl;
+  else if (runAll) cout << "Running all datasets" << endl;
+  else if (runTTbar) cout << "Running ttbar events..." << endl;
+  else if (runSTtW || runSTt)
+  {
+    if (runSTtW && runSTt && ! runTTbar && ! runOther) cout << "Only running ST events..." << endl;
+    else if (runSTtW && ! runSTt && ! runTTbar && ! runOther) cout << "Only running ST tW events..." << endl;
+    else if (! runSTtW && runSTt && ! runTTbar && ! runOther) cout << "Only running ST t events..." << endl;
+    else if (runSTtW && runSTt) cout << "Running ST events..." << endl;
+    else if (runSTtW) cout << "Running ST tW events..." << endl;
+    else if (runSTt) cout << "Running ST t events..." << endl;
+  }
+  else if (runOther)
+  {
+    if (! runTTbar && ! runSTtW && ! runSTt) cout << "Only running DY+jets and W+jets events... " << endl;
+    else cout << "Running DY+jets and W+jets events... " << endl;
+  }
   
   
   /// xml file
@@ -1120,7 +1145,7 @@ int main(int argc, char* argv[])
         cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
       }
       
-      isData = false; isTTbar = false; isST = false; isOther = false;
+      isData = false; isTTbar = false; isST = false; isSTtW = false; isSTt = false; isOther = false;
       if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
       {
         isData = true;
@@ -1158,14 +1183,14 @@ int main(int argc, char* argv[])
       else if ( dataSetName.find("ST") != std::string::npos )
       {
         isST = true;
+        if ( dataSetName.find("tW") != std::string::npos ) isSTtW = true;
+        else isSTt = true;
       }
       else
       {
         isOther = true;
       }
       
-      /// Temporarily, to make templates
-      //if (! isTTbar) continue;
       if (! isData && useTTTemplates && includeDataSets[d] == 0 )
       {
         cout << "Skipping dataset, because not included in likelihood calculation" << endl;
@@ -1185,12 +1210,23 @@ int main(int argc, char* argv[])
         cout << "Skipping dataset..." << endl;
         continue;
       }
-      else if (runSTOnly && ! isST)
+      
+      if (! runTTbar && isTTbar)
       {
         cout << "Skipping dataset..." << endl;
         continue;
       }
-      else if (runOtherOnly && ! isOther)
+      if (! runSTtW && isSTtW)
+      {
+        cout << "Skipping dataset..." << endl;
+        continue;
+      }
+      if (! runSTt && isSTt)
+      {
+        cout << "Skipping dataset..." << endl;
+        continue;
+      }
+      if (! runOther && isOther)
       {
         cout << "Skipping dataset..." << endl;
         continue;
@@ -2230,7 +2266,7 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && ! runSTOnly && ! runOtherOnly && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && ! runAll && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths
