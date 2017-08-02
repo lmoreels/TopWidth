@@ -121,6 +121,12 @@ Likelihood::~Likelihood()
   delete file_;
   delete rew_;
   delete tls_;
+  
+  if ( fileTGraphs_ != NULL )
+  {
+    fileTGraphs_->Close();
+    delete fileTGraphs_;
+  }
 }
 
 void Likelihood::ClearLikelihoods()
@@ -242,9 +248,9 @@ void Likelihood::GetHistogram(int iCat)
 
 void Likelihood::MakeGraph(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph)
 {
-  histoName_ = name+"_"+stringSuffix_[iCat];
+  histoName_ = name+stringSuffix_[iCat];
   graph_[histoName_] = new TGraph(nPoints, centres, contents);
-  graph_[histoName_]->SetName(("g"+histoName_).c_str());
+  graph_[histoName_]->SetName((histoName_).c_str());
   graph_[histoName_]->SetTitle(histoName_.c_str());
   graph_[histoName_]->Write();
   if (drawGraph) this->DrawGraph(histoSm_[histoName_], graph_[histoName_], "Graph_Red_top_mass_"+histoName_);
@@ -254,7 +260,7 @@ void Likelihood::MakeGraphSmooth(int iCat, int nPoints, double* centres, double*
 {
   this->MakeGraph(iCat, nPoints, centres, contents, name, drawGraph);
   
-  histoName_ = name+"_"+stringSuffix_[iCat];
+  histoName_ = name+stringSuffix_[iCat];
   histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
   TGraphSmooth* gs = new TGraphSmooth(histoName_.c_str());
   //graph_[histoNameSm_] = gs->SmoothSuper(graph_[histoName_],"",0,0);
@@ -311,7 +317,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   for (int iCat = 1; iCat < nCats_; iCat++)
   {
     WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
-    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat], true);
+    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_", true);
     histoSm_[histoName_]->Scale(fracCats[iCat]);
   }
   
@@ -327,7 +333,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       binContentArray[0][i] = (vecBinContents_[listCats_[0]+"_"+stringSuffix_[0]]).at(i);
     
     WriteFuncOutput(nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_"+stringSuffix_[0]);
-    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0], true);
+    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_", true);
     
     /// Make likelihood functions
     ClearArray(nEval, outputValues);
@@ -357,21 +363,21 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
         histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
         histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x)");
         
-        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM", false);
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
       }
       else if ( iCat == 1 )  // outputValues = CM + WM
       {
         histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
         
-        this->MakeGraph(0, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM", false);
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM_", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0], 1);
       }
       else  // outputValues = CM + WM + NM
       {
         histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
         if (verbose_) std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[stringSuffix_[0]]->Integral(histoTotal_[stringSuffix_[0]]->FindBin(minRedMass_), histoTotal_[stringSuffix_[0]]->FindBin(maxRedMass_)+1) << std::endl;
-        this->MakeGraph(0, nEval, evalPoints, outputValues, "TotalProbability", false);
+        this->MakeGraph(0, nEval, evalPoints, outputValues, "TotalProbability_", false);
         this->DrawGraph(histoTotal_[stringSuffix_[0]], graph_["TotalProbability_"+stringSuffix_[0]], "Graph_totalProbability_"+stringSuffix_[0]);
         if (verbose_)
         {
@@ -381,7 +387,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
           std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability graph is " << graph_["TotalProbability_"+stringSuffix_[0]+"_test"]->Integral() << std::endl;
         }
         
-        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood", false);
+        this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 1);  // for TGraph
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 2);  // for TGraph2D
       }
@@ -472,6 +478,10 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   ClearArray(nCats_, fracs);
   this->GetFractions(fracs, nCats_, datasetNames, includeDataset);
   
+  fileTGraphs_ = new TFile((dirNameLLTxt_+"TGraphs.root").c_str(), "RECREATE");
+  std::cout << "Likelihood::ConstructTGraphs: Creating output file " << dirNameLLTxt_+"TGraphs.root" << std::endl;
+  fileTGraphs_->cd();
+  
   /// WM & NM distribution are independent of the width
   for (int iCat = 1; iCat < nCats_; iCat++)
   {
@@ -498,7 +508,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   
   /// Make TGraphs
   for (int iCat = 1; iCat < nCats_; iCat++)
-    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]);
+    this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_");
   
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -512,7 +522,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
     for (int i = 0; i < nPoints; i++)
       binContentArray[0][i] = (vecBinContents_[histoName_]).at(i);
     
-    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]);
+    this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_");
     
     /// Make likelihood functions
     ClearArray(nEval, outputValues);
@@ -521,6 +531,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
     {
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
+        histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
         histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
         outputValues[i] += fracs[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
         
@@ -528,7 +539,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
       likelihoodValues[i] = -TMath::Log(outputValues[i]);
     }
     
-    this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_");
+    this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "");
     
   }  // end widths
   
@@ -855,20 +866,20 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
     if ( LLvalues[locMin+1] > tempArray[tempMin+1] ) centreVal = evalWidths[tempMin+3];
   }
   
-  double interval = 0.5;
+  double interval = 0.4;
   if ( centreVal <= interval ) interval = centreVal - 0.1;
   if ( centreVal > 3.8 ) interval = 1.0;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
-  if ( centreVal < 1.6 ) fitmin += 0.1;
+  //if ( centreVal < 1.6 ) fitmin += 0.1;
   if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
-  if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
-  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
-  //if ( centreVal > 0.4 && fitmin < 0.4 ) fitmin = 0.4;
+  //if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
+  if ( centreVal > 0.4 && fitmin < 0.25 ) fitmin = 0.25;
+  if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
-  if ( centreVal > 0.8 && fitmin < 0.7 ) fitmin = 0.7;
+  if ( centreVal > 0.8 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
-  //if ( centreVal < 0.7 ) fitmax += 0.1;
+  
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
   

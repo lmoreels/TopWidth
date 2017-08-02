@@ -44,7 +44,7 @@ bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
 bool makeControlPlots = false;
-bool makeLikelihoodPlots = false;
+bool makeLikelihoodPlots = true;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
@@ -55,6 +55,7 @@ bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
+double mlbCutValue = 160.;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
@@ -69,11 +70,11 @@ bool runOther = true;
 
 bool rewHadTopOnly = false;
 bool applyWidthSF = false;
-double scaleWidth = 0.8;
+double scaleWidth = 8.;
 
 
 bool runListWidths = false;
-double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2./*, 2.5, 3., 4., 5., 6., 7., 8., 9.*/};
+double listWidths[] = {0.2, 0.4/*, 0.5*/, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5./*, 6., 7., 8., 9.*/};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
@@ -108,19 +109,16 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170728_1418/";  // without W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had & lep
-//string inputDateLL = "170728_1324/";  // without W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had-only
-//string inputDateLL = "170727_1950/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(1) & supsmu bass = 0
-//string inputDateLL = "170727_2029/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 0
-//string inputDateLL = "170727_2054/";  // without W+1/2jets, all SFs, ttbar-only; TH1::Smooth(3) & supsmu bass = 3
-//string inputDateLL = "170721_1212/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 60b
-//string inputDateLL = "170721_1018/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 45b
-//string inputDateLL = "170721_0937/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 20b
-//string inputDateLL = "170720_2235/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 900b
-//string inputDateLL = "170720_1838/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 450b
-//string inputDateLL = "170720_1321/";  // without W+1/2jets, all SFs, ttbar-only, also CM/WM/NM functions; 90b
-//string inputDateLL = "170719_2119/";  // without W+1/2jets, all SFs, ttbar-only
-//string inputDateLL = "170719_1802/";  // without W+1/2jets, all SFs
+//string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
+//string inputDateLL = "170801_1252/";  // all SFs, ttbar-only; mlb cut 160; widthSF had & lep; redtopmass [0.7, 1.3]
+//string inputDateLL = "170731_1824/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had-only
+string inputDateLL = "170731_1823/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had & lep
+//string inputDateLL = "170731_1743/";  // all SFs, ttbar-only; no smoothing; mlb cut 170; widthSF had-only
+//string inputDateLL = "170731_1733/";  // all SFs, ttbar-only; no smoothing; mlb cut 170; widthSF had & lep
+//string inputDateLL = "170731_1507/";  // all SFs, ttbar-only; no smoothing; mlb cut 180; widthSF had-only
+//string inputDateLL = "170731_1441/";  // all SFs, ttbar-only; no smoothing; mlb cut 180; widthSF had & lep
+//string inputDateLL = "170728_1418/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had & lep
+//string inputDateLL = "170728_1324/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had-only
 string whichTemplates()
 {
   if      (! applyLeptonSF && ! applyBTagSF && ! applyPU ) return "170719_1800/";
@@ -144,6 +142,7 @@ bool isOther = false;
 
 int nofHardSelected = 0;
 int nofMETCleaned = 0;
+int nofPassMlbCut = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
@@ -174,11 +173,12 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
+std::array<double, 14> aveTopMass = {171.833, 169.809, 167.629, 197.651, 196.796, 199.712, 181.987, 252.371, 250.519, 230.876, 229.157, 184.107, 184.620, 184.536};  // mlb < 160, with SFs
+//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.632, 197.609, 196.895, 199.322, 182.014, 252.492, 250.582, 230.492, 228.514, 184.179, 184.658, 184.580};  // mlb < 170, with SFs
+//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.631, 197.579, 196.954, 199.068, 182.033, 252.469, 250.384, 230.236, 228.344, 184.237, 184.691, 184.617};  // mlb < 180, with SFs
+//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.507, 196.668, 195.936, 198.395, 181.629, 249.719, 247.814, 228.048, 226.336, 184.237, 184.207, 184.211};  // mlb < 180, no SFs
+//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
-std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.572, 196.603, 196.072, 197.919, 181.953, 247.003, 243.879, 226.505, 224.951, 184.717, 184.598, 184.616};  // Res 170515
-//  no KF chi2 cut
-//std::array<double, nofAveMasses> aveTopMass = {171.810, 168.728, 167.110, 203.721, 204.952, 198.233, 193.403, 270.895, 267.167, 230.144, 229.649, 250.010, 242.091, 200.455, 193.963, 194.025};
 
 /// # events after kin fitter
 //  KF chi2 < 5
@@ -724,6 +724,7 @@ int main(int argc, char* argv[])
   
   if (calculateAverageMass)
   {
+    makeTGraphs = false;
     calculateLikelihood = false;
     doPseudoExps = false;
     makePlots = false;
@@ -761,7 +762,6 @@ int main(int argc, char* argv[])
   }
   if (calculateFractions)
   {
-    makeTGraphs = false;
     calculateLikelihood = false;
     doPseudoExps = false;
     runListWidths = false;
@@ -884,7 +884,10 @@ int main(int argc, char* argv[])
   {
     string dataSetName = datasets[d]->Name();
     
-    dataSetNames.push_back(dataSetName);
+    if ( dataSetName.find("TT") != std::string::npos )
+      dataSetNames.push_back("TT_nominal");   // Temporarily ! Change to "TT" when making new (final?) templates
+    else
+      dataSetNames.push_back(dataSetName);
     
     
     if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
@@ -988,7 +991,7 @@ int main(int argc, char* argv[])
     kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
   }
   
-  if (makeTGraphs)
+  if (makeTGraphs || calculateFractions)
   {
     like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, true);  // calculateGoodEvtLL, verbose
   }
@@ -1012,10 +1015,7 @@ int main(int argc, char* argv[])
     if (runSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths_syst.root").c_str(), "RECREATE");
     else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths.root").c_str(), "RECREATE");
   }
-  if (calculateFractions)
-  {
-    like = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, false, false);  // calculateGoodEvtLL, verbose
-  }
+  
   if (doPseudoExps)
   {
     nPsExps = like->InitPull(nPseudoExps);
@@ -1507,33 +1507,17 @@ int main(int argc, char* argv[])
               if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
             }
             
-            if ( mc_pdgId[i] == pdgID_top )  // top
+            if ( mc_pdgId[i] == pdgID_top && mc_status[i] == 62 )  // top
             {
-              if ( mc_status[i] == 62 )
-              {
-                foundTop62 = true;
-                if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-                else topPtSF = TMath::Exp(0.0615-0.0005*400.);
-              }
-              else if (! foundTop62 )
-              {
-                if ( mcParticles[i].Pt() < 400 ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-                else topPtSF = TMath::Exp(0.0615-0.0005*400.);
-              }
+              foundTop62 = true;
+              if ( mcParticles[i].Pt() < 800. ) topPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else topPtSF = TMath::Exp(0.0615-0.0005*800.);
             }
-            else if ( mc_pdgId[i] == -pdgID_top )  // antitop
+            else if ( mc_pdgId[i] == -pdgID_top && mc_status[i] == 62 )  // antitop
             {
-              if ( mc_status[i] == 62 )
-              {
-                foundAntiTop62 = true;
-                if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-                else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
-              }
-              else if (! foundAntiTop62)
-              {
-                if ( mcParticles[i].Pt() < 400 ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
-                else antiTopPtSF = TMath::Exp(0.0615-0.0005*400.);
-              }
+              foundAntiTop62 = true;
+              if ( mcParticles[i].Pt() < 800. ) antiTopPtSF = TMath::Exp(0.0615-0.0005*mcParticles[i].Pt());
+              else antiTopPtSF = TMath::Exp(0.0615-0.0005*800.);
             }
             
             
@@ -1858,6 +1842,12 @@ int main(int argc, char* argv[])
         reco_ttbar_mass_bKF = reco_mlb_bKF + reco_top_mass_bKF;
         redTopMass_bKF = reco_top_mass_bKF/aveTopMassLL;
         
+        
+        /// Cut on m_lb to reduce background
+        if ( reco_mlb_bKF > mlbCutValue ) continue;
+        nofPassMlbCut++;
+        
+        
         if (makePlots)
         {
           if (isTTbar && doKinFit) FillKinFitPlots(doneKinFit);
@@ -2091,7 +2081,8 @@ int main(int argc, char* argv[])
       cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
       cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
       cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
-      if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
+      cout << "Number of events passed Mlb cut: " << nofPassMlbCut << " (" << 100*((float)nofPassMlbCut/(float)nofMETCleaned) << "%)" << endl;
+      if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofPassMlbCut) << "%)" << endl;
       
       //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
       if (! isData && nofHadrMatchedEvents > 0 )
@@ -2173,6 +2164,10 @@ int main(int argc, char* argv[])
     }
     
     
+    if (calculateFractions)
+    {
+      like->CalculateFractions(dataSetNames);
+    }
     if (makeTGraphs)
     {
       like->WriteHistograms("ReducedTopMassPlots.root");
@@ -2185,8 +2180,7 @@ int main(int argc, char* argv[])
       cout << "Maximum reduced top mass: " << maxRedTopMass << endl;
       
       /// Print output to file
-      string llFileName = "output_loglikelihood_widthx1";
-      if (applyWidthSF || runListWidths) llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
+      string llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
       if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
       //if (useToys) llFileName = "output_loglikelihood_toys";
       if (runSystematics) llFileName = "output_loglikelihood_"+listSyst[iSys];
@@ -2266,7 +2260,7 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && ! runAll && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && runAll && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths
@@ -3132,6 +3126,7 @@ void ClearMetaData()
   
   nofHardSelected = 0;
   nofMETCleaned = 0;
+  nofPassMlbCut = 0;
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofHadrMatchedEventsAKF = 0;
@@ -3683,19 +3678,22 @@ void FillLikelihoodPlots()
   for (int iMass = 0; iMass < nLikeMasses; iMass++)
   {
     loglike_per_evt.clear();
-    loglike_per_evt = like->CalculateLikelihood(redTopMassArray[iMass], 1., 172.5, 172.5, 1., false, false);
-    //if (redTopMass >= redTopMassArray[iMass] && redTopMass < redTopMassArray[iMass+1])
-    //{
+    if ( redTopMassArray[iMass] > minCutRedTopMass && maxCutRedTopMass < redTopMassArray[iMass])
+    {
+      loglike_per_evt = like->CalculateLikelihood(redTopMassArray[iMass], 1., 172.5, 172.5, 1., false, false);
       for (int iWidth = 0; iWidth < nWidthsLike; iWidth++)  // Deliberately filling iWidth and not actual width
       {
-        histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//         if (isCM) histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//         if (isWM) histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//         if (isNM) histo1DLike["loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//        if (redTopMass > redTopMassArray[iMass] && redTopMass < redTopMassArray[iMass+1])
+//        {
+          histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//          if (isCM) histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//          if (isWM) histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//          if (isNM) histo1DLike["loglike_vs_width_NM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
+//        }
       }  // end width
 
 //      break;  // only fill once per event (because only one redTopMass)
-    //}
+    }
   }  // end masses
 }
 
