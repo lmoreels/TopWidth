@@ -66,7 +66,7 @@ bool test = false;
 bool fillLooseTree = false;
 bool makeCutFlow = true;
 bool runData = false;
-bool runSystematics = false;
+bool runSystematics = true;
 
 
 /// Configuration
@@ -444,6 +444,7 @@ int maxMCParticles = -1;
 bool isAmc = false;
 bool isData = false;
 bool isTTbar = false;
+bool isHerwig = false;
 
 bool isGoodPV;
 bool isBadMuon, isCloneMuon;
@@ -680,7 +681,7 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   
   
   // mcparticles
-  if (! isData)
+  if (! isData && ! isHerwig)
   {
     myTree->Branch("nMCParticles",&nMCParticles,"nMCParticles/I");
     myTree->Branch("mc_status",&mc_status,"mc_status[nMCParticles]/I");
@@ -1803,6 +1804,11 @@ int main (int argc, char *argv[])
       cout << "         This is an amc@nlo sample." << endl;
     }
     
+    if ( dataSetName.find("herwig") != std::string::npos || dataSetName.find("Herwig") != std::string::npos )
+    {
+      isHerwig = true;
+    }
+    
     if (calculateBTagSF && isData)
     {
       cout << "  Calculating btag scale factors.... Skipping data..." << endl;
@@ -2013,7 +2019,7 @@ int main (int argc, char *argv[])
         }
       }
       
-      if (! isData )
+      if (! isData && ! isHerwig)
       {
         genjets = treeLoader.LoadGenJet(ievt,false);
         treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
@@ -2310,7 +2316,7 @@ int main (int argc, char *argv[])
       FillJetVars(selectedJets);
       FillMetVars(mets, mets_corrected);
       FillFilters(isData);
-      if (! isData) FillMCParticles(isTTbar);
+      if (! isData && ! isHerwig) FillMCParticles(isTTbar);
       if (isTTbar) FillRenFacScaleFactors();
       
       
@@ -2322,7 +2328,7 @@ int main (int argc, char *argv[])
       
     }  // end loop events
     
-    if (! isData && ! calculateBTagSF) cout << "Max MCParticles: " << maxMCParticles << endl;
+    if (! isData && ! isHerwig && ! calculateBTagSF) cout << "Max MCParticles: " << maxMCParticles << endl;
     if (isTTbar) cout << "Number of TT events without generated top quark: " << nofTTEventsWithoutAGenTop << endl << endl;
     
     if (! calculateBTagSF)

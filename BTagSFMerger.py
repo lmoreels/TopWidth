@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Define time variable
 #date = "test"
-date = "170711"
+date = "170731"
 
 scalesys = "nominal"
 #scalesys = "JERup"
@@ -25,7 +25,8 @@ if not os.path.exists(pathMerged):
     os.makedirs(pathMerged)
 
 # get filenames from the xml!!!
-tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
+#tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
+tree = ET.ElementTree(file='config/topWidth_syst_loc.xml')
 
 
 # get the list of dataset

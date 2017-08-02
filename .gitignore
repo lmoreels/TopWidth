@@ -27,7 +27,7 @@ likelihood/*
 localgridSubmission/SubmitScripts/*
 negWeights/*
 negWeightsCalculator
-nohup_Ntuple/*
+nohup_/*
 output*/
 test*/*
 toys/*
