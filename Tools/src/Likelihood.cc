@@ -250,7 +250,7 @@ void Likelihood::MakeGraph(int iCat, int nPoints, double* centres, double* conte
 {
   histoName_ = name+stringSuffix_[iCat];
   graph_[histoName_] = new TGraph(nPoints, centres, contents);
-  graph_[histoName_]->SetName((histoName_).c_str());
+  graph_[histoName_]->SetName(("g"+histoName_).c_str());
   graph_[histoName_]->SetTitle(histoName_.c_str());
   graph_[histoName_]->Write();
   if (drawGraph) this->DrawGraph(histoSm_[histoName_], graph_[histoName_], "Graph_Red_top_mass_"+histoName_);

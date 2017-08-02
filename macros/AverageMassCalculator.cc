@@ -10,10 +10,10 @@
 using namespace std;
 
 /// Define inputs
-string inputDate = "170713_1435";  // Should be >= 170511_1314 !
+string inputDate = "170802_1151";  // Should be >= 170531_1136 !
 string dataSetNames[] = {"TT", "ST_t_top", "ST_t_antitop", "ST_tW_top", "ST_tW_antitop", "DYJets", "WJets", "data"};
 string pathInput = "averageMass/";
-string inputFiles[] = {"mass_genp_matched_"+dataSetNames[0]+"_"+inputDate, "mass_genj_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_nominal_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
+string inputFiles[] = {"mass_genp_matched_"+dataSetNames[0]+"_"+inputDate, "mass_genj_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_matched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notCorrectMatch_"+dataSetNames[0]+"_"+inputDate, "mass_reco_notMatched_"+dataSetNames[0]+"_"+inputDate, "mass_reco_wrongPerm_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[0]+"_"+inputDate, "mass_reco_"+dataSetNames[1]+"_"+inputDate, "mass_reco_"+dataSetNames[2]+"_"+inputDate, "mass_reco_"+dataSetNames[3]+"_"+inputDate, "mass_reco_"+dataSetNames[4]+"_"+inputDate, "mass_reco_"+dataSetNames[5]+"_"+inputDate, "mass_reco_"+dataSetNames[6]+"_"+inputDate, "mass_reco_"+dataSetNames[7]+"_"+inputDate};
 int nInputs = sizeof(inputFiles)/sizeof(inputFiles[0]);
 
 string inputFileName;
@@ -27,7 +27,8 @@ void WriteToFile(std::ofstream &fout, std::string thisDataSet, double meanTop);
 /// Define vars
 char dataLine[1024];
 int nEntries, nEntriesAllMC, nEntriesAllSamples, eventId;
-double massTop;
+double nEntriesW, nEntriesAllMCW, nEntriesAllSamplesW;
+double massTop, scaleFactor, lumiWeight;
 double sumTop, sumTopAllMC, sumTopAllSamples;
 double meanTop;
 
@@ -43,8 +44,10 @@ int main()
   fileOut << "# Dataset                     meanTop" << endl;
   
   nEntriesAllMC = 0;
+  nEntriesAllMCW = 0.;
   sumTopAllMC = 0.;
   nEntriesAllSamples = 0;
+  nEntriesAllSamplesW = 0.;
   sumTopAllSamples = 0.;
   
   for (int iFile = 0; iFile < nInputs; iFile++)
@@ -71,31 +74,35 @@ int main()
       fileIn.seekg(currentPosition);
       fileIn.getline(dataLine,sizeof(dataLine));
       istringstream iss(dataLine);
-      iss >> eventId >> massTop;
+      iss >> eventId >> massTop >> scaleFactor >> lumiWeight;
       currentPosition = fileIn.tellg();
       
       nEntries++;
-      sumTop += massTop;
+      nEntriesW += scaleFactor;
+      sumTop += massTop*scaleFactor;
       
       if ( iFile > 5 && iFile < nInputs-1) // reco
       {
         nEntriesAllMC++;
-        sumTopAllMC += massTop;
+        nEntriesAllMCW += scaleFactor;
+        sumTopAllMC += massTop*scaleFactor;
         
         nEntriesAllSamples++;
-        sumTopAllSamples += massTop;
+        nEntriesAllSamplesW += scaleFactor;
+        sumTopAllSamples += massTop*scaleFactor;
       }
       else if ( iFile == nInputs-1 ) // data
       {
         nEntriesAllSamples++;
-        sumTopAllSamples += massTop;
+        nEntriesAllSamplesW += scaleFactor;
+        sumTopAllSamples += massTop*scaleFactor;
       }
       
     }  // end while
     
     
     /// Calculate mean
-    meanTop = sumTop/((double)nEntries);
+    meanTop = sumTop/nEntriesW;
     
     
     /// Store mean in file
@@ -142,13 +149,15 @@ int main()
   
   /// Calculate mean reco all MC
   ClearVars(true);
-  meanTop = sumTopAllMC/((double)nEntriesAllMC);
+  meanTop = sumTopAllMC/nEntriesAllMCW;
+  //meanTop = sumTopAllMC/((double)nEntriesAllMC);
   
   WriteToFile(fileOut, "Reco All MC", meanTop);
   
   /// Calculate mean reco all samples
   ClearVars(true);
-  meanTop = sumTopAllSamples/((double)nEntriesAllSamples);
+  meanTop = sumTopAllSamples/nEntriesAllSamplesW;
+  //meanTop = sumTopAllSamples/((double)nEntriesAllSamples);
   
   WriteToFile(fileOut, "Reco All Samples", meanTop);
   
@@ -171,12 +180,15 @@ void ClearVars(bool isNewDataset)
 {
   eventId = -1;
   massTop = 0.;
+  scaleFactor = 1.;
+  lumiWeight = 1.;
   
   if (isNewDataset)
   {
     thisDataSet = "";
     inputFileName = "";
     nEntries = 0;
+    nEntriesW = 0.;
     sumTop = 0.;
     meanTop = 0.;
   }

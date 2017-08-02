@@ -44,7 +44,7 @@ bool testTTbarOnly = false;
 bool doGenOnly = false;
 bool makePlots = false;
 bool makeControlPlots = false;
-bool makeLikelihoodPlots = true;
+bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
@@ -55,7 +55,6 @@ bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 5.;
-double mlbCutValue = 160.;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
@@ -109,30 +108,20 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
+//string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
+string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
 //string inputDateLL = "170801_1252/";  // all SFs, ttbar-only; mlb cut 160; widthSF had & lep; redtopmass [0.7, 1.3]
 //string inputDateLL = "170731_1824/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had-only
-string inputDateLL = "170731_1823/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had & lep
-//string inputDateLL = "170731_1743/";  // all SFs, ttbar-only; no smoothing; mlb cut 170; widthSF had-only
-//string inputDateLL = "170731_1733/";  // all SFs, ttbar-only; no smoothing; mlb cut 170; widthSF had & lep
-//string inputDateLL = "170731_1507/";  // all SFs, ttbar-only; no smoothing; mlb cut 180; widthSF had-only
-//string inputDateLL = "170731_1441/";  // all SFs, ttbar-only; no smoothing; mlb cut 180; widthSF had & lep
+//string inputDateLL = "170731_1823/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had & lep
 //string inputDateLL = "170728_1418/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had & lep
 //string inputDateLL = "170728_1324/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had-only
 string whichTemplates()
 {
-  if      (! applyLeptonSF && ! applyBTagSF && ! applyPU ) return "170719_1800/";
-  else if (  applyLeptonSF && ! applyBTagSF &&   applyPU ) return "170719_1803/";
-  else if (  applyLeptonSF &&   applyBTagSF && ! applyPU ) return "170719_1804/";
-  else if (  applyLeptonSF &&   applyBTagSF &&   applyPU ) return "170719_1802/";
+  if      (rewHadTopOnly) return "170728_1324/";
+  else return "170802_1317/";
 }
-//string inputDateLL = "170719_1800/";  // without W+1/2jets, no SFs
-//string inputDateLL = "170719_1804/";  // without W+1/2jets, no pu SFs
-//string inputDateLL = "170719_1803/";  // without W+1/2jets, no b tag SFs
-//string inputDateLL = "170713_1644/";  // non-rel BW, SF_h
-//string inputDateLL = "170713_1656/";  // non-rel BW, SF_h*SF_l
-//string inputDateLL = "170714_1001/";  // rel BW, SF_h
-//string inputDateLL = "170714_1010/";  // rel BW, SF_h*SF_l
+
 bool isData = false;
 bool isTTbar = false;
 bool isST = false;
@@ -142,7 +131,6 @@ bool isOther = false;
 
 int nofHardSelected = 0;
 int nofMETCleaned = 0;
-int nofPassMlbCut = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
@@ -173,10 +161,7 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-std::array<double, 14> aveTopMass = {171.833, 169.809, 167.629, 197.651, 196.796, 199.712, 181.987, 252.371, 250.519, 230.876, 229.157, 184.107, 184.620, 184.536};  // mlb < 160, with SFs
-//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.632, 197.609, 196.895, 199.322, 182.014, 252.492, 250.582, 230.492, 228.514, 184.179, 184.658, 184.580};  // mlb < 170, with SFs
-//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.631, 197.579, 196.954, 199.068, 182.033, 252.469, 250.384, 230.236, 228.344, 184.237, 184.691, 184.617};  // mlb < 180, with SFs
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.507, 196.668, 195.936, 198.395, 181.629, 249.719, 247.814, 228.048, 226.336, 184.237, 184.207, 184.211};  // mlb < 180, no SFs
+std::array<double, 14> aveTopMass = {171.833, 169.809, 167.636, 197.975, 197.718, 198.582, 182.317, 252.174, 249.964, 229.383, 227.814, 184.794, 185.096, 185.046};  // with SFs
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
 
@@ -1843,10 +1828,6 @@ int main(int argc, char* argv[])
         redTopMass_bKF = reco_top_mass_bKF/aveTopMassLL;
         
         
-        /// Cut on m_lb to reduce background
-        if ( reco_mlb_bKF > mlbCutValue ) continue;
-        nofPassMlbCut++;
-        
         
         if (makePlots)
         {
@@ -2081,8 +2062,7 @@ int main(int argc, char* argv[])
       cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
       cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
       cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
-      cout << "Number of events passed Mlb cut: " << nofPassMlbCut << " (" << 100*((float)nofPassMlbCut/(float)nofMETCleaned) << "%)" << endl;
-      if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofPassMlbCut) << "%)" << endl;
+      if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
       
       //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
       if (! isData && nofHadrMatchedEvents > 0 )
@@ -3126,7 +3106,6 @@ void ClearMetaData()
   
   nofHardSelected = 0;
   nofMETCleaned = 0;
-  nofPassMlbCut = 0;
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofHadrMatchedEventsAKF = 0;
