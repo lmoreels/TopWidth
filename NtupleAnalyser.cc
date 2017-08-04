@@ -49,8 +49,8 @@ bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
-bool calculateLikelihood = true;
 bool useTTTemplates = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -73,7 +73,7 @@ double scaleWidth = 8.;
 
 
 bool runListWidths = false;
-double listWidths[] = {0.2, 0.4/*, 0.5*/, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5./*, 6., 7., 8., 9.*/};
+double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
@@ -108,8 +108,8 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-//string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
-string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
+string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
+//string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
 //string inputDateLL = "170801_1252/";  // all SFs, ttbar-only; mlb cut 160; widthSF had & lep; redtopmass [0.7, 1.3]
 //string inputDateLL = "170731_1824/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had-only
@@ -637,7 +637,7 @@ Likelihood *like;
 ofstream txtDebugTopMass, txtDebugPUSF;
 
 /// Pseudo experiments
-const int nPseudoExps = 500;
+const int nPseudoExps = 200;
 int nPsExps = nPseudoExps;
 TRandom3 random3;
 double toyValues[nPseudoExps]; // = random3.Uniform(0,1);

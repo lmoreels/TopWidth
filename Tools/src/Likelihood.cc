@@ -30,8 +30,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0.};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {-0.00214191, 0.948805};
-const double Likelihood::calCurveParUnc_[2] = {0.071603, 0.0170251};
+const double Likelihood::calCurvePar_[2] = {0.0388173, 0.994354};
+const double Likelihood::calCurveParUnc_[2] = {0.0292865, 0.00841485};
 
 double Likelihood::nEventsCMFractions_[nWidths_][25] = {{0.}};
 double Likelihood::nEventsWMFractions_[nWidths_][25] = {{0.}};
@@ -979,15 +979,20 @@ void Likelihood::CalculatePull(double inputWidth)
   
   /// Calculate output width for all pseudo experiments
   //  Transform to input width via calibration curve & calculate average input width
-  std::pair<double,double> thisOutputWidth[nPsExp_] = {std::pair<double,double>(-1.,-1.)};
-  std::pair<double,double> thisInputWidth[nPsExp_] = {std::pair<double,double>(-1.,-1.)};
+  std::pair<double,double> thisOutputWidth[nPsExp_], thisInputWidth[nPsExp_];
   double aveInputWidth = 0.;
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
+    // Clear
+    thisOutputWidth[iPsExp] = std::pair<double,double>(-1.,-1.);
+    thisInputWidth[iPsExp] = std::pair<double,double>(-1.,-1.);
+    
+    // Fill
     thisOutputWidth[iPsExp] = this->GetOutputWidth(inputWidth, iPsExp);
     thisInputWidth[iPsExp] = this->ApplyCalibrationCurve(thisOutputWidth[iPsExp].first, thisOutputWidth[iPsExp].second);
-    aveInputWidth += thisInputWidth[iPsExp].first;
+    if ( thisInputWidth[iPsExp].first != -1. ) aveInputWidth += thisInputWidth[iPsExp].first;
+    else std::cerr << "Likelihood::CalculatePull: Input width for pseudo experiment " << iPsExp << " is equal to -1! Ignoring this pseudo experiment... " << std::endl;
   }
   aveInputWidth = aveInputWidth/nPsExp_;
   //std::cout << "Output width : " << thisOutputWidth[0].first << " ;   sigma : " << thisOutputWidth[0].second << std::endl;
@@ -1003,8 +1008,11 @@ void Likelihood::CalculatePull(double inputWidth)
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
-    fillValue = (thisInputWidth[iPsExp].first - aveInputWidth)/thisInputWidth[iPsExp].second;
-    hPull->Fill(fillValue);
+    if ( thisInputWidth[iPsExp].first != -1. )
+    {
+      fillValue = (thisInputWidth[iPsExp].first - aveInputWidth)/thisInputWidth[iPsExp].second;
+      hPull->Fill(fillValue);
+    }
   }
   hPull->Write();
   
