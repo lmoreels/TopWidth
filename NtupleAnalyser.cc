@@ -69,16 +69,16 @@ bool runOther = true;
 
 bool rewHadTopOnly = false;
 bool applyWidthSF = false;
-double scaleWidth = 8.;
+double scaleWidth = 0.6;
 
 
 bool runListWidths = false;
-double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.};
+double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5.};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
 bool runSystematics = false;
-string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "renFac1002"/*, "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009"*/};
+string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009"};
 int nSystematics = sizeof(listSyst)/sizeof(listSyst[0]);
 
 TFile *fileWidths;
@@ -108,7 +108,8 @@ string pathNtuplesData = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
+string inputDateLL = "170814_1625/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]; other widths
+//string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
 //string inputDateLL = "170801_1252/";  // all SFs, ttbar-only; mlb cut 160; widthSF had & lep; redtopmass [0.7, 1.3]
@@ -567,7 +568,9 @@ double xSection;
 double lumiWeight, scaleFactor, widthSF;
 double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
 double topPtRewSF, topPtSF, antiTopPtSF;
+bool foundTop22, foundAntiTop22;
 bool foundTop62, foundAntiTop62;
+bool foundLastCopyTop, foundLastCopyAntitop;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
@@ -637,7 +640,7 @@ Likelihood *like;
 ofstream txtDebugTopMass, txtDebugPUSF;
 
 /// Pseudo experiments
-const int nPseudoExps = 200;
+const int nPseudoExps = 500;
 int nPsExps = nPseudoExps;
 TRandom3 random3;
 double toyValues[nPseudoExps]; // = random3.Uniform(0,1);
@@ -990,8 +993,8 @@ int main(int argc, char* argv[])
     else
     {
       calculateLikelihood = like->ConstructTGraphsFromFile();
-      calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
-      calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
+      if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
+      if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
     }
     widthsLike.clear();
     widthsLike = like->GetWidths();
@@ -1217,6 +1220,12 @@ int main(int argc, char* argv[])
         continue;
       }
       
+//       if (doPseudoExps && isOther)
+//       {
+//         cout << "Skipping DY+jets & W+jets datasets when doing pseudo experiments." << endl;
+//         continue;
+//       }
+      
       
       string ntupleFileName = "Ntuples_"+dataSetName+".root";
       
@@ -1365,6 +1374,19 @@ int main(int argc, char* argv[])
               if ( listSyst[iSys].find("up") != std::string::npos ) { scaleFactor *= puSF_up;}
               else if ( listSyst[iSys].find("down") != std::string::npos ) { scaleFactor *= puSF_down;}
             }
+            else if ( listSyst[iSys].find("renFac") != std::string::npos )
+            {
+              if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+              if (applyBTagSF) { scaleFactor *= btagSF;}
+              if (applyPU) { scaleFactor *= puSF;}
+              
+              if ( listSyst[iSys].find("1002") != std::string::npos ) scaleFactor *= weight1002 * sumWeight1001/sumWeight1002;
+              else if ( listSyst[iSys].find("1003") != std::string::npos ) scaleFactor *= weight1003 * sumWeight1001/sumWeight1003;
+              else if ( listSyst[iSys].find("1004") != std::string::npos ) scaleFactor *= weight1004 * sumWeight1001/sumWeight1004;
+              else if ( listSyst[iSys].find("1005") != std::string::npos ) scaleFactor *= weight1005 * sumWeight1001/sumWeight1005;
+              else if ( listSyst[iSys].find("1007") != std::string::npos ) scaleFactor *= weight1007 * sumWeight1001/sumWeight1007;
+              else if ( listSyst[iSys].find("1009") != std::string::npos ) scaleFactor *= weight1009 * sumWeight1001/sumWeight1009;
+            }
             else
             {
               if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
@@ -1474,7 +1496,8 @@ int main(int argc, char* argv[])
             mcParticles.push_back(mcpart);
           }
           
-          foundTop62 = false; foundAntiTop62 = false;
+          foundTop22 = false; foundAntiTop22 = false; foundTop62 = false; foundAntiTop62 = false;
+          foundLastCopyTop = false; foundLastCopyAntitop = false;
           for (unsigned int i = 0; i < mcParticles.size(); i++)
           {
             if ( test && verbose > 4 )
@@ -1483,13 +1506,49 @@ int main(int argc, char* argv[])
             /// Find tops
             if ( mc_pdgId[i] == pdgID_top )  // isLastCopy() == status 62
             {
-              if ( mc_status[i] == 22 ) topQuark = i;
+              if ( mc_status[i] == 22 )
+              {
+                topQuark = i;
+                foundTop22 = true;
+              }
               if ( topQuark == -9999 && mc_status[i] == 62 ) topQuark = i;
+              
+              if (makePlots && isTTbar)
+              {
+                histo1D["genTop_status"]->Fill(mc_status[i]);
+                if ( mc_status[i] == 22 )
+                  histo1D["genTop_status22_pT"]->Fill(mc_pt[i]);
+                else if ( mc_status[i] == 62 )
+                  histo1D["genTop_status62_pT"]->Fill(mc_pt[i]);
+              }
+              if (isTTbar && mc_isLastCopy[i])
+              {
+                foundLastCopyTop = true;
+                if (makePlots) histo1D["genTop_isLastCopy_status"]->Fill(mc_status[i]);
+              }
             }
             else if ( mc_pdgId[i] == -pdgID_top )
             {
-              if ( mc_status[i] == 22 ) antiTopQuark = i;
+              if ( mc_status[i] == 22 )
+              {
+                antiTopQuark = i;
+                foundAntiTop22 = true;
+              }
               if ( antiTopQuark == -9999 && mc_status[i] == 62 ) antiTopQuark = i;
+              
+              if (makePlots && isTTbar)
+              {
+                histo1D["genAntitop_status"]->Fill(mc_status[i]);
+                if ( mc_status[i] == 22 )
+                  histo1D["genAntitop_status22_pT"]->Fill(mc_pt[i]);
+                else if ( mc_status[i] == 62 )
+                  histo1D["genAntitop_status62_pT"]->Fill(mc_pt[i]);
+              }
+              if (isTTbar && mc_isLastCopy[i])
+              {
+                foundLastCopyAntitop = true;
+                if (makePlots) histo1D["genAntitop_isLastCopy_status"]->Fill(mc_status[i]);
+              }
             }
             
             if ( mc_pdgId[i] == pdgID_top && mc_status[i] == 62 )  // top
@@ -1535,6 +1594,18 @@ int main(int argc, char* argv[])
             }
             
           }  // end loop mcParticles
+          
+          if (makePlots && isTTbar)
+          {
+            if (foundLastCopyTop) histo1D["genTop_hasLastCopy"]->Fill(1.);
+            else histo1D["genTop_hasLastCopy"]->Fill(0.);
+            if (foundLastCopyAntitop) histo1D["genAntitop_hasLastCopy"]->Fill(1.);
+            else histo1D["genAntitop_hasLastCopy"]->Fill(0.);
+            if (foundTop22) histo1D["genTop_hasStatus22"]->Fill(1.);
+            else histo1D["genTop_hasStatus22"]->Fill(0.);
+            if (foundAntiTop22) histo1D["genAntitop_hasStatus22"]->Fill(1.);
+            else histo1D["genAntitop_hasStatus22"]->Fill(0.);
+          }
           
           if (verbose > 3)
           {
@@ -1703,7 +1774,7 @@ int main(int argc, char* argv[])
                   if (calculateLikelihood)
                   {
                     double temp = matched_top_mass_j_akF/aveTopMassLL;
-                    if (! useTTTemplates)
+                    if (! useTTTemplates && ! runSystematics)
                       like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
                   }
                 }  // passKFChi2MatchedCut
@@ -1940,9 +2011,9 @@ int main(int argc, char* argv[])
         if (calculateLikelihood)
         {
           loglike_per_evt = like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && ! useTTTemplates && isCM )  // isCM ensures ! isData
+          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
             like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && ! useTTTemplates && ( isCM || isWM ) )
+          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ( isCM || isWM ) )
             like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
         }
         
@@ -2240,7 +2311,7 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && runAll && ! useTTTemplates) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && runAll && ! useTTTemplates && ! doPseudoExps) CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths
@@ -2745,6 +2816,20 @@ void InitHisto1D()
   TH1::SetDefaultSumw2();
   
   InitHisto1DMatch();
+  
+  histo1D["genTop_status"] = new TH1F("genTop_status", "Status code of the generated top quark; status", 100, -0.5, 99.5);
+  histo1D["genTop_isLastCopy_status"] = new TH1F("genTop_isLastCopy_status", "Status code of the last copy of the generated top quark; status", 100, -0.5, 99.5);
+  histo1D["genTop_hasLastCopy"] = new TH1F("genTop_hasLastCopy", "Generated top quark has isLastCopy tag; has isLastCopy", 2, -0.5, 1.5);
+  histo1D["genTop_hasStatus22"] = new TH1F("genTop_hasStatus22", "Generated top quark has status 22; has status 22", 2, -0.5, 1.5);
+  histo1D["genAntitop_status"] = new TH1F("genAntitop_status", "Status code of the generated antitop quark; status", 100, -0.5, 99.5);
+  histo1D["genAntitop_isLastCopy_status"] = new TH1F("genAntitop_isLastCopy_status", "Status code of the last copy of the generated antitop quark; status", 100, -0.5, 99.5);
+  histo1D["genAntitop_hasLastCopy"] = new TH1F("genAntitop_hasLastCopy", "Generated antitop quark has isLastCopy tag; has isLastCopy", 2, -0.5, 1.5);
+  histo1D["genAntitop_hasStatus22"] = new TH1F("genAntitop_hasStatus22", "Generated antitop quark has status 22; has status 22", 2, -0.5, 1.5);
+  
+  histo1D["genTop_status22_pT"] = new TH1F("genTop_status22_pT", "pT of the generated top quark with status 22; p_{T} (GeV)", 250, 0., 250.);
+  histo1D["genTop_status62_pT"] = new TH1F("genTop_status62_pT", "pT of the generated top quark with status 62; p_{T} (GeV)", 250, 0., 250.);
+  histo1D["genAntitop_status22_pT"] = new TH1F("genAntitop_status22_pT", "pT of the generated antitop quark with status 22; p_{T} (GeV)", 250, 0., 250.);
+  histo1D["genAntitop_status62_pT"] = new TH1F("genAntitop_status62_pT", "pT of the generated antitop quark with status 62; p_{T} (GeV)", 250, 0., 250.);
   
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
@@ -3657,7 +3742,7 @@ void FillLikelihoodPlots()
   for (int iMass = 0; iMass < nLikeMasses; iMass++)
   {
     loglike_per_evt.clear();
-    if ( redTopMassArray[iMass] > minCutRedTopMass && maxCutRedTopMass < redTopMassArray[iMass])
+    if ( redTopMassArray[iMass] > minCutRedTopMass && maxCutRedTopMass > redTopMassArray[iMass])
     {
       loglike_per_evt = like->CalculateLikelihood(redTopMassArray[iMass], 1., 172.5, 172.5, 1., false, false);
       for (int iWidth = 0; iWidth < nWidthsLike; iWidth++)  // Deliberately filling iWidth and not actual width
