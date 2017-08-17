@@ -1,6 +1,6 @@
 #include "../interface/Likelihood.h"
 
-const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.25, 4.5, 4.75, 5., 5.25, 5.5, 5.75, 6., 6.25, 6.5, 6.75, 7., 7.25, 7.5, 7.75, 8., 8.25, 8.5, 8.75, 9., 9.25, 9.5, 9.75, 10., 10.5, 11., 11.5, 12.};
+const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5., 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6., 6.1, 6.2, 6.3, 6.4, 6.5};
 
 const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
 
@@ -30,8 +30,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0.};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {0.0388173, 0.994354};
-const double Likelihood::calCurveParUnc_[2] = {0.0292865, 0.00841485};
+const double Likelihood::calCurvePar_[2] = {0.00986675, 0.963861};
+const double Likelihood::calCurveParUnc_[2] = {0.0759725, 0.0301143};
 
 double Likelihood::nEventsCMFractions_[nWidths_][25] = {{0.}};
 double Likelihood::nEventsWMFractions_[nWidths_][25] = {{0.}};
@@ -229,6 +229,7 @@ void Likelihood::GetHistogram(int iCat)
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
   histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
+  histoSm_[histoName_]->Write();
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
   binMin = histoSm_[histoName_]->FindBin(minRedMass_);
@@ -798,7 +799,7 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   txtOutputLL_.open(fileName.c_str());
   if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
   else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
-  txtOutputLL_ << std::setw(5) << std::left << inputWidth << "   " << std::setw(16) << std::right << std::fixed << std::setprecision(15) << output_.first << "  " << std::setw(16) << std::right << std::fixed << std::setprecision(15) << output_.second << std::endl;
+  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(20) << std::right << std::setprecision(20) << output_.first << "  " << std::setw(20) << std::right << std::setprecision(20) << output_.second << std::endl;
   txtOutputLL_.close();
 }
 
@@ -873,12 +874,14 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   double fitmin = centreVal - interval;
   //if ( centreVal < 1.6 ) fitmin += 0.1;
   if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
-  //if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
-  if ( centreVal > 0.4 && fitmin < 0.25 ) fitmin = 0.25;
-  if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
-  //if ( centreVal > 0.5 && fitmin < 0.5 ) fitmin = 0.5;
-  if ( centreVal > 0.8 && fitmin < 0.5 ) fitmin = 0.5;
+  if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
+  if ( centreVal > 0.35 && fitmin < 0.25 ) fitmin = 0.25;
+  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
+  //if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
+  if ( centreVal > 0.55 && fitmin < 0.4 ) fitmin = 0.4;
+  if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
+  if ( centreVal > 0.35 && centreVal < 1.2 ) fitmax = centreVal + (centreVal - fitmin);
   
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
@@ -976,6 +979,12 @@ void Likelihood::CalculatePull(double inputWidth)
 {
   std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+".root";
   TFile *filePull = new TFile(fileName.c_str(),"RECREATE");
+  filePull->cd();
+  TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 32, -4., 4.);
+  TH1D *hAveWidthOut = new TH1D("hAveWidthOut", "; #Gamma_{out}", 40, 0., 2.);
+  TH1D *hAveWidthIn = new TH1D("hAveWidthIn", "; #Gamma_{in}", 40, 0., 2.);
+  TH1D *hUncAveWidthOut = new TH1D("hUncAveWidthOut", "; #sigma_{#Gamma_{out}}", 30, 0., 0.3);
+  TH1D *hUncAveWidthIn = new TH1D("hUncAveWidthIn", "; #sigma_{#Gamma_{in}}", 30, 0., 0.3);
   
   /// Calculate output width for all pseudo experiments
   //  Transform to input width via calibration curve & calculate average input width
@@ -993,6 +1002,10 @@ void Likelihood::CalculatePull(double inputWidth)
     thisInputWidth[iPsExp] = this->ApplyCalibrationCurve(thisOutputWidth[iPsExp].first, thisOutputWidth[iPsExp].second);
     if ( thisInputWidth[iPsExp].first != -1. ) aveInputWidth += thisInputWidth[iPsExp].first;
     else std::cerr << "Likelihood::CalculatePull: Input width for pseudo experiment " << iPsExp << " is equal to -1! Ignoring this pseudo experiment... " << std::endl;
+    hAveWidthOut->Fill(thisOutputWidth[iPsExp].first);
+    hAveWidthIn->Fill(thisInputWidth[iPsExp].first);
+    hUncAveWidthOut->Fill(thisOutputWidth[iPsExp].second);
+    hUncAveWidthIn->Fill(thisInputWidth[iPsExp].second);
   }
   aveInputWidth = aveInputWidth/nPsExp_;
   //std::cout << "Output width : " << thisOutputWidth[0].first << " ;   sigma : " << thisOutputWidth[0].second << std::endl;
@@ -1000,11 +1013,23 @@ void Likelihood::CalculatePull(double inputWidth)
   std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
   
   WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
+  hAveWidthOut->Write();
+  hAveWidthIn->Write();
+  hUncAveWidthOut->Write();
+  hUncAveWidthIn->Write();
+  TF1 *wOut = new TF1("wOut", "gaus", hAveWidthOut->GetMean()-0.3, hAveWidthOut->GetMean()+0.3);
+  hAveWidthOut->Fit(wOut,"R");
+  gStyle->SetOptFit(0111);
+  hAveWidthOut->Write();
+  wOut->Write();
+  TF1 *wIn = new TF1("wIn", "gaus", hAveWidthIn->GetMean()-0.3, hAveWidthIn->GetMean()+0.3);
+  hAveWidthIn->Fit(wIn,"R");
+  gStyle->SetOptFit(0111);
+  hAveWidthIn->Write();
+  wIn->Write();
   
   /// Fill histogram with (Gamma_j - <Gamma>)/sigma_j
   double fillValue;
-  filePull->cd();
-  TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 40, -5., 5.);
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
@@ -1021,7 +1046,7 @@ void Likelihood::CalculatePull(double inputWidth)
   double fitMin = hPull->GetXaxis()->GetXmin();
   double fitMax = hPull->GetXaxis()->GetXmax();
   
-  TF1 *gaus = new TF1("gaus", "gaus", fitMin, fitMax);
+  TF1 *gaus = new TF1("gaus", "gaus", -3., 3.);
   hPull->Fit(gaus,"R");
   gStyle->SetOptFit(0111);
   hPull->Write();
