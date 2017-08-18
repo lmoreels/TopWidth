@@ -640,7 +640,7 @@ Likelihood *like;
 ofstream txtDebugTopMass, txtDebugPUSF;
 
 /// Pseudo experiments
-const int nPseudoExps = 500;
+const int nPseudoExps = 400;
 int nPsExps = nPseudoExps;
 TRandom3 random3;
 double toyValues[nPseudoExps]; // = random3.Uniform(0,1);

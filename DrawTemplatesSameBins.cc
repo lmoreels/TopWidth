@@ -37,15 +37,15 @@ map<string,vector<double>> vecBinContents;
 string pathFiles = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/LikelihoodTemplates/";
 string outputPath = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/test/";
 
-string fileName[] = {/*"170721_0937/", "170721_1018/", */"170721_1212/", "170720_1321/"/*, "170720_1838/", "170720_2235/"*/};
+string fileName[] = {"170817_1144"/*, "170721_0937/", "170721_1018/", "170721_1212/", "170720_1321/", "170720_1838/", "170720_2235/"*/};
 const int sizeFiles = sizeof(fileName)/sizeof(fileName[0]);
-string fileType[] = {/*"20b", "45b", */"60b", "90b"/*, "450b", "900b"*/};
+string fileType[] = {"90b"/*, "20b", "45b", "60b", "90b", "450b", "900b"*/};
 
 string cats[] = {"CM", "WM", "NM"};
 const int sizeCats = sizeof(cats)/sizeof(cats[0]);
-double fracs[sizeCats] = {0.479916, 0.148529, 0.371554};  // FOR 0.6 -- 1.4 !!!
+double fracs[sizeCats] = {0.479806, 0.148569, 0.371625};  // FOR 0.6 -- 1.4 !!!
 
-string widths[] = {"0p2", "0p3", "0p4", "0p5", "0p75", "1", "2"};
+string widths[] = {"0p25", "0p5", "0p75", "1", "2", "3", "4"};
 const int sizeWidths = sizeof(widths)/sizeof(widths[0]);
 
 //Color_t colours[] = {kRed, kOrange-3, kYellow-7, kGreen-7, kGreen+2, kCyan+1, kBlue+2, kMagenta, kViolet-5, kPink+10};

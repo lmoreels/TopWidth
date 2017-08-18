@@ -25,6 +25,10 @@
 #include <TGraphSmooth.h>
 #include <TCanvas.h>
 #include <TFile.h>
+#include <TLatex.h>
+//#include <TPaveStats.h>
+//#include <TList.h>
+//#include <TText.h>
 
 // user defined
 #include "EventReweighting.h"

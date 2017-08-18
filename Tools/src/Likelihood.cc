@@ -361,7 +361,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       
       if ( iCat == 0 )  // outputValues = CM
       {
-        histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone("TotalProbability");
+        histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone(("TotalProbability_"+stringSuffix_[0]).c_str());
         histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x)");
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
@@ -377,6 +377,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       else  // outputValues = CM + WM + NM
       {
         histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
+        histoTotal_[stringSuffix_[0]]->Write();
         if (verbose_) std::cout << "Likelihood::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[stringSuffix_[0]]->Integral(histoTotal_[stringSuffix_[0]]->FindBin(minRedMass_), histoTotal_[stringSuffix_[0]]->FindBin(maxRedMass_)+1) << std::endl;
         this->MakeGraph(0, nEval, evalPoints, outputValues, "TotalProbability_", false);
         this->DrawGraph(histoTotal_[stringSuffix_[0]], graph_["TotalProbability_"+stringSuffix_[0]], "Graph_totalProbability_"+stringSuffix_[0]);
@@ -1013,10 +1014,12 @@ void Likelihood::CalculatePull(double inputWidth)
   std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
   
   WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
+  gStyle->SetOptStat(1110);  // display entries, mean & RMS, but no title
   hAveWidthOut->Write();
   hAveWidthIn->Write();
   hUncAveWidthOut->Write();
   hUncAveWidthIn->Write();
+  gStyle->SetOptStat(10);  // display entries, but no title, mean & RMS
   TF1 *wOut = new TF1("wOut", "gaus", hAveWidthOut->GetMean()-0.3, hAveWidthOut->GetMean()+0.3);
   hAveWidthOut->Fit(wOut,"R");
   gStyle->SetOptFit(0111);
@@ -1029,6 +1032,7 @@ void Likelihood::CalculatePull(double inputWidth)
   wIn->Write();
   
   /// Fill histogram with (Gamma_j - <Gamma>)/sigma_j
+  gStyle->SetOptStat(1110);  // display entries, mean & RMS, but no title
   double fillValue;
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
@@ -1043,9 +1047,10 @@ void Likelihood::CalculatePull(double inputWidth)
   
   /// Fit distribution with Gaussian function
   //  Should have mean = 0 and sigma = 1
-  double fitMin = hPull->GetXaxis()->GetXmin();
-  double fitMax = hPull->GetXaxis()->GetXmax();
+  //double fitMin = hPull->GetXaxis()->GetXmin();
+  //double fitMax = hPull->GetXaxis()->GetXmax();
   
+  gStyle->SetOptStat(10);  // display entries, but no title, mean & RMS
   TF1 *gaus = new TF1("gaus", "gaus", -3., 3.);
   hPull->Fit(gaus,"R");
   gStyle->SetOptFit(0111);
@@ -1166,7 +1171,7 @@ void Likelihood::DrawGraph(TH1D* h, TGraph* g, std::string name)
 {
   TCanvas *c = new TCanvas(name.c_str(), name.c_str());
   c->cd();
-  h->GetXaxis()->SetTitle("m_{t}/<m_{t}> [GeV]");
+  h->GetXaxis()->SetTitle("m_{r}");
   h->Draw("C");
   g->SetLineColor(kRed);
   g->Draw("same");
@@ -1184,9 +1189,9 @@ void Likelihood::DrawGraph(TGraph2D* g, std::string name)
   c->cd();
   gStyle->SetPalette(1);
   g->SetMaxIter(500000);
-  g->Draw();
+  g->Draw("AP");
   g->SetName(name.c_str());
-  g->SetTitle((name+"; m_{t}/<m_{t}> [GeV]; #Gamma/#Gamma_{SM}").c_str());
+  g->SetTitle((name+"; m_{r}; #Gamma/#Gamma_{t}").c_str());
   g->GetXaxis()->SetTitleOffset(1.5);
   g->GetYaxis()->SetTitleOffset(1.5);
   g->Draw("surf1");
@@ -1238,10 +1243,11 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   c1->cd();
   g->Draw("AP");
   if ( minX < 0. ) minX = 0.;
+  g->SetTitle("");
   g->GetXaxis()->SetRangeUser(minX,maxX);
   g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
-  g->GetXaxis()->SetTitle("#Gamma/#Gamma_{SM}");
-  g->GetYaxis()->SetTitle("-#Delta Log(likelihood)");
+  g->GetXaxis()->SetTitle("#Gamma/#Gamma_{t}");
+  g->GetYaxis()->SetTitle("\\Delta\\mathscr{L}(\\mathrm{\\Gamma})");
   g->SetMarkerStyle(2);  //kPlus
   g->Draw("AP");
   //if (writeToFile) g->Write();
@@ -1253,6 +1259,21 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   l.SetLineColor(921);
   l.DrawLine(minX, 0.5, maxX, 0.5);
   c1->Update();
+  
+//   TPaveStats* sb = (TPaveStats*) g->GetListOfFunctions()->FindObject("stats");
+//   TList *listOfLines = sb->GetListOfLines();
+//   TText *tconst = sb->GetLineWith("const");
+//   listOfLines->Remove(tconst);
+//   if ( name.find("zoom") != std::string::npos)
+//   {
+//     sb->SetBorderSize(0);
+//     sb->SetX1NDC(0.30);
+//     sb->SetX2NDC(0.70);
+//     sb->SetY2NDC(0.89);
+//   }
+//   c1->Modified();
+//   c1->Update();
+  
   if (writeToFile) c1->Write();
   c1->SaveAs(outputFileName.c_str());
   c1->Close();
