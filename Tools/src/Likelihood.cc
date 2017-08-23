@@ -1246,8 +1246,8 @@ void Likelihood::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, double 
   g->SetTitle("");
   g->GetXaxis()->SetRangeUser(minX,maxX);
   g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
-  g->GetXaxis()->SetTitle("#Gamma/#Gamma_{t}");
-  g->GetYaxis()->SetTitle("\\Delta\\mathscr{L}(\\mathrm{\\Gamma})");
+  g->GetXaxis()->SetTitle("#Gamma_{t} /#Gamma_{t,gen}");
+  g->GetYaxis()->SetTitle("\\Delta\\mathscr{L}(\\mathrm{\\Gamma_{t}})");
   g->SetMarkerStyle(2);  //kPlus
   g->Draw("AP");
   //if (writeToFile) g->Write();

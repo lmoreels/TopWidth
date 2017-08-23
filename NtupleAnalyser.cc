@@ -42,15 +42,15 @@ bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
 bool doGenOnly = false;
-bool makePlots = false;
-bool makeControlPlots = false;
+bool makePlots = true;
+bool makeControlPlots = true;
 bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -146,6 +146,7 @@ int nofCM = 0, nofWM = 0, nofNM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
 double nofCMl = 0., nofWMl = 0., nofNMl = 0.;
 double nofCM_weighted = 0., nofWM_weighted = 0., nofNM_weighted = 0.;
+double nofCMout_weighted = 0., nofWMout_weighted = 0., nofNMout_weighted = 0.;
 
 /// Lumi per data era
 double lumi_runBCDEF = 19.67550334113;  // 1/fb
@@ -1018,6 +1019,7 @@ int main(int argc, char* argv[])
     MSPlot["nPVs_afterPU_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nPVs_afterPU_up_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nPVs_afterPU_down_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["rho_"] = new MultiSamplePlot(datasets, "#rho", 41, -0.5, 40.5, "#rho");
     MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
     MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
@@ -1109,6 +1111,7 @@ int main(int argc, char* argv[])
     nofCM_TT = 0; nofWM_TT = 0; nofNM_TT = 0;
     nofCMl = 0; nofWMl = 0; nofNMl = 0;
     nofCM_weighted = 0; nofWM_weighted = 0; nofNM_weighted = 0;
+    nofCMout_weighted = 0., nofWMout_weighted = 0., nofNMout_weighted = 0.;
     
     if (calculateLikelihood) like->ClearLikelihoods();
     
@@ -1439,7 +1442,11 @@ int main(int argc, char* argv[])
           selectedJets.push_back(jet);
         }
         
-        if (makePlots && passedMETFilter) MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
+        if (makePlots && passedMETFilter)
+        {
+          MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
+          MSPlot["rho_"]->Fill(rho, datasets[d], true, lumiWeight*scaleFactor);
+        }
         
         if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
         nofHardSelected++;
@@ -2017,9 +2024,17 @@ int main(int argc, char* argv[])
             like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
         }
         
+        /// Calculate fraction of events in category outside interval
+        if (! isData)
+        {
+          if (isCM) nofCMout_weighted += lumiWeight*scaleFactor*widthSF;
+          else if (isWM) nofWMout_weighted += lumiWeight*scaleFactor*widthSF;
+          else if (isNM) nofNMout_weighted += lumiWeight*scaleFactor*widthSF;
+        }
+        
         if ( redTopMass > maxRedTopMass ) maxRedTopMass = redTopMass;
         if ( redTopMass < minRedTopMass ) minRedTopMass = redTopMass;
-        if ( redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
+        if ( ! isData && redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass )
         {
           if (isCM)
           {
@@ -2212,6 +2227,7 @@ int main(int argc, char* argv[])
       cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCMl << " (" << 100*nofCMl/(nofCMl+nofWMl+nofNMl) << "%)   WM: " << nofWMl << " (" << 100*nofWMl/(nofCMl+nofWMl+nofNMl) << "%)   NM: " << nofNMl << " (" << 100*nofNMl/(nofCMl+nofWMl+nofNMl) << "%)   Total: " << nofCMl+nofWMl+nofNMl << endl;
       cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   NM: " << nofNM_weighted << " (" << 100*nofNM_weighted/(nofCM_weighted+nofWM_weighted+nofNM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofNM_weighted) << endl;
       cout << "                               (TTbar only) CM: " << nofCM_TT << "               WM: " << nofWM_TT << "               NM: " << nofNM_TT << endl;
+      cout << endl << "Number of events outside interval:          CM: " << nofCMout_weighted << " (" << 100*nofCMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofNMout_weighted) << "%)   WM: " << nofWMout_weighted << " (" << 100*nofWMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofNMout_weighted) << "%)   NM: " << nofNMout_weighted << " (" << 100*nofNMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofNMout_weighted) << "%)   Total: " << (int)(nofCMout_weighted+nofWMout_weighted+nofNMout_weighted) << endl;
     }
     
     
@@ -2834,6 +2850,13 @@ void InitHisto1D()
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
   //histo1D["btag_SF"] = new TH1F("btag_SF", "b tag scale factor; btag SF", 80, 0, 2);
+  
+  if (makeControlPlots)
+  {
+    histo1D["dR_jets_min"]  = new TH1F("dR_jets_min","Minimal delta R between two jets; #Delta R(j_{1},j_{2})", 35, 0, 3.5);
+//    histo1D["dR_jets_sum"]  = new TH1F("dR_jets_sum","Sum of delta R between all jets; #Delta R(j_{1},j_{2})", 60, 0, 12);
+  }
+  
   
   /// Systematic comparison
   histo1D["allSim_top_mass"] = new TH1F("allSim_top_mass","Reconstructed top mass for all simulated samples; m_{t}", 32, 130, 210);
@@ -3538,6 +3561,27 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
   }
   MSPlotCP["CSVv2Discr_highest"+suffix]->Fill(highestBDiscr, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   MSPlotCP["CSVv2Discr_jetNb"+suffix]->Fill(labelB, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+  
+  if (isTTbar)
+  {
+    pair<unsigned int,unsigned int> hasMinDR = pair<unsigned int,unsigned int>(9999,9999);
+    double tempMin = 999.;
+    double tempDR;
+    for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
+    {
+      for (unsigned int jJet = iJet+1; jJet < selectedJets.size(); jJet++)
+      {
+        tempDR = ROOT::Math::VectorUtil::DeltaR( selectedJets[iJet], selectedJets[jJet]);
+        if ( tempDR < tempMin)
+        {
+          tempMin = tempDR;
+          hasMinDR = pair<unsigned int,unsigned int>(iJet,jJet);
+        }
+      }
+    }
+    tempDR = ROOT::Math::VectorUtil::DeltaR( selectedJets[hasMinDR.first], selectedJets[hasMinDR.second]);
+    histo1D["dR_jets_min"]->Fill(tempDR);
+  }
 }
 
 void FillMatchingPlots()
