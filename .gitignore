@@ -19,6 +19,9 @@ OutputLikelihood/*
 OutputPlots/*
 Output*/*
 Plots*/*
+Systematics/CalculateSystematics
+Systematics/*.tex
+Systematics/*.txt
 TGraphFits/*
 archive/*
 averageMass/*
