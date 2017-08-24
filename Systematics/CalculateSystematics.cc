@@ -2,10 +2,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
-//#include <pair>
 #include <map>
 #include <math.h>
 #include <TMath.h>
@@ -22,14 +22,14 @@ string listFileName = "list_syst.txt";
 
 string line, lineList;
 string thisSyst;
-double thisWidthValue, thisWidthUnc;
+double thisWidth, thisWidthValue, thisWidthUnc;
 
 int nSys = -1;
 vector<string> systName;
 vector<double> systWidthValue;
 vector<double> systWidthUnc;
 
-vector<pair<string,double>> systDifference;
+vector<double> systDifference, systRelDifference;
 
 int indexNom;
 int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig;
@@ -39,6 +39,7 @@ void ClearVars();
 bool foundUP(string name);
 bool foundDOWN(string name);
 void IndexSystematics();
+void TestIndexing();
 void WriteTable();
 
 bool fexists(const char *filename)
@@ -94,7 +95,8 @@ int main()
       if ( ! line.empty() )
       {
         istringstream iss(line);
-        iss >> thisSyst >> thisWidthValue >> thisWidthUnc;
+        iss >> thisSyst >> thisWidth >> thisWidthValue >> thisWidthUnc;
+        //cout << thisSyst << "  " << thisWidthValue << "  " << thisWidthUnc << endl;
         
         systName.push_back(thisSyst);
         systWidthValue.push_back(thisWidthValue);
@@ -118,26 +120,20 @@ int main()
   }
   if (verbose_) cout << "Number of measurements: " << nSys << endl;
   
-//   for (int iSys = 0; iSys < nSys; iSys++)
-//   {
-//     if ( systName[iSys].find("nominal") != std::string::npos )
-//     {
-//       indexNom = iSys;
-//       break;
-//     }
-//   }
-//   if (verbose_) cout << "Index for nominal value is " << indexNom << endl;
-  
+  IndexSystematics();
   
   double nomVal = systWidthValue[indexNom];
-  double diff;
+  double diff, relDiff;
   for (int iSys = 0; iSys < nSys; iSys++)
   {
     diff = systWidthValue[iSys] - nomVal;
-    systDifference.push_back(pair<string,double>(systName[iSys],diff));
+    systDifference.push_back(diff);
+    relDiff = 100*diff/nomVal;
+    systRelDifference.push_back(relDiff);
   }
   
-  IndexSystematics();
+  
+  WriteTable();
   
   
   if (verbose_) cout << "End of the test program" << endl;
@@ -182,6 +178,7 @@ void ClearVars()
   systWidthValue.clear();
   systWidthUnc.clear();
   systDifference.clear();
+  systRelDifference.clear();
 }
 
 bool foundUP(string name)
@@ -268,30 +265,170 @@ void IndexSystematics()
     }
     //else if ( systName[iSys].find("") != std::string::npos )
     
+    else
+      cerr << "Systematic " << systName[iSys] << " not found! Please update list..." << endl;
   }
   
-  if (verbose_)
+  if (verbose_) TestIndexing();
+  
+}
+
+void TestIndexing()
+{
+  cout << endl << "Test indices: " << endl;
+  for (int iSys = 0; iSys < nSys; iSys++)
   {
-    cout << "Test indices: " << endl;
-    for (int iSys = 0; iSys < nSys; iSys++)
-    {
-      cout << systDifference[iSys].first << " " << iSys << "    ";
-    }
-    cout << endl << endl;
-    
-    cout << "indexLepTrkUP  " << indexLepTrkUP << endl;
-    cout << "indexLepTrkDOWN  " << indexLepTrkDOWN << endl;
-    cout << "indexLepIdUP  " << indexLepIdUP << endl;
-    cout << "indexLepIdDOWN  " << indexLepIdDOWN << endl;
-    cout << "indexLepIsoUP  " << indexLepIsoUP << endl;
-    cout << "indexLepIsoDOWN  " << indexLepIsoDOWN << endl;
-    cout << "indexPuUP  " << indexPuUP << endl;
-    cout << "indexTopPt  " << indexTopPt << endl;
-    cout << "indexRenFac1003  " << indexRenFac1003 << endl;
+    cout << systName[iSys] << " " << iSys << "    ";
   }
+  cout << endl << endl;
+  
+  cout << "indexLepTrkUP  " << indexLepTrkUP << endl;
+  cout << "indexLepTrkDOWN  " << indexLepTrkDOWN << endl;
+  cout << "indexLepIdUP  " << indexLepIdUP << endl;
+  cout << "indexLepIdDOWN  " << indexLepIdDOWN << endl;
+  cout << "indexLepIsoUP  " << indexLepIsoUP << endl;
+  cout << "indexLepIsoDOWN  " << indexLepIsoDOWN << endl;
+  cout << "indexPuUP  " << indexPuUP << endl;
+  cout << "indexTopPt  " << indexTopPt << endl;
+  cout << "indexRenFac1003  " << indexRenFac1003 << endl;
 }
 
 void WriteTable()
 {
   cout << "Add code to write LaTeX table here" << endl;
+  string space = "     ";
+  string hline = space+"\\hline";
+  string interline = space+"&&\\\\[-6pt]";
+  string headerextra = "[+3pt]";
+  
+  
+  ofstream fileOut("systematicsFull.tex");
+  fileOut << "\\begin{table}[htp]" << endl;
+  fileOut << " \\caption{\\fixme{Put caption here}}" << endl;
+  fileOut << " \\begin{center}" << endl;
+  fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
+  fileOut << "   \\begin{center}" << endl;
+  fileOut << "    %\\hspace{-2.6cm}" << endl;
+  fileOut << "    {\\small" << endl;
+  fileOut << "    \\begin{tabular}{l S[table-format=1.4] S[table-format=1.4]}" << endl;  /// adapt!!
+  
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Systematic & {$+1\\sigma$ ($\\%$)} & {$-1\\sigma$ ($\\%$)} \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  
+  fileOut << interline << endl;
+  fileOut << space << "\\textit{Lepton SFs} &  & \\\\" << endl;
+  if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
+    fileOut << space << "\\tabsp Id & +" << fixed << setprecision(4) << systRelDifference[indexLepIdUP] << " & " << fixed << setprecision(4) << systRelDifference[indexLepIdDOWN] << " \\\\" << endl;
+  if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
+    fileOut << space << "\\tabsp Isolation & +" << fixed << setprecision(4) << systRelDifference[indexLepIsoDOWN] << " & " << fixed << setprecision(4) << systRelDifference[indexLepIsoUP] << " \\\\" << endl;
+  if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
+    fileOut << space << "\\tabsp Trigger & +" << fixed << setprecision(4) << systRelDifference[indexLepTrigDOWN] << " & " << fixed << setprecision(4) << systRelDifference[indexLepTrigUP] << " \\\\" << endl;
+  if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
+    fileOut << space << "\\tabsp Tracking & " << fixed << setprecision(4) << systRelDifference[indexLepTrkUP] << " & " << fixed << setprecision(4) << systRelDifference[indexLepTrkDOWN] << " \\\\" << endl;
+  
+  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~tagging SFs & +" << fixed << setprecision(4) << systRelDifference[indexBTagUP] << " & " << fixed << setprecision(4) << systRelDifference[indexBTagDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexPuUP != -1 && indexPuDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << fixed << setprecision(4) << "\\pileup\\ SFs & +" << systRelDifference[indexPuUP] << " & " << fixed << setprecision(4) << systRelDifference[indexPuDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexLumiUP != -1 && indexLumiDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Luminosity & +" << fixed << setprecision(4) << systRelDifference[indexLumiUP] << " & " << fixed << setprecision(4) << systRelDifference[indexLumiDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexMassUP != -1 && indexMassDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top mass & +" << systRelDifference[indexMassUP] << " & " << systRelDifference[indexMassDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexTopPt != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top $\\pT$ reweighting & \\multicolumn{2}{c}{" << fixed << setprecision(4) << systRelDifference[indexTopPt] << "} \\\\" << endl;
+  }
+  
+  if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Renormalisation/factorisation scale} &  & \\\\" << endl;
+    if ( indexRenFac1002 != -1 )
+      fileOut << space << "\\tabsp 1002 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1002] << "} \\\\" << endl;
+    if ( indexRenFac1003 != -1 )
+      fileOut << space << "\\tabsp 1003 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1003] << "} \\\\" << endl;
+    if ( indexRenFac1004 != -1 )
+      fileOut << space << "\\tabsp 1004 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1004] << "} \\\\" << endl;
+    if ( indexRenFac1005 != -1 )
+      fileOut << space << "\\tabsp 1005 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1005] << "} \\\\" << endl;
+    if ( indexRenFac1007 != -1 )
+      fileOut << space << "\\tabsp 1007 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1007] << "} \\\\" << endl;
+    if ( indexRenFac1009 != -1 )
+      fileOut << space << "\\tabsp 1009 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1009] << "} \\\\" << endl;
+  }
+  
+  if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ISR & +" << systRelDifference[indexIsrUP] << " & " << systRelDifference[indexIsrDOWN] << " \\\\" << endl;
+  }
+  if ( indexFsrUP != -1 && indexFsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "FSR & +" << systRelDifference[indexFsrUP] << " & " << systRelDifference[indexFsrDOWN] << " \\\\" << endl;
+  }
+  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\hdamp & +" << systRelDifference[indexHdampUP] << " & " << systRelDifference[indexHdampDOWN] << " \\\\" << endl;
+  }
+  if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Tune & +" << systRelDifference[indexTuneUP] << " & " << systRelDifference[indexTuneDOWN] << " \\\\" << endl;
+  }
+  if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Colour reconnection} &  & \\\\" << endl;
+    if ( indexCrGluonMoveErd != -1 )
+      fileOut << space << "\\tabsp MPI (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrErd] << "} \\\\" << endl;
+    if ( indexCrGluonMoveErd != -1 )
+      fileOut << space << "\\tabsp QCD-based (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrQcdErd] << "} \\\\" << endl;
+    if ( indexCrGluonMoveErd != -1 )
+      fileOut << space << "\\tabsp Gluon move & \\multicolumn{2}{c}{" << systRelDifference[indexCrGluonMove] << "} \\\\" << endl;
+    if ( indexCrGluonMoveErd != -1 )
+      fileOut << space << "\\tabsp Gluon move (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrGluonMoveErd] << "} \\\\" << endl;
+  }
+  
+  if ( indexHerwig != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Herwig & \\multicolumn{2}{c}{" << systRelDifference[indexHerwig] << "} \\\\" << endl;
+  }
+  
+  
+  //....
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  
+  fileOut << "    \\end{tabular}}" << endl;
+  fileOut << "   \\end{center}" << endl;
+  fileOut << "  \\end{minipage}" << endl;
+  fileOut << " \\end{center}" << endl;
+  fileOut << " \\label{tab:systFull}" << endl;
+  fileOut << "\\end{table}%" << endl;
+  
 }
