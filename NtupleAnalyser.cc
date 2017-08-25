@@ -41,16 +41,17 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool testTTbarOnly = false;
+bool unblind = false;
 bool doGenOnly = false;
-bool makePlots = true;
-bool makeControlPlots = true;
+bool makePlots = false;
+bool makeControlPlots = false;
 bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -78,8 +79,18 @@ int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
 
 bool runSystematics = false;
-string listSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009"};
-int nSystematics = sizeof(listSyst)/sizeof(listSyst[0]);
+bool runRateSystematics = false;
+bool runSampleSystematics = false;
+int nSystematics;
+string thisSystematic;
+
+string listRateSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "lumiup", "lumidown", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009"};
+int nRateSystematics = sizeof(listRateSyst)/sizeof(listRateSyst[0]);
+string listSampleSyst[] = {"tuneup", "tunedown", "isrup", "isrdown", "fsrup", "fsrdown", "hdampup", "hdampdown", "mpiERD", "qcdERD", "gluonMove", "gluonMoveERD", "mass169p5", "mass175p5", "herwig"};
+string dataSetNameSyst[] = {"TT_tune_up", "TT_tune_down", "TT_isr_up", "TT_isr_down", "TT_fsr_up", "TT_fsr_down", "TT_hdamp_up", "TT_hdamp_down", "TT_erdOn", "TT_QCD_erdOn", "TT_gluon_move", "TT_gluon_move_erdOn", "TT_mass169p5", "TT_mass175p5", "TT_herwigpp"};
+int nSampleSystematics = sizeof(listSampleSyst)/sizeof(listSampleSyst[0]);
+const char *xmlSyst = "config/topWidth_extra.xml";
+
 
 TFile *fileWidths;
 
@@ -100,11 +111,13 @@ pair<string,string> whichDate(string syst)
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
+string ntupleSystDate = "170803";
 int verbose = 2;
 
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
+string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
@@ -186,7 +199,7 @@ map<string,TTree*> tStatsTree;
 
 //map<string,TNtuple*> ntuple;
 
-vector < Dataset* > datasets, datasetsMSP, datasetsTemp;
+vector < Dataset* > datasets, datasetsMSP, datasetsTemp, datasetsSyst;
 vector<string> dataSetNames;
 vector<int> includeDataSets;
 
@@ -568,6 +581,7 @@ long nEventsDataSet;
 double xSection;
 double lumiWeight, scaleFactor, widthSF;
 double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
+double renFacSumNom, renFacSum1002, renFacSum1003, renFacSum1004, renFacSum1005, renFacSum1007, renFacSum1009;
 double topPtRewSF, topPtSF, antiTopPtSF;
 bool foundTop22, foundAntiTop22;
 bool foundTop62, foundAntiTop62;
@@ -780,6 +794,12 @@ int main(int argc, char* argv[])
     calculateLikelihood = true;
     doPseudoExps = false;
   }
+  else
+  {
+    runRateSystematics = false;
+    runSampleSystematics = false;
+  }
+  if (! runRateSystematics && ! runSampleSystematics) runSystematics = false;
   
   if (! makePlots) makeControlPlots = false;
   
@@ -819,6 +839,7 @@ int main(int argc, char* argv[])
   pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
   pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
+  pathNtuplesSyst = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleSystDate+"/";
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values using templates from " << inputDateLL << endl;
   if (doPseudoExps)       cout << "              for pseudo experiments" << endl;
@@ -962,6 +983,14 @@ int main(int argc, char* argv[])
 //   for (int d = 0; d < datasetsMSP.size(); d++)
 //     cout << "   Dataset " << d << ": " << datasetsMSP[d]->Name() << " / title : " << datasetsMSP[d]->Title() << endl;
   
+  /// Load systematic samples
+  if (runSampleSystematics)
+  {
+    datasetsSyst.clear();
+    treeLoader.LoadDatasets(datasetsSyst, xmlSyst);
+    cout << "Found " << datasetsSyst.size() << " extra systematics samples..." << endl;
+  }
+  
   
   
   ////////////////////////
@@ -1081,6 +1110,11 @@ int main(int argc, char* argv[])
   bool doReweighting = false;
   
   /// Loop over systematics or widths
+  if (runSystematics)
+  {
+    if (runRateSystematics) nSystematics = nRateSystematics;
+    else if (runSampleSystematics ) nSystematics = nSampleSystematics;
+  }
   int endSys = nSystematics;
   if (runListWidths) endSys = nWidths;
   if (! runSystematics && ! runListWidths) endSys = 1;
@@ -1097,12 +1131,27 @@ int main(int argc, char* argv[])
       cout << endl << "Width for ttbar sample is " << thisWidth << " x SM width..." << endl;
     }
     
-    if (runSystematics)
+    if (runRateSystematics)
     {
-      cout << endl << "Running over systematics...  " << listSyst[iSys] << endl;
-      if (! applyLeptonSF && listSyst[iSys].find("lepton") != std::string::npos ) continue;
-      else if (! applyBTagSF && listSyst[iSys].find("btag") != std::string::npos ) continue;
-      else if (! applyPU && listSyst[iSys].find("pu") != std::string::npos ) continue;
+      thisSystematic = listRateSyst[iSys];
+      cout << endl << "Running over systematics...  " << thisSystematic << endl;
+      if (! applyLeptonSF && thisSystematic.find("lepton") != std::string::npos ) continue;
+      else if (! applyBTagSF && thisSystematic.find("btag") != std::string::npos ) continue;
+      else if (! applyPU && thisSystematic.find("pu") != std::string::npos ) continue;
+      else if ( thisSystematic.find("lumiup") != std::string::npos ) Luminosity *= 1.025;
+      else if ( thisSystematic.find("lumidown") != std::string::npos ) Luminosity *= 0.975;
+    }
+    else if (runSampleSystematics)
+    {
+      thisSystematic = listSampleSyst[iSys];
+      cout << endl << "Running over systematics...  " << thisSystematic << endl;
+      
+      // Temporarily!
+      if ( thisSystematic.find("fsr") != std::string::npos || thisSystematic.find("FSR") != std::string::npos || thisSystematic.find("Fsr") != std::string::npos ) continue;
+      else if ( thisSystematic.find("herwig") != std::string::npos || thisSystematic.find("HERWIG") != std::string::npos || thisSystematic.find("Herwig") != std::string::npos ) continue;
+      else if ( thisSystematic.find("gluonMoveERD") != std::string::npos ) continue;
+      else if ( thisSystematic.find("JES") != std::string::npos ) continue;
+      else if ( thisSystematic.find("JER") != std::string::npos ) continue;
     }
     
     
@@ -1164,11 +1213,10 @@ int main(int argc, char* argv[])
             exit(1);
           }
         }
-        if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos )
+        if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("ERD") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos )
         {
           applyWidthSF = false;
           runListWidths = false;
-          endSys = 1;
         }
       }
       else if ( dataSetName.find("ST") != std::string::npos )
@@ -1230,13 +1278,13 @@ int main(int argc, char* argv[])
 //       }
       
       
-      string ntupleFileName = "Ntuples_"+dataSetName+".root";
-      
+      string ntupleFileName = pathNtuples+"Ntuples_"+dataSetName+".root";
+      if (runSampleSystematics && isTTbar) ntupleFileName = pathNtuplesSyst+"Ntuples_"+dataSetNameSyst[iSys]+".root";
       
       /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
       if (isTTbar) dataSetName = "TT";
       
-      tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
+      tFileMap[dataSetName.c_str()] = new TFile(ntupleFileName.c_str(),"READ"); //create TFile for each dataset
       
       string tTreeName = "tree";
       string tStatsTreeName = "stats";
@@ -1314,6 +1362,18 @@ int main(int argc, char* argv[])
         cout << "NEvents Run H:  " << GetNEvents(tStatsTree[(dataSetName).c_str()], "nofEventsRunH", isData) << endl;
       }
       
+      if (runRateSystematics && isTTbar && thisSystematic.find("renFac") != std::string::npos )
+      {
+        renFacSumNom = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1001", isData);
+        renFacSum1002 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1002", isData);
+        renFacSum1003 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1003", isData);
+        renFacSum1004 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1004", isData);
+        renFacSum1005 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1005", isData);
+        renFacSum1007 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1007", isData);
+        renFacSum1009 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1009", isData);
+        cout << endl << "            Sum weight1001: " << (long)renFacSumNom << endl;
+      }
+      
       // Set branch addresses and branch pointers
       InitTree(tTree[dataSetName.c_str()], isData);
       
@@ -1348,47 +1408,47 @@ int main(int argc, char* argv[])
           thisLeptonIsoSF = fracDataEras[0]*muonIsoSF_BCDEF[0] + fracDataEras[1]*muonIsoSF_GH[0];
           thisLeptonTrigSF = fracDataEras[0]*muonTrigSF_BCDEF[0] + fracDataEras[1]*muonTrigSF_GH[0];
           thisLeptonSF = muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * thisLeptonTrigSF;
-          if (runSystematics)
+          if (runRateSystematics)
           {
-            if ( listSyst[iSys].find("lepton") != std::string::npos )  // apply some lepton SF systematic
+            if ( thisSystematic.find("lepton") != std::string::npos )  // apply some lepton SF systematic
             {
               if (applyBTagSF) { scaleFactor *= btagSF;}
               if (applyPU) { scaleFactor *= puSF;}
-              if ( listSyst[iSys].find("IdSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
-              else if ( listSyst[iSys].find("IdSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
-              else if ( listSyst[iSys].find("IsoSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * thisLeptonTrigSF;}
-              else if ( listSyst[iSys].find("IsoSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * thisLeptonTrigSF;}
-              else if ( listSyst[iSys].find("TrigSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}
-              else if ( listSyst[iSys].find("TrigSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}
-              else if ( listSyst[iSys].find("TrkSFup") != std::string::npos ) { scaleFactor *= 1.01*thisLeptonSF;}
-              else if ( listSyst[iSys].find("TrkSFdown") != std::string::npos ) { scaleFactor *= 0.99*thisLeptonSF;}
+              if ( thisSystematic.find("IdSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
+              else if ( thisSystematic.find("IdSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * thisLeptonIsoSF * thisLeptonTrigSF;}
+              else if ( thisSystematic.find("IsoSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * thisLeptonTrigSF;}
+              else if ( thisSystematic.find("IsoSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * thisLeptonTrigSF;}
+              else if ( thisSystematic.find("TrigSFup") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);}
+              else if ( thisSystematic.find("TrigSFdown") != std::string::npos ) { scaleFactor *= muonTrackSF_eta[0] * thisLeptonIdSF * thisLeptonIsoSF * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);}
+              else if ( thisSystematic.find("TrkSFup") != std::string::npos ) { scaleFactor *= 1.01*thisLeptonSF;}
+              else if ( thisSystematic.find("TrkSFdown") != std::string::npos ) { scaleFactor *= 0.99*thisLeptonSF;}
             }
-            else if ( listSyst[iSys].find("btag") != std::string::npos )
+            else if ( thisSystematic.find("btag") != std::string::npos )
             {
               if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
               if (applyPU) { scaleFactor *= puSF;}
-              if ( listSyst[iSys].find("up") != std::string::npos ) { scaleFactor *= btagSF_up;}
-              else if ( listSyst[iSys].find("down") != std::string::npos ) { scaleFactor *= btagSF_down;}
+              if ( thisSystematic.find("up") != std::string::npos ) { scaleFactor *= btagSF_up;}
+              else if ( thisSystematic.find("down") != std::string::npos ) { scaleFactor *= btagSF_down;}
             }
-            else if ( listSyst[iSys].find("pu") != std::string::npos )
+            else if ( thisSystematic.find("pu") != std::string::npos )
             {
               if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
               if (applyBTagSF) { scaleFactor *= btagSF;}
-              if ( listSyst[iSys].find("up") != std::string::npos ) { scaleFactor *= puSF_up;}
-              else if ( listSyst[iSys].find("down") != std::string::npos ) { scaleFactor *= puSF_down;}
+              if ( thisSystematic.find("up") != std::string::npos ) { scaleFactor *= puSF_up;}
+              else if ( thisSystematic.find("down") != std::string::npos ) { scaleFactor *= puSF_down;}
             }
-            else if ( listSyst[iSys].find("renFac") != std::string::npos )
+            else if ( thisSystematic.find("renFac") != std::string::npos && isTTbar )
             {
               if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
               if (applyBTagSF) { scaleFactor *= btagSF;}
               if (applyPU) { scaleFactor *= puSF;}
               
-              if ( listSyst[iSys].find("1002") != std::string::npos ) scaleFactor *= weight1002 * sumWeight1001/sumWeight1002;
-              else if ( listSyst[iSys].find("1003") != std::string::npos ) scaleFactor *= weight1003 * sumWeight1001/sumWeight1003;
-              else if ( listSyst[iSys].find("1004") != std::string::npos ) scaleFactor *= weight1004 * sumWeight1001/sumWeight1004;
-              else if ( listSyst[iSys].find("1005") != std::string::npos ) scaleFactor *= weight1005 * sumWeight1001/sumWeight1005;
-              else if ( listSyst[iSys].find("1007") != std::string::npos ) scaleFactor *= weight1007 * sumWeight1001/sumWeight1007;
-              else if ( listSyst[iSys].find("1009") != std::string::npos ) scaleFactor *= weight1009 * sumWeight1001/sumWeight1009;
+              if ( thisSystematic.find("1002") != std::string::npos ) scaleFactor *= weight1002 * renFacSumNom/renFacSum1002;
+              else if ( thisSystematic.find("1003") != std::string::npos ) scaleFactor *= weight1003 * renFacSumNom/renFacSum1003;
+              else if ( thisSystematic.find("1004") != std::string::npos ) scaleFactor *= weight1004 * renFacSumNom/renFacSum1004;
+              else if ( thisSystematic.find("1005") != std::string::npos ) scaleFactor *= weight1005 * renFacSumNom/renFacSum1005;
+              else if ( thisSystematic.find("1007") != std::string::npos ) scaleFactor *= weight1007 * renFacSumNom/renFacSum1007;
+              else if ( thisSystematic.find("1009") != std::string::npos ) scaleFactor *= weight1009 * renFacSumNom/renFacSum1009;
             }
             else
             {
@@ -1396,6 +1456,12 @@ int main(int argc, char* argv[])
               if (applyBTagSF) { scaleFactor *= btagSF;}
               if (applyPU) { scaleFactor *= puSF;}
             }
+          }
+          else if (runSampleSystematics)
+          {
+            if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+            if (applyBTagSF) { scaleFactor *= btagSF;}
+            if (applyPU) { scaleFactor *= puSF;}
           }
           else
           {
@@ -1651,7 +1717,7 @@ int main(int argc, char* argv[])
 //             continue;
 //           }
           
-          if ( runSystematics && listSyst[iSys].find("topPtRew") != std::string::npos )
+          if ( runSystematics && thisSystematic.find("topPtRew") != std::string::npos )
           {
             if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
             else topPtRewSF = 1.;
@@ -2250,20 +2316,20 @@ int main(int argc, char* argv[])
       string llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
       if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
       //if (useToys) llFileName = "output_loglikelihood_toys";
-      if (runSystematics) llFileName = "output_loglikelihood_"+listSyst[iSys];
+      if (runSystematics) llFileName = "output_loglikelihood_"+thisSystematic;
       like->PrintLikelihoodOutput(llFileName+".txt");
-      //if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
+      if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
       like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
       
       /// Calculate output width
       if ( runSystematics || runListWidths)
       {
-        if (runSystematics) cout << "Output width for " << listSyst[iSys] << ": " << endl;
+        if (runSystematics) cout << "Output width for " << thisSystematic << ": " << endl;
         else cout << "Standard output width: " << endl;
         fileWidths->cd();
-        if (runSystematics) like->GetOutputWidth(thisWidth, listSyst[iSys], true, false);
+        if (runSystematics) like->GetOutputWidth(thisWidth, thisSystematic, true, false);
         else like->GetOutputWidth(thisWidth, true, false);
-        if (! useTTTemplates)
+        if (! useTTTemplates && ! runSystematics)
         {
           cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
           like->GetOutputWidth(thisWidth, "CM", true, false);
@@ -2275,6 +2341,7 @@ int main(int argc, char* argv[])
       {
         cout << "Standard output width: " << endl;
         like->GetOutputWidth(thisWidth, true, true);
+        if (unblind) like->GetOutputWidth(thisWidth, "data", true, true);
         if (! doPseudoExps && ! useTTTemplates)
         {
           cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
