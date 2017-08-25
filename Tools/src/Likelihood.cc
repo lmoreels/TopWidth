@@ -789,6 +789,8 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
     output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile);
+  else if ( type.find("data") != std::string::npos || type.find("Data") != std::string::npos )
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_data_, loglikePlotName, writeToFile, makeNewFile);
   else
     output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile);
   
@@ -860,13 +862,14 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   int locMin = LocMinArray(nn, LLvalues);
   //std::cout << "Index of minimum LL value is " << locMin << std::endl;
   double centreVal = evalWidths[locMin];
-  if ( centreVal == 0.3 )
+  if ( centreVal <= 0.3 )
   {
     double tempArray[nn-3];
     for (int i = 0; i < nn-3; i++) { tempArray[i] = LLvalues[i+3]; }
     int tempMin = LocMinArray(nn-3, tempArray); //std::cout << tempMin << "  " << evalWidths[tempMin] << std::endl;
-    if ( LLvalues[locMin+1] > tempArray[tempMin+1] ) centreVal = evalWidths[tempMin+3];
+    if ( LLvalues[locMin+2] > tempArray[tempMin+2] ) centreVal = evalWidths[tempMin+3];
   }
+  
   
   double interval = 0.4;
   if ( centreVal <= interval ) interval = centreVal - 0.1;
