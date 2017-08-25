@@ -16,7 +16,7 @@ using namespace std;
 
 
 bool verbose_ = true;
-string inputFileDir = "OutputLikelihood/170816_0947/";
+string inputFileDir = "Systematics/temp/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
 
@@ -263,6 +263,23 @@ void IndexSystematics()
       //else if ( systName[iSys].find("173") != std::string::npos ) indexMassDOWN = iSys;
       else if ( systName[iSys].find("175") != std::string::npos ) indexMassDOWN = iSys;
     }
+    else if ( systName[iSys].find("hdamp") != std::string::npos )
+    {
+      if ( foundUP(systName[iSys]) ) indexHdampUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexHdampDOWN = iSys;
+    }
+    else if ( systName[iSys].find("tune") != std::string::npos )
+    {
+      if ( foundUP(systName[iSys]) ) indexTuneUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexTuneDOWN = iSys;
+    }
+    else if ( systName[iSys].find("ERD") != std::string::npos )
+    {
+      if ( systName[iSys].find("mpi") != std::string::npos ) indexCrErd = iSys;
+      else if ( systName[iSys].find("qcd") != std::string::npos ) indexCrQcdErd = iSys;
+      else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMoveErd = iSys;
+    }
+    else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMove = iSys;
     //else if ( systName[iSys].find("") != std::string::npos )
     
     else
@@ -356,7 +373,7 @@ void WriteTable()
   if ( indexTopPt != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Top $\\pT$ reweighting & \\multicolumn{2}{c}{" << fixed << setprecision(4) << systRelDifference[indexTopPt] << "} \\\\" << endl;
+    fileOut << space << "Top $\\pT$ reweighting & \\multicolumn{2}{r}{" << fixed << setprecision(4) << systRelDifference[indexTopPt] << "$\\qquad\\quad$} \\\\" << endl;
   }
   
   if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 )
@@ -364,17 +381,17 @@ void WriteTable()
     fileOut << interline << endl;
     fileOut << space << "\\textit{Renormalisation/factorisation scale} &  & \\\\" << endl;
     if ( indexRenFac1002 != -1 )
-      fileOut << space << "\\tabsp 1002 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1002] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1002 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1002] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexRenFac1003 != -1 )
-      fileOut << space << "\\tabsp 1003 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1003] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1003 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1003] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexRenFac1004 != -1 )
-      fileOut << space << "\\tabsp 1004 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1004] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1004 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1004] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexRenFac1005 != -1 )
-      fileOut << space << "\\tabsp 1005 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1005] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1005 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1005] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexRenFac1007 != -1 )
-      fileOut << space << "\\tabsp 1007 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1007] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1007 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1007] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexRenFac1009 != -1 )
-      fileOut << space << "\\tabsp 1009 & \\multicolumn{2}{c}{" << systRelDifference[indexRenFac1009] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp 1009 & \\multicolumn{2}{r}{" << systRelDifference[indexRenFac1009] << "$\\qquad\\quad$} \\\\" << endl;
   }
   
   if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
@@ -401,14 +418,14 @@ void WriteTable()
   {
     fileOut << interline << endl;
     fileOut << space << "\\textit{Colour reconnection} &  & \\\\" << endl;
+    if ( indexCrErd != -1 )
+      fileOut << space << "\\tabsp MPI (ERD) & \\multicolumn{2}{r}{" << systRelDifference[indexCrErd] << "$\\qquad\\quad$} \\\\" << endl;
+    if ( indexCrQcdErd != -1 )
+      fileOut << space << "\\tabsp QCD-based (ERD) & \\multicolumn{2}{r}{" << systRelDifference[indexCrQcdErd] << "$\\qquad\\quad$} \\\\" << endl;
+    if ( indexCrGluonMove != -1 )
+      fileOut << space << "\\tabsp Gluon move & \\multicolumn{2}{r}{" << systRelDifference[indexCrGluonMove] << "$\\qquad\\quad$} \\\\" << endl;
     if ( indexCrGluonMoveErd != -1 )
-      fileOut << space << "\\tabsp MPI (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrErd] << "} \\\\" << endl;
-    if ( indexCrGluonMoveErd != -1 )
-      fileOut << space << "\\tabsp QCD-based (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrQcdErd] << "} \\\\" << endl;
-    if ( indexCrGluonMoveErd != -1 )
-      fileOut << space << "\\tabsp Gluon move & \\multicolumn{2}{c}{" << systRelDifference[indexCrGluonMove] << "} \\\\" << endl;
-    if ( indexCrGluonMoveErd != -1 )
-      fileOut << space << "\\tabsp Gluon move (ERD) & \\multicolumn{2}{c}{" << systRelDifference[indexCrGluonMoveErd] << "} \\\\" << endl;
+      fileOut << space << "\\tabsp Gluon move (ERD) & \\multicolumn{2}{r}{" << systRelDifference[indexCrGluonMoveErd] << "$\\qquad\\quad$} \\\\" << endl;
   }
   
   if ( indexHerwig != -1 )
