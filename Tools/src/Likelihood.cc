@@ -176,7 +176,7 @@ void Likelihood::BookHistograms()
   }
 }
 
-void Likelihood::FillHistograms(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix)
+void Likelihood::FillHistograms(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isData, std::string catSuffix)
 {
   if ( ! isData )
   {
@@ -190,14 +190,14 @@ void Likelihood::FillHistograms(double redMass, double lumiWeight, double hadTop
       }
       else thisWidthSF_ = 1.;
       
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_20b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_45b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_450b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_900b").c_str()]->Fill(redMass, lumiWeight*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_20b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_45b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_450b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_900b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
     }
   }
 }
@@ -549,12 +549,12 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   return true;
 }
 
-void Likelihood::CalculateLikelihood(double redMass, double lumiWeight, bool isData)
+void Likelihood::CalculateLikelihood(double redMass, double relativeSF, bool isData)
 {
-  this->CalculateLikelihood(redMass, lumiWeight, 1., 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
+  this->CalculateLikelihood(redMass, relativeSF, 1., 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
 }
 
-std::vector<double> Likelihood::CalculateLikelihood(double redMass, double lumiWeight, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
   
@@ -575,7 +575,7 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double lumiW
       
       loglike_per_evt_[iWidth] = graph_["widthx"+thisWidth_]->Eval(redMass);
       vecLogLike_.push_back(loglike_per_evt_[iWidth]);
-      if (! isData) loglike_[iWidth] += loglike_per_evt_[iWidth]*lumiWeight*thisWidthSF_;
+      if (! isData) loglike_[iWidth] += loglike_per_evt_[iWidth]*relativeSF*thisWidthSF_;
       else loglike_data_[iWidth] += loglike_per_evt_[iWidth];
     }
     
@@ -595,7 +595,7 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double lumiW
 //        nofGoodEvtsLL[d]++;
         for (int iWidth = 0; iWidth < nWidths_; iWidth++)
         {
-          if (! isData) loglike_good_evts_[iWidth] += loglike_per_evt_[iWidth]*lumiWeight*thisWidthSF_;
+          if (! isData) loglike_good_evts_[iWidth] += loglike_per_evt_[iWidth]*relativeSF*thisWidthSF_;
           else loglike_good_evts_data_[iWidth] += loglike_per_evt_[iWidth];
         }
       }

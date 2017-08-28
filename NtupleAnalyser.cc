@@ -142,6 +142,7 @@ bool isST = false;
 bool isSTtW = false;
 bool isSTt = false;
 bool isOther = false;
+bool isHerwig = false;
 
 int nofHardSelected = 0;
 int nofMETCleaned = 0;
@@ -579,7 +580,7 @@ TBranch        *b_sumWeight1009;   //!
 
 long nEventsDataSet;
 double xSection;
-double lumiWeight, scaleFactor, widthSF;
+double lumiWeight, scaleFactor, widthSF, relativeSF, eqLumi_TT;
 double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
 double renFacSumNom, renFacSum1002, renFacSum1003, renFacSum1004, renFacSum1005, renFacSum1007, renFacSum1009;
 double topPtRewSF, topPtSF, antiTopPtSF;
@@ -983,6 +984,7 @@ int main(int argc, char* argv[])
 //   for (int d = 0; d < datasetsMSP.size(); d++)
 //     cout << "   Dataset " << d << ": " << datasetsMSP[d]->Name() << " / title : " << datasetsMSP[d]->Title() << endl;
   
+  
   /// Load systematic samples
   if (runSampleSystematics)
   {
@@ -1167,6 +1169,9 @@ int main(int argc, char* argv[])
     hasFoundTTbar = false;
     doReweighting = false;
     
+    eqLumi_TT = -1.;
+    
+    
     
     ////////////////////////////////////
     /// Loop over datasets
@@ -1180,12 +1185,7 @@ int main(int argc, char* argv[])
       ClearMetaData();
       
       dataSetName = datasets[d]->Name();
-      if (verbose > 1)
-      {
-        cout << "   Dataset " << d << ": " << datasets[d]->Name() << " / title : " << datasets[d]->Title() << endl;
-      }
-      
-      isData = false; isTTbar = false; isST = false; isSTtW = false; isSTt = false; isOther = false;
+      isData = false; isTTbar = false; isST = false; isSTtW = false; isSTt = false; isOther = false; isHerwig = false;
       if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
       {
         isData = true;
@@ -1213,7 +1213,9 @@ int main(int argc, char* argv[])
             exit(1);
           }
         }
-        if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("ERD") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos )
+        if (runSampleSystematics) dataSetName = dataSetNameSyst[iSys];
+        if ( dataSetName.find("herwig") != std::string::npos || dataSetName.find("HERWIG") != std::string::npos || dataSetName.find("Herwig") != std::string::npos ) isHerwig = true;
+        if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("ERD") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos || isHerwig )
         {
           applyWidthSF = false;
           runListWidths = false;
@@ -1228,6 +1230,19 @@ int main(int argc, char* argv[])
       else
       {
         isOther = true;
+      }
+      
+      if (verbose > 1)
+      {
+        cout << "   Dataset " << d << ": " << dataSetName << " / title : " << datasets[d]->Title() << endl;
+      }
+      
+      if (isData && (runListWidths || runSystematics) )
+      {
+        cout << "Skipping data";
+        if (runSystematics) cout << " when running systematics";
+        cout << "..." << endl;
+        continue;
       }
       
       if (! isData && useTTTemplates && includeDataSets[d] == 0 )
@@ -1279,7 +1294,7 @@ int main(int argc, char* argv[])
       
       
       string ntupleFileName = pathNtuples+"Ntuples_"+dataSetName+".root";
-      if (runSampleSystematics && isTTbar) ntupleFileName = pathNtuplesSyst+"Ntuples_"+dataSetNameSyst[iSys]+".root";
+      if (runSampleSystematics && isTTbar) ntupleFileName = pathNtuplesSyst+"Ntuples_"+dataSetName+".root";
       
       /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
       if (isTTbar) dataSetName = "TT";
@@ -1309,8 +1324,16 @@ int main(int argc, char* argv[])
         }
         xSection = datasets[d]->Xsection();  // pb
         eqLumi = (double)nEventsDataSet/xSection;  // 1/pb
+        if (isTTbar) eqLumi_TT = eqLumi;
         
         lumiWeight = Luminosity/eqLumi;
+        if ( eqLumi_TT != -1. )
+          relativeSF = eqLumi_TT/eqLumi;
+        else if ( makeTGraphs || calculateLikelihood )
+        {
+          cerr << "ERROR: Cannot find eqLumi of ttbar sample for relative scale factor... " << endl;
+          exit(1);
+        }
       }
       
       if (doPseudoExps)
@@ -1560,7 +1583,7 @@ int main(int argc, char* argv[])
         /////////////////////////////
         
         //if ( isTTbar || dataSetName.find("ST") != std::string::npos )
-        if (! isData)
+        if (! isData && ! isHerwig)
         {
           for (int iMC = 0; iMC < nMCParticles; iMC++)
           {
@@ -1717,11 +1740,15 @@ int main(int argc, char* argv[])
 //             continue;
 //           }
           
-          if ( runSystematics && thisSystematic.find("topPtRew") != std::string::npos )
+          if (runSystematics)
           {
-            if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
-            else topPtRewSF = 1.;
-            scaleFactor *= topPtRewSF;
+            doMatching = false;
+            if ( thisSystematic.find("topPtRew") != std::string::npos )
+            {
+              if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
+              else topPtRewSF = 1.;
+              scaleFactor *= topPtRewSF;
+            }
           }
           
           
@@ -2083,7 +2110,7 @@ int main(int argc, char* argv[])
         if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
         if (calculateLikelihood)
         {
-          loglike_per_evt = like->CalculateLikelihood(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+          loglike_per_evt = like->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
             like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ( isCM || isWM ) )
@@ -3278,6 +3305,7 @@ void ClearMetaData()
   xSection = 1.;
   eqLumi = 1.;
   lumiWeight = 1.;
+  relativeSF = 1.;
   
   nofHardSelected = 0;
   nofMETCleaned = 0;
