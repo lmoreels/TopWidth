@@ -9,6 +9,7 @@
 #include <map>
 #include <math.h>
 #include <TMath.h>
+#include <algorithm>
 
 
 using namespace std;
@@ -38,6 +39,8 @@ vector<double> systDifference, systRelDifference;
 vector<double> systDifferenceUnc, systRelDifferenceUnc;
 
 double nomVal, nomValUnc;
+double totalShiftUp, totalShiftDown, maxScale, minScale, maxCR, minCR;
+
 
 int indexNom;
 int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig;
@@ -108,6 +111,19 @@ int main()
         iss >> thisSyst >> thisWidth >> thisWidthValue >> thisWidthUnc;
         //cout << thisSyst << "  " << thisWidthValue << "  " << thisWidthUnc << endl;
         
+        if ( thisSyst.find("nominal") != std::string::npos || thisSyst.find("lepton") != std::string::npos || thisSyst.find("btag") != std::string::npos  || thisSyst.find("pu") != std::string::npos || thisSyst.find("lumi") != std::string::npos || thisSyst.find("renFac") != std::string::npos || thisSyst.find("topPt") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.196778);
+        else if ( thisSyst.find("tuneup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.513533);
+        else if ( thisSyst.find("tunedown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.535293);
+        else if ( thisSyst.find("isrup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.545857);
+        else if ( thisSyst.find("isrdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.570966);
+        else if ( thisSyst.find("hdampup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.528832);
+        else if ( thisSyst.find("hdampdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.533218);
+        else if ( thisSyst.find("mpiERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.508222);
+        else if ( thisSyst.find("qcdERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.521036);
+        else if ( thisSyst.find("gluon") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.512814);
+        else if ( thisSyst.find("mass169p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.538284);
+        else if ( thisSyst.find("mass175p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.763128);
+        
         thisCorrWidthValue = ApplyCalibrationCurve(thisWidthValue, thisWidthUnc);
         
         systName.push_back(thisSyst);
@@ -149,6 +165,27 @@ int main()
     systRelDifferenceUnc.push_back(uncRelDiff);
   }
   
+  vector<double> scaleQ2 = {systDifference[indexRenFac1002], systDifference[indexRenFac1003], systDifference[indexRenFac1004], systDifference[indexRenFac1005], systDifference[indexRenFac1007], systDifference[indexRenFac1009], systDifference[indexIsrUP], systDifference[indexIsrDOWN]/*, systDifference[indexFsrUP], systDifference[indexFsrDOWN]*/};
+  maxScale = *max_element(scaleQ2.begin(), scaleQ2.end());
+  minScale = *min_element(scaleQ2.begin(), scaleQ2.end());
+  cout << "Maximum shift for Q^2 scale is " << maxScale << " and minimum " << minScale << endl;
+  
+  vector<double> CR = {systDifference[indexCrErd], systDifference[indexCrQcdErd], systDifference[indexCrGluonMove]/*, systDifference[indexCrGluonMoveErd]*/};
+  maxCR = *max_element(CR.begin(), CR.end());
+  minCR = *min_element(CR.begin(), CR.end());
+  cout << "Maximum shift for colour reconnection is " << maxCR << " and minimum " << minCR << endl;
+  
+  totalShiftUp = TMath::Sqrt( (systDifference[indexLepIdUP])*(systDifference[indexLepIdUP]) + (systDifference[indexLepIsoUP])*(systDifference[indexLepIsoUP]) + (systDifference[indexLepTrigUP])*(systDifference[indexLepTrigUP]) + (systDifference[indexLepTrkUP])*(systDifference[indexLepTrkUP]) + (systDifference[indexBTagUP])*(systDifference[indexBTagUP]) + (systDifference[indexPuUP])*(systDifference[indexPuUP]) + (systDifference[indexLumiUP])*(systDifference[indexLumiUP]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + maxScale*maxScale + (systDifference[indexTuneUP])*(systDifference[indexTuneUP]) + maxCR*maxCR);
+  totalShiftDown = TMath::Sqrt( (systDifference[indexLepIdDOWN])*(systDifference[indexLepIdDOWN]) + (systDifference[indexLepIsoDOWN])*(systDifference[indexLepIsoDOWN]) + (systDifference[indexLepTrigDOWN])*(systDifference[indexLepTrigDOWN]) + (systDifference[indexLepTrkDOWN])*(systDifference[indexLepTrkDOWN]) + (systDifference[indexBTagDOWN])*(systDifference[indexBTagDOWN]) + (systDifference[indexPuDOWN])*(systDifference[indexPuDOWN]) + (systDifference[indexLumiDOWN])*(systDifference[indexLumiDOWN]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + minScale*minScale + (systDifference[indexTuneDOWN])*(systDifference[indexTuneDOWN]) + minCR*minCR);
+  cout << "Total systematic uncertainty is +" << totalShiftUp << " and -" << totalShiftDown << endl;
+  
+  
+  // Test on fake data
+  testData = ApplyCalibrationCurve(1.59034, 0.155181);
+  cout << "For MC:   width = " << nomVal << " +- " << nomValUnc << endl;
+  cout << "For data: width = " << testData.first << " +- " << testData.second << " (stat.) +" << totalShiftUp << " -" << totalShiftDown << " (syst.)" << endl;
+  
+  cout << "Combination of statistical and systematic uncertainty gives +" << TMath::Sqrt( (testData.second)* (testData.second) + totalShiftUp*totalShiftUp ) << " and -" << TMath::Sqrt( (testData.second)* (testData.second) + totalShiftDown*totalShiftDown ) << endl;
   
   WriteShiftTable();
   WriteRelTable();
@@ -389,7 +426,7 @@ void WriteShiftTable()
   if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "\\bq~tagging SFs & " << fixed << setprecision(4) << systDifferenceUnc[indexBTagUP] << " & " << systDifferenceUnc[indexBTagUP] << " & " << systDifference[indexBTagDOWN] << " & " << systDifferenceUnc[indexBTagDOWN] << " \\\\" << endl;
+    fileOut << space << "\\bq~tagging SFs & " << fixed << setprecision(4) << systDifference[indexBTagUP] << " & " << systDifferenceUnc[indexBTagUP] << " & " << systDifference[indexBTagDOWN] << " & " << systDifferenceUnc[indexBTagDOWN] << " \\\\" << endl;
   }
   
   if ( indexPuUP != -1 && indexPuDOWN != -1 )
@@ -476,6 +513,10 @@ void WriteShiftTable()
   
   //....
   
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Total & \\multicolumn{2}{c}{" << totalShiftUp << "} & \\multicolumn{2}{c}{-" << totalShiftDown << "} \\\\" << endl;
   
   fileOut << interline << endl;
   fileOut << hline << endl;
