@@ -73,7 +73,7 @@ bool applyWidthSF = false;
 double scaleWidth = 0.6;
 
 
-bool runListWidths = false;
+bool runListWidths = true;
 double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5.};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
@@ -121,7 +121,8 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170814_1625/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]; other widths
+string inputDateLL = "170829_1010/";  // use relativeSF instead of lumiWeight
+//string inputDateLL = "170814_1625/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]; other widths
 //string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
@@ -787,10 +788,15 @@ int main(int argc, char* argv[])
     makePlots = false;
     runListWidths = false;
   }
-  if (runListWidths) makePlots = false;
+  if (runListWidths)
+  {
+    makePlots = false;
+    unblind = false;
+  }
   if (runSystematics)
   {
     runListWidths = false;
+    unblind = false;
     makeTGraphs = false;
     calculateLikelihood = true;
     doPseudoExps = false;
@@ -921,7 +927,7 @@ int main(int argc, char* argv[])
       datasets[d]->SetTitle("t#bar{t}");
       datasets[d]->SetColor(kRed+1);
       datasetsMSP[dTT+2]->SetName("TT_NM");
-      datasetsMSP[dTT+2]->SetTitle("t#bar{t} NM");
+      datasetsMSP[dTT+2]->SetTitle("t#bar{t} unmatched");
       datasetsMSP[dTT+2]->SetColor(kRed-10);
       
       dTT = d;
@@ -967,13 +973,13 @@ int main(int argc, char* argv[])
   
   treeLoader.LoadDatasets(datasetsTemp, xmlfile);
   datasetsTemp[dTT]->SetName("TT_WM");
-  datasetsTemp[dTT]->SetTitle("t#bar{t} WM");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} wrong");
   datasetsTemp[dTT]->SetColor(kRed-9);
   datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
   datasetsTemp.clear();
   treeLoader.LoadDatasets(datasetsTemp, xmlfile);
   datasetsTemp[dTT]->SetName("TT_CM");
-  datasetsTemp[dTT]->SetTitle("t#bar{t} CM");
+  datasetsTemp[dTT]->SetTitle("t#bar{t} correct");
   datasetsTemp[dTT]->SetColor(kRed-7);
   datasetsMSP.insert(datasetsMSP.begin()+dTT, 1, datasetsTemp[dTT]);
   
@@ -2107,7 +2113,7 @@ int main(int argc, char* argv[])
         ///  Likelihood  ///
         ////////////////////
         
-        if (makeTGraphs) like->FillHistograms(redTopMass, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
+        if (makeTGraphs) like->FillHistograms(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isData, catSuffix);
         if (calculateLikelihood)
         {
           loglike_per_evt = like->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
@@ -2421,7 +2427,8 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && runAll && ! useTTTemplates && ! doPseudoExps) CheckSystematics(vJER, vJES, vPU);
+    if (! testTTbarOnly && runAll && ! runListWidths && ! runSystematics && ! useTTTemplates && ! doPseudoExps)
+      CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths

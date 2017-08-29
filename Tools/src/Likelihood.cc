@@ -873,14 +873,14 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   
   double interval = 0.4;
   if ( centreVal <= interval ) interval = centreVal - 0.1;
-  if ( centreVal > 3.8 ) interval = 1.0;
+  if ( centreVal > 3.8 ) interval = 0.8;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
   //if ( centreVal < 1.6 ) fitmin += 0.1;
   if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
-  if ( centreVal > 0.35 && fitmin < 0.25 ) fitmin = 0.25;
-  if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
+  if ( centreVal > 0.35 && fitmin < 0.3 ) fitmin = 0.3;
+  //if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
   if ( centreVal > 0.55 && fitmin < 0.4 ) fitmin = 0.4;
   if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
