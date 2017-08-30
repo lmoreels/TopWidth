@@ -30,8 +30,8 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0.};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {0.00986675, 0.963861};
-const double Likelihood::calCurveParUnc_[2] = {0.0759725, 0.0301143};
+const double Likelihood::calCurvePar_[2] = {0.0110942, 0.962622};
+const double Likelihood::calCurveParUnc_[2] = {0.03277, 0.0131771};
 
 double Likelihood::nEventsCMFractions_[nWidths_][25] = {{0.}};
 double Likelihood::nEventsWMFractions_[nWidths_][25] = {{0.}};
@@ -885,6 +885,8 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 0.55 && fitmin < 0.4 ) fitmin = 0.4;
   if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
+  
+  if ( centreVal < 0.35 && fitmax > 0.4 ) fitmax = 0.4;
   if ( centreVal > 0.35 && centreVal < 1.2 ) fitmax = centreVal + (centreVal - fitmin);
   
   

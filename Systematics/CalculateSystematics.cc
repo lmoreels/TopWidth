@@ -20,8 +20,8 @@ bool verbose_ = true;
 string inputFileDir = "Systematics/temp/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
-const double calCurvePar_[2] = {0.00986675, 0.963861};
-const double calCurveParUnc_[2] = {0.0759725, 0.0301143};
+const double calCurvePar_[2] = {0.0110942, 0.962622};
+const double calCurveParUnc_[2] = {0.03277, 0.0131771};
 
 
 string line, lineList;
