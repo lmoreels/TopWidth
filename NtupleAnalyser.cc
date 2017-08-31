@@ -32,6 +32,7 @@
 #include "Tools/interface/KinFitter.h"
 #include "Tools/interface/EventReweighting.h"
 #include "Tools/interface/Likelihood.h"
+#include "Tools/interface/SelectionTables.h"
 
 
 using namespace std;
@@ -51,7 +52,7 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -73,7 +74,7 @@ bool applyWidthSF = false;
 double scaleWidth = 0.6;
 
 
-bool runListWidths = true;
+bool runListWidths = false;
 double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5.};
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth;
@@ -252,7 +253,10 @@ void FillMSPlots(int d, bool doneKinFit);
 void FillLikelihoodPlots();
 void WriteLikelihoodPlots();
 long GetNEvents(TTree* fChain, string var, bool isData);
+long GetNEvents(TTree* fChain, string var, unsigned int index, bool isData);
 void GetEraFraction(double* fractions);
+void SetUpSelectionTable();
+void FillSelectionTable(int d, string dataSetName);
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
 void PrintKFDebug(int ievt);
 
@@ -639,6 +643,7 @@ bool addEqMassKF = false;
 int kFitVerbosity = 0;
 double kFitChi2 = 99., kFitChi2Matched = 99.;
 int nofAcceptedKFit = 0, nofAcceptedKFitMatched = 0;
+double nofAcceptedKFitWeighted = 0.;
 bool passKFChi2MatchedCut = false;
 
 
@@ -682,6 +687,7 @@ double matched_mlb_wrong, matched_ttbarMass_wrong, matched_dR_lep_b_wrong;
 string strSyst = "";
 double eqLumi;
 vector<int> vJER, vJES, vPU;
+SelectionTables *selTab;
 
 bool CharSearch( char str[], char substr[] )
 {
@@ -999,6 +1005,13 @@ int main(int argc, char* argv[])
     cout << "Found " << datasetsSyst.size() << " extra systematics samples..." << endl;
   }
   
+  /// Selection table
+  if (! runListWidths && ! runSystematics)
+  {
+    //SelectionTables *selTab = new SelectionTables(datasets);
+    selTab = new SelectionTables(datasets);
+    SetUpSelectionTable();
+  }
   
   
   ////////////////////////
@@ -1098,7 +1111,7 @@ int main(int argc, char* argv[])
   ///  Open files and get Ntuples  ///
   ////////////////////////////////////
   
-  string dataSetName, slumi;
+  string dataSetName;
   double timePerDataSet[datasets.size()];
   
   int nEntries;
@@ -1320,7 +1333,11 @@ int main(int argc, char* argv[])
       vPU.push_back(appliedPU);
       
       /// eqLumi calculation
-      if (isData) lumiWeight = 1.;
+      if (isData)
+      {
+        lumiWeight = 1.;
+        if (! runListWidths && ! runSystematics) selTab->SetEqLumi(d, Luminosity);
+      }
       else
       {
         nEventsDataSet = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEvents", isData);
@@ -1330,6 +1347,7 @@ int main(int argc, char* argv[])
         }
         xSection = datasets[d]->Xsection();  // pb
         eqLumi = (double)nEventsDataSet/xSection;  // 1/pb
+        if (! runListWidths && ! runSystematics) selTab->SetEqLumi(d, eqLumi);
         if (isTTbar) eqLumi_TT = eqLumi;
         
         lumiWeight = Luminosity/eqLumi;
@@ -2056,6 +2074,7 @@ int main(int argc, char* argv[])
           
           if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
           nofAcceptedKFit++;
+          nofAcceptedKFitWeighted += scaleFactor;
           if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
           if (isCM) nofCorrectlyMatchedAKF++;
           else if (isWM) nofNotCorrectlyMatchedAKF++;
@@ -2311,6 +2330,9 @@ int main(int argc, char* argv[])
       }  // end ! isData
       
       
+      /// Make selection table
+      if (! runListWidths && ! runSystematics && ! isData) FillSelectionTable(d, dataSetName);   /// TEMPORARILY !!
+      
       
       if (calculateAverageMass) txtMassReco.close();
       
@@ -2319,6 +2341,13 @@ int main(int argc, char* argv[])
       timePerDataSet[d] = ((double)clock() - startDataSet) / CLOCKS_PER_SEC;
       
     }  // end loop datasets
+    
+    if (! runListWidths && ! runSystematics)
+    {
+      selTab->CalculateTable();
+      selTab->Write("SelectionTable_semiMu_notMerged.tex", true, false, true);
+      selTab->Write("SelectionTable_semiMu.tex", true, true, false);
+    }
     
     if (! doGenOnly && ! testTTbarOnly)
     {
@@ -3328,6 +3357,7 @@ void ClearMetaData()
   nofNoMatchAKFNoCut = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitMatched = 0;
+  nofAcceptedKFitWeighted = 0.;
   
   
   toyMax = 1.;
@@ -3951,6 +3981,19 @@ long GetNEvents(TTree* fChain, string var, bool isData)
   return varNew;
 }
 
+long GetNEvents(TTree* fChain, string var, unsigned int index, bool isData)
+{
+  GetMetaData(fChain, isData);
+  long varNew = 0;
+  for (unsigned int iEntry = 0; iEntry < fChain->GetEntries(); iEntry++)
+  {
+    fChain->GetEntry(iEntry);
+    varNew += (fChain->FindLeaf(var.c_str()))->GetValueLong64(index);
+  }
+  
+  return varNew;
+}
+
 void GetEraFraction(double* fractions)
 {
   TFile* file = new TFile((pathNtuplesData+"Ntuples_data.root").c_str(),"READ");
@@ -3967,6 +4010,36 @@ void GetEraFraction(double* fractions)
   
   file->Close();
   ClearMetaData();
+}
+
+void SetUpSelectionTable()
+{
+  selTab->SetLumi(Luminosity);
+  selTab->AddCutStep("preselected");
+  selTab->AddCutStep("triggered");
+  selTab->AddCutStep("goodPV");
+  selTab->AddCutStep("1 muon");
+  selTab->AddCutStep("veto muon");
+  selTab->AddCutStep("veto elec");
+  selTab->AddCutStep("#geq 4 jets");
+  selTab->AddCutStep("#geq 1 b jet");
+  selTab->AddCutStep("#geq 2 b jets");
+  selTab->AddCutStep("= 4 jets");
+  selTab->AddCutStep("KF #chi^{2} > 5");
+  selTab->SetUpTable();
+}
+
+void FillSelectionTable(int d, string dataSetName)
+{
+  vector<double> cutFlowValues;
+  cutFlowValues.clear();
+  for (unsigned int i = 0; i < 10; i++)
+  {
+    cutFlowValues.push_back(GetNEvents(tStatsTree[(dataSetName).c_str()], "cutFlowWeighted", i, isData));
+  }
+  
+  selTab->Fill(d, cutFlowValues);
+  selTab->Fill(d, 10, nofAcceptedKFitWeighted);
 }
 
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)

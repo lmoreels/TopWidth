@@ -4,6 +4,7 @@
 #include "Tools/interface/KinFitter.h"
 #include "Tools/interface/Likelihood.h"
 #include "Tools/interface/ResolutionFunctions.h"
+#include "Tools/interface/SelectionTables.h"
 #include "Tools/interface/Trigger.h"
 #else
 #include "Tools/interface/EventReweighting.h"
@@ -11,6 +12,7 @@
 #include "Tools/interface/KinFitter.h"
 #include "Tools/interface/Likelihood.h"
 #include "Tools/interface/ResolutionFunctions.h"
+#include "Tools/interface/SelectionTables.h"
 #include "Tools/interface/Trigger.h"
 #endif
 
@@ -24,6 +26,7 @@
 #pragma link C++ class KinFitter+;
 #pragma link C++ class Likelihood+;
 #pragma link C++ class ResolutionFunctions+;
+#pragma link C++ class SelectionTables+;
 #pragma link C++ class Trigger+;
 
 #endif
