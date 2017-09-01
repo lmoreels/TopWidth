@@ -318,10 +318,10 @@ void IndexSystematics()
     }
     else if ( systName[iSys].find("mass") != std::string::npos || systName[iSys].find("MASS") != std::string::npos || systName[iSys].find("Mass") != std::string::npos )
     {
-      if ( systName[iSys].find("169") != std::string::npos ) indexMassUP = iSys;
-      //if ( systName[iSys].find("171") != std::string::npos ) indexMassUP = iSys;
-      //else if ( systName[iSys].find("173") != std::string::npos ) indexMassDOWN = iSys;
-      else if ( systName[iSys].find("175") != std::string::npos ) indexMassDOWN = iSys;
+      if ( systName[iSys].find("169") != std::string::npos ) indexMassDOWN = iSys;
+      //if ( systName[iSys].find("171") != std::string::npos ) indexMassDOWN = iSys;
+      //else if ( systName[iSys].find("173") != std::string::npos ) indexMassUP = iSys;
+      else if ( systName[iSys].find("175") != std::string::npos ) indexMassUP = iSys;
     }
     else if ( systName[iSys].find("hdamp") != std::string::npos )
     {
@@ -432,7 +432,7 @@ void WriteShiftTable()
   if ( indexPuUP != -1 && indexPuDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << fixed << setprecision(4) << "\\pileup\\ SFs & " << systDifference[indexPuUP] << " & " << systDifferenceUnc[indexPuUP] << " & " << systDifference[indexPuDOWN] << " & " << systDifferenceUnc[indexPuDOWN] << " \\\\" << endl;
+    fileOut << space << fixed << setprecision(4) << "\\Pileup\\ SFs & " << systDifference[indexPuUP] << " & " << systDifferenceUnc[indexPuUP] << " & " << systDifference[indexPuDOWN] << " & " << systDifferenceUnc[indexPuDOWN] << " \\\\" << endl;
   }
   
   if ( indexLumiUP != -1 && indexLumiDOWN != -1 )
@@ -444,13 +444,13 @@ void WriteShiftTable()
   if ( indexMassUP != -1 && indexMassDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Top mass & +" << fixed << setprecision(4) << systDifference[indexMassUP] << " & " << systDifferenceUnc[indexMassUP] << " & " << systDifference[indexMassDOWN] << " & " << systDifferenceUnc[indexMassDOWN] << " \\\\" << endl;
+    fileOut << space << "Top mass & " << fixed << setprecision(4) << systDifference[indexMassUP]/3. << " & " << systDifferenceUnc[indexMassUP] << " & " << systDifference[indexMassDOWN]/3. << " & " << systDifferenceUnc[indexMassDOWN] << " \\\\" << endl;
   }
   
   if ( indexTopPt != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Top $\\pT$ reweighting & \\multicolumn{3}{r}{" << fixed << setprecision(4) << systDifference[indexTopPt] << "} & " << systDifferenceUnc[indexTopPt] << " \\\\" << endl;
+    fileOut << space << "Top $\\pT$ reweighting &  &  & " << fixed << setprecision(4) << systDifference[indexTopPt] << " & " << systDifferenceUnc[indexTopPt] << " \\\\" << endl;
   }
   
   if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 )
@@ -458,17 +458,17 @@ void WriteShiftTable()
     fileOut << interline << endl;
     fileOut << space << "\\textit{Renormalisation/factorisation scale} &  &  &  &  \\\\" << endl;
     if ( indexRenFac1002 != -1 )
-      fileOut << space << "\\tabsp 1002 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1002] << "} & " << systDifferenceUnc[indexRenFac1002] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 1\\,,\\quad \\muF = 2$ &  &  & " << systDifference[indexRenFac1002] << " & " << systDifferenceUnc[indexRenFac1002] << " \\\\" << endl;
     if ( indexRenFac1003 != -1 )
-      fileOut << space << "\\tabsp 1003 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1003] << "} & " << systDifferenceUnc[indexRenFac1003] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 1\\,,\\quad \\muF = 0.5$ &  &  & " << systDifference[indexRenFac1003] << " & " << systDifferenceUnc[indexRenFac1003] << " \\\\" << endl;
     if ( indexRenFac1004 != -1 )
-      fileOut << space << "\\tabsp 1004 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1004] << "} & " << systDifferenceUnc[indexRenFac1004] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 2\\,,\\quad \\muF = 1$ &  &  & " << systDifference[indexRenFac1004] << " & " << systDifferenceUnc[indexRenFac1004] << " \\\\" << endl;
     if ( indexRenFac1005 != -1 )
-      fileOut << space << "\\tabsp 1005 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1005] << "} & " << systDifferenceUnc[indexRenFac1005] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 2\\,,\\quad \\muF = 2$ &  &  & " << systDifference[indexRenFac1005] << " & " << systDifferenceUnc[indexRenFac1005] << " \\\\" << endl;
     if ( indexRenFac1007 != -1 )
-      fileOut << space << "\\tabsp 1007 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1007] << "} & " << systDifferenceUnc[indexRenFac1007] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 0.5\\,,\\, \\muF = 1$ &  &  & " << systDifference[indexRenFac1007] << " & " << systDifferenceUnc[indexRenFac1007] << " \\\\" << endl;
     if ( indexRenFac1009 != -1 )
-      fileOut << space << "\\tabsp 1009 & \\multicolumn{3}{r}{" << systDifference[indexRenFac1009] << "} & " << systDifferenceUnc[indexRenFac1009] << " \\\\" << endl;
+      fileOut << space << "\\tabsp $\\muR = 0.5\\,,\\, \\muF = 0.5$ &  &  & " << systDifference[indexRenFac1009] << " & " << systDifferenceUnc[indexRenFac1009] << " \\\\" << endl;
   }
   
   if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
@@ -496,19 +496,19 @@ void WriteShiftTable()
     fileOut << interline << endl;
     fileOut << space << "\\textit{Colour reconnection} &  &  &  &  \\\\" << endl;
     if ( indexCrErd != -1 )
-      fileOut << space << "\\tabsp MPI (ERD) & \\multicolumn{3}{r}{" << systDifference[indexCrErd] << "} & " << systDifferenceUnc[indexCrErd] << " \\\\" << endl;
+      fileOut << space << "\\tabsp MPI (ERD) &  &  & " << systDifference[indexCrErd] << " & " << systDifferenceUnc[indexCrErd] << " \\\\" << endl;
     if ( indexCrQcdErd != -1 )
-      fileOut << space << "\\tabsp QCD-based (ERD) & \\multicolumn{3}{r}{" << systDifference[indexCrQcdErd] << "} & " << systDifferenceUnc[indexCrQcdErd] << " \\\\" << endl;
+      fileOut << space << "\\tabsp QCD-based (ERD) &  &  & " << systDifference[indexCrQcdErd] << " & " << systDifferenceUnc[indexCrQcdErd] << " \\\\" << endl;
     if ( indexCrGluonMove != -1 )
-      fileOut << space << "\\tabsp Gluon move & \\multicolumn{3}{r}{" << systDifference[indexCrGluonMove] << "} & " << systDifferenceUnc[indexCrGluonMove] << " \\\\" << endl;
+      fileOut << space << "\\tabsp Gluon move &  &  & " << systDifference[indexCrGluonMove] << " & " << systDifferenceUnc[indexCrGluonMove] << " \\\\" << endl;
     if ( indexCrGluonMoveErd != -1 )
-      fileOut << space << "\\tabsp Gluon move (ERD) & \\multicolumn{3}{r}{" << systDifference[indexCrGluonMoveErd] << "} & " << systDifferenceUnc[indexCrGluonMoveErd] << " \\\\" << endl;
+      fileOut << space << "\\tabsp Gluon move (ERD) &  &  & " << systDifference[indexCrGluonMoveErd] << " & " << systDifferenceUnc[indexCrGluonMoveErd] << " \\\\" << endl;
   }
   
   if ( indexHerwig != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Herwig & \\multicolumn{3}{r}{" << systDifference[indexHerwig] << "} & " << systDifferenceUnc[indexHerwig] << " \\\\" << endl;
+    fileOut << space << "Herwig &  &  & " << systDifference[indexHerwig] << " & " << systDifferenceUnc[indexHerwig] << " \\\\" << endl;
   }
   
   //....
