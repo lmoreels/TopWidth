@@ -2346,7 +2346,7 @@ int main(int argc, char* argv[])
     {
       selTab->CalculateTable();
       selTab->Write("SelectionTable_semiMu_notMerged.tex", true, false, true);
-      selTab->Write("SelectionTable_semiMu.tex", true, true, false);
+      selTab->Write("SelectionTable_semiMu.tex", true, true, true);
     }
     
     if (! doGenOnly && ! testTTbarOnly)
@@ -4017,15 +4017,23 @@ void SetUpSelectionTable()
   selTab->SetLumi(Luminosity);
   selTab->AddCutStep("preselected");
   selTab->AddCutStep("triggered");
-  selTab->AddCutStep("goodPV");
+  selTab->AddCutStep("PV \\& filters");
   selTab->AddCutStep("1 muon");
   selTab->AddCutStep("veto muon");
   selTab->AddCutStep("veto elec");
-  selTab->AddCutStep("#geq 4 jets");
-  selTab->AddCutStep("#geq 1 b jet");
-  selTab->AddCutStep("#geq 2 b jets");
-  selTab->AddCutStep("= 4 jets");
-  selTab->AddCutStep("KF #chi^{2} > 5");
+  selTab->AddCutStep("$\\geq 4$ jets");
+  
+//   // Cutflow 1
+//   selTab->AddCutStep("$\\geq 1$ \\bq~jet");
+//   selTab->AddCutStep("$\\geq 2$ \\bq~jets");
+//   selTab->AddCutStep("$= 4$ jets");
+  
+  // Cutflow 2
+  selTab->AddCutStep("$= 4$ jets");
+  selTab->AddCutStep("$\\geq 1$ \\bq~jet");
+  selTab->AddCutStep("$\\geq 2$ \\bq~jets");
+  
+  selTab->AddCutStep("KF $\\chi^{2} > 5$");
   selTab->SetUpTable();
 }
 
@@ -4035,7 +4043,10 @@ void FillSelectionTable(int d, string dataSetName)
   cutFlowValues.clear();
   for (unsigned int i = 0; i < 10; i++)
   {
-    cutFlowValues.push_back(GetNEvents(tStatsTree[(dataSetName).c_str()], "cutFlowWeighted", i, isData));
+//     // Cutflow 1
+//     cutFlowValues.push_back(GetNEvents(tStatsTree[(dataSetName).c_str()], "cutFlowWeighted", i, isData));
+    // Cutflow 2
+    cutFlowValues.push_back(GetNEvents(tStatsTree[(dataSetName).c_str()], "cutFlow2Weighted", i, isData));
   }
   
   selTab->Fill(d, cutFlowValues);

@@ -122,7 +122,7 @@ void SelectionTables::MergeDatasets()
     {
       if (! addedST)
       {
-        listOfDatasetsMerged_.push_back(new Dataset("ST_Merged", "single top", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
+        listOfDatasetsMerged_.push_back(new Dataset("ST_Merged", "\\text{single top}", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
         addedST = true;
       }
     }
@@ -132,7 +132,7 @@ void SelectionTables::MergeDatasets()
       {
         if (! addedDY)
         {
-          listOfDatasetsMerged_.push_back(new Dataset("DYJets_Merged", "DY+jets", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
+          listOfDatasetsMerged_.push_back(new Dataset("DYJets_Merged", "\\text{DY${}+{}$jets}", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
           addedDY = true;
         }
       }
@@ -140,13 +140,14 @@ void SelectionTables::MergeDatasets()
       {
         if (! addedW)
         {
-          listOfDatasetsMerged_.push_back(new Dataset("WJets_Merged", "W+jets", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
+          listOfDatasetsMerged_.push_back(new Dataset("WJets_Merged", "\\text{W${}+{}$jets}", true, listOfDatasets_[d]->Color(), listOfDatasets_[d]->LineStyle(), listOfDatasets_[d]->LineWidth(), 1., 1.));
           addedW = true;
         }
       }
     }
     else
     {
+      if ( dataSetName.find("TT") != std::string::npos ) listOfDatasets_[d]->SetTitle("\\ttbar");
       listOfDatasetsMerged_.push_back(listOfDatasets_[d]);
     }
   }
@@ -239,42 +240,52 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
   
   if(writeLandscape) fout << "\\begin{landscape}" << std::endl;
   fout << "\\begin{table}" << std::endl;
-  fout << "\\caption{Your caption must be on top for tables. ($" << lumi_/1000. << "\\fbinv$ of int. lumi.)}" << std::endl;
-  fout << "\\label{tab:}" << std::endl;
-  fout << "\\centering" << std::endl;
+  fout << "\\caption{Effect of each selection requirement on the number of selected events. ($" << lumi_/1000. << "\\fbinv$ of int. lumi.)}" << std::endl;
+  fout << "\\label{tab:selectionTable}" << std::endl;
+  fout << "\\begin{center}" << std::endl;
   fout << "\\begin{tabular}{r|";
-  for (int d = 0; d < nDatasets; d++) fout << "c";
-  fout << "|c}" << std::endl;
+  for (int d = 1; d < nDatasets; d++) fout << "c";
+  fout << "|c|c}" << std::endl;
   fout << "\\hline" << std::endl;
   fout << "\\hline" << std::endl;
   fout << interline << std::endl;
   fout << " & ";
-  for (int d = 0; d < nDatasets; d++)
+  for (int d = 1; d < nDatasets; d++)
   {
     if (writeMerged) fout << "$" << listOfDatasetsMerged_[d]->Title() << "$";
     else fout << "$" << listOfDatasets_[d]->Title() << "$";
     
     if ( d < nDatasets-1 ) fout << " & ";
-    else fout << " & Total \\\\" << headerextra << std::endl;
+    else fout << " & Total exp. & Observed \\\\" << headerextra << std::endl;
   }
   fout << "\\hline" << std::endl;
+  fout << interline << std::endl;
   for (int iCut = 0; iCut < numberOfCuts_; iCut++)
   {
     fout << listOfCuts_[iCut] << " & ";
-    for (int d = 0; d < nDatasets; d++)
+    for (int d = 1; d < nDatasets; d++)
     {
       fout << listTable_[iCut][d];
       if (writeError) fout << " $\\pm$ " << listTableError_[iCut][d];
       
       if ( d < nDatasets-1 ) fout << " & ";
-      else fout << " & " << totalEvents_[iCut] << " $\\pm$ " << totalEventsError_[iCut] << " \\\\" << std::endl;
+      else
+      {
+        fout << " & " << totalEvents_[iCut];
+        if (writeError) fout << " $\\pm$ " << totalEventsError_[iCut];
+        fout << " & " << listTable_[iCut][0];
+        if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];
+        fout << " \\\\" << std::endl;
+      }
     }
   }
   fout << interline << std::endl;
   fout << "\\hline" << std::endl;
+  fout << "\\hline" << std::endl;
   fout << "\\end{tabular}" << std::endl;
+  fout << "\\end{center}" << std::endl;
   fout << "\\end{table}" << std::endl;
-  if (writeLandscape) fout << "\\end{landscape}" << std::endl;
+  if (writeLandscape) fout << "\\end{landscape}%" << std::endl;
 }
 
 void SelectionTables::Write(string filename, bool writeError, bool writeMerged, bool writeLandscape)
