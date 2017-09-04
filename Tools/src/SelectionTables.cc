@@ -147,7 +147,6 @@ void SelectionTables::MergeDatasets()
     }
     else
     {
-      if ( dataSetName.find("TT") != std::string::npos ) listOfDatasets_[d]->SetTitle("\\ttbar");
       listOfDatasetsMerged_.push_back(listOfDatasets_[d]);
     }
   }
@@ -252,8 +251,16 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
   fout << " & ";
   for (int d = 1; d < nDatasets; d++)
   {
-    if (writeMerged) fout << "$" << listOfDatasetsMerged_[d]->Title() << "$";
-    else fout << "$" << listOfDatasets_[d]->Title() << "$";
+    if (writeMerged)
+    {
+      if ( (listOfDatasetsMerged_[d]->Name()).find("TT") != std::string::npos ) fout << "$\\ttbar$";
+      else fout << "$" << listOfDatasetsMerged_[d]->Title() << "$";
+    }
+    else
+    {
+      if ( (listOfDatasets_[d]->Name()).find("TT") != std::string::npos ) fout << "$\\ttbar$";
+      else fout << "$" << listOfDatasets_[d]->Title() << "$";
+    }
     
     if ( d < nDatasets-1 ) fout << " & ";
     else fout << " & Total exp. & Observed \\\\" << headerextra << std::endl;

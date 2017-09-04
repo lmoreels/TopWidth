@@ -44,8 +44,8 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool unblind = false;
 bool doGenOnly = false;
-bool makePlots = false;
-bool makeControlPlots = false;
+bool makePlots = true;
+bool makeControlPlots = true;
 bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
@@ -1069,6 +1069,8 @@ int main(int argc, char* argv[])
     MSPlot["nPVs_afterPU_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nPVs_afterPU_up_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_up_", 46, -0.5, 45.5, "# PVs");
     MSPlot["nPVs_afterPU_down_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_down_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_beforePU_aSel_"] = new MultiSamplePlot(datasets, "nPVs_beforePU_aSel_", 46, -0.5, 45.5, "# PVs");
+    MSPlot["nPVs_afterPU_aSel_"] = new MultiSamplePlot(datasets, "nPVs_afterPU_aSel_", 46, -0.5, 45.5, "# PVs");
     MSPlot["rho_"] = new MultiSamplePlot(datasets, "#rho", 41, -0.5, 40.5, "#rho");
     MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
     MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
@@ -1076,6 +1078,8 @@ int main(int argc, char* argv[])
     MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["btag_SF_"] = new MultiSamplePlot(datasets, "btag_SF_", 80, 0., 2., "btag SF");
+    MSPlot["W_mass_"] = new MultiSamplePlot(datasets, "W mass before kinFitter_", 60, 0, 300, "m_{W}", "GeV");
+    MSPlot["top_mass_"] = new MultiSamplePlot(datasets, "Top mass before kinFitter_", 50, 0, 500, "m_{t}", "GeV");
   }
   if (makeLikelihoodPlots)
   {
@@ -1600,6 +1604,20 @@ int main(int argc, char* argv[])
         if (! doReweighting ) widthSF = 1.;
         //else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
         
+        if (makePlots)
+        {
+          if (isData)
+          {
+            MSPlot["nPVs_beforePU_aSel_"]->Fill(nvtx, datasets[d], false, lumiWeight*thisLeptonSF*btagSF);
+            MSPlot["nPVs_afterPU_aSel_"]->Fill(nvtx, datasets[d], false, lumiWeight*thisLeptonSF*btagSF*puSF);
+          }
+          else
+          {
+            MSPlot["nPVs_beforePU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF);
+            MSPlot["nPVs_afterPU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF);
+          }
+        }
+        
         
         
         /////////////////////////////
@@ -2036,6 +2054,8 @@ int main(int argc, char* argv[])
           {
             MSPlot["jet_pT_allJets_"]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
           }
+          MSPlot["W_mass_"]->Fill(reco_W_mass_bKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+          MSPlot["top_mass_"]->Fill(reco_top_mass_bKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
         }
         
         
@@ -2920,9 +2940,9 @@ void InitMSPlots()
   MSPlot["pu_SF"] = new MultiSamplePlot(datasetsMSP, "pu_SF", 80, 0., 2., "pu SF");
   
   /// Reco
-  MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 50, 0, 200, "m_{W}", "GeV");
-  MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 40, 0, 400, "m_{t}", "GeV");
-  MSPlot["top_mass_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter (zoomed)", 40, 130, 210, "m_{t}", "GeV");
+  MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 60, 0, 300, "m_{W}", "GeV");
+  MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 50, 0, 500, "m_{t}", "GeV");
+  MSPlot["top_mass_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter (zoomed)", 40, 110, 230, "m_{t}", "GeV");
   MSPlot["red_top_mass_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
   MSPlot["red_top_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
   MSPlot["top_pT"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 80, 0, 400, "p_{T}", "GeV");
@@ -2938,9 +2958,9 @@ void InitMSPlots()
     MSPlot["scaleFactor_aKF"] = new MultiSamplePlot(datasetsMSP, "scaleFactor_aKF", 80, 0., 2., "SF");
     MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0., 2., "btag SF");
     MSPlot["pu_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "pu_SF_aKF", 80, 0., 2., "pu SF");
-    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 50, 0, 200, "m_{W,kf}", "GeV");
-    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
-    MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 130, 210, "m_{t,kf}", "GeV");
+    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 60, 0, 300, "m_{W,kf}", "GeV");
+    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 50, 0, 500, "m_{t,kf}", "GeV");
+    MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 110, 230, "m_{t,kf}", "GeV");
     MSPlot["red_top_mass_aKF_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
     MSPlot["red_top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
     MSPlot["top_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 80, 0, 400, "p_{T}", "GeV");
@@ -3870,7 +3890,7 @@ void FillMSPlots(int d, bool doneKinFit)
   {
     MSPlot["W_mass"]->Fill(reco_W_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
-    if ( reco_top_mass_bKF < 210 && reco_top_mass_bKF > 130 )
+    if ( reco_top_mass_bKF < 230 && reco_top_mass_bKF > 110 )
     {
       MSPlot["top_mass_zoom"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     }
@@ -3896,7 +3916,7 @@ void FillMSPlots(int d, bool doneKinFit)
     
     MSPlot["W_mass"+suffix]->Fill(reco_W_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"+suffix]->Fill(reco_top_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
-    if ( reco_top_mass_aKF < 210 && reco_top_mass_aKF > 130 )
+    if ( reco_top_mass_aKF < 230 && reco_top_mass_aKF > 110 )
     {
       MSPlot["top_mass"+suffix+"_zoom"]->Fill(reco_top_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     }
