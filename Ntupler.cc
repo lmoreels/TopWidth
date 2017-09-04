@@ -66,7 +66,7 @@ bool test = false;
 bool fillLooseTree = false;
 bool makeCutFlow = true;
 bool runData = false;
-bool runSystematics = true;
+bool runSystematics = false;
 
 
 /// Configuration
@@ -244,6 +244,7 @@ Bool_t hasGenAntiTopWithStatus22;
 Bool_t hasGenAntiTopWithStatus62;
 
 /// Renormalisation/factorisation
+Double_t baseweight;
 Double_t weight1001;
 Double_t weight1002;
 Double_t weight1003;
@@ -711,6 +712,7 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   {
     if (isTTbar)
     {
+      myTree->Branch("baseweight", &baseweight, "baseweight/D");
       myTree->Branch("weight1001", &weight1001, "weight1001/D");
       myTree->Branch("weight1002", &weight1002, "weight1002/D");
       myTree->Branch("weight1003", &weight1003, "weight1003/D");
@@ -885,6 +887,7 @@ void ClearObjects()
   hasGenAntiTopWithStatus22 = false;
   hasGenAntiTopWithStatus62 = false;
   
+  baseweight = 1.;
   weight1001 = 1.;
   weight1002 = 1.;
   weight1003 = 1.;
@@ -1387,13 +1390,14 @@ void FillRenFacScaleFactors()
 {
   if ( isTTbar && event->getWeight(1001) != -9999. )
   {
-    weight1001 = event->getWeight(1001);
-    weight1002 = event->getWeight(1002);
-    weight1003 = event->getWeight(1003);
-    weight1004 = event->getWeight(1004);
-    weight1005 = event->getWeight(1005);
-    weight1007 = event->getWeight(1007);
-    weight1009 = event->getWeight(1009);
+    baseweight = fabs(event->originalXWGTUP());
+    weight1001 = event->getWeight(1001)/baseweight;
+    weight1002 = event->getWeight(1002)/baseweight;
+    weight1003 = event->getWeight(1003)/baseweight;
+    weight1004 = event->getWeight(1004)/baseweight;
+    weight1005 = event->getWeight(1005)/baseweight;
+    weight1007 = event->getWeight(1007)/baseweight;
+    weight1009 = event->getWeight(1009)/baseweight;
     
     sumWeight1001 += weight1001;
     sumWeight1002 += weight1002;
@@ -1409,7 +1413,7 @@ void FillaMCScaleFactors()
 {
   if ( event->getWeight(1001) != -9999. )
   {
-    nloWeight = event->getWeight(1001)/abs(event->originalXWGTUP());
+    nloWeight = event->getWeight(1001)/fabs(event->originalXWGTUP());
     //mc_scaleupweight = event->getWeight(1005)/abs(event->originalXWGTUP());
     //mc_scaledownweight = event->getWeight(1009)/abs(event->originalXWGTUP());
     if ( nloWeight >= 0. )
@@ -1837,9 +1841,9 @@ int main (int argc, char *argv[])
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
       //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_comb_central.root", false, 20., 600., 2.4);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "PlotsForBTagSFs_"+sysString+"_central.root", false, 30., 250., 2.4, "central");
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "PlotsForBTagSFs_"+sysString+"_up.root", false, 30., 250., 2.4, "up");
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "PlotsForBTagSFs_"+sysString+"_down.root", false, 30., 250., 2.4, "down");
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "input/PlotsForBTagSFs_nominal_central.root", false, 30., 250., 2.4, "central");
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "input/PlotsForBTagSFs_nominal_up.root", false, 30., 250., 2.4, "up");
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "input/PlotsForBTagSFs_nominal_down.root", false, 30., 250., 2.4, "down");
     }
     else if (calculateBTagSF && ! isData)
     {
@@ -1924,7 +1928,7 @@ int main (int argc, char *argv[])
     
     /// Systematics
     if (applyJEC) { appliedJES = 0;}
-    else if (applyJESup) { appliedJES = 1;}
+    if (applyJESup) { appliedJES = 1;}
     else if (applyJESdown) { appliedJES = -1;}
     if (applyJER) { appliedJER = 0;}
     else if (applyJERup) { appliedJER = 1;}
