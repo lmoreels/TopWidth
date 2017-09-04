@@ -103,15 +103,15 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Etparton_vs_Etnonbjet_B"] = new TH2F("Etparton_vs_Etnonbjet_B","Etparton_vs_Etnonbjet_B", 30, 0, 300, 30, 0, 300);
   histoRes2D["Etparton_vs_Etnonbjet_O"] = new TH2F("Etparton_vs_Etnonbjet_O","Etparton_vs_Etnonbjet_O", 30, 0, 300, 30, 0, 300);
   histoRes2D["Etparton_vs_Etnonbjet_E"] = new TH2F("Etparton_vs_Etnonbjet_E","Etparton_vs_Etnonbjet_E", 30, 0, 300, 30, 0, 300);
-  histoRes2D["Etparton_vs_Etparton-Etnonbjet_B"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_B","Etparton_vs_Etparton-Etnonbjet_B", 6, 0, 250, 100, -100, 100);
-  histoRes2D["Etparton_vs_Etparton-Etnonbjet_O"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_O","Etparton_vs_Etparton-Etnonbjet_O", 6, 0, 250, 100, -100, 100);
-  histoRes2D["Etparton_vs_Etparton-Etnonbjet_E"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_E","Etparton_vs_Etparton-Etnonbjet_E", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etnonbjet_B"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_B","; E_{T} (parton); E_{T} (parton) - E_{T} (light jet)", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etnonbjet_O"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_O","; E_{T} (parton); E_{T} (parton) - E_{T} (light jet)", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etnonbjet_E"] = new TH2F("Etparton_vs_Etparton-Etnonbjet_E","; E_{T} (parton); E_{T} (parton) - E_{T} (light jet)", 6, 0, 250, 100, -100, 100);
   histoRes2D["Etparton_vs_Etbjet_B"] = new TH2F("Etparton_vs_Etbjet_B","Etparton_vs_Etbjet_B", 30, 0, 300, 30, 0, 300);
   histoRes2D["Etparton_vs_Etbjet_O"] = new TH2F("Etparton_vs_Etbjet_O","Etparton_vs_Etbjet_O", 30, 0, 300, 30, 0, 300);
   histoRes2D["Etparton_vs_Etbjet_E"] = new TH2F("Etparton_vs_Etbjet_E","Etparton_vs_Etbjet_E", 30, 0, 300, 30, 0, 300);
-  histoRes2D["Etparton_vs_Etparton-Etbjet_B"] = new TH2F("Etparton_vs_Etparton-Etbjet_B","Etparton_vs_Etparton-Etbjet_B", 6, 0, 250, 100, -100, 100);
-  histoRes2D["Etparton_vs_Etparton-Etbjet_O"] = new TH2F("Etparton_vs_Etparton-Etbjet_O","Etparton_vs_Etparton-Etbjet_O", 6, 0, 250, 100, -100, 100);
-  histoRes2D["Etparton_vs_Etparton-Etbjet_E"] = new TH2F("Etparton_vs_Etparton-Etbjet_E","Etparton_vs_Etparton-Etbjet_E", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etbjet_B"] = new TH2F("Etparton_vs_Etparton-Etbjet_B","; E_{T} (parton); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etbjet_O"] = new TH2F("Etparton_vs_Etparton-Etbjet_O","; E_{T} (parton); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
+  histoRes2D["Etparton_vs_Etparton-Etbjet_E"] = new TH2F("Etparton_vs_Etparton-Etbjet_E","; E_{T} (parton); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
   
   /// pT
   histoRes2D["Ptparton_vs_Ptnonbjet"] = new TH2F("Ptparton_vs_Ptnonbjet","Ptparton_vs_Ptnonbjet", 30, 0, 300, 30, 0, 300);
@@ -144,12 +144,12 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["PtgenMu_vs_ThgenMu-ThrecMu"] = new TH2F("PtgenMu_vs_ThgenMu-ThrecMu","PtgenMu_vs_ThgenMu-ThrecMu", 5, 0, 250, 100, -0.002, 0.002);
   
   /// Et vs theta, binned in eta
-  histoRes2D["Etparton_vs_Thparton-Thnonbjet_B"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_B","Etparton_vs_Thparton-Thnonbjet_B", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etparton_vs_Thparton-Thnonbjet_O"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_O","Etparton_vs_Thparton-Thnonbjet_O", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etparton_vs_Thparton-Thnonbjet_E"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_E","Etparton_vs_Thparton-Thnonbjet_E", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etparton_vs_Thparton-Thbjet_B"] = new TH2F("Etparton_vs_Thparton-Thbjet_B","Etparton_vs_Thparton-Thbjet_B", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etparton_vs_Thparton-Thbjet_O"] = new TH2F("Etparton_vs_Thparton-Thbjet_O","Etparton_vs_Thparton-Thbjet_O", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etparton_vs_Thparton-Thbjet_E"] = new TH2F("Etparton_vs_Thparton-Thbjet_E","Etparton_vs_Thparton-Thbjet_E", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thnonbjet_B"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_B","; E_{T} (parton); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thnonbjet_O"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_O","; E_{T} (parton); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thnonbjet_E"] = new TH2F("Etparton_vs_Thparton-Thnonbjet_E","; E_{T} (parton); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thbjet_B"] = new TH2F("Etparton_vs_Thparton-Thbjet_B","; E_{T} (parton); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thbjet_O"] = new TH2F("Etparton_vs_Thparton-Thbjet_O","; E_{T} (parton); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etparton_vs_Thparton-Thbjet_E"] = new TH2F("Etparton_vs_Thparton-Thbjet_E","; E_{T} (parton); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
   
   /// Eta
   histoRes2D["Etaparton_vs_Etanonbjet"] = new TH2F("Etaparton_vs_Etanonbjet","Etaparton_vs_Etanonbjet", 60, -2.5, 2.5, 60, 0, 2.5);
@@ -192,12 +192,12 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["PtgenMu_vs_PhigenMu-PhirecMu"] = new TH2F("PtgenMu_vs_PhigenMu-PhirecMu","PtgenMu_vs_PhigenMu-PhirecMu", 5, 0, 250, 100, -0.002, 0.002);
   
   /// Et vs phi, binned in eta
-  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_B"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_B","Etparton_vs_Phiparton-Phinonbjet_B", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_O"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_O","Etparton_vs_Phiparton-Phinonbjet_O", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_E"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_E","Etparton_vs_Phiparton-Phinonbjet_E", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etparton_vs_Phiparton-Phibjet_B"] = new TH2F("Etparton_vs_Phiparton-Phibjet_B","Etparton_vs_Phiparton-Phibjet_B", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etparton_vs_Phiparton-Phibjet_O"] = new TH2F("Etparton_vs_Phiparton-Phibjet_O","Etparton_vs_Phiparton-Phibjet_O", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etparton_vs_Phiparton-Phibjet_E"] = new TH2F("Etparton_vs_Phiparton-Phibjet_E","Etparton_vs_Phiparton-Phibjet_E", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_B"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_B","; E_{T} (parton); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_O"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_O","; E_{T} (parton); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phinonbjet_E"] = new TH2F("Etparton_vs_Phiparton-Phinonbjet_E","; E_{T} (parton); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phibjet_B"] = new TH2F("Etparton_vs_Phiparton-Phibjet_B","; E_{T} (parton); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phibjet_O"] = new TH2F("Etparton_vs_Phiparton-Phibjet_O","; E_{T} (parton); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etparton_vs_Phiparton-Phibjet_E"] = new TH2F("Etparton_vs_Phiparton-Phibjet_E","; E_{T} (parton); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
   
   if (verbose) std::cout << "                                    - Histograms booked" << std::endl;
 }
@@ -635,6 +635,8 @@ void ResolutionFunctions::makeFit()
       float nEntries = float(hp->GetEntries());
       if (nEntries == 0 || nEntries < cut) {delete hp; continue;}
       
+      hp->GetXaxis()->SetTitle(histo->GetYaxis()->GetTitle());
+      hp->GetYaxis()->SetTitle("");
       
       /// Normalise histogram
       Double_t scale = 1./hp->Integral();

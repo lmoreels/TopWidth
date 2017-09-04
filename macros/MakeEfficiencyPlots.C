@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <TFile.h>
 #include <TH2.h>
+#include <map>
 
 using namespace std;
 
@@ -30,9 +31,9 @@ void MakeEfficiencyPlots()
   float minY = histo2D["BtaggedJets"]->GetYaxis()->GetBinLowEdge(1);
   float maxY = histo2D["BtaggedJets"]->GetYaxis()->GetBinUpEdge(nBinsY);
   
-  histo2D["effBJets"] = new TH2F("effBJets", "effBJets", nBinsX, minX, maxX, nBinsY, minY, maxY);
-  histo2D["effCJets"] = new TH2F("effCJets", "effCJets", nBinsX, minX, maxX, nBinsY, minY, maxY);
-  histo2D["effLightJets"] = new TH2F("effLightJets", "effLightJets", nBinsX, minX, maxX, nBinsY, minY, maxY);
+  histo2D["effBJets"] = new TH2F("effBJets", "effBJets; p_{T}; |#eta|", nBinsX, minX, maxX, nBinsY, minY, maxY);
+  histo2D["effCJets"] = new TH2F("effCJets", "effCJets; p_{T}; |#eta|", nBinsX, minX, maxX, nBinsY, minY, maxY);
+  histo2D["effLightJets"] = new TH2F("effLightJets", "effLightJets; p_{T}; |#eta|", nBinsX, minX, maxX, nBinsY, minY, maxY);
   
   float num, denom;
   for (int xBin = 1; xBin < nBinsX+1; xBin++)
