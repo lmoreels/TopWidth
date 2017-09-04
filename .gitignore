@@ -48,6 +48,7 @@ ReducedTopMassDistributionGenerator
 ReweightTopWidth
 ReweightTopWidth2
 TopReconstruction
+TopReconstruction2
 VoigtFitter
 VoigtFitter_gen
 testAnalyser
