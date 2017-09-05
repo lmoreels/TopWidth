@@ -16,11 +16,11 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170712"
+date = "170904"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
-isData = False
+isData = True
 runSyst = False
 
 for chan in channels:
@@ -103,9 +103,9 @@ for chan in channels:
     
     
     # Further merging of data if there are multiple data collections
-    mergeData = False
+    mergeData = True
     
-    if (mergeData):
+    if (isData and mergeData):
     # combining all the Data in one
         dataList=glob.glob(pathMerged+"*data*.root")
     

@@ -44,15 +44,15 @@ bool testHistos = false;
 bool testTTbarOnly = false;
 bool unblind = false;
 bool doGenOnly = false;
-bool makePlots = true;
-bool makeControlPlots = true;
+bool makePlots = false;
+bool makeControlPlots = false;
 bool makeLikelihoodPlots = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -96,15 +96,15 @@ const char *xmlSyst = "config/topWidth_extra.xml";
 TFile *fileWidths;
 
 
-string systStr = "nominal";
+string systStr = "JESup";
 pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
     return pair<string,string>("170712","170522");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
+  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
+  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
@@ -153,11 +153,13 @@ int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
+int nofUnmatched = 0;
 int nofCorrectlyMatchedAKF = 0;
 int nofNotCorrectlyMatchedAKF = 0;
+int nofUnmatchedAKF = 0;
 int nofCorrectlyMatchedAKFNoCut = 0;
 int nofNotCorrectlyMatchedAKFNoCut = 0;
-int nofNoMatchAKFNoCut = 0;
+int nofUnmatchedAKFNoCut = 0;
 int nofCM = 0, nofWM = 0, nofNM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofNM_TT = 0;
 double nofCMl = 0., nofWMl = 0., nofNMl = 0.;
@@ -2011,6 +2013,7 @@ int main(int argc, char* argv[])
           else  // no match
           {
             isNM = true;
+            nofUnmatched++;
           }
           
           
@@ -2090,7 +2093,7 @@ int main(int argc, char* argv[])
           
           if (isCM) nofCorrectlyMatchedAKFNoCut++;
           else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
-          else if (isNM) nofNoMatchAKFNoCut++;
+          else if (isNM) nofUnmatchedAKFNoCut++;
           
           if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
           nofAcceptedKFit++;
@@ -2098,6 +2101,7 @@ int main(int argc, char* argv[])
           if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
           if (isCM) nofCorrectlyMatchedAKF++;
           else if (isWM) nofNotCorrectlyMatchedAKF++;
+          else if (isNM) nofUnmatchedAKF++;
           
           selectedJetsKFcorrected.clear();
           selectedJetsKFcorrected = kf->getCorrectedJets();
@@ -2298,6 +2302,7 @@ int main(int argc, char* argv[])
         {
           cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
           cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
+          cout << "Unmatched reconstructed events:             " << setw(8) << right << nofUnmatched << endl;
           if ( nofCorrectlyMatched != 0 || nofNotCorrectlyMatched != 0 )
             cout << "   ===> This means that " << 100*(float)nofCorrectlyMatched / (float)(nofCorrectlyMatched + nofNotCorrectlyMatched) << "% of matched events is correctly matched." << endl;
           
@@ -2307,14 +2312,16 @@ int main(int argc, char* argv[])
             cout << " --- Kinematic fit --- Before chi2 cut --- " << endl;
             cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
             cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
+            cout << "Unmatched reconstructed events:             " << setw(8) << right << nofUnmatchedAKFNoCut << endl;
             if ( nofCorrectlyMatchedAKFNoCut != 0 || nofNotCorrectlyMatchedAKFNoCut != 0 )
               cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut + nofNotCorrectlyMatchedAKFNoCut) << "% of matched events is correctly matched after KF." << endl;
             
-            cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofNotCorrectlyMatchedAKFNoCut+nofNoMatchAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
+            cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut+nofNotCorrectlyMatchedAKFNoCut+nofUnmatchedAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
             
             cout << " --- Kinematic fit --- After chi2 cut --- " << endl;
             cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedAKF << endl;
             cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKF << endl;
+            cout << "Unmatched reconstructed events:             " << setw(8) << right << nofUnmatchedAKF << endl;
             if ( nofCorrectlyMatchedAKF != 0 || nofNotCorrectlyMatchedAKF != 0 )
               cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKF / (float)(nofCorrectlyMatchedAKF + nofNotCorrectlyMatchedAKF) << "% of matched events is correctly matched after KF." << endl;
             
@@ -3370,11 +3377,13 @@ void ClearMetaData()
   nofHadrMatchedEventsAKF = 0;
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
+  nofUnmatched = 0;
   nofCorrectlyMatchedAKF = 0;
   nofNotCorrectlyMatchedAKF = 0;
+  nofUnmatchedAKF = 0;
   nofCorrectlyMatchedAKFNoCut = 0;
   nofNotCorrectlyMatchedAKFNoCut = 0;
-  nofNoMatchAKFNoCut = 0;
+  nofUnmatchedAKFNoCut = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitMatched = 0;
   nofAcceptedKFitWeighted = 0.;

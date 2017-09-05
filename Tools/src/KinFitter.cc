@@ -150,7 +150,7 @@ void KinFitter::SetupFitter()
   
   /// Set convergence criteria
   fitter_->setMaxNbIter(30);
-  fitter_->setMaxDeltaS(5e-5);
+  fitter_->setMaxDeltaS(1e-5);
   fitter_->setMaxF(1e-4);
   fitter_->setVerbosity(0);
 }

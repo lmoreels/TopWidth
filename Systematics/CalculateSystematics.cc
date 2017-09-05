@@ -43,7 +43,7 @@ double totalShiftUp, totalShiftDown, maxScale, minScale, maxCR, minCR;
 
 
 int indexNom;
-int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig;
+int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN;
 
 void ClearIndices();
 void ClearVars();
@@ -111,18 +111,18 @@ int main()
         iss >> thisSyst >> thisWidth >> thisWidthValue >> thisWidthUnc;
         //cout << thisSyst << "  " << thisWidthValue << "  " << thisWidthUnc << endl;
         
-        if ( thisSyst.find("nominal") != std::string::npos || thisSyst.find("lepton") != std::string::npos || thisSyst.find("btag") != std::string::npos  || thisSyst.find("pu") != std::string::npos || thisSyst.find("lumi") != std::string::npos || thisSyst.find("renFac") != std::string::npos || thisSyst.find("topPt") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.196778);
-        else if ( thisSyst.find("tuneup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.513533);
-        else if ( thisSyst.find("tunedown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.535293);
-        else if ( thisSyst.find("isrup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.545857);
-        else if ( thisSyst.find("isrdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.570966);
-        else if ( thisSyst.find("hdampup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.528832);
-        else if ( thisSyst.find("hdampdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.533218);
-        else if ( thisSyst.find("mpiERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.508222);
-        else if ( thisSyst.find("qcdERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.521036);
-        else if ( thisSyst.find("gluon") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.512814);
-        else if ( thisSyst.find("mass169p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.538284);
-        else if ( thisSyst.find("mass175p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.763128);
+//         if ( thisSyst.find("nominal") != std::string::npos || thisSyst.find("lepton") != std::string::npos || thisSyst.find("btag") != std::string::npos  || thisSyst.find("pu") != std::string::npos || thisSyst.find("lumi") != std::string::npos || thisSyst.find("renFac") != std::string::npos || thisSyst.find("topPt") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.196778);
+//         else if ( thisSyst.find("tuneup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.513533);
+//         else if ( thisSyst.find("tunedown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.535293);
+//         else if ( thisSyst.find("isrup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.545857);
+//         else if ( thisSyst.find("isrdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.570966);
+//         else if ( thisSyst.find("hdampup") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.528832);
+//         else if ( thisSyst.find("hdampdown") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.533218);
+//         else if ( thisSyst.find("mpiERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.508222);
+//         else if ( thisSyst.find("qcdERD") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.521036);
+//         else if ( thisSyst.find("gluon") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.512814);
+//         else if ( thisSyst.find("mass169p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.538284);
+//         else if ( thisSyst.find("mass175p5") != std::string::npos ) thisWidthUnc *= TMath::Sqrt(0.763128);
         
         thisCorrWidthValue = ApplyCalibrationCurve(thisWidthValue, thisWidthUnc);
         
@@ -175,8 +175,8 @@ int main()
   minCR = *min_element(CR.begin(), CR.end());
   cout << "Maximum shift for colour reconnection is " << maxCR << " and minimum " << minCR << endl;
   
-  totalShiftUp = TMath::Sqrt( (systDifference[indexLepIdUP])*(systDifference[indexLepIdUP]) + (systDifference[indexLepIsoUP])*(systDifference[indexLepIsoUP]) + (systDifference[indexLepTrigUP])*(systDifference[indexLepTrigUP]) + (systDifference[indexLepTrkUP])*(systDifference[indexLepTrkUP]) + (systDifference[indexBTagUP])*(systDifference[indexBTagUP]) + (systDifference[indexPuUP])*(systDifference[indexPuUP]) + (systDifference[indexLumiUP])*(systDifference[indexLumiUP]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + maxScale*maxScale + (systDifference[indexTuneUP])*(systDifference[indexTuneUP]) + maxCR*maxCR);
-  totalShiftDown = TMath::Sqrt( (systDifference[indexLepIdDOWN])*(systDifference[indexLepIdDOWN]) + (systDifference[indexLepIsoDOWN])*(systDifference[indexLepIsoDOWN]) + (systDifference[indexLepTrigDOWN])*(systDifference[indexLepTrigDOWN]) + (systDifference[indexLepTrkDOWN])*(systDifference[indexLepTrkDOWN]) + (systDifference[indexBTagDOWN])*(systDifference[indexBTagDOWN]) + (systDifference[indexPuDOWN])*(systDifference[indexPuDOWN]) + (systDifference[indexLumiDOWN])*(systDifference[indexLumiDOWN]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + minScale*minScale + (systDifference[indexTuneDOWN])*(systDifference[indexTuneDOWN]) + minCR*minCR);
+  totalShiftUp = TMath::Sqrt( (systDifference[indexLepIdUP])*(systDifference[indexLepIdUP]) + (systDifference[indexLepIsoUP])*(systDifference[indexLepIsoUP]) + (systDifference[indexLepTrigUP])*(systDifference[indexLepTrigUP]) + (systDifference[indexLepTrkUP])*(systDifference[indexLepTrkUP]) + (systDifference[indexBTagUP])*(systDifference[indexBTagUP]) + (systDifference[indexPuUP])*(systDifference[indexPuUP]) + (systDifference[indexLumiUP])*(systDifference[indexLumiUP]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + maxScale*maxScale + (systDifference[indexTuneUP])*(systDifference[indexTuneUP]) + maxCR*maxCR + (systDifference[indexJesUP])*(systDifference[indexJesUP]));
+  totalShiftDown = TMath::Sqrt( (systDifference[indexLepIdDOWN])*(systDifference[indexLepIdDOWN]) + (systDifference[indexLepIsoDOWN])*(systDifference[indexLepIsoDOWN]) + (systDifference[indexLepTrigDOWN])*(systDifference[indexLepTrigDOWN]) + (systDifference[indexLepTrkDOWN])*(systDifference[indexLepTrkDOWN]) + (systDifference[indexBTagDOWN])*(systDifference[indexBTagDOWN]) + (systDifference[indexPuDOWN])*(systDifference[indexPuDOWN]) + (systDifference[indexLumiDOWN])*(systDifference[indexLumiDOWN]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + minScale*minScale + (systDifference[indexTuneDOWN])*(systDifference[indexTuneDOWN]) + minCR*minCR + (systDifference[indexJesDOWN])*(systDifference[indexJesDOWN]));
   cout << "Total systematic uncertainty is +" << totalShiftUp << " and -" << totalShiftDown << endl;
   
   
@@ -223,6 +223,8 @@ void ClearIndices()
   indexCrGluonMoveErd = -1;
   indexMassUP = -1; indexMassDOWN = -1;
   indexHerwig = -1;
+  indexJesUP = -1; indexJesDOWN = -1;
+  indexJerUP = -1; indexJerDOWN = -1;
 }
 
 void ClearVars()
@@ -340,6 +342,16 @@ void IndexSystematics()
       else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMoveErd = iSys;
     }
     else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMove = iSys;
+    else if ( systName[iSys].find("jes") != std::string::npos || systName[iSys].find("JES") != std::string::npos || systName[iSys].find("Jes") != std::string::npos )
+    {
+      if ( foundUP(systName[iSys]) ) indexJesUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexJesDOWN = iSys;
+    }
+    else if ( systName[iSys].find("jer") != std::string::npos || systName[iSys].find("JER") != std::string::npos || systName[iSys].find("Jer") != std::string::npos )
+    {
+      if ( foundUP(systName[iSys]) ) indexJerUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexJerDOWN = iSys;
+    }
     //else if ( systName[iSys].find("") != std::string::npos )
     
     else
@@ -509,6 +521,17 @@ void WriteShiftTable()
   {
     fileOut << interline << endl;
     fileOut << space << "Herwig &  &  & " << systDifference[indexHerwig] << " & " << systDifferenceUnc[indexHerwig] << " \\\\" << endl;
+  }
+  
+  if ( indexJesUP != -1 && indexJesDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JES & " << systDifference[indexJesUP] << " & " << systDifferenceUnc[indexJesUP] << " & " << systDifference[indexJesDOWN] << " & " << systDifferenceUnc[indexJesDOWN] << " \\\\" << endl;
+  }
+  if ( indexJerUP != -1 && indexJerDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JER & " << systDifference[indexJerUP] << " & " << systDifferenceUnc[indexJerUP] << " & " << systDifference[indexJerDOWN] << " & " << systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
   }
   
   //....
