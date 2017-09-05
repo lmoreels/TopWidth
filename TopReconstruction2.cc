@@ -21,7 +21,6 @@
 #include "TopTreeProducer/interface/TRootEvent.h"
 #include "TopTreeAnalysisBase/Content/interface/AnalysisEnvironment.h"
 #include "TopTreeAnalysisBase/MCInformation/interface/JetPartonMatching.h"
-#include "TopTreeAnalysisBase/Selection/interface/SelectionTable.h"
 #include "TopTreeAnalysisBase/Tools/interface/MultiSamplePlot.h"
 #include "TopTreeAnalysisBase/Tools/interface/PlottingTools.h"
 #include "TopTreeAnalysisBase/Tools/interface/TTreeLoader.h"
@@ -32,7 +31,6 @@
 #include "Tools/interface/KinFitter.h"
 #include "Tools/interface/EventReweighting.h"
 #include "Tools/interface/Likelihood.h"
-#include "Tools/interface/SelectionTables.h"
 
 
 using namespace std;
@@ -45,7 +43,7 @@ bool makePlots = false;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
-double kinFitCutValue = 5.;
+double kinFitCutValue = 2.;
 
 bool doMETCleaning = true;
 
@@ -56,8 +54,8 @@ pair<string,string> whichDate(string syst)
   {
     return pair<string,string>("170712","170522");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
+  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
+  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
@@ -80,11 +78,13 @@ int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
+int nofUnmatched = 0;
 int nofCorrectlyMatchedAKF = 0;
 int nofNotCorrectlyMatchedAKF = 0;
+int nofUnmatchedAKF = 0;
 int nofCorrectlyMatchedAKFNoCut = 0;
 int nofNotCorrectlyMatchedAKFNoCut = 0;
-int nofNoMatchAKFNoCut = 0;
+int nofUnmatchedAKFNoCut = 0;
 
 int corrMatchHadrB = 0;
 
@@ -489,12 +489,15 @@ vector<unsigned int> partonId;
 
 /// KinFitter
 bool doneKinFit = false;
-TKinFitter* kFitter;
-TKinFitter* kFitterMatched;
+TKinFitter* kFitter01;
+TKinFitter* kFitter02;
+TKinFitter* kFitter12;
 bool addWMassKF = true;
 bool addEqMassKF = false;
 int kFitVerbosity = 0;
-double kFitChi2 = 99.;
+double kFitChi2_01 = 99., kFitChi2_02 = 99., kFitChi2_12 = 99., kFitChi2_min = 99.;
+int labelsKF[3] = {-9999, -9999, -9999};
+bool min01, min02, min12;
 int nofAcceptedKFit = 0;
 double nofAcceptedKFitWeighted = 0.;
 
@@ -515,7 +518,6 @@ double matched_mlb_wrong, matched_ttbarMass_wrong, matched_dR_lep_b_wrong;
 string strSyst = "";
 double eqLumi;
 vector<int> vJER, vJES, vPU;
-SelectionTables *selTab;
 
 bool CharSearch( char str[], char substr[] )
 {
@@ -598,7 +600,9 @@ int main(int argc, char* argv[])
   
   EventReweighting *rew = new EventReweighting(false);  // no correction for number of events
   ResolutionFunctions* rf = new ResolutionFunctions(false, true);
-  KinFitter *kf = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+  KinFitter *kf01 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+  KinFitter *kf02 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+  KinFitter *kf12 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
   
   
   if (makePlots)
@@ -935,6 +939,7 @@ int main(int argc, char* argv[])
     else  // no match
     {
       isNM = true;
+      nofUnmatched++;
     }
     
     
@@ -967,32 +972,65 @@ int main(int argc, char* argv[])
       /*if (addEqMassKF)
        kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
        else if (addWMassKF)*/
-      kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
+      kFitter01 = kf01->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
+      kFitter02 = kf02->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[2]], kFitVerbosity);
+      kFitter12 = kf12->doFit(selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], kFitVerbosity);
       
-      if ( kFitter->getStatus() != 0 )  // did not converge
+      if ( kFitter01->getStatus() != 0 && kFitter02->getStatus() != 0 && kFitter12->getStatus() != 0 )  // did not converge
       {
         if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
         continue;
       }
       
-      kFitChi2 = kFitter->getS();
-      if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2 << endl;
+      kFitChi2_01 = kFitter01->getS();
+      kFitChi2_02 = kFitter02->getS();
+      kFitChi2_12 = kFitter12->getS();
+      min01 = false; min02 = false; min12 = false;
+      if ( kFitter01->getStatus() == 0 && kFitChi2_01 < kFitChi2_min )
+      {
+        min01 = true;
+        kFitChi2_min = kFitChi2_01;
+        for (int i = 0; i < 3; i++) labelsKF[i] = labelsReco[i];
+      }
+      if ( kFitter02->getStatus() == 0 && kFitChi2_02 < kFitChi2_min )
+      {
+        min01 = false; min02 = true;
+        kFitChi2_min = kFitChi2_02;
+        labelsKF[0] = labelsReco[0];
+        labelsKF[1] = labelsReco[2];
+        labelsKF[2] = labelsReco[1];
+      }
+      if ( kFitter12->getStatus() == 0 && kFitChi2_12 < kFitChi2_min )
+      {
+        min01 = false; min02 = false; min12 = true;
+        kFitChi2_min = kFitChi2_12;
+        labelsKF[0] = labelsReco[1];
+        labelsKF[1] = labelsReco[2];
+        labelsKF[2] = labelsReco[0];
+      }
+      
+      /// Put correct order back into labelsReco
+      for (int i = 0; i < 3; i++) labelsReco[i] = labelsKF[i];
+      if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2_min << endl;
       
       doneKinFit = true;
       
       if (isCM) nofCorrectlyMatchedAKFNoCut++;
       else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
-      else if (isNM) nofNoMatchAKFNoCut++;
+      else if (isNM) nofUnmatchedAKFNoCut++;
       
-      if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
+      if ( applyKinFitCut && kFitChi2_min > kinFitCutValue ) continue;
       nofAcceptedKFit++;
       nofAcceptedKFitWeighted += scaleFactor;
       if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
       if (isCM) nofCorrectlyMatchedAKF++;
       else if (isWM) nofNotCorrectlyMatchedAKF++;
+      else if (isNM) nofUnmatchedAKF++;
       
       selectedJetsKFcorrected.clear();
-      selectedJetsKFcorrected = kf->getCorrectedJets();
+      if (min12) selectedJetsKFcorrected = kf12->getCorrectedJets();
+      else if (min02) selectedJetsKFcorrected = kf02->getCorrectedJets();
+      else selectedJetsKFcorrected = kf01->getCorrectedJets();
       
     }
     
@@ -1057,7 +1095,7 @@ int main(int argc, char* argv[])
       if ( nofCorrectlyMatchedAKFNoCut != 0 || nofNotCorrectlyMatchedAKFNoCut != 0 )
         cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut + nofNotCorrectlyMatchedAKFNoCut) << "% of matched events is correctly matched after KF." << endl;
       
-      cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofNotCorrectlyMatchedAKFNoCut+nofNoMatchAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
+      cout << "                        " << 100*(float)nofCorrectlyMatchedAKFNoCut / (float)(nofCorrectlyMatchedAKFNoCut+nofNotCorrectlyMatchedAKFNoCut+nofUnmatchedAKFNoCut) << "% of all events accepted by kinfitter is correctly matched." << endl;
       
       cout << " --- Kinematic fit --- After chi2 cut --- " << endl;
       cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedAKF << endl;
@@ -1557,11 +1595,13 @@ void ClearMetaData()
   nofHadrMatchedEventsAKF = 0;
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
+  nofUnmatched = 0;
   nofCorrectlyMatchedAKF = 0;
   nofNotCorrectlyMatchedAKF = 0;
+  nofUnmatchedAKF = 0;
   nofCorrectlyMatchedAKFNoCut = 0;
   nofNotCorrectlyMatchedAKFNoCut = 0;
-  nofNoMatchAKFNoCut = 0;
+  nofUnmatchedAKFNoCut = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitWeighted = 0.;
 }
@@ -1752,8 +1792,13 @@ void ClearVars()
   isNM = false;
   doneKinFit = false;
   kFitVerbosity = false;
-  kFitChi2 = 99.;
-  
+  kFitChi2_01 = 99.;
+  kFitChi2_02 = 99.;
+  kFitChi2_12 = 99.;
+  kFitChi2_min = 99.;
+  min01 = false;
+  min02 = false;
+  min12 = false;
   
   M3 = -1.;
   M3_aKF = -1.;
