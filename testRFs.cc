@@ -37,8 +37,8 @@ using namespace std;
 // using namespace TopTree;
 
 bool test = false;
-bool testFit = false;
-bool testRead = true;
+bool testFit = true;
+bool testRead = false;
 
 std::map<std::string, TF1*> errorFuncMap;
 
@@ -149,7 +149,7 @@ int main (int argc, char *argv[])
   
   if (testFit)
   {
-    rf->makeFit(inputFileName, rfFileName, true);
+    rf->makeFit(inputFileName, rfFileName, false);
   }
   
   if (testRead)
