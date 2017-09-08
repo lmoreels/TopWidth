@@ -39,6 +39,7 @@ class Likelihood{
   public:
     Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
     ~Likelihood();
+    void SetMass(double mass);
     void ClearLikelihoods();
     std::vector<double> GetWidths();
     /// Make TGraphs
@@ -70,6 +71,8 @@ class Likelihood{
     /// Calculate fractions
     void AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isNM);
     void CalculateFractions(std::vector<std::string> datasetNames);
+    /// Make 2D likelihood plot
+    void Make2DGraph(std::string name, bool makeNewFile);
     /// Write output from likelihood calculation to file
     void PrintLikelihoodOutput(std::string llFileName);
     void PrintLikelihoodOutputData(std::string llFileName);
@@ -95,17 +98,20 @@ class Likelihood{
     EventReweighting *rew_;
     
     static const double widthArray_[];
+    static const double massArray_[];
     static const std::string listCats_[];
     
     static const int nWidths_;
+    static const int nMasses_;
     static const int nCats_;
     
     static std::string stringWidthArray_[];
+    static std::string stringMassArray_[];
     static std::string stringSuffix_[];
     
-    static double loglike_[];
-    static double loglike_data_[];
-    static double loglike_per_evt_[];
+    static double loglike_[][3];
+    static double loglike_data_[][3];
+    static double loglike_per_evt_[][3];
     static double loglike_good_evts_[];
     static double loglike_good_evts_data_[];
     static double loglike_CM_[];
@@ -125,6 +131,7 @@ class Likelihood{
     std::vector<double> vecLogLike_;
     
     std::string thisWidth_;
+    std::string thisMass_;
     double thisWidthSF_;
     TFile *file_;
     TFile *fileTGraphs_;

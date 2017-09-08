@@ -82,6 +82,7 @@ double thisWidth;
 bool runSystematics = false;
 bool runRateSystematics = false;
 bool runSampleSystematics = false;
+bool makeMassTemplates = false;
 int nSystematics;
 string thisSystematic;
 
@@ -96,7 +97,7 @@ const char *xmlSyst = "config/topWidth_extra.xml";
 TFile *fileWidths;
 
 
-string systStr = "JESup";
+string systStr = "nominal";
 pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
@@ -122,7 +123,8 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170829_1010/";  // use relativeSF instead of lumiWeight
+string inputDateLL = "170908_1800/";  // diff masses
+//string inputDateLL = "170829_1010/";  // use relativeSF instead of lumiWeight
 //string inputDateLL = "170814_1625/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]; other widths
 //string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
 //string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
@@ -805,8 +807,11 @@ int main(int argc, char* argv[])
   {
     runListWidths = false;
     unblind = false;
-    makeTGraphs = false;
-    calculateLikelihood = true;
+    if (! makeMassTemplates)
+    {
+      makeTGraphs = false;
+      calculateLikelihood = true;
+    }
     doPseudoExps = false;
   }
   else
@@ -1046,8 +1051,8 @@ int main(int argc, char* argv[])
     else
     {
       calculateLikelihood = like->ConstructTGraphsFromFile();
-      if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
-      if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
+//       if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
+//       if (! runSystematics) calculateLikelihood = like->ConstructTGraphsFromFile("MatchLikelihood_");
     }
     widthsLike.clear();
     widthsLike = like->GetWidths();
@@ -1172,6 +1177,15 @@ int main(int argc, char* argv[])
     {
       thisSystematic = listSampleSyst[iSys];
       cout << endl << "Running over systematics...  " << thisSystematic << endl;
+      
+      //if ( thisSystematic.find("mass") == std::string::npos ) continue;
+      if (makeMassTemplates)
+      {
+        //if ( thisSystematic.find("mass169") == std::string::npos ) continue;
+        //like->SetMass(169.5);
+        if ( thisSystematic.find("mass175") == std::string::npos ) continue;
+        like->SetMass(175.5);
+      }
       
       // Temporarily!
       if ( thisSystematic.find("fsr") != std::string::npos || thisSystematic.find("FSR") != std::string::npos || thisSystematic.find("Fsr") != std::string::npos ) continue;
@@ -1786,7 +1800,7 @@ int main(int argc, char* argv[])
           
           if (runSystematics)
           {
-            doMatching = false;
+            if (! makeMassTemplates) doMatching = false;
             if ( thisSystematic.find("topPtRew") != std::string::npos )
             {
               if (isTTbar) topPtRewSF = TMath::Sqrt(topPtSF*antiTopPtSF);
@@ -1915,12 +1929,12 @@ int main(int argc, char* argv[])
                   
                   matched_top_mass_j_akF = (selectedJetsKFMatched[0] + selectedJetsKFMatched[1] + selectedJetsKFMatched[2]).M();
                   
-                  if (calculateLikelihood)
-                  {
-                    double temp = matched_top_mass_j_akF/aveTopMassLL;
-                    if (! useTTTemplates && ! runSystematics)
-                      like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-                  }
+//                   if (calculateLikelihood)
+//                   {
+//                     double temp = matched_top_mass_j_akF/aveTopMassLL;
+//                     if (! useTTTemplates && ! runSystematics)
+//                       like->CalculateGenLikelihood(temp, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+//                   }
                 }  // passKFChi2MatchedCut
               }  // end KF
               
@@ -2133,6 +2147,10 @@ int main(int argc, char* argv[])
         reco_dRLepB_lep_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
         reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
         reco_ttbar_mass_aKF = reco_mlb_aKF + reco_top_mass_aKF;
+        
+        /// Temporarily !
+        //reco_top_mass_aKF += 1.5; // Manually shift top mass distribution by X GeV
+        
         redTopMass = reco_top_mass_aKF/aveTopMassLL;
         
         if ( reco_top_mass_aKF < 0. )
@@ -2160,10 +2178,10 @@ int main(int argc, char* argv[])
         if (calculateLikelihood)
         {
           loglike_per_evt = like->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
-            like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
-          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ( isCM || isWM ) )
-            like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+//           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
+//             like->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
+//           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ( isCM || isWM ) )
+//             like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, doReweighting, isData);
         }
         
         /// Calculate fraction of events in category outside interval
@@ -2401,14 +2419,14 @@ int main(int argc, char* argv[])
       cout << "Minimum reduced top mass: " << minRedTopMass << endl;
       cout << "Maximum reduced top mass: " << maxRedTopMass << endl;
       
-      /// Print output to file
-      string llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
-      if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
-      //if (useToys) llFileName = "output_loglikelihood_toys";
-      if (runSystematics) llFileName = "output_loglikelihood_"+thisSystematic;
-      like->PrintLikelihoodOutput(llFileName+".txt");
-      if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
-      like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
+      /// Print output to file  /// TEMPORARILY !
+//       string llFileName = "output_loglikelihood_widthx"+DotReplace(thisWidth);
+//       if (doGenOnly) llFileName = "output_loglikelihood_parton_widthx"+DotReplace(thisWidth);
+//       //if (useToys) llFileName = "output_loglikelihood_toys";
+//       if (runSystematics) llFileName = "output_loglikelihood_"+thisSystematic;
+//       like->PrintLikelihoodOutput(llFileName+".txt");
+//       if (unblind) like->PrintLikelihoodOutputData(llFileName+"_data.txt");
+//       like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
       
       /// Calculate output width
       if ( runSystematics || runListWidths)
@@ -2428,20 +2446,21 @@ int main(int argc, char* argv[])
       }
       else
       {
-        cout << "Standard output width: " << endl;
-        like->GetOutputWidth(thisWidth, true, true);
-        if (unblind) like->GetOutputWidth(thisWidth, "data", true, true);
-        if (! doPseudoExps && ! useTTTemplates)
-        {
-          cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
-          like->GetOutputWidth(thisWidth, "CM", true, true);
-          cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-          like->GetOutputWidth(thisWidth, "matched", true, true);
-          //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-          //like->GetOutputWidth(scaleWidth, "gen", true);
-        }
-        //cout << "Output width from file (standard calculation): " << endl;
-        //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
+//         cout << "Standard output width: " << endl;
+//         like->GetOutputWidth(thisWidth, systStr, true, true);
+//         if (unblind) like->GetOutputWidth(thisWidth, "data", true, true);
+//         if (! doPseudoExps && ! useTTTemplates)
+//         {
+//           cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
+//           like->GetOutputWidth(thisWidth, "CM", true, true);
+//           cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
+//           like->GetOutputWidth(thisWidth, "matched", true, true);
+//           //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
+//           //like->GetOutputWidth(scaleWidth, "gen", true);
+//         }
+//         //cout << "Output width from file (standard calculation): " << endl;
+//         //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
+        like->Make2DGraph("2D_"+systStr, true);  // fileName, makeNewFile
       }
     }
     if (calculateFractions)
@@ -2489,7 +2508,7 @@ int main(int argc, char* argv[])
     
   }  // end loop systematics/widths
   
-  if (runSystematics || runListWidths)
+  if ( calculateLikelihood && (runSystematics || runListWidths) )
   {
     fileWidths->Close();
     delete fileWidths;
@@ -2965,8 +2984,8 @@ void InitMSPlots()
     MSPlot["scaleFactor_aKF"] = new MultiSamplePlot(datasetsMSP, "scaleFactor_aKF", 80, 0., 2., "SF");
     MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0., 2., "btag SF");
     MSPlot["pu_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "pu_SF_aKF", 80, 0., 2., "pu SF");
-    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 60, 0, 300, "m_{W,kf}", "GeV");
-    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 50, 0, 500, "m_{t,kf}", "GeV");
+    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 40, 0, 200, "m_{W,kf}", "GeV");
+    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
     MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 110, 230, "m_{t,kf}", "GeV");
     MSPlot["red_top_mass_aKF_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
     MSPlot["red_top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
@@ -4062,7 +4081,7 @@ void SetUpSelectionTable()
   selTab->AddCutStep("$\\geq 1$ \\bq~jet");
   selTab->AddCutStep("$\\geq 2$ \\bq~jets");
   
-  selTab->AddCutStep("KF $\\chi^{2} > 5$");
+  selTab->AddCutStep("KF $\\chi^{2} < 5$");
   selTab->SetUpTable();
 }
 
