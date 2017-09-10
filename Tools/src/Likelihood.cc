@@ -1232,10 +1232,16 @@ void Likelihood::Make2DGraph(std::string name, bool makeNewFile)
   c->Write();
   c->SaveAs((dirNameLLTxt_+name+"_surf3.png").c_str());
   c->SetName((name+"_zoom").c_str());
-  g->GetXaxis()->SetRangeUser(0.1,2.5);
+  g->GetXaxis()->SetRangeUser(0.1,2.);
   c->Update();
   c->Write();
   c->SaveAs((dirNameLLTxt_+name+"_surf3_zoom.png").c_str());
+  c->SetName((name+"_colz_zoom").c_str());
+  g->Draw("colz");
+  g->GetXaxis()->SetRangeUser(0.1,2.);
+  c->Update();
+  c->Write();
+  c->SaveAs((dirNameLLTxt_+name+"_colz_zoom.png").c_str());
   
   if (makeNewFile)
   {
