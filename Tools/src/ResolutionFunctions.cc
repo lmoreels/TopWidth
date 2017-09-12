@@ -666,7 +666,13 @@ void ResolutionFunctions::makeFit()
           if ( xBin > 4 ) fitEdge = 0.05;
         }
       }
-      else if ( fitPhi ) fitEdge = 0.2;
+      else if ( fitPhi )
+      {
+        fitEdge = 0.18;
+        if ( xBin > 1 ) fitEdge = 0.15;
+        if ( xBin > 2 ) fitEdge = 0.10;
+        if ( xBin > 3 ) fitEdge = 0.07;
+      }
       
       if (useSingleG)
       {
@@ -713,29 +719,38 @@ void ResolutionFunctions::makeFit()
         if ( xBin == 1 )
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 1., 0.);
-          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, 2., 8., 1.);
-          if (! useSingleG) myfit->SetParLimits(1, 2., 8.);
-          myfit->SetParLimits(4, 7., 110.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/4., 0.3, 2., 10., 1.);
+          if (! useSingleG)
+          {
+            myfit->SetParLimits(1, 2., 8.);
+            myfit->SetParLimits(4, 9., 110.);
+          }
+          else myfit->SetParLimits(4, 7., 110.);
         }
         else if ( xBin == 2 )
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
-          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.3, 2., 14.4, 1.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, 2., 14.4, 1.);
           if (! useSingleG) myfit->SetParLimits(1, 2., 10.);
         }
         else if ( xBin == 3 || xBin == 4 )
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
-          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 0.9, 5., 30.0, 1.);
-          if (! useSingleG) myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.9, 5., 30.0, 1.);
+          if (! useSingleG)
+          {
+            myfit->SetParLimits(1, 8., 14.);
+            myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
+            myfit->SetParLimits(4, 12., 50.);
+          }
         }
         else if ( xBin == 5 )
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
-          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 2., 6.6, 50., 1.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 2., 6.6, 50., 1.);
           if (! useSingleG)
           {
-            myfit->SetParLimits(1, 15., 20.);
+            myfit->SetParLimits(1, 13., 20.);
             myfit->SetParLimits(4, 25., 125.);
           }
           //if ( f > 6 )  // Et, pt of non-b jet
@@ -744,7 +759,7 @@ void ResolutionFunctions::makeFit()
         else if ( xBin == 6 )
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
-          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 2., 6.6, 50., 1.);
+          else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 2., 6.6, 50., 1.);
           if (! useSingleG) myfit->SetParLimits(4, 28., 125.);
           //if ( f > 6 )  // Et, pt of non-b jet
             //fix such that small gaussian has smallest width
@@ -758,25 +773,30 @@ void ResolutionFunctions::makeFit()
         myfit->SetParLimits(0,-0.005,0.005);
         // Restrict sigma to be positive
         myfit->SetParLimits(1,1e-3,15e-3);
-        if (fitPhi) myfit->SetParLimits(1,5e-3,25e-3);
+        if (fitPhi) myfit->SetParLimits(1,5e-3,20e-3);
         
         if (! useSingleG)
         {
           myfit->SetParLimits(2,0.06,0.6);
-          myfit->SetParLimits(3,-0.06,0.06);  // mean around zero
+          myfit->SetParLimits(3,-0.05,0.05);  // mean around zero
           myfit->SetParLimits(4,1e-2,3e-1);   // sigma positive
         }
         
         if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 1., 0.);
+        else if (fitPhi) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/4., 0.3, hp->GetMean(), hp->GetRMS()*1.5, 0.03);
         else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, hp->GetMean(), hp->GetRMS()*2., 0.03);
         
         if ( xBin == 1 )
         {
           if (! useSingleG)
           {
-            if (fitPhi) myfit->SetParLimits(1,1e-3,3e-2);
-            else myfit->SetParLimits(1,1e-3,2e-2);
-            myfit->SetParLimits(4,1e-2,6e-1);
+            if (fitPhi)
+            {
+              myfit->SetParameter(1, 0.023);
+              myfit->SetParLimits(1,20e-3,25e-3);
+            }
+            else myfit->SetParLimits(1,5e-3,18e-3);
+            myfit->SetParLimits(4,2e-2,6e-1);
           }
         }
         else if ( xBin > 1 && xBin < 4 )
@@ -785,8 +805,13 @@ void ResolutionFunctions::makeFit()
           {
             if ( xBin == 2 )
             {
-              if (fitTheta) myfit->SetParLimits(1, 1e-3, 12e-3);
-              else if (fitPhi) myfit->SetParLimits(4,1e-2,6e-1);
+              if (fitTheta) myfit->SetParLimits(1, 5e-3, 13e-3);
+              else if (fitPhi)
+              {
+                myfit->SetParameter(1, 0.018);
+                myfit->SetParLimits(1,13e-3,20e-3);
+                myfit->SetParLimits(4,2e-2,6e-1);
+              }
             }
             myfit->SetParameter(2, 0.2);
           }
@@ -794,9 +819,14 @@ void ResolutionFunctions::makeFit()
         else
         {
           myfit->SetParLimits(1, 2e-3, 1e-2);
-          if (fitPhi) myfit->SetParLimits(1,3e-3,2e-2);
+          if (fitPhi) myfit->SetParLimits(1,5e-3,12e-3);
           if (! useSingleG)
           {
+            if (fitTheta)
+            {
+              if ( xBin == 4 ) myfit->SetParLimits(1, 2e-3, 8e-3);
+              else myfit->SetParLimits(1, 2e-3, 75e-4);
+            }
             myfit->SetParameter(2, 0.1);
             myfit->SetParLimits(2,0.06,0.45);
             myfit->SetParLimits(4,7e-3,3e-1);
@@ -851,7 +881,7 @@ void ResolutionFunctions::makeFit()
       {
         double temp = myfit->GetParameter(1);
         double tempErr = myfit->GetParError(1);
-        double addErr = 0.;
+        double addErr = 0.003;
         if (fitEt) addErr = 3.;
         myfit->SetParameter(1, myfit->GetParameter(4));
         myfit->SetParError(1, myfit->GetParError(4)+addErr);
@@ -867,16 +897,39 @@ void ResolutionFunctions::makeFit()
         else if ( tempErr < 0.002 ) myfit->SetParError(1, 3.*tempErr);
       }
       
-      if (! useSingleG && fitEt && xBin < 3 && histoNames[f].find("_O") != std::string::npos )
+      if (! useSingleG && fitEt )
       {
         double tempErr = myfit->GetParError(1);
-        if ( tempErr < 0.1 ) myfit->SetParError(1, 3.*tempErr);
-        if ( tempErr < 5e-2 ) myfit->SetParError(1, 1.);
+        if ( xBin == 4 && histoNames[f].find("_O") != std::string::npos )
+        {
+          if ( tempErr < 0.1 ) myfit->SetParError(1, 3.*tempErr);
+          else if ( tempErr < 1. ) myfit->SetParError(1, 2.*tempErr);
+          if ( tempErr < 5e-2 ) myfit->SetParError(1, 1.);
+        }
+        if ( xBin < 3 && histoNames[f].find("_B") != std::string::npos )
+        {
+          if ( tempErr < 0.1 ) myfit->SetParError(1, 2.*tempErr);
+          if ( tempErr < 5e-2 ) myfit->SetParError(1, 1.);
+        }
       }
-      if (! useSingleG && fitTheta && xBin == 1 )
+      if (! useSingleG && (fitTheta || fitPhi) && xBin < 3 )
       {
         double tempErr = myfit->GetParError(1);
-        myfit->SetParError(1, 3.*tempErr);
+        if (fitTheta)
+        {
+          //myfit->SetParError(1, 3.*tempErr);
+          if ( tempErr < 4e-5 ) myfit->SetParError(1, 0.005);
+        }
+        else if (fitPhi)
+        {
+          if ( myfit->GetParameter(1) > 0.029 ) myfit->SetParError(1, 0.005);
+          if ( tempErr < 5e-4 ) myfit->SetParError(1, 0.005);
+        }
+      }
+      if (! useSingleG && fitPhi && xBin == 5 )
+      {
+        double tempErr = myfit->GetParError(1);
+        myfit->SetParError(1, 2.*tempErr);
       }
       
       int npFits = myfit->GetNumberFitPoints();
@@ -887,9 +940,10 @@ void ResolutionFunctions::makeFit()
           //std::cout << "myfit->GetParameter("<<iPar<<") " << myfit->GetParameter(iPar) << std::endl;
           //std::cout << "myfit->GetParError("<<iPar<<") " << myfit->GetParError(iPar) << std::endl;
           hlist[iPar]->SetBinContent(xBin, myfit->GetParameter(iPar)); // fill histogram for parameter i
-          if ( fitTheta && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 3.*myfit->GetParError(iPar));
-          else if ( fitPhi && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 0.0005);
-          else hlist[iPar]->SetBinError(xBin,myfit->GetParError(iPar));
+          //if ( fitTheta && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 3.*myfit->GetParError(iPar));
+          //else if ( fitPhi && xBin == 1 ) hlist[iPar]->SetBinError(xBin, 0.0005);
+          //else
+          hlist[iPar]->SetBinError(xBin,myfit->GetParError(iPar));
         }
         //hchi2->Fill(histo->GetXaxis()->GetBinCenter(binOn),myfit->GetChisquare()/(npfits-npar));
       }
@@ -942,7 +996,7 @@ void ResolutionFunctions::makeFit()
 
 void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName)
 {
-  makeFit(inputFileName, outputFileName, false);
+  this->makeFit(inputFileName, outputFileName, false);
 }
 
 void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputFileName, bool simplify)
