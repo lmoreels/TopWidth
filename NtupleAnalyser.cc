@@ -1,5 +1,5 @@
-#include "TStyle.h"
-#include "TPaveText.h"
+#include <TStyle.h>
+#include <TPaveText.h>
 
 #include <cmath>
 #include <iostream>
@@ -9,8 +9,8 @@
 #include <sys/stat.h>
 #include <string>
 #include <array>
-#include "TRandom3.h"
-#include "TNtuple.h"
+#include <TRandom3.h>
+#include <TNtuple.h>
 #include <TFile.h>
 #include <TLeaf.h>
 #include <TGraph.h>
@@ -52,7 +52,7 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -102,14 +102,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("170712","170907");
   }
   else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
   else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("170712","170907");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -1081,6 +1081,7 @@ int main(int argc, char* argv[])
     MSPlot["rho_"] = new MultiSamplePlot(datasets, "#rho", 41, -0.5, 40.5, "#rho");
     MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
     MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
+    MSPlot["leadingJet_pT_bKF_noTopCut_"] = new MultiSamplePlot(datasets, "leadingJet_pT_bKF_noTopCut_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
     MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
@@ -1632,6 +1633,7 @@ int main(int argc, char* argv[])
             MSPlot["nPVs_beforePU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF);
             MSPlot["nPVs_afterPU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF);
           }
+          MSPlot["leadingJet_pT_bKF_noTopCut_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor);
         }
         
         
@@ -1781,6 +1783,7 @@ int main(int argc, char* argv[])
           
           if ( isTTbar && (topQuark == -9999 || antiTopQuark == -9999) )
           {
+            if (makePlots) histo1D["leadingJet_pT_reco_no22or62"]->Fill(selectedJets[0].Pt());
             if ( thisWidth == 1 )
             {
               txtDebugTopMass << "Event " << ievt << ";  Event nb. " << evt_num << "; Run nb. " << run_num << endl;
@@ -2968,9 +2971,10 @@ void InitMSPlots()
   /// Reco
   MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 60, 0, 300, "m_{W}", "GeV");
   MSPlot["top_mass"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter", 50, 0, 500, "m_{t}", "GeV");
+  MSPlot["top_mass_400"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter (400)", 40, 0, 400, "m_{t}", "GeV");
   MSPlot["top_mass_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass before kinFitter (zoomed)", 40, 110, 230, "m_{t}", "GeV");
-  MSPlot["red_top_mass_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-  MSPlot["red_top_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
+  MSPlot["red_top_mass_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass (many bins)", 640, 0.4, 2., "m_{r}");
+  MSPlot["red_top_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass", 32, 0.4, 2., "m_{r}");
   MSPlot["top_pT"] = new MultiSamplePlot(datasetsMSP, "Top pt before kinFitter", 80, 0, 400, "p_{T}", "GeV");
   
   MSPlot["mlb"] = new MultiSamplePlot(datasetsMSP, "mlb before kinFitter", 80, 0, 800, "m_{lb}", "GeV");
@@ -2984,11 +2988,11 @@ void InitMSPlots()
     MSPlot["scaleFactor_aKF"] = new MultiSamplePlot(datasetsMSP, "scaleFactor_aKF", 80, 0., 2., "SF");
     MSPlot["btag_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "btag_SF_aKF", 80, 0., 2., "btag SF");
     MSPlot["pu_SF_aKF"] = new MultiSamplePlot(datasetsMSP, "pu_SF_aKF", 80, 0., 2., "pu SF");
-    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 40, 0, 200, "m_{W,kf}", "GeV");
-    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t,kf}", "GeV");
-    MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 110, 230, "m_{t,kf}", "GeV");
-    MSPlot["red_top_mass_aKF_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF (many bins)", 880, 0.2, 2.4, "M_{t}/<M_{t}>");
-    MSPlot["red_top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF", 44, 0.2, 2.4, "M_{t}/<M_{t}>");
+    MSPlot["W_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "W mass after kinFitter", 40, 0, 200, "m_{W}", "GeV");
+    MSPlot["top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter", 40, 0, 400, "m_{t}", "GeV");
+    MSPlot["top_mass_aKF_zoom"] = new MultiSamplePlot(datasetsMSP, "Top mass after kinFitter (zoomed)", 40, 110, 230, "m_{t}", "GeV");
+    MSPlot["red_top_mass_aKF_manyBins"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF (many bins)", 640, 0.4, 2., "m_{r}");
+    MSPlot["red_top_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass after KF", 32, 0.4, 2., "m_{r}");
     MSPlot["top_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "Top pt after kinFitter", 80, 0, 400, "p_{T}", "GeV");
     
     MSPlot["mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "mlb after kinFitter", 80, 0, 800, "m_{lb}", "GeV");
@@ -3023,6 +3027,8 @@ void InitHisto1D()
   histo1D["genAntitop_status22_pT"] = new TH1F("genAntitop_status22_pT", "pT of the generated antitop quark with status 22; p_{T} (GeV)", 250, 0., 250.);
   histo1D["genAntitop_status62_pT"] = new TH1F("genAntitop_status62_pT", "pT of the generated antitop quark with status 62; p_{T} (GeV)", 250, 0., 250.);
   
+  histo1D["leadingJet_pT_reco_no22or62"] = new TH1F("leadingJet_pT_reco_no22or62", "pT of the leading reconstructed jet for events that have no top quark with status 22 or 62; p_{T} (GeV)", 250, 0., 500.);
+  
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
   //histo1D["btag_SF"] = new TH1F("btag_SF", "b tag scale factor; btag SF", 80, 0, 2);
@@ -3039,20 +3045,20 @@ void InitHisto1D()
   histo1D["allSim_red_top_mass"] = new TH1F("allSim_red_top_mass","Reduced top mass for all simulated samples; m_{t}/<m_{t}>", 110, 0.2, 2.4);
   
   /// m_t/<m_t>
-  histo1D["red_top_mass_TT_CM"] = new TH1F("red_top_mass_TT_CM","Reduced top mass for matched TT sample (reco, correct top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_TT_WMNM"] = new TH1F("red_top_mass_TT_WMNM","Reduced top mass for unmatched TT sample (reco, no & wrong top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_TT_NM"] = new TH1F("red_top_mass_TT_NM","Reduced top mass for unmatched TT sample (reco, no top match); M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_TT_WM"] = new TH1F("red_top_mass_TT_WM","Reduced top mass for matched TT sample (reco, wrong top match: wrong permutation); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["red_top_mass_TT_CM"] = new TH1F("red_top_mass_TT_CM","Reduced top mass for matched TT sample (reco, correct top match); m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_TT_WMNM"] = new TH1F("red_top_mass_TT_WMNM","Reduced top mass for unmatched TT sample (reco, no & wrong top match); m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_TT_NM"] = new TH1F("red_top_mass_TT_NM","Reduced top mass for unmatched TT sample (reco, no top match); m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_TT_WM"] = new TH1F("red_top_mass_TT_WM","Reduced top mass for matched TT sample (reco, wrong top match: wrong permutation); m_{r}", 640, 0.4, 2.);
   
-  histo1D["red_top_mass_bkgd"] = new TH1F("red_top_mass_bkgd","Reduced top mass for background samples; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_TT"] = new TH1F("red_top_mass_TT","Reduced top mass for TT sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_ST_tW_top"] = new TH1F("red_top_mass_ST_tW_top","Reduced top mass for ST tW top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_ST_tW_antitop"] = new TH1F("red_top_mass_ST_tW_antitop","Reduced top mass for ST tW antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_ST_t_top"] = new TH1F("red_top_mass_ST_t_top","Reduced top mass for ST t top sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_ST_t_antitop"] = new TH1F("red_top_mass_ST_t_antitop","Reduced top mass for ST t antitop sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_DYJets"] = new TH1F("red_top_mass_DYJets","Reduced top mass for DY+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_WJets"] = new TH1F("red_top_mass_WJets","Reduced top mass for W+Jets sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
-  histo1D["red_top_mass_data"] = new TH1F("red_top_mass_data","Reduced top mass for data sample; M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["red_top_mass_bkgd"] = new TH1F("red_top_mass_bkgd","Reduced top mass for background samples; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_TT"] = new TH1F("red_top_mass_TT","Reduced top mass for TT sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_ST_tW_top"] = new TH1F("red_top_mass_ST_tW_top","Reduced top mass for ST tW top sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_ST_tW_antitop"] = new TH1F("red_top_mass_ST_tW_antitop","Reduced top mass for ST tW antitop sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_ST_t_top"] = new TH1F("red_top_mass_ST_t_top","Reduced top mass for ST t top sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_ST_t_antitop"] = new TH1F("red_top_mass_ST_t_antitop","Reduced top mass for ST t antitop sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_DYJets"] = new TH1F("red_top_mass_DYJets","Reduced top mass for DY+Jets sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_WJets"] = new TH1F("red_top_mass_WJets","Reduced top mass for W+Jets sample; m_{r}", 640, 0.4, 2.);
+  histo1D["red_top_mass_data"] = new TH1F("red_top_mass_data","Reduced top mass for data sample; m_{r}", 640, 0.4, 2.);
   
   /// mlb
   histo1D["mlb_CM"]  = new TH1F("minMlb_CM","m_{lb} mass for events that have a correct hadronic top match (CM); m_{lb} [GeV]", 400, 0, 800);
@@ -3173,8 +3179,8 @@ void InitHisto1DMatch()
   histo1D["matched_top_mass_reco"] = new TH1F("matched_top_mass_reco","Reconstructed top mass of matched events; M_{t} [GeV]", 175, 50, 400);
   histo1D["matched_top_mass_gen"] = new TH1F("matched_top_mass_gen","Generated top mass of matched events; M_{t} [GeV]", 1200, 150, 190);
   
-  histo1D["matched_red_top_mass_TT_partons"] = new TH1F("matched_red_top_mass_TT_partons","Reduced top mass for matched TT sample (using matched partons); M_{t}/<M_{t}>", 800, 0.8, 1.2);
-  histo1D["matched_red_top_mass_TT_jets"] = new TH1F("matched_red_top_mass_TT_jets","Reduced top mass for matched TT sample (using jets from matched partons); M_{t}/<M_{t}>", 880, 0.2, 2.4);
+  histo1D["matched_red_top_mass_TT_partons"] = new TH1F("matched_red_top_mass_TT_partons","Reduced top mass for matched TT sample (using matched partons); m_{r}", 800, 0.8, 1.2);
+  histo1D["matched_red_top_mass_TT_jets"] = new TH1F("matched_red_top_mass_TT_jets","Reduced top mass for matched TT sample (using jets from matched partons); m_{r}", 640, 0.4, 2.);
   
   histo1D["matched_mlb_corr"]  = new TH1F("matched_mlb_corr","Reconstructed leptonic top mass using correctly matched events; M_{lb} [GeV]", 80, 0, 800);
   histo1D["matched_mlb_wrong"] = new TH1F("matched_mlb_wrong","Reconstructed leptonic top mass using wrongly matched events; M_{lb} [GeV]", 80, 0, 800);
@@ -3918,6 +3924,7 @@ void FillMSPlots(int d, bool doneKinFit)
   {
     MSPlot["W_mass"]->Fill(reco_W_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["top_mass"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["top_mass_400"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     if ( reco_top_mass_bKF < 230 && reco_top_mass_bKF > 110 )
     {
       MSPlot["top_mass_zoom"]->Fill(reco_top_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
