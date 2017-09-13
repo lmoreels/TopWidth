@@ -49,23 +49,23 @@ void KinFitter::GetErrorFunctions()
 {
   ResolutionFunctions *rf = new ResolutionFunctions(false, false);
   
-  errorFuncMap["bjetEt_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
-  errorFuncMap["bjetEt_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "O");
-  errorFuncMap["bjetEt_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "E");
+//   errorFuncMap["bjetEt_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "B");
+//   errorFuncMap["bjetEt_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "O");
+//   errorFuncMap["bjetEt_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "bjet", "E");
   errorFuncMap["nonbjetEt_B"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "B");
   errorFuncMap["nonbjetEt_O"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "O");
   errorFuncMap["nonbjetEt_E"] = (TF1*) rf->getResolutionFunction(rfFileName, "Et", "nonbjet", "E");
   
-  errorFuncMap["bjetTheta_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
-  errorFuncMap["bjetTheta_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "O");
-  errorFuncMap["bjetTheta_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "E");
+//   errorFuncMap["bjetTheta_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "B");
+//   errorFuncMap["bjetTheta_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "O");
+//   errorFuncMap["bjetTheta_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "bjet", "E");
   errorFuncMap["nonbjetTheta_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "B");
   errorFuncMap["nonbjetTheta_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "O");
   errorFuncMap["nonbjetTheta_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "theta", "nonbjet", "E");
   
-  errorFuncMap["bjetPhi_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "B");
-  errorFuncMap["bjetPhi_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "O");
-  errorFuncMap["bjetPhi_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "E");
+//   errorFuncMap["bjetPhi_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "B");
+//   errorFuncMap["bjetPhi_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "O");
+//   errorFuncMap["bjetPhi_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "bjet", "E");
   errorFuncMap["nonbjetPhi_B"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "B");
   errorFuncMap["nonbjetPhi_O"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "O");
   errorFuncMap["nonbjetPhi_E"]    = (TF1*) rf->getResolutionFunction(rfFileName, "phi", "nonbjet", "E");

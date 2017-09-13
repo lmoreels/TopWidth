@@ -183,7 +183,8 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-std::array<double, 14> aveTopMass = {171.833, 169.809, 167.636, 197.975, 197.718, 198.582, 182.317, 252.174, 249.964, 229.383, 227.814, 184.794, 185.096, 185.046};  // with SFs
+std::array<double, 14> aveTopMass = {171.828, 170.662, 167.841, 197.327, 196.972, 198.197, 182.357, 248.361, 247.185, 227.921, 226.553, 184.765, 185.085, 185.033};  // Res 170912
+//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.636, 197.975, 197.718, 198.582, 182.317, 252.174, 249.964, 229.383, 227.814, 184.794, 185.096, 185.046};  // with SFs
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
 //std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
 
@@ -1033,8 +1034,8 @@ int main(int argc, char* argv[])
   
   if (! calculateResolutionFunctions)
   {
-    kf = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
-    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+    kf = new KinFitter("PlotsForResolutionFunctions_testFit_170912.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit_170912.root", addWMassKF, addEqMassKF);
   }
   
   if (makeTGraphs || calculateFractions)
@@ -1743,7 +1744,7 @@ int main(int argc, char* argv[])
             }
             
             /// Partons/gluons
-            if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
+            if ( abs(mc_pdgId[i]) < 6 /*|| abs(mc_pdgId[i]) == 21 */)  //light/b quarks, 6 should stay hardcoded, OR gluon
             {
               partons.push_back(mcParticles[i]);
               partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
@@ -2379,7 +2380,8 @@ int main(int argc, char* argv[])
       
       
       /// Make selection table
-      if (! runListWidths && ! runSystematics && ! isData) FillSelectionTable(d, dataSetName);   /// TEMPORARILY !!
+      if (! runListWidths && ! runSystematics && ! calculateResolutionFunctions && ! calculateAverageMass)
+        FillSelectionTable(d, dataSetName);
       
       
       if (calculateAverageMass) txtMassReco.close();
@@ -2714,8 +2716,8 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
   tree->SetBranchAddress("cutFlow", cutFlow, &b_cutFlow);
   tree->SetBranchAddress("cutFlow2", cutFlow2, &b_cutFlow2);
-  if (! isData) tree->SetBranchAddress("cutFlowWeighted", cutFlowWeighted, &b_cutFlowWeighted);     // temporarily!
-  if (! isData) tree->SetBranchAddress("cutFlow2Weighted", cutFlow2Weighted, &b_cutFlow2Weighted);  // temporarily!
+  tree->SetBranchAddress("cutFlowWeighted", cutFlowWeighted, &b_cutFlowWeighted);
+  tree->SetBranchAddress("cutFlow2Weighted", cutFlow2Weighted, &b_cutFlow2Weighted);
   tree->SetBranchAddress("appliedJER", &appliedJER, &b_appliedJER);
   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
