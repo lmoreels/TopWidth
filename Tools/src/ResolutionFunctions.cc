@@ -144,12 +144,12 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["PtrecMu_vs_ThgenMu-ThrecMu"] = new TH2F("PtrecMu_vs_ThgenMu-ThrecMu","PtrecMu_vs_ThgenMu-ThrecMu", 5, 0, 250, 100, -0.002, 0.002);
   
   /// Et vs theta, binned in eta
-  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_B"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_B","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_O"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_O","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_E"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_E","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etbjet_vs_Thparton-Thbjet_B"] = new TH2F("Etbjet_vs_Thparton-Thbjet_B","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etbjet_vs_Thparton-Thbjet_O"] = new TH2F("Etbjet_vs_Thparton-Thbjet_O","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
-  histoRes2D["Etbjet_vs_Thparton-Thbjet_E"] = new TH2F("Etbjet_vs_Thparton-Thbjet_E","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.15, 0.15);
+  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_B"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_B","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 120, -0.1, 0.1);
+  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_O"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_O","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 100, -0.1, 0.1);
+  histoRes2D["Etnonbjet_vs_Thparton-Thnonbjet_E"] = new TH2F("Etnonbjet_vs_Thparton-Thnonbjet_E","; E_{T} (light jet); #theta(parton) - #theta(light jet)", 5, 0, 250, 100, -0.1, 0.1);
+  histoRes2D["Etbjet_vs_Thparton-Thbjet_B"] = new TH2F("Etbjet_vs_Thparton-Thbjet_B","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
+  histoRes2D["Etbjet_vs_Thparton-Thbjet_O"] = new TH2F("Etbjet_vs_Thparton-Thbjet_O","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
+  histoRes2D["Etbjet_vs_Thparton-Thbjet_E"] = new TH2F("Etbjet_vs_Thparton-Thbjet_E","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
   
   /// Eta
   histoRes2D["Etaparton_vs_Etanonbjet"] = new TH2F("Etaparton_vs_Etanonbjet","Etaparton_vs_Etanonbjet", 60, -2.5, 2.5, 60, 0, 2.5);
@@ -192,12 +192,12 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["PtrecMu_vs_PhigenMu-PhirecMu"] = new TH2F("PtrecMu_vs_PhigenMu-PhirecMu","PtrecMu_vs_PhigenMu-PhirecMu", 5, 0, 250, 100, -0.002, 0.002);
   
   /// Et vs phi, binned in eta
-  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_B"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_B","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_O"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_O","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_E"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_E","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etbjet_vs_Phiparton-Phibjet_B"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_B","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etbjet_vs_Phiparton-Phibjet_O"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_O","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
-  histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_E","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.25, 0.25);
+  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_B"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_B","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 120, -0.18, 0.18);
+  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_O"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_O","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 100, -0.18, 0.18);
+  histoRes2D["Etnonbjet_vs_Phiparton-Phinonbjet_E"] = new TH2F("Etnonbjet_vs_Phiparton-Phinonbjet_E","; E_{T} (light jet); #phi(parton) - #phi(light jet)", 5, 0, 250, 100, -0.18, 0.18);
+  histoRes2D["Etbjet_vs_Phiparton-Phibjet_B"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_B","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.18, 0.18);
+  histoRes2D["Etbjet_vs_Phiparton-Phibjet_O"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_O","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 100, -0.18, 0.18);
+  histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_E","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 100, -0.18, 0.18);
   
   if (verbose) std::cout << "                                    - Histograms booked" << std::endl;
 }
@@ -652,25 +652,26 @@ void ResolutionFunctions::makeFit()
       double fitEdge = 100.;  // largest for Et
       if ( fitTheta )
       {
-        fitEdge = 0.12;
+        fitEdge = 0.08;
+        if ( xBin > 1 ) fitEdge = 0.06;
         if ( histoNames[f].find("_B") == std::string::npos )
         {
-          fitEdge = 0.08;
-          if ( xBin > 2 ) fitEdge = 0.05;
+          if ( xBin > 2 ) fitEdge = 0.04;
           if ( xBin > 4 ) fitEdge = 0.03;
+          if ( histoNames[f].find("_E") != std::string::npos && xBin > 3 ) fitEdge = 0.02;
         }
         else
         {
-          if ( xBin > 2 ) fitEdge = 0.08;
           if ( xBin > 4 ) fitEdge = 0.05;
         }
       }
       else if ( fitPhi )
       {
         fitEdge = 0.18;
-        if ( xBin > 1 ) fitEdge = 0.15;
-        if ( xBin > 2 ) fitEdge = 0.10;
-        if ( xBin > 3 ) fitEdge = 0.07;
+        if ( xBin > 1 ) fitEdge = 0.13;
+        if ( xBin > 2 ) fitEdge = 0.08;
+        if ( xBin > 3 ) fitEdge = 0.06;
+        if ( histoNames[f].find("_B") == std::string::npos && xBin > 4 ) fitEdge = 0.05;
       }
       
       if (useSingleG)
@@ -740,7 +741,7 @@ void ResolutionFunctions::makeFit()
           {
             myfit->SetParLimits(1, 8., 14.);
             myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
-            myfit->SetParLimits(4, 12., 50.);
+            myfit->SetParLimits(4, 18., 50.);
           }
         }
         else if ( xBin == 5 )
@@ -810,6 +811,7 @@ void ResolutionFunctions::makeFit()
                 myfit->SetParameter(1, 0.018);
                 myfit->SetParLimits(1,13e-3,20e-3);
                 myfit->SetParLimits(4,2e-2,6e-1);
+                if ( histoNames[f].find("_B") != std::string::npos ) myfit->SetParLimits(1,13e-3,18e-3);
               }
             }
             myfit->SetParameter(2, 0.2);
@@ -825,6 +827,11 @@ void ResolutionFunctions::makeFit()
             {
               if ( xBin == 4 ) myfit->SetParLimits(1, 2e-3, 8e-3);
               else myfit->SetParLimits(1, 2e-3, 75e-4);
+              if ( histoNames[f].find("_E") != std::string::npos )
+              {
+                myfit->SetParLimits(1, 2e-3, 35e-4);
+                if ( xBin > 4 ) myfit->SetParLimits(1, 1e-3, 3e-3);
+              }
             }
             myfit->SetParameter(2, 0.1);
             myfit->SetParLimits(2,0.06,0.45);
@@ -922,13 +929,13 @@ void ResolutionFunctions::makeFit()
         else if (fitPhi)
         {
           if ( myfit->GetParameter(1) > 0.029 ) myfit->SetParError(1, 0.005);
-          if ( tempErr < 5e-4 ) myfit->SetParError(1, 0.005);
+          if ( tempErr < 5e-4 ) myfit->SetParError(1, 0.001);
         }
       }
       if (! useSingleG && fitPhi && xBin == 5 )
       {
         double tempErr = myfit->GetParError(1);
-        myfit->SetParError(1, 2.*tempErr);
+        myfit->SetParError(1, 1.5*tempErr);
       }
       
       int npFits = myfit->GetNumberFitPoints();
@@ -968,11 +975,13 @@ void ResolutionFunctions::makeFit()
 //    else if ( fitPhi && histoNames[f].find("_E") != std::string::npos )
 //      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
     
-    TF1 *myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
+    TF1 *myfit2;
+    if (fitEt) myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
+    else myfit2 = new TF1("myfit2", "[0]+[1]*x+[2]*sqrt(x)", minfit2, maxfit2);
     // Give names to the parameters
     myfit2->SetParName(0,"ai0");
     myfit2->SetParName(1,"ai1");
-    //myfit2->SetParName(2,"ai2");
+    if (fitTheta || fitPhi) myfit2->SetParName(2,"ai2");
 
     for (int iPar = 0; iPar < nPar; iPar++){
       int paramname = iPar+1;
