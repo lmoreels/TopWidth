@@ -67,14 +67,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("170712","170907");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170602","170522");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170606","170522");
+  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170904","170904");
+  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170905","170905");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("170712","170907");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -86,7 +86,7 @@ string pathNtuplesData = "";
 string dateString = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "170713_1105/";  // TT nominal
+string inputDateLL = "170918_1300/";  // TT nominal
 bool isData = false;
 bool isTTbar = false;
 
@@ -122,7 +122,8 @@ double CSVv2Tight  = 0.9535;
 // also background in CM/WM/NM cats (unlike name suggests)
 const int nofAveMasses = 16;
 //  KF chi2 < 5
-std::array<double, 5> aveTopMass = {171.791, 169.728, 185.155, 181.914, 167.723};  // Res 170608 Single Gaus
+std::array<double, 5> aveTopMass = {171.791, 169.728, 186.218, 182.657, 167.919};  // Res 170915
+//std::array<double, 5> aveTopMass = {171.791, 169.728, 185.155, 181.914, 167.723};  // Res 170608 Single Gaus
 
 /// # events
 vector<long> nEventsTot, nEventsSelc, nEventsHardSel, nEventsAKF;
@@ -615,8 +616,8 @@ int main(int argc, char* argv[])
   
   if (! calculateResolutionFunctions)
   {
-    kf = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
-    kfMatched = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+    kf = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
   }
   
   if (makePlots)
@@ -1087,6 +1088,11 @@ int main(int argc, char* argv[])
               
               histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_prod);
               histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]+"_fewerBins").c_str()]->Fill(m_hadr, evWeight_prod);
+              for (int i = 0; i < nGenWidths; i++)
+              {
+                if ( reweightArray[s] == genWidthArray[i] )
+                  histo1D[("top_mass_hadr_gen_prodSF_"+reweightString[s]+"_th").c_str()]->Fill(m_hadr, evWeight_prod);
+              }
               histo1D[("top_mass_lept_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_lept, evWeight_prod);
               histo1D[("bqq_mass_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_bqq, evWeight_prod);
               histo1D[("blv_mass_gen_prodSF_"+reweightString[s]).c_str()]->Fill(m_blv, evWeight_prod);
@@ -1115,6 +1121,7 @@ int main(int argc, char* argv[])
           {
             histo1D[("top_mass_hadr_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_hadr, numWeight);
             histo1D[("top_mass_hadr_gen_"+genWidthString[thisGenWidthId]+"_fewerBins").c_str()]->Fill(m_hadr, numWeight);
+            histo1D[("top_mass_hadr_gen_"+genWidthString[thisGenWidthId]+"_th").c_str()]->Fill(m_hadr, numWeight);
             histo1D[("top_mass_lept_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_lept, numWeight);
             histo1D[("bqq_mass_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_bqq, numWeight);
             histo1D[("blv_mass_gen_"+genWidthString[thisGenWidthId]).c_str()]->Fill(m_blv, numWeight);
@@ -1975,6 +1982,12 @@ void InitHisto1DGen()
 //     histo1D[("reduced_top_mass_reco_matched_"+genWidthString[g]).c_str()] = new TH1F(("reduced_top_mass_reco_matched_"+genWidthString[g]).c_str(), "Reduced reconstructed top mass (m_bjj) of matched events; M_{t}/<M_{t}>", 400, 0, 2.4);
     
   }
+  
+  histo1D["top_mass_hadr_gen_g0p2_th"] = new TH1F("top_mass_hadr_gen_g0p2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_hadr_gen_g0p5_th"] = new TH1F("top_mass_hadr_gen_g0p5_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_g1_th"] = new TH1F("top_mass_hadr_gen_g1_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1000, 120, 220);
+  histo1D["top_mass_hadr_gen_g4_th"] = new TH1F("top_mass_hadr_gen_g4_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 320, 120, 220);
+  histo1D["top_mass_hadr_gen_g8_th"] = new TH1F("top_mass_hadr_gen_g8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 200, 120, 220);
 }
 
 void InitHisto1DReweighted()
@@ -2011,6 +2024,12 @@ void InitHisto1DReweighted()
     histo1D[("Width_SF_prod_"+reweightString[s]).c_str()] = new TH1F(("Width_SF_prod_"+reweightString[s]).c_str(), "Product of the hadronic and leptonic scale factor to change the ttbar distribution width; width SF", 5001, -0.0005, 5.0005);
     histo1D[("Width_SF_prodsqrt_"+reweightString[s]).c_str()] = new TH1F(("Width_SF_prodsqrt_"+reweightString[s]).c_str(), "Sqrt of the product of the hadronic and leptonic scale factor to change the ttbar distribution width; width SF", 5001, -0.0005, 5.0005);
   }
+  
+  histo1D["top_mass_hadr_gen_prodSF_s0p2_th"] = new TH1F("top_mass_hadr_gen_prodSF_s0p2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s0p5_th"] = new TH1F("top_mass_hadr_gen_prodSF_s0p5_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s1_th"] = new TH1F("top_mass_hadr_gen_prodSF_s1_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1000, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s4_th"] = new TH1F("top_mass_hadr_gen_prodSF_s4_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 320, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s8_th"] = new TH1F("top_mass_hadr_gen_prodSF_s8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 200, 120, 220);
 }
 
 void InitHisto1DMatch()
