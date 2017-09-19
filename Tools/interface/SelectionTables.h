@@ -12,24 +12,25 @@
 #include <math.h>
 #include <TMath.h>
 #include <TFile.h>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "TopTreeAnalysisBase/Content/interface/Dataset.h"
 
 
 class SelectionTables{
   public:
-    SelectionTables(vector<Dataset*> datasets);
+    SelectionTables(std::vector<Dataset*> datasets);
     ~SelectionTables();
     void SetPrecision(int i);
     void SetLumi(double lumi);
     void SetEqLumi(int d, double eqLumi);
-    void AddCutStep(string cutStepName);
+    void AddCutStep(std::string cutStepName);
     void SetUpTable();
     void Fill(int d, int cutStep, double value);
-    void Fill(int d, vector<double> values);
-    void CalculateTable();
-    void Write(string filename, bool writeError, bool writeMerged, bool writeLandscape);
-    void Write(ofstream& fout, bool writeError, bool writeMerged, bool writeLandscape);
+    void Fill(int d, std::vector<double> values);
+    void CalculateTable(bool scaleEvents = true);
+    void Write(std::string filename, bool writeError, bool writeMerged, bool writeLandscape, bool writeVertical = false);
+    void Write(ofstream& fout, bool writeError, bool writeMerged, bool writeLandscape, bool writeVertical = false);
     
   private:
     int precision_; // nb of digits to display after the decimal point
@@ -37,8 +38,8 @@ class SelectionTables{
     int numberOfCuts_;
     int numberOfDatasets_, numberOfDatasetsMerged_;
     
-    vector<string> listOfCuts_;
-    vector<Dataset*> listOfDatasets_, listOfDatasetsMerged_;
+    std::vector<std::string> listOfCuts_;
+    std::vector<Dataset*> listOfDatasets_, listOfDatasetsMerged_;
     
     double lumi_;
     double* eqLumi_;
@@ -65,6 +66,7 @@ class SelectionTables{
     
     void MergeDatasets();
     void WriteTable(ofstream& fout, double** listTable_,double** listTableError_, bool writeError, bool writeMerged, bool writeLandscape);
+    void WriteTableVertical(ofstream& fout, double** listTable_,double** listTableError_, bool writeError, bool writeMerged);
   
 };
 

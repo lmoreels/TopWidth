@@ -1,6 +1,6 @@
 #include "../interface/SelectionTables.h"
 
-SelectionTables::SelectionTables(vector<Dataset*> datasets):
+SelectionTables::SelectionTables(std::vector<Dataset*> datasets):
 precision_(0), listOfDatasets_(datasets), lumi_(1.)
 {
   numberOfDatasets_ = listOfDatasets_.size();
@@ -33,7 +33,7 @@ void SelectionTables::SetEqLumi(int d, double eqLumi)
   eqLumi_[d] = eqLumi;
 }
 
-void SelectionTables::AddCutStep(string cutStepName)
+void SelectionTables::AddCutStep(std::string cutStepName)
 {
   listOfCuts_.push_back(cutStepName);
 }
@@ -90,7 +90,7 @@ void SelectionTables::Fill(int d, int cutStep, double value)
   }
 }
 
-void SelectionTables::Fill(int d, vector<double> values)
+void SelectionTables::Fill(int d, std::vector<double> values)
 {
   if ( values.size() > (unsigned int)numberOfCuts_ )
   {
@@ -112,7 +112,7 @@ void SelectionTables::Fill(int d, vector<double> values)
 void SelectionTables::MergeDatasets()
 {
   //dataSetTitle_ = datasets[d]->Title();
-  string dataSetName, dataSetNameMerged;
+  std::string dataSetName, dataSetNameMerged;
   bool addedST = false, addedDY = false, addedW = false;
   for (int d = 0; d < numberOfDatasets_; d++)
   {
@@ -171,7 +171,7 @@ void SelectionTables::MergeDatasets()
       for (int d = 0; d < numberOfDatasets_; d++)
       {
         dataSetName = listOfDatasets_[d]->Name();
-        if ( (dataSetNameMerged.find("TT") != std::string::npos && dataSetName.find("TT") != std::string::npos) || 
+        if ( /*(dataSetNameMerged.find("TT") != std::string::npos && dataSetName.find("TT") != std::string::npos) || */
             (dataSetNameMerged.find("ST") != std::string::npos && dataSetName.find("ST") != std::string::npos) || 
             (dataSetNameMerged.find("WJets") != std::string::npos && dataSetName.find("W") != std::string::npos && dataSetName.find("Jets") != std::string::npos) || 
             (dataSetNameMerged.find("DYJets") != std::string::npos && dataSetName.find("DY") != std::string::npos && dataSetName.find("Jets") != std::string::npos) ||
@@ -180,6 +180,11 @@ void SelectionTables::MergeDatasets()
           //nofEventsRawMerged_[iCut][dM]      += nofEventsRaw_[iCut][d];   // not allowed unless all constituents have the same eqLumi
           nofEventsMerged_[iCut][dM]    += nofEvents_[iCut][d];
           nofEventsVarMerged_[iCut][dM] += nofEventsVar_[iCut][d];
+        }
+        else if ( dataSetNameMerged.find("TT") != std::string::npos )
+        {
+          nofEventsMerged_[iCut][dM]    = nofEvents_[iCut][dM];
+          nofEventsVarMerged_[iCut][dM] = nofEventsVar_[iCut][dM];
         }
         
       }  // end d
@@ -191,9 +196,9 @@ void SelectionTables::MergeDatasets()
   
 }
 
-void SelectionTables::CalculateTable()
+void SelectionTables::CalculateTable(bool scaleEvents)
 {
-  string dataSetName;
+  std::string dataSetName;
   double lumiWeight;
   
   for (int d = 0; d < numberOfDatasets_; d++)
@@ -201,7 +206,7 @@ void SelectionTables::CalculateTable()
     dataSetName = listOfDatasets_[d]->Name();
     if ( dataSetName.find("data") != std::string::npos ) lumiWeight = 1.;
     else lumiWeight = lumi_/eqLumi_[d];
-    if ( eqLumi_[d] == 1. ) std::cout << "SelectionTables::CalculateTable: WARNING: eqLumi = 1 for dataset " << dataSetName << ". Please check if this is correct..." << endl;
+    if ( scaleEvents && eqLumi_[d] == 1. ) std::cout << "SelectionTables::CalculateTable: WARNING: eqLumi = 1 for dataset " << dataSetName << ". Please check if this is correct..." << endl;
       
     for (int iCut = 0; iCut < numberOfCuts_; iCut++)
     {
@@ -209,13 +214,18 @@ void SelectionTables::CalculateTable()
       else nofEventsRawError_[iCut][d] = ErrorCalculator(nofEventsRaw_[iCut][d], nofEventsRaw_[iCut][d]/nofEventsRaw_[0][d], 1.);
       nofEventsRawVar_[iCut][d]   = pow(nofEventsRawError_[iCut][d], 2.);
       
-      nofEvents_[iCut][d]      = nofEventsRaw_[iCut][d] * lumiWeight;
+      if (scaleEvents) nofEvents_[iCut][d] = nofEventsRaw_[iCut][d] * lumiWeight;
+      else             nofEvents_[iCut][d] = nofEventsRaw_[iCut][d];
+      
       if ( nofEvents_[0][d] == 0. ) nofEventsError_[iCut][d] = 0.;
       else nofEventsError_[iCut][d] = ErrorCalculator(nofEvents_[iCut][d], nofEvents_[iCut][d]/nofEvents_[0][d], 1.);
-      nofEventsVar_[iCut][d]   = pow(nofEventsError_[iCut][d], 2.);
+      nofEventsVar_[iCut][d] = pow(nofEventsError_[iCut][d], 2.);
       
-      totalEvents_[iCut]    += nofEvents_[iCut][d];
-      totalEventsVar_[iCut] += nofEventsVar_[iCut][d];
+      if ( dataSetName.find("data") == std::string::npos )
+      {
+        totalEvents_[iCut]    += nofEvents_[iCut][d];
+        totalEventsVar_[iCut] += nofEventsVar_[iCut][d];
+      }
     }  // end cut
   }  // end d
   
@@ -232,10 +242,10 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
   int nDatasets = ( writeMerged ? numberOfDatasetsMerged_ : numberOfDatasets_ );
   if( precision_ >= 0 ) fout << fixed << setprecision(precision_);
   
-  string interline = "";
+  std::string interline = "";
   for (int d = 0; d < nDatasets; d++) interline += "&";
   interline += "&\\\\[-6pt]";
-  string headerextra = "[+3pt]";
+  std::string headerextra = "[+3pt]";
   
   if(writeLandscape) fout << "\\begin{landscape}" << std::endl;
   fout << "\\begin{table}" << std::endl;
@@ -295,14 +305,103 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
   if (writeLandscape) fout << "\\end{landscape}%" << std::endl;
 }
 
-void SelectionTables::Write(string filename, bool writeError, bool writeMerged, bool writeLandscape)
+void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,double** listTableError_, bool writeError, bool writeMerged)
 {
-  ofstream fout(filename.c_str());
-  this->Write(fout, writeError, writeMerged, writeLandscape);
+  int nDatasets = ( writeMerged ? numberOfDatasetsMerged_ : numberOfDatasets_ );
+  if( precision_ >= 0 ) fout << fixed << setprecision(precision_);
+  std::string datasettitle = "";
+  
+  std::string interline = "";
+  for (int iCut = 0; iCut < numberOfCuts_; iCut++) interline += "&";
+  interline += "\\\\[-6pt]";
+  std::string headerextra = "[+3pt]";
+  
+  fout << "\\begin{table}" << std::endl;
+  fout << "\\caption{Number of events before and after applying a kinematic fit and requiring $\\chi^2 < 5$ ($" << lumi_/1000. << "\\fbinv$ of int. lumi.)}" << std::endl;
+  fout << "\\label{tab:KFtable}" << std::endl;
+  fout << "\\begin{center}" << std::endl;
+  fout << "\\begin{tabular}{l";
+  for (int iCut = 0; iCut < numberOfCuts_; iCut++)
+  {
+    if (! writeError) fout << "r";
+    else fout << "c";
+  }
+  fout << "}" << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << interline << std::endl;
+  for (int iCut = 0; iCut < numberOfCuts_; iCut++) fout << " & " << listOfCuts_[iCut];
+  fout << " \\\\" << headerextra << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << interline << std::endl;
+  for (int d = 1; d < nDatasets; d++)
+  {
+    if (writeMerged)
+    {
+      datasettitle = listOfDatasetsMerged_[d]->Title();
+    }
+    else
+    {
+      datasettitle = listOfDatasets_[d]->Title();
+    }
+    
+    if ( datasettitle.find("t#bar{t}") != std::string::npos )
+    {
+      boost::replace_all(datasettitle, "t#bar{t}", "$\\ttbar$");
+      boost::replace_all(datasettitle, ". ", ".\\ ");
+      fout << datasettitle;
+    }
+    else fout << "$" << datasettitle << "$";
+    
+    for (int iCut = 0; iCut < numberOfCuts_; iCut++)
+    {
+      fout << " & " << listTable_[iCut][d];
+      if (writeError) fout << " $\\pm$ " << listTableError_[iCut][d];
+      if ( iCut == numberOfCuts_-1 ) fout << " \\\\" << std::endl;
+    }
+  }
+  fout << interline << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << interline << std::endl;
+  fout << "Total exp.";
+  for (int iCut = 0; iCut < numberOfCuts_; iCut++)
+  {
+    fout << " & " << totalEvents_[iCut];
+    if (writeError) fout << " $\\pm$ " << totalEventsError_[iCut];
+  }
+  fout << " \\\\" << headerextra << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << interline << std::endl;
+  fout << "Observed";
+  for (int iCut = 0; iCut < numberOfCuts_; iCut++)
+  {
+    fout << " & " << listTable_[iCut][0];
+    if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];
+  }
+  fout << " \\\\" << headerextra << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << "\\hline" << std::endl;
+  fout << "\\end{tabular}" << std::endl;
+  fout << "\\end{center}" << std::endl;
+  fout << "\\end{table}%" << std::endl;
 }
 
-void SelectionTables::Write(ofstream& fout, bool writeError, bool writeMerged, bool writeLandscape)
+void SelectionTables::Write(std::string filename, bool writeError, bool writeMerged, bool writeLandscape, bool writeVertical)
 {
-  if (writeMerged) this->WriteTable(fout, nofEventsMerged_, nofEventsErrorMerged_, writeError, writeMerged, writeLandscape);
-  else this->WriteTable(fout, nofEvents_, nofEventsError_, writeError, writeMerged, writeLandscape);
+  ofstream fout(filename.c_str());
+  this->Write(fout, writeError, writeMerged, writeLandscape, writeVertical);
+}
+
+void SelectionTables::Write(ofstream& fout, bool writeError, bool writeMerged, bool writeLandscape, bool writeVertical)
+{
+  if (writeVertical)
+  {
+    if (writeMerged) this->WriteTableVertical(fout, nofEventsMerged_, nofEventsErrorMerged_, writeError, writeMerged);
+    else this->WriteTableVertical(fout, nofEvents_, nofEventsError_, writeError, writeMerged);
+  }
+  else
+  {
+    if (writeMerged) this->WriteTable(fout, nofEventsMerged_, nofEventsErrorMerged_, writeError, writeMerged, writeLandscape);
+    else this->WriteTable(fout, nofEvents_, nofEventsError_, writeError, writeMerged, writeLandscape);
+  }
 }
