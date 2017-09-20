@@ -357,6 +357,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
     {
       fout << " & " << listTable_[iCut][d];
       if (writeError) fout << " $\\pm$ " << listTableError_[iCut][d];
+      else fout << " \\qquad";
       if ( iCut == numberOfCuts_-1 ) fout << " \\\\" << std::endl;
     }
   }
@@ -368,6 +369,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
   {
     fout << " & " << totalEvents_[iCut];
     if (writeError) fout << " $\\pm$ " << totalEventsError_[iCut];
+    else fout << " \\qquad";
   }
   fout << " \\\\" << headerextra << std::endl;
   fout << "\\hline" << std::endl;
@@ -377,6 +379,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
   {
     fout << " & " << listTable_[iCut][0];
     if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];
+    else fout << " \\qquad";
   }
   fout << " \\\\" << headerextra << std::endl;
   fout << "\\hline" << std::endl;
