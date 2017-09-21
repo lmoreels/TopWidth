@@ -4,7 +4,7 @@ const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 
 
 const double Likelihood::massArray_[] = {169.5, 172.5, 175.5};
 
-const std::string Likelihood::listCats_[] = {"CM", "WM", "NM"};
+const std::string Likelihood::listCats_[] = {"CM", "WM", "UM"};
 
 const int Likelihood::nWidths_ = sizeof(widthArray_)/sizeof(widthArray_[0]);
 const int Likelihood::nCats_ = sizeof(listCats_)/sizeof(listCats_[0]);
@@ -17,17 +17,12 @@ std::string Likelihood::stringSuffix_[nCats_] = {""};
 double Likelihood::loglike_[nWidths_][3] = {0.};
 double Likelihood::loglike_data_[nWidths_][3] = {0.};
 double Likelihood::loglike_per_evt_[nWidths_][3] = {0.};
-double Likelihood::loglike_good_evts_[nWidths_] = {0.};
-double Likelihood::loglike_good_evts_data_[nWidths_] = {0.};
 double Likelihood::loglike_CM_[nWidths_] = {0.};
 double Likelihood::loglike_CM_per_evt_[nWidths_] = {0.};
-double Likelihood::loglike_CM_good_evts_[nWidths_] = {0.};
 double Likelihood::loglike_temp_[nWidths_] = {0.};
 double Likelihood::loglike_temp_per_evt_[nWidths_] = {0.};
-double Likelihood::loglike_temp_good_evts_[nWidths_] = {0.};
 double Likelihood::loglike_gen_[nWidths_] = {0.};
 double Likelihood::loglike_gen_per_evt_[nWidths_] = {0.};
-double Likelihood::loglike_gen_good_evts_[nWidths_] = {0.};
 
 double Likelihood::loglike_pull_[nWidths_][1000] = {{0.}};
 double Likelihood::loglike_pull_single_[nWidths_] = {0.};
@@ -39,7 +34,7 @@ const double Likelihood::calCurveParUnc_[2] = {0.03277, 0.0131771};
 
 double Likelihood::nEventsCMFractions_[nWidths_][25] = {{0.}};
 double Likelihood::nEventsWMFractions_[nWidths_][25] = {{0.}};
-double Likelihood::nEventsNMFractions_[nWidths_][25] = {{0.}};
+double Likelihood::nEventsUMFractions_[nWidths_][25] = {{0.}};
 
 
 int Likelihood::LocMinArray(int n, double* array)
@@ -95,8 +90,13 @@ void Likelihood::MakeTable(double* array, int n, double min, double max)
   }
 }
 
-Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose):
-verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calculateGoodEvtLL_(calculateGoodEvtLL), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_(), vecGoodLLValsFromFile_()
+Double_t Likelihood::DDparabola(Double_t *x, Double_t *par)
+{
+  return pow(x[0]-par[0], 2) + pow(x[1]-par[1], 2) + par[2];
+}
+
+Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
@@ -153,14 +153,9 @@ void Likelihood::ClearLikelihoods()
       loglike_data_[i][j] = 0.;
       loglike_per_evt_[i][j] = 0.;
     }
-    loglike_good_evts_[i] = 0.;
-    loglike_good_evts_data_[i] = 0.;
     loglike_CM_[i] = 0.;
-    loglike_CM_good_evts_[i] = 0.;
     loglike_temp_[i] = 0.;
-    loglike_temp_good_evts_[i] = 0.;
     loglike_gen_[i] = 0.;
-    loglike_gen_good_evts_[i] = 0.;
   }
 }
 
@@ -304,13 +299,13 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   double fracCats[nCats_] = {0.}, fracCatsTemp[nCats_-1] = {0.};
   this->GetFractions(fracCats, nCats_, datasetNames, includeDataset);
   this->GetFractions(fracCatsTemp, nCats_-1, datasetNames, includeDataset);
-  if (verbose_) std::cout << "   # CM: " << fracCats[0] << "*100%   # WM: " << fracCats[1] << "*100%   # NM: " << fracCats[2] << "*100%  " << std::endl;
+  if (verbose_) std::cout << "   # CM: " << fracCats[0] << "*100%   # WM: " << fracCats[1] << "*100%   # UM: " << fracCats[2] << "*100%  " << std::endl;
   
   /// Make output file
   fileTGraphs_ = new TFile((outputDirName_+tGraphFileName).c_str(), "RECREATE");
   fileTGraphs_->cd();
   
-  /// WM & NM distribution are independent of the width
+  /// WM & UM distribution are independent of the width
   for (int iCat = 1; iCat < nCats_; iCat++)
   {
     stringSuffix_[iCat] = "widthx1";
@@ -379,7 +374,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       if ( iCat == 0 )  // outputValues = CM
       {
         histoTotal_[stringSuffix_[0]] = (TH1D*) histoSm_[histoName_]->Clone(("TotalProbability_"+stringSuffix_[0]).c_str());
-        histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{NM}}{n_{tot}} * f_{NM}(x)");
+        histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{UM}}{n_{tot}} * f_{UM}(x)");
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
@@ -391,7 +386,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
         this->MakeGraph(0, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM_", false);
         WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0], 1);
       }
-      else  // outputValues = CM + WM + NM
+      else  // outputValues = CM + WM + UM
       {
         histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
         histoTotal_[stringSuffix_[0]]->Write();
@@ -508,7 +503,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   std::cout << "Likelihood::ConstructTGraphs: Creating output file " << dirNameLLTxt_+"TGraphs.root" << std::endl;
   fileTGraphs_->cd();
   
-  /// WM & NM distribution are independent of the width
+  /// WM & UM distribution are independent of the width
   for (int iCat = 1; iCat < nCats_; iCat++)
   {
     stringSuffix_[iCat] = "widthx1";
@@ -605,33 +600,6 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relat
         else loglike_data_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass];
       }
     }
-    
-    if (calculateGoodEvtLL_)
-    {
-      bool isGoodLL = false;
-      for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
-      {
-        if ( loglike_per_evt_[0][1] > loglike_per_evt_[iWidth][1] && loglike_per_evt_[iWidth][1] < loglike_per_evt_[nWidths_-1][1] )
-        {
-          isGoodLL = true;
-          break;
-        }
-      }
-      if (isGoodLL)
-      {
-//        nofGoodEvtsLL[d]++;
-        for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-        {
-          if (! isData) loglike_good_evts_[iWidth] += loglike_per_evt_[iWidth][1]*relativeSF*thisWidthSF_;
-          else loglike_good_evts_data_[iWidth] += loglike_per_evt_[iWidth][1];
-        }
-      }
-//       else
-//       {
-//         nofBadEvtsLL[d]++;
-//       }
-      
-    }
   }
   
   return vecLogLike_;
@@ -662,32 +630,6 @@ void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, doubl
       loglike_CM_per_evt_[iWidth] = graph_["CorrectMatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
       loglike_CM_[iWidth] += loglike_CM_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
-    
-    if (calculateGoodEvtLL_)
-    {
-      bool isGoodLL = false;
-      for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
-      {
-        if ( loglike_CM_per_evt_[0] > loglike_CM_per_evt_[iWidth] && loglike_CM_per_evt_[iWidth] < loglike_CM_per_evt_[nWidths_-1] )
-        {
-          isGoodLL = true;
-          break;
-        }
-      }
-      if (isGoodLL)
-      {
-//        nofGoodEvtsLL[d]++;
-        for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-        {
-          loglike_CM_good_evts_[iWidth] += loglike_CM_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
-        }
-      }
-//       else
-//       {
-//         nofBadEvtsLL[d]++;
-//       }
-      
-    }
   }
 }
 
@@ -716,32 +658,6 @@ void Likelihood::CalculateTempLikelihood(double redMass, double scaleFactor, dou
       loglike_temp_per_evt_[iWidth] = graph_["MatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
       loglike_temp_[iWidth] += loglike_temp_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
-    
-    if (calculateGoodEvtLL_)
-    {
-      bool isGoodLL = false;
-      for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
-      {
-        if ( loglike_temp_per_evt_[0] > loglike_temp_per_evt_[iWidth] && loglike_temp_per_evt_[iWidth] < loglike_temp_per_evt_[nWidths_-1] )
-        {
-          isGoodLL = true;
-          break;
-        }
-      }
-      if (isGoodLL)
-      {
-//        nofGoodEvtsLL[d]++;
-        for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-        {
-          loglike_temp_good_evts_[iWidth] += loglike_temp_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
-        }
-      }
-//       else
-//       {
-//         nofBadEvtsLL[d]++;
-//       }
-      
-    }
   }
 }
 
@@ -769,32 +685,6 @@ void Likelihood::CalculateGenLikelihood(double redMass, double hadTopMassForWidt
       
       loglike_gen_per_evt_[iWidth] = graph_["CorrectMatchLikelihood_widthx"+thisWidth_]->Eval(redMass);
       loglike_gen_[iWidth] += loglike_gen_per_evt_[iWidth]*thisWidthSF_;
-    }
-    
-    if (calculateGoodEvtLL_)
-    {
-      bool isGoodLL = false;
-      for (int iWidth = 1; iWidth < nWidths_-1; iWidth++)
-      {
-        if ( loglike_gen_per_evt_[0] > loglike_gen_per_evt_[iWidth] && loglike_gen_per_evt_[iWidth] < loglike_gen_per_evt_[nWidths_-1] )
-        {
-          isGoodLL = true;
-          break;
-        }
-      }
-      if (isGoodLL)
-      {
-//        nofGoodEvtsLL[d]++;
-        for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-        {
-          loglike_gen_good_evts_[iWidth] += loglike_gen_per_evt_[iWidth]*thisWidthSF_;
-        }
-      }
-//       else
-//       {
-//         nofBadEvtsLL[d]++;
-//       }
-      
     }
   }
 }
@@ -1106,7 +996,7 @@ void Likelihood::CalculatePull(double inputWidth)
   delete filePull;
 }
 
-void Likelihood::AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isNM)
+void Likelihood::AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isUM)
 {
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
@@ -1120,7 +1010,7 @@ void Likelihood::AddToFraction(int d, double scaleFactor, double hadTopMassForWi
     
     if      (isCM) nEventsCMFractions_[iWidth][d] += scaleFactor * thisWidthSF_;
     else if (isWM) nEventsWMFractions_[iWidth][d] += scaleFactor * thisWidthSF_;
-    else if (isNM) nEventsNMFractions_[iWidth][d] += scaleFactor * thisWidthSF_;
+    else if (isUM) nEventsUMFractions_[iWidth][d] += scaleFactor * thisWidthSF_;
   }
 }
 
@@ -1134,7 +1024,7 @@ void Likelihood::CalculateFractions(std::vector<std::string> datasetNames)
     {
       fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_widthx"+stringWidthArray_[iWidth]+".txt";
       txtOutputFractions_.open(fileName.c_str());
-      txtOutputFractions_ << nEventsCMFractions_[iWidth][d] << "   " << nEventsWMFractions_[iWidth][d] << "   " << nEventsNMFractions_[iWidth][d] << std::endl;
+      txtOutputFractions_ << nEventsCMFractions_[iWidth][d] << "   " << nEventsWMFractions_[iWidth][d] << "   " << nEventsUMFractions_[iWidth][d] << std::endl;
       txtOutputFractions_.close();
     }  // end datasets
   }  // end widths
@@ -1195,7 +1085,7 @@ void Likelihood::GetFractions(double *fractions, int nCats, std::string width, s
     if ( verbose_ && iCat == nCats-1 )
     {
       std::cout << "Width: " << width << "   # CM: " << 100.*fractions[0] << "%   # WM: " << 100.*fractions[1];
-      if ( nCats > 2 ) std::cout << "%   # NM: " << 100.*fractions[2];
+      if ( nCats > 2 ) std::cout << "%   # UM: " << 100.*fractions[2];
       std::cout << "%  " << std::endl;
     }
   }
@@ -1204,13 +1094,17 @@ void Likelihood::GetFractions(double *fractions, int nCats, std::string width, s
 void Likelihood::Make2DGraph(std::string name, bool makeNewFile)
 {
   TGraph2D *g = new TGraph2D;
+  TGraph2D *g2 = new TGraph2D;
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     for (int iMass = 0; iMass < nMasses_; iMass++)
     {
       g->SetPoint(g->GetN(), widthArray_[iWidth], massArray_[iMass], loglike_[iWidth][iMass]);
+      if ( widthArray_[iWidth] > 0.2 && widthArray_[iWidth] < 1.9 )
+        g2->SetPoint(g2->GetN(), widthArray_[iWidth], massArray_[iMass], loglike_[iWidth][iMass]);
     }
   }
+  
   
   if (makeNewFile)
   {
@@ -1242,6 +1136,11 @@ void Likelihood::Make2DGraph(std::string name, bool makeNewFile)
   c->Update();
   c->Write();
   c->SaveAs((dirNameLLTxt_+name+"_colz_zoom.png").c_str());
+  c->SetName((name+"_colz_hardzoom").c_str());
+  g2->Draw("colz");
+  c->Update();
+  c->Write();
+  c->SaveAs((dirNameLLTxt_+name+"_colz_hardzoom.png").c_str());
   
   if (makeNewFile)
   {
@@ -1379,7 +1278,6 @@ void Likelihood::ReadLLValuesFromFile(std::string inputFileName, std::string inp
   
   vecWidthFromFile_.clear();
   vecLLValsFromFile_.clear();
-  vecGoodLLValsFromFile_.clear();
   
   std::string line;
   std::string var = "";
@@ -1395,15 +1293,7 @@ void Likelihood::ReadLLValuesFromFile(std::string inputFileName, std::string inp
         vecWidthFromFile_.push_back(val);
       }
     }
-    if ( line.find("GoodLL") != std::string::npos )
-    {
-      iss >> var;
-      while ( iss >> val )
-      {
-        vecGoodLLValsFromFile_.push_back(val);
-      }
-    }
-    else if ( line.find("LL") != std::string::npos )
+    if ( line.find("LL") != std::string::npos )
     {
       iss >> var;
       while ( iss >> val )
@@ -1415,13 +1305,12 @@ void Likelihood::ReadLLValuesFromFile(std::string inputFileName, std::string inp
   
   fileIn_.close();
   
-  if ( vecWidthFromFile_.size() != vecLLValsFromFile_.size() || vecWidthFromFile_.size() != vecGoodLLValsFromFile_.size() )
+  if ( vecWidthFromFile_.size() != vecLLValsFromFile_.size() )
   {
     std::cerr << "Likelihood::ReadLLValuesFromFile : Input file " << inputFileName << " cannot be read:" << std::endl;
     std::cerr << "                                   # widths != # likelihood values !!" << std::endl;
     vecWidthFromFile_.clear();
     vecLLValsFromFile_.clear();
-    vecGoodLLValsFromFile_.clear();
   }
 }
 
@@ -1493,14 +1382,6 @@ void Likelihood::PrintLikelihoodOutput(std::string llFileName)
   {
     txtOutputLogLike << std::setw(12) << std::right << loglike_[iWidth][1] << "  ";
   }
-  if (calculateGoodEvtLL_)
-  {
-    txtOutputLogLike << std::endl << "GoodLLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-    {
-      txtOutputLogLike << std::setw(12) << std::right << loglike_good_evts_[iWidth] << "  ";
-    }
-  }
   txtOutputLogLike << std::endl;
   txtOutputLogLike.close();
 }
@@ -1517,14 +1398,6 @@ void Likelihood::PrintLikelihoodOutputData(std::string llFileName)
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     txtOutputLogLike << std::setw(17) << std::right << std::setprecision(15) << loglike_data_[iWidth] << "  ";
-  }
-  if (calculateGoodEvtLL_)
-  {
-    txtOutputLogLike << std::endl << "GoodLLikelihood: ";
-    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-    {
-      txtOutputLogLike << std::setw(17) << std::right << std::setprecision(15) << loglike_good_evts_data_[iWidth] << "  ";
-    }
   }
   txtOutputLogLike << std::endl;
   txtOutputLogLike.close();
@@ -1547,23 +1420,6 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
 //     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
 //   }
 //   txtOutputLogLike << "};" << std::endl;
-  if (calculateGoodEvtLL_)
-  {
-    txtOutputLogLike << "likelihood values (only good MC events) : {";
-    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-    {
-      txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_good_evts_[iWidth];
-      if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-    }
-  }
-  txtOutputLogLike << "};" << std::endl;
-//   txtOutputLogLike << "likelihood values (only good data events) : {";
-//   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-//   {
-//     txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_good_evts_data_[iWidth];
-//     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-//   }
-//   txtOutputLogLike << "};" << std::endl;
   if (calledCMLLCalculation_)
   {
     txtOutputLogLike << "CM likelihood values : {";
@@ -1571,16 +1427,6 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
     {
       txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_CM_[iWidth];
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-    }
-    txtOutputLogLike << "};";
-    if (calculateGoodEvtLL_)
-    {
-      txtOutputLogLike << std::endl << "CM likelihood values (only good events) : {";
-      for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-      {
-        txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_CM_good_evts_[iWidth];
-        if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-      }
     }
     txtOutputLogLike << "};";
   }
@@ -1597,15 +1443,6 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
     {
       txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_gen_[iWidth];
       if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-    }
-    if (calculateGoodEvtLL_)
-    {
-      txtOutputLogLike << "};" << std::endl << "PARTON likelihood values (only good matched events) : {";
-      for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-      {
-        txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_gen_good_evts_[iWidth];
-        if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
-      }
     }
     txtOutputLogLike << "};";
   }

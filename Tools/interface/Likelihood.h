@@ -37,7 +37,7 @@
 
 class Likelihood{
   public:
-    Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool calculateGoodEvtLL, bool verbose);
+    Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose);
     ~Likelihood();
     void SetMass(double mass);
     void ClearLikelihoods();
@@ -69,7 +69,7 @@ class Likelihood{
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Calculate fractions
-    void AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isNM);
+    void AddToFraction(int d, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, bool isTTbar, bool isCM, bool isWM, bool isUM);
     void CalculateFractions(std::vector<std::string> datasetNames);
     /// Make 2D likelihood plot
     void Make2DGraph(std::string name, bool makeNewFile);
@@ -112,17 +112,12 @@ class Likelihood{
     static double loglike_[][3];
     static double loglike_data_[][3];
     static double loglike_per_evt_[][3];
-    static double loglike_good_evts_[];
-    static double loglike_good_evts_data_[];
     static double loglike_CM_[];
     static double loglike_CM_per_evt_[];
-    static double loglike_CM_good_evts_[];
     static double loglike_temp_[];
     static double loglike_temp_per_evt_[];
-    static double loglike_temp_good_evts_[];
     static double loglike_gen_[];
     static double loglike_gen_per_evt_[];
-    static double loglike_gen_good_evts_[];
     
     static double loglike_pull_[][1000];
     static double loglike_pull_single_[];
@@ -149,7 +144,6 @@ class Likelihood{
     std::map<std::string,std::vector<double>> vecBinCentres_;
     std::map<std::string,std::vector<double>> vecBinContents_;
     
-    bool calculateGoodEvtLL_;
     bool calledLLCalculation_;
     bool calledCMLLCalculation_;
     bool calledTempLLCalculation_;
@@ -158,7 +152,6 @@ class Likelihood{
     std::ifstream fileIn_;
     std::vector<double> vecWidthFromFile_;
     std::vector<double> vecLLValsFromFile_;
-    std::vector<double> vecGoodLLValsFromFile_;
     std::pair<double,double> output_;
     
     static const double calCurvePar_[2];
@@ -167,13 +160,14 @@ class Likelihood{
     int nPsExp_;
     static double nEventsCMFractions_[][25];
     static double nEventsWMFractions_[][25];
-    static double nEventsNMFractions_[][25];
+    static double nEventsUMFractions_[][25];
     
     int LocMinArray(int n, double* array);
     void ClearArray(int size, int* array);
     void ClearArray(int size, double* array);
     void ClearArray2D(int size, double (*array)[3]);
     void MakeTable(double* array, int n, double min, double max);
+    Double_t DDparabola(Double_t *x, Double_t *par);
     void GetHistogram(int iCat);
     void MakeGraph(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
     void MakeGraphSmooth(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
