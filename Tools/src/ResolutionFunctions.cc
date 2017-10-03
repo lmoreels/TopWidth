@@ -612,8 +612,8 @@ void ResolutionFunctions::makeFit()
     
     /// Create one histogram for each function parameter -> 6 histograms for each 2D plot
     TH1D **hlist = new TH1D*[nPar];
-    std::string parnames[nPar]={"a1","a2","a3","a4","a5","a6"};
-    //std::string parnames[nPar]={"a1","a2","a3","a4","a5"};
+    std::string parnames[6]={"a1","a2","a3","a4","a5","a6"};
+    //std::string parnames[5]={"a1","a2","a3","a4","a5"};
     std::string name=""; std::string title="";
     //const TArrayD *bins = histo->GetXaxis()->GetXbins();
     for (int iPar = 0; iPar < nPar; iPar++)
