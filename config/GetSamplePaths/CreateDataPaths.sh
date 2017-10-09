@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # CHECK IF THESE ARE CORRECT AND ADAPT WHEN NECESSARY
-CMSSWversion="CMSSW_80X_v8"
-globalTag="TTP-CMSSW_80X_v8--GT-80X_mcRun2_asymptotic_2016_TrancheIV_v8"
+CMSSWversion="CMSSW_80X_v12"
+globalTagMC="TTP-CMSSW_80X_v12--GT-80X_mcRun2_asymptotic_2016_TrancheIV_v8"
+globalTagData="TTP-CMSSW_80X_v12--GT-80X_dataRun2_2016SeptRepro_v7"
 
+globalTag=$globalTagMC
 
 #check if input file is declared
 if [ $# -eq 0 ]
@@ -22,6 +24,10 @@ fi
 
 if [ $# -eq 3 ]
 then CMSSWversion=$2; globalTag=$3
+fi
+
+if [[ $inputFile == *Data* ]]
+then globalTag=$globalTagData
 fi
 
 #strip extension off filename to make output file
