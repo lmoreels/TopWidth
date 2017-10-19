@@ -1,5 +1,5 @@
-#include "TStyle.h"
-#include "TPaveText.h"
+#include <TStyle.h>
+#include <TPaveText.h>
 
 #include <cmath>
 #include <iostream>
@@ -9,8 +9,8 @@
 #include <sys/stat.h>
 #include <string>
 #include <array>
-#include "TRandom3.h"
-#include "TNtuple.h"
+#include <TRandom3.h>
+#include <TNtuple.h>
 #include <TFile.h>
 #include <TLeaf.h>
 #include <TGraph.h>
@@ -52,14 +52,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("171015","170920");
   }
   else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
   else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170522");
+    return pair<string,string>("170712","170920");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -73,6 +73,7 @@ string pathOutput = "";
 
 int nofHardSelected = 0;
 int nofMETCleaned = 0;
+int nofAfterDRmincut = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
@@ -87,6 +88,13 @@ int nofNotCorrectlyMatchedAKFNoCut = 0;
 int nofUnmatchedAKFNoCut = 0;
 
 int corrMatchHadrB = 0;
+
+int nofCMnJets[4] = {0};
+int nofWMnJets[4] = {0};
+int nofUMnJets[4] = {0};
+int nofCMnJetsAKF[4] = {0};
+int nofWMnJetsAKF[4] = {0};
+int nofUMnJetsAKF[4] = {0};
 
 /// Lumi per data era
 double lumi_runBCDEF = 19.67550334113;  // 1/fb
@@ -163,14 +171,14 @@ Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
 Bool_t          hasErasedBadOrCloneMuon;
-Bool_t          filterHBHENoise;
-Bool_t          filterHBHEIso;
-Bool_t          filterCSCTightHalo;
-Bool_t          filterEcalDeadCell;
-Bool_t          filterEEBadSc;
-Bool_t          filterBadChCand;
-Bool_t          filterBadMuon;
-Bool_t          passedMETFilter;
+// Bool_t          filterHBHENoise;
+// Bool_t          filterHBHEIso;
+// Bool_t          filterCSCTightHalo;
+// Bool_t          filterEcalDeadCell;
+// Bool_t          filterEEBadSc;
+// Bool_t          filterBadChCand;
+// Bool_t          filterBadMuon;
+Bool_t          passedMETFilter = true;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
 Double_t        muon_pt[1];   //[nMuons]
@@ -224,11 +232,11 @@ Bool_t          mc_isPromptFinalState[200];   //[nMCParticles]
 Bool_t          mc_isHardProcess[200];   //[nMCParticles]
 Bool_t          mc_fromHardProcessFinalState[200];   //[nMCParticles]
 Bool_t          hasGenTop;
-Bool_t          hasGenTopWithStatus22;
-Bool_t          hasGenTopWithStatus62;
+// Bool_t          hasGenTopWithStatus22;
+// Bool_t          hasGenTopWithStatus62;
 Bool_t          hasGenAntiTop;
-Bool_t          hasGenAntiTopWithStatus22;
-Bool_t          hasGenAntiTopWithStatus62;
+// Bool_t          hasGenAntiTopWithStatus22;
+// Bool_t          hasGenAntiTopWithStatus62;
 Double_t        weight1001;
 Double_t        weight1002;
 Double_t        weight1003;
@@ -236,6 +244,12 @@ Double_t        weight1004;
 Double_t        weight1005;
 Double_t        weight1007;
 Double_t        weight1009;
+// Double_t        upFragWeight;
+// Double_t        centralFragWeight;
+// Double_t        downFragWeight;
+// Double_t        petersonFragWeight;
+// Double_t        semilepbrUp;
+// Double_t        semilepbrDown;
 Double_t        btagSF;
 Double_t        btagSF_up;
 Double_t        btagSF_down;
@@ -273,20 +287,20 @@ Double_t        cutFlow2Weighted[10];
 Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
-Long64_t        nofEventsWithGenTop;
-Long64_t        nofEventsWithGenTopWithStatus22or62;
-Long64_t        nofEventsWithGenAntiTop;
-Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
-Long64_t        nofTTEventsWithoutBothGenTops;
+// Long64_t        nofEventsWithGenTop;
+// Long64_t        nofEventsWithGenTopWithStatus22or62;
+// Long64_t        nofEventsWithGenAntiTop;
+// Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
+// Long64_t        nofTTEventsWithoutBothGenTops;
 Long64_t        nofTTEventsWithoutAGenTop;
-Long64_t        nofTTEventsWithoutGenTop;
-Long64_t        nofTTEventsWithoutGenAntiTop;
-Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
-Long64_t        nofTTEventsWithoutGenTopWithStatus22;
-Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
-Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
-Long64_t        nofTTEventsWithoutGenTopWithStatus62;
-Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
+// Long64_t        nofTTEventsWithoutGenTop;
+// Long64_t        nofTTEventsWithoutGenAntiTop;
+// Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
+// Long64_t        nofTTEventsWithoutGenTopWithStatus22;
+// Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
+// Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
+// Long64_t        nofTTEventsWithoutGenTopWithStatus62;
+// Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
 Double_t        sumWeight1001;
 Double_t        sumWeight1002;
 Double_t        sumWeight1003;
@@ -306,14 +320,14 @@ TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
 TBranch        *b_hasErasedBadOrCloneMuon;   //!
-TBranch        *b_filterHBHENoise;   //!
-TBranch        *b_filterHBHEIso;   //!
-TBranch        *b_filterCSCTightHalo;   //!
-TBranch        *b_filterEcalDeadCell;   //!
-TBranch        *b_filterEEBadSc;   //!
-TBranch        *b_filterBadChCand;   //!
-TBranch        *b_filterBadMuon;   //!
-TBranch        *b_passedMETFilter;   //!
+// TBranch        *b_filterHBHENoise;   //!
+// TBranch        *b_filterHBHEIso;   //!
+// TBranch        *b_filterCSCTightHalo;   //!
+// TBranch        *b_filterEcalDeadCell;   //!
+// TBranch        *b_filterEEBadSc;   //!
+// TBranch        *b_filterBadChCand;   //!
+// TBranch        *b_filterBadMuon;   //!
+// TBranch        *b_passedMETFilter;   //!
 TBranch        *b_nMuons;   //!
 TBranch        *b_muon_charge;   //!
 TBranch        *b_muon_pt;   //!
@@ -367,11 +381,11 @@ TBranch        *b_mc_isPromptFinalState;   //!
 TBranch        *b_mc_isHardProcess;   //!
 TBranch        *b_mc_fromHardProcessFinalState;   //!
 TBranch        *b_hasGenTop;   //!
-TBranch        *b_hasGenTopWithStatus22;   //!
-TBranch        *b_hasGenTopWithStatus62;   //!
+// TBranch        *b_hasGenTopWithStatus22;   //!
+// TBranch        *b_hasGenTopWithStatus62;   //!
 TBranch        *b_hasGenAntiTop;   //!
-TBranch        *b_hasGenAntiTopWithStatus22;   //!
-TBranch        *b_hasGenAntiTopWithStatus62;   //!
+// TBranch        *b_hasGenAntiTopWithStatus22;   //!
+// TBranch        *b_hasGenAntiTopWithStatus62;   //!
 TBranch        *b_weight1001;   //!
 TBranch        *b_weight1002;   //!
 TBranch        *b_weight1003;   //!
@@ -416,20 +430,20 @@ TBranch        *b_cutFlow2Weighted;   //!
 TBranch        *b_appliedJER;   //!
 TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
-TBranch        *b_nofEventsWithGenTop;   //!
-TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
-TBranch        *b_nofEventsWithGenAntiTop;   //!
-TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
+// TBranch        *b_nofEventsWithGenTop;   //!
+// TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
+// TBranch        *b_nofEventsWithGenAntiTop;   //!
+// TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
+// TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
 TBranch        *b_nofTTEventsWithoutAGenTop;   //!
-TBranch        *b_nofTTEventsWithoutGenTop;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutGenTopWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
-TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
+// TBranch        *b_nofTTEventsWithoutGenTop;   //!
+// TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
+// TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
+// TBranch        *b_nofTTEventsWithoutGenTopWithStatus22;   //!
+// TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
+// TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
+// TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
+// TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 TBranch        *b_sumWeight1001;   //!
 TBranch        *b_sumWeight1002;   //!
 TBranch        *b_sumWeight1003;   //!
@@ -452,8 +466,8 @@ int labelsReco[4];
 double massHadTopQ, massLepTopQ;
 
 string catSuffix = "";
-string catSuffixList[] = {"_CM", "_WM", "_NM"};
-bool isCM, isWM, isNM;
+string catSuffixList[] = {"_CM", "_WM", "_UM"};
+bool isCM, isWM, isUM;
 
 
 /// Define TLVs
@@ -507,6 +521,7 @@ double M3, Ht, min_Mlb, dRLepB;
 double M3_aKF, Ht_aKF;
 double reco_W_mass_bKF, reco_top_mass_bKF, reco_top_pt_bKF, reco_mlb_bKF, reco_dRLepB_lep_bKF, reco_dRLepB_had_bKF, reco_ttbar_mass_bKF;
 double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_pt_aKF, reco_mlb_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_ttbar_mass_aKF;
+double tempDR;
 
 double matched_W_mass_q, matched_top_mass_q;
 double matched_W_mass_j, matched_top_mass_j, matched_top_mass_j_akF;
@@ -600,9 +615,9 @@ int main(int argc, char* argv[])
   
   EventReweighting *rew = new EventReweighting(false);  // no correction for number of events
   ResolutionFunctions* rf = new ResolutionFunctions(false, true);
-  KinFitter *kf01 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
-  KinFitter *kf02 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
-  KinFitter *kf12 = new KinFitter("PlotsForResolutionFunctions_testFit_170608_S.root", addWMassKF, addEqMassKF);
+  KinFitter *kf01 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
+//  KinFitter *kf02 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
+//  KinFitter *kf12 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
   
   
   if (makePlots)
@@ -618,6 +633,7 @@ int main(int argc, char* argv[])
   
   string dataSetName;
   int nEntries;
+  bool skipEvent = false;
   
   /// Load original Ntuple
   cout << "  - Loading original Ntuples..." << endl;
@@ -671,10 +687,28 @@ int main(int argc, char* argv[])
     }
     
     if ( selectedJets.size() > 4 ) continue;
+    //if ( selectedJets.size() > 5 ) continue;
     nofHardSelected++;
     
     if (! passedMETFilter) continue;
     nofMETCleaned++;
+    
+    skipEvent = false;
+    for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+    {
+      for (int jJet = iJet+1; jJet < selectedJets.size(); jJet++)
+      {
+        tempDR = ROOT::Math::VectorUtil::DeltaR(selectedJets[iJet], selectedJets[jJet]);
+        if ( tempDR < 0.6 )
+        {
+          skipEvent = true;
+          break;
+        }
+      }
+      if (skipEvent) break;
+    }
+    if (skipEvent) continue;
+    nofAfterDRmincut++;
     
     for (int iJet = 0; iJet < selectedJets.size(); iJet++)
     {
@@ -771,7 +805,7 @@ int main(int argc, char* argv[])
       }
       
       /// Partons/gluons
-      if ( abs(mc_pdgId[i]) < 6 || abs(mc_pdgId[i]) == 21 )  //light/b quarks, 6 should stay hardcoded, OR gluon
+      if ( abs(mc_pdgId[i]) < 6 /*|| abs(mc_pdgId[i]) == 21*/ )  //light/b quarks, 6 should stay hardcoded, OR gluon
       {
         partons.push_back(mcParticles[i]);
         partonId.push_back(i);  /// partons[j] = mcParticles[partonId[j]]
@@ -862,7 +896,7 @@ int main(int argc, char* argv[])
       }
     }
     
-    if ( labelsReco[3] == -9999 ) continue;
+//    if ( labelsReco[3] == -9999 ) continue;
     
     if ( labelsReco[3] == bJetId[labelB1] ) labelsReco[2] = bJetId[labelB2];
     else if ( labelsReco[3] == bJetId[labelB2] ) labelsReco[2] = bJetId[labelB1];
@@ -874,39 +908,55 @@ int main(int argc, char* argv[])
       
       if ( labelsReco[0] == -9999 ) labelsReco[0] = ijet;
       else if ( labelsReco[1] == -9999 ) labelsReco[1] = ijet;
-      else cerr << endl << "Seems like there are too many jets..." << endl;
+//      else cerr << endl << "Seems like there are too many jets..." << endl;
     }
     
-    if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
+//    if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
     
-//     for (int ijet = 0; ijet < selectedJets.size(); ijet++)
+//     if ( selectedJets.size() > 4)
 //     {
-//       for (int jjet = ijet; jjet < selectedJets.size(); jjet++)
+//       for (int ijet = 0; ijet < selectedJets.size(); ijet++)
 //       {
-//         for (int kjet = 0; kjet < selectedJets.size(); kjet++)
+//         for (int jjet = ijet; jjet < selectedJets.size(); jjet++)
 //         {
-//           if ( kjet == ijet || kjet == jjet ) continue;
-//           if ( jet_bdiscr[kjet] < CSVv2Medium ) continue;
-//           
-//           for (int ljet = 0; ljet < selectedJets.size(); ljet++)
+//           for (int kjet = 0; kjet < selectedJets.size(); kjet++)
 //           {
-//             if ( ljet == ijet || ljet == jjet || ljet == kjet ) continue;
-//             if ( jet_bdiscr[ljet] < CSVv2Medium ) continue;
-//             
-//             deltaR = ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[jjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[kjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[jjet], selectedJets[kjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[ljet], selectedLepton[0]);
-//             
-//             if (deltaR < minDeltaR)
+//             if ( kjet == ijet || kjet == jjet ) continue;
+//             //if ( jet_bdiscr[kjet] < CSVv2Medium ) continue;
+// 
+//             for (int ljet = 0; ljet < selectedJets.size(); ljet++)
 //             {
-//               minDeltaR = deltaR;
-//               labelsReco[0] = ijet;
-//               labelsReco[1] = jjet;
-//               labelsReco[2] = kjet;
-//               labelsReco[3] = ljet;
+//               if ( ljet == ijet || ljet == jjet || ljet == kjet ) continue;
+//               //if ( jet_bdiscr[ljet] < CSVv2Medium ) continue;
+// 
+//               deltaR = ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[jjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[ijet], selectedJets[kjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[jjet], selectedJets[kjet]) + ROOT::Math::VectorUtil::DeltaR(selectedJets[ljet], selectedLepton[0]);
+// 
+//               if (deltaR < minDeltaR)
+//               {
+//                 minDeltaR = deltaR;
+//                 labelsReco[0] = ijet;
+//                 labelsReco[1] = jjet;
+//                 labelsReco[2] = kjet;
+//                 labelsReco[3] = ljet;
+//               }
 //             }
 //           }
 //         }
 //       }
 //     }
+    
+    if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 || labelsReco[3] == -9999 ) continue;
+    
+    /// Fill variables before performing kinFit
+    reco_W_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
+    reco_top_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
+    reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
+    reco_mlb_bKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
+    reco_dRLepB_lep_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
+    reco_dRLepB_had_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
+    reco_ttbar_mass_bKF = reco_mlb_bKF + reco_top_mass_bKF;
+    
+    //if ( fabs(reco_top_mass_bKF - reco_mlb_bKF) < 20 ) continue;
     
     
     
@@ -929,37 +979,39 @@ int main(int argc, char* argv[])
         isCM = true;
         nofCorrectlyMatched++;
         if ( labelsReco[2] == MCPermutation[2].first ) corrMatchHadrB++;
+        if ( selectedJets.size() == 4 ) nofCMnJets[0]++;
+        else if ( selectedJets.size() == 5 ) nofCMnJets[1]++;
+        else if ( selectedJets.size() == 6 ) nofCMnJets[2]++;
+        else nofCMnJets[3]++;
       }
       else  // wrong permutation
       {
         isWM = true;
         nofNotCorrectlyMatched++;
+        if ( selectedJets.size() == 4 ) nofWMnJets[0]++;
+        else if ( selectedJets.size() == 5 ) nofWMnJets[1]++;
+        else if ( selectedJets.size() == 6 ) nofWMnJets[2]++;
+        else nofWMnJets[3]++;
       }
     }  // end hadrTopMatch
     else  // no match
     {
-      isNM = true;
+      isUM = true;
       nofUnmatched++;
+      if ( selectedJets.size() == 4 ) nofUMnJets[0]++;
+      else if ( selectedJets.size() == 5 ) nofUMnJets[1]++;
+      else if ( selectedJets.size() == 6 ) nofUMnJets[2]++;
+      else nofUMnJets[3]++;
     }
     
     
-    if ( (! isCM && ! isWM && ! isNM) || (isCM && isWM) || (isCM && isNM) || (isWM && isNM) )
-      cerr << "Something wrong with trigger logic CM/WM/NM !! " << endl;
+    if ( (! isCM && ! isWM && ! isUM) || (isCM && isWM) || (isCM && isUM) || (isWM && isUM) )
+      cerr << "Something wrong with trigger logic CM/WM/UM !! " << endl;
     
     
     if (isCM) catSuffix = catSuffixList[0];
     else if (isWM) catSuffix = catSuffixList[1];
-    else if (isNM) catSuffix = catSuffixList[2];
-    
-    
-    /// Fill variables before performing kinFit
-    reco_W_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]]).M();
-    reco_top_mass_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).M();
-    reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
-    reco_mlb_bKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
-    reco_dRLepB_lep_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
-    reco_dRLepB_had_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
-    reco_ttbar_mass_bKF = reco_mlb_bKF + reco_top_mass_bKF;
+    else if (isUM) catSuffix = catSuffixList[2];
     
     
     
@@ -973,51 +1025,51 @@ int main(int argc, char* argv[])
        kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
        else if (addWMassKF)*/
       kFitter01 = kf01->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
-      kFitter02 = kf02->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[2]], kFitVerbosity);
-      kFitter12 = kf12->doFit(selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], kFitVerbosity);
+//       kFitter02 = kf02->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[2]], kFitVerbosity);
+//       kFitter12 = kf12->doFit(selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], kFitVerbosity);
       
-      if ( kFitter01->getStatus() != 0 && kFitter02->getStatus() != 0 && kFitter12->getStatus() != 0 )  // did not converge
+      if ( kFitter01->getStatus() != 0 /*&& kFitter02->getStatus() != 0 && kFitter12->getStatus() != 0 */)  // did not converge
       {
         if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
         continue;
       }
       
       kFitChi2_01 = kFitter01->getS();
-      kFitChi2_02 = kFitter02->getS();
-      kFitChi2_12 = kFitter12->getS();
-      min01 = false; min02 = false; min12 = false;
-      if ( kFitter01->getStatus() == 0 && kFitChi2_01 < kFitChi2_min )
-      {
-        min01 = true;
-        kFitChi2_min = kFitChi2_01;
-        for (int i = 0; i < 3; i++) labelsKF[i] = labelsReco[i];
-      }
-      if ( kFitter02->getStatus() == 0 && kFitChi2_02 < kFitChi2_min )
-      {
-        min01 = false; min02 = true;
-        kFitChi2_min = kFitChi2_02;
-        labelsKF[0] = labelsReco[0];
-        labelsKF[1] = labelsReco[2];
-        labelsKF[2] = labelsReco[1];
-      }
-      if ( kFitter12->getStatus() == 0 && kFitChi2_12 < kFitChi2_min )
-      {
-        min01 = false; min02 = false; min12 = true;
-        kFitChi2_min = kFitChi2_12;
-        labelsKF[0] = labelsReco[1];
-        labelsKF[1] = labelsReco[2];
-        labelsKF[2] = labelsReco[0];
-      }
+//       kFitChi2_02 = kFitter02->getS();
+//       kFitChi2_12 = kFitter12->getS();
+//       min01 = false; min02 = false; min12 = false;
+//       if ( kFitter01->getStatus() == 0 && kFitChi2_01 < kFitChi2_min )
+//       {
+//         min01 = true;
+         kFitChi2_min = kFitChi2_01;
+//         for (int i = 0; i < 3; i++) labelsKF[i] = labelsReco[i];
+//       }
+//       if ( kFitter02->getStatus() == 0 && kFitChi2_02 < kFitChi2_min )
+//       {
+//         min01 = false; min02 = true;
+//         kFitChi2_min = kFitChi2_02;
+//         labelsKF[0] = labelsReco[0];
+//         labelsKF[1] = labelsReco[2];
+//         labelsKF[2] = labelsReco[1];
+//       }
+//       if ( kFitter12->getStatus() == 0 && kFitChi2_12 < kFitChi2_min )
+//       {
+//         min01 = false; min02 = false; min12 = true;
+//         kFitChi2_min = kFitChi2_12;
+//         labelsKF[0] = labelsReco[1];
+//         labelsKF[1] = labelsReco[2];
+//         labelsKF[2] = labelsReco[0];
+//       }
       
       /// Put correct order back into labelsReco
-      for (int i = 0; i < 3; i++) labelsReco[i] = labelsKF[i];
+      //for (int i = 0; i < 3; i++) labelsReco[i] = labelsKF[i];
       if (test && verbose > 4) cout << "Fit converged: Chi2 = " << kFitChi2_min << endl;
       
       doneKinFit = true;
       
       if (isCM) nofCorrectlyMatchedAKFNoCut++;
       else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
-      else if (isNM) nofUnmatchedAKFNoCut++;
+      else if (isUM) nofUnmatchedAKFNoCut++;
       
       if ( applyKinFitCut && kFitChi2_min > kinFitCutValue ) continue;
       nofAcceptedKFit++;
@@ -1025,12 +1077,13 @@ int main(int argc, char* argv[])
       if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
       if (isCM) nofCorrectlyMatchedAKF++;
       else if (isWM) nofNotCorrectlyMatchedAKF++;
-      else if (isNM) nofUnmatchedAKF++;
+      else if (isUM) nofUnmatchedAKF++;
       
       selectedJetsKFcorrected.clear();
-      if (min12) selectedJetsKFcorrected = kf12->getCorrectedJets();
-      else if (min02) selectedJetsKFcorrected = kf02->getCorrectedJets();
-      else selectedJetsKFcorrected = kf01->getCorrectedJets();
+//       if (min12) selectedJetsKFcorrected = kf12->getCorrectedJets();
+//       else if (min02) selectedJetsKFcorrected = kf02->getCorrectedJets();
+//       else 
+        selectedJetsKFcorrected = kf01->getCorrectedJets();
       
     }
     
@@ -1060,10 +1113,32 @@ int main(int argc, char* argv[])
     reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
     reco_ttbar_mass_aKF = reco_mlb_aKF + reco_top_mass_aKF;
     
+    if ( fabs(reco_top_mass_aKF - reco_mlb_aKF) < 25 ) continue;
+    
     if ( reco_top_mass_aKF < 0. )
       PrintKFDebug(ievt);
     
-    
+    if (isCM)
+    {
+      if ( selectedJets.size() == 4 ) nofCMnJetsAKF[0]++;
+      else if ( selectedJets.size() == 5 ) nofCMnJetsAKF[1]++;
+      else if ( selectedJets.size() == 6 ) nofCMnJetsAKF[2]++;
+      else nofCMnJetsAKF[3]++;
+    }
+    else if (isWM)
+    {
+      if ( selectedJets.size() == 4 ) nofWMnJetsAKF[0]++;
+      else if ( selectedJets.size() == 5 ) nofWMnJetsAKF[1]++;
+      else if ( selectedJets.size() == 6 ) nofWMnJetsAKF[2]++;
+      else nofWMnJetsAKF[3]++;
+    }
+    else if (isUM)
+    {
+      if ( selectedJets.size() == 4 ) nofUMnJetsAKF[0]++;
+      else if ( selectedJets.size() == 5 ) nofUMnJetsAKF[1]++;
+      else if ( selectedJets.size() == 6 ) nofUMnJetsAKF[2]++;
+      else nofUMnJetsAKF[3]++;
+    }
     
   }  // end loop events
   
@@ -1071,7 +1146,8 @@ int main(int argc, char* argv[])
   cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
   cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
   cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
-  if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofMETCleaned) << "%)" << endl;
+  cout << "Number of events after min dR cut: " << nofAfterDRmincut << " (" << 100*((float)nofAfterDRmincut/(float)nofMETCleaned) << "%)" << endl;
+  if (doKinFit) cout << "Number of clean events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofAfterDRmincut) << "%)" << endl;
   
   if (nofHadrMatchedEvents > 0 )
   {
@@ -1107,6 +1183,26 @@ int main(int argc, char* argv[])
     }
     else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched." << endl;
   }
+  
+  cout << endl;
+  cout << " 4 jets:   CM " << setw(6) << right << nofCMnJets[0] << " (" << 100*((float)nofCMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)     WM " << setw(6) << right << nofWMnJets[0] << " (" << 100*((float)nofWMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)     UM " << setw(6) << right << nofUMnJets[0] << " (" << 100*((float)nofUMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)" << endl;
+  cout << " 5 jets:   CM " << setw(6) << right << nofCMnJets[1] << " (" << 100*((float)nofCMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     WM " << setw(6) << right << nofWMnJets[1] << " (" << 100*((float)nofWMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     UM " << setw(6) << right << nofUMnJets[1] << " (" << 100*((float)nofUMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)" << endl;
+  cout << " 6 jets:   CM " << setw(6) << right << nofCMnJets[2] << " (" << 100*((float)nofCMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     WM " << setw(6) << right << nofWMnJets[2] << " (" << 100*((float)nofWMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     UM " << setw(6) << right << nofUMnJets[2] << " (" << 100*((float)nofUMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)" << endl;
+  cout << ">6 jets:   CM " << setw(6) << right << nofCMnJets[3] << " (" << 100*((float)nofCMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     WM " << setw(6) << right << nofWMnJets[3] << " (" << 100*((float)nofWMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     UM " << setw(6) << right << nofUMnJets[3] << " (" << 100*((float)nofUMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)" << endl;
+  
+  int total = nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0] + nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1] + nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2] + nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3];
+  cout << "  total:   CM " << setw(6) << right << nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3] << " (" << 100*((float)(nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3] << " (" << 100*((float)(nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3] << " (" << 100*((float)(nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3])/(float)(total)) << "%)" << endl;
+  
+  
+  cout << endl;
+  cout << "After KF" << endl;
+  cout << " 4 jets:   CM " << setw(6) << right << nofCMnJetsAKF[0] << " (" << 100*((float)nofCMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[0] << " (" << 100*((float)nofWMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[0] << " (" << 100*((float)nofUMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)" << endl;
+  cout << " 5 jets:   CM " << setw(6) << right << nofCMnJetsAKF[1] << " (" << 100*((float)nofCMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[1] << " (" << 100*((float)nofWMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[1] << " (" << 100*((float)nofUMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)" << endl;
+  cout << " 6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[2] << " (" << 100*((float)nofCMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[2] << " (" << 100*((float)nofWMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[2] << " (" << 100*((float)nofUMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)" << endl;
+  cout << ">6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[3] << " (" << 100*((float)nofCMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[3] << " (" << 100*((float)nofWMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[3] << " (" << 100*((float)nofUMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)" << endl;
+  
+  total = nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0] + nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1] + nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2] + nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3];
+  cout << "  total:   CM " << setw(6) << right << nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3] << " (" << 100*((float)(nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3] << " (" << 100*((float)(nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3] << " (" << 100*((float)(nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3])/(float)(total)) << "%)" << endl;
   
   
   origNtuple->Close();
@@ -1270,20 +1366,20 @@ void GetMetaData(TTree* tree)
   tree->SetBranchAddress("appliedJES", &appliedJES, &b_appliedJES);
   tree->SetBranchAddress("appliedPU", &appliedPU, &b_appliedPU);
   
-  tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
-  tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
-  tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
-  tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+//   tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
+//   tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
+//   tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
+//   tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
   tree->SetBranchAddress("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, &b_nofTTEventsWithoutAGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
   tree->SetBranchAddress("sumWeight1001", &sumWeight1001, &b_sumWeight1001);
   tree->SetBranchAddress("sumWeight1002", &sumWeight1002, &b_sumWeight1002);
   tree->SetBranchAddress("sumWeight1003", &sumWeight1003, &b_sumWeight1003);
@@ -1309,14 +1405,14 @@ void InitTree(TTree* tree)
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
   tree->SetBranchAddress("hasErasedBadOrCloneMuon", &hasErasedBadOrCloneMuon, &b_hasErasedBadOrCloneMuon);
-  tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
-  tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
-  tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
-  tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
-  tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
-  tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
-  tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
-  tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
+//   tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
+//   tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
+//   tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
+//   tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
+//   tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
+//   tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
+//   tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
+//   tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -1371,11 +1467,11 @@ void InitTree(TTree* tree)
   tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
   tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
   tree->SetBranchAddress("hasGenTop", &hasGenTop, &b_hasGenTop);
-  tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
-  tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
+//   tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
+//   tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
   tree->SetBranchAddress("hasGenAntiTop", &hasGenAntiTop, &b_hasGenAntiTop);
-  tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
-  tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
+//   tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
+//   tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
   tree->SetBranchAddress("weight1001", &weight1001, &b_weight1001);
   tree->SetBranchAddress("weight1002", &weight1002, &b_weight1002);
   tree->SetBranchAddress("weight1003", &weight1003, &b_weight1003);
@@ -1560,20 +1656,20 @@ void ClearMetaData()
   appliedJER = 999;
   appliedJES = 999;
   appliedPU = 999;
-  nofEventsWithGenTop = 0;
-  nofEventsWithGenTopWithStatus22or62 = 0;
-  nofEventsWithGenAntiTop = 0;
-  nofEventsWithGenAntiTopWithStatus22or62 = 0;
-  nofTTEventsWithoutBothGenTops = 0;
+//   nofEventsWithGenTop = 0;
+//   nofEventsWithGenTopWithStatus22or62 = 0;
+//   nofEventsWithGenAntiTop = 0;
+//   nofEventsWithGenAntiTopWithStatus22or62 = 0;
+//   nofTTEventsWithoutBothGenTops = 0;
   nofTTEventsWithoutAGenTop = 0;
-  nofTTEventsWithoutGenTop = 0;
-  nofTTEventsWithoutGenAntiTop = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-  nofTTEventsWithoutGenTopWithStatus22 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-  nofTTEventsWithoutGenTopWithStatus62 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+//   nofTTEventsWithoutGenTop = 0;
+//   nofTTEventsWithoutGenAntiTop = 0;
+//   nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
+//   nofTTEventsWithoutGenTopWithStatus22 = 0;
+//   nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
+//   nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
+//   nofTTEventsWithoutGenTopWithStatus62 = 0;
+//   nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
   sumWeight1001 = 0;
   sumWeight1002 = 0;
   sumWeight1003 = 0;
@@ -1590,6 +1686,7 @@ void ClearMetaData()
   
   nofHardSelected = 0;
   nofMETCleaned = 0;
+  nofAfterDRmincut = 0;
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofHadrMatchedEventsAKF = 0;
@@ -1672,11 +1769,11 @@ void ClearLeaves()
     mc_M[i] = 0.;
   }
   hasGenTop = false;
-  hasGenTopWithStatus22 = false;
-  hasGenTopWithStatus62 = false;
+//   hasGenTopWithStatus22 = false;
+//   hasGenTopWithStatus62 = false;
   hasGenAntiTop = false;
-  hasGenAntiTopWithStatus22 = false;
-  hasGenAntiTopWithStatus62 = false;
+//   hasGenAntiTopWithStatus22 = false;
+//   hasGenAntiTopWithStatus62 = false;
   
   weight1001 = 1.;
   weight1002 = 1.;
@@ -1789,7 +1886,7 @@ void ClearVars()
   catSuffix = "";
   isCM = false;
   isWM = false;
-  isNM = false;
+  isUM = false;
   doneKinFit = false;
   kFitVerbosity = false;
   kFitChi2_01 = 99.;
