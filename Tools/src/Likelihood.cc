@@ -2,21 +2,17 @@
 
 const double Likelihood::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.6, 1.7, 1.8, 1.9, 2., 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3., 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4., 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5., 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6., 6.1, 6.2, 6.3, 6.4, 6.5};
 
-const double Likelihood::massArray_[] = {169.5, 172.5, 175.5};
-
 const std::string Likelihood::listCats_[] = {"CM", "WM", "UM"};
 
 const int Likelihood::nWidths_ = sizeof(widthArray_)/sizeof(widthArray_[0]);
 const int Likelihood::nCats_ = sizeof(listCats_)/sizeof(listCats_[0]);
-const int Likelihood::nMasses_ = 3;
 
 std::string Likelihood::stringWidthArray_[nWidths_] = {""};
-std::string Likelihood::stringMassArray_[nMasses_] = {""};
 std::string Likelihood::stringSuffix_[nCats_] = {""};
 
-double Likelihood::loglike_[nWidths_][3] = {0.};
-double Likelihood::loglike_data_[nWidths_][3] = {0.};
-double Likelihood::loglike_per_evt_[nWidths_][3] = {0.};
+double Likelihood::loglike_[nWidths_] = {0.};
+double Likelihood::loglike_data_[nWidths_] = {0.};
+double Likelihood::loglike_per_evt_[nWidths_] = {0.};
 double Likelihood::loglike_CM_[nWidths_] = {0.};
 double Likelihood::loglike_CM_per_evt_[nWidths_] = {0.};
 double Likelihood::loglike_temp_[nWidths_] = {0.};
@@ -90,11 +86,6 @@ void Likelihood::MakeTable(double* array, int n, double min, double max)
   }
 }
 
-Double_t Likelihood::DDparabola(Double_t *x, Double_t *par)
-{
-  return pow(x[0]-par[0], 2) + pow(x[1]-par[1], 2) + par[2];
-}
-
 Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
 verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
 {
@@ -103,18 +94,13 @@ verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), di
   
   rangeRedMass_ = tls_->DotReplace(minRedMass_)+"To"+tls_->DotReplace(maxRedMass_);
   dirNameNEvents_ += rangeRedMass_+"/";
-  thisMass_ = "172p5";
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     stringWidthArray_[iWidth] = tls_->DotReplace(widthArray_[iWidth]);
   }
-  for (int iMass = 0; iMass < nMasses_; iMass++)
-  {
-    stringMassArray_[iMass] = tls_->DotReplace(massArray_[iMass]);
-  }
   
-  ClearLikelihoods();
+  this->ClearLikelihoods();
   
   if (makeHistograms)
   {
@@ -138,21 +124,13 @@ Likelihood::~Likelihood()
   }
 }
 
-void Likelihood::SetMass(double mass)
-{
-  thisMass_ = tls_->DotReplace(mass);
-}
-
 void Likelihood::ClearLikelihoods()
 {
   for (int i = 0; i < nWidths_; i++)
   {
-    for (int j = 0; j < nMasses_; j++)
-    {
-      loglike_[i][j] = 0.;
-      loglike_data_[i][j] = 0.;
-      loglike_per_evt_[i][j] = 0.;
-    }
+    loglike_[i] = 0.;
+    loglike_data_[i] = 0.;
+    loglike_per_evt_[i] = 0.;
     loglike_CM_[i] = 0.;
     loglike_temp_[i] = 0.;
     loglike_gen_[i] = 0.;
@@ -178,9 +156,10 @@ void Likelihood::BookHistograms()
     {
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_20b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_20b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 20, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_45b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_45b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 45, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 60, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 75, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);
+//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 60, 0.5, 2.0);
+//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 75, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 60, 1.2, 3.2);  /// ONLY FOR NEW VAR !!!
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 100, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_450b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 450, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_900b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; M_{t}/<M_{t}>").c_str(), 900, 0.5, 2.0);
@@ -204,8 +183,8 @@ void Likelihood::FillHistograms(double redMass, double relativeSF, double hadTop
       
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_20b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_45b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
-      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_450b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
@@ -291,8 +270,8 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   /// Define vars for likelihood calculation
   const int nEval = 50;
   double evalPoints[nEval], outputValues[nEval], outputValuesTemp[nEval], likelihoodValues[nEval], likelihoodValuesTemp[nEval];
-  ClearArray(nEval, evalPoints);
-  MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
+  this->ClearArray(nEval, evalPoints);
+  this->MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
   
   /// Determine fractions based on number of events within reduced top mass range
   //  (is not dependent on number of bins, so the same for all widths)
@@ -315,8 +294,8 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   /// Make arrays as input for TGraph
   const int nPoints = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).size();
   double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
-  ClearArray(nPoints, binCentreArray);
-  for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
+  this->ClearArray(nPoints, binCentreArray);
+  for (int iCat = 0; iCat < nCats_; iCat++) this->ClearArray(nPoints, binContentArray[iCat]);
   
   for (int i = 0; i < nPoints; i++)
   {
@@ -329,7 +308,7 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
   
   for (int iCat = 1; iCat < nCats_; iCat++)
   {
-    WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
+    this->WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
     this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_", true);
     histoSm_[histoName_]->Scale(fracCats[iCat]);
   }
@@ -341,16 +320,16 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
     stringSuffix_[0] = "widthx"+stringWidthArray_[iWidth];
     this->GetHistogram(0);
     
-    ClearArray(nPoints, binContentArray[0]);
+    this->ClearArray(nPoints, binContentArray[0]);
     for (int i = 0; i < nPoints; i++)
       binContentArray[0][i] = (vecBinContents_[listCats_[0]+"_"+stringSuffix_[0]]).at(i);
     
-    WriteFuncOutput(nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_"+stringSuffix_[0]);
+    this->WriteFuncOutput(nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_"+stringSuffix_[0]);
     this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_", true);
     
     /// Make likelihood functions
-    ClearArray(nEval, outputValues);
-    ClearArray(nEval, outputValuesTemp);
+    this->ClearArray(nEval, outputValues);
+    this->ClearArray(nEval, outputValuesTemp);
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
       histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
@@ -358,9 +337,10 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       
       if ( iCat == 0 ) histoSm_[histoName_]->Scale(fracCats[iCat]);
       
-      ClearArray(nEval, likelihoodValues);
+      this->ClearArray(nEval, likelihoodValues);
       for (int i = 0; i < nEval; i++)
       {
+//        if ( iCat == 1 ) outputValues[i] += fracCats[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]); else  /// ONLY FOR NEW VAR !!!
         outputValues[i] += fracCats[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
         if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log(graph_[histoName_]->Eval(evalPoints[i]));
         else likelihoodValues[i] = -TMath::Log(outputValues[i]);
@@ -377,14 +357,14 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
         histoTotal_[stringSuffix_[0]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{UM}}{n_{tot}} * f_{UM}(x)");
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
-        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
+        this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0], 1);
       }
       else if ( iCat == 1 )  // outputValues = CM + WM
       {
         histoTotal_[stringSuffix_[0]]->Add(histoSm_[histoName_]);
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM_", false);
-        WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0], 1);
+        this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0], 1);
       }
       else  // outputValues = CM + WM + UM
       {
@@ -402,8 +382,8 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
         }
         
         this->MakeGraph(0, nEval, evalPoints, likelihoodValues, "likelihood_", false);
-        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 1);  // for TGraph
-        WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 2);  // for TGraph2D
+        this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 1);  // for TGraph
+        this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0], 2);  // for TGraph2D
       }
       
     }  // end cats
@@ -436,24 +416,17 @@ bool Likelihood::ConstructTGraphsFromFile()
 
 bool Likelihood::ConstructTGraphsFromFile(std::string name)
 {
-  unsigned int tmp = 0;
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    for (int iMass = 0; iMass < nMasses_; iMass++)
+    suffix_ = name+"widthx"+stringWidthArray_[iWidth];
+    inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
+    if ( ! tls_->fexists(inputFileName_.c_str()) )
     {
-      tmp = 0;
-      suffix_ = name+"widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
-      inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
-      if ( ! tls_->fexists(inputFileName_.c_str()) )
-      {
-        std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
-        //std::cerr << "                          Aborting the likelihood calculation..." << std::endl;
-        tmp++;
-        if ( tmp == nMasses_ ) return false;
-        else continue;
-      }
-      graph_[suffix_] = new TGraph(inputFileName_.c_str());
+      std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
+      std::cerr << "                              Aborting the likelihood calculation..." << std::endl;
+      continue;
     }
+    graph_[suffix_] = new TGraph(inputFileName_.c_str());
   }
   std::cout << "Likelihood::ConstructTGraphs: Constructed TGraphs for likelihood measurements (using " << nWidths_ << " widths)" << std::endl;
   return true;
@@ -466,7 +439,7 @@ bool Likelihood::ReadInput(std::string name)
   (vecBinCentres_[name]).clear();
   (vecBinContents_[name]).clear();
   
-  inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+"_mass"+thisMass_+".txt";
+  inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+".txt";
   if ( ! tls_->fexists(inputFileName_.c_str()) )
   {
     std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
@@ -491,12 +464,12 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
 {
   const int nEval = 50;
   double evalPoints[nEval], outputValues[nEval], likelihoodValues[nEval];
-  ClearArray(nEval, evalPoints);
-  MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
+  this->ClearArray(nEval, evalPoints);
+  this->MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
   
   /// Get fractions
   double fracs[nCats_];
-  ClearArray(nCats_, fracs);
+  this->ClearArray(nCats_, fracs);
   this->GetFractions(fracs, nCats_, datasetNames, includeDataset);
   
   fileTGraphs_ = new TFile((dirNameLLTxt_+"TGraphs.root").c_str(), "RECREATE");
@@ -515,8 +488,8 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
   /// Make arrays as input for TGraph
   const int nPoints = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).size();
   double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
-  ClearArray(nPoints, binCentreArray);
-  for (int iCat = 0; iCat < nCats_; iCat++) ClearArray(nPoints, binContentArray[iCat]);
+  this->ClearArray(nPoints, binCentreArray);
+  for (int iCat = 0; iCat < nCats_; iCat++) this->ClearArray(nPoints, binContentArray[iCat]);
   
   for (int i = 0; i < nPoints; i++)
   {
@@ -539,15 +512,15 @@ bool Likelihood::ConstructTGraphsFromFile(std::vector<std::string> datasetNames,
     
     if (! this->ReadInput(histoName_)) return false;
     
-    ClearArray(nPoints, binContentArray[0]);
+    this->ClearArray(nPoints, binContentArray[0]);
     for (int i = 0; i < nPoints; i++)
       binContentArray[0][i] = (vecBinContents_[histoName_]).at(i);
     
     this->MakeGraphSmooth(0, nPoints, binCentreArray, binContentArray[0], listCats_[0]+"_");
     
     /// Make likelihood functions
-    ClearArray(nEval, outputValues);
-    ClearArray(nEval, likelihoodValues);
+    this->ClearArray(nEval, outputValues);
+    this->ClearArray(nEval, likelihoodValues);
     for (int i = 0; i < nEval; i++)
     {
       for (int iCat = 0; iCat < nCats_; iCat++)
@@ -573,6 +546,11 @@ void Likelihood::CalculateLikelihood(double redMass, double relativeSF, bool isD
   this->CalculateLikelihood(redMass, relativeSF, 1., 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
 }
 
+std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  return this->CalculateLikelihood(redMass, relativeSF, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, isTTbar, isData);
+}
+
 std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
@@ -590,19 +568,21 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relat
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      for (int iMass = 0; iMass < nMasses_; iMass++)
-      {
-        histoName_ = "widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
-        
-        loglike_per_evt_[iWidth][iMass] = graph_[histoName_]->Eval(redMass);
-        vecLogLike_.push_back(loglike_per_evt_[iWidth][iMass]);
-        if (! isData) loglike_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass]*relativeSF*thisWidthSF_;
-        else loglike_data_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass];
-      }
+      histoName_ = "widthx"+stringWidthArray_[iWidth];
+      
+      loglike_per_evt_[iWidth] = graph_[histoName_]->Eval(redMass);
+      vecLogLike_.push_back(loglike_per_evt_[iWidth]);
+      if (! isData) loglike_[iWidth] += loglike_per_evt_[iWidth]*relativeSF*thisWidthSF_;
+      else loglike_data_[iWidth] += loglike_per_evt_[iWidth];
     }
   }
   
   return vecLogLike_;
+}
+
+void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  this->CalculateCMLikelihood(redMass, scaleFactor, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, isTTbar, isData);
 }
 
 void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
@@ -631,6 +611,11 @@ void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, doubl
       loglike_CM_[iWidth] += loglike_CM_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
   }
+}
+
+void Likelihood::CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  this->CalculateTempLikelihood(redMass, scaleFactor, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, isTTbar, isData);
 }
 
 void Likelihood::CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
@@ -707,10 +692,10 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("data") != std::string::npos || type.find("Data") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_data_[3], loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_data_, loglikePlotName, writeToFile, makeNewFile);
   else
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_[3], loglikePlotName, writeToFile, makeNewFile);
-  /// TEMPORARILY!!! WRONG NOW!!!
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile);
+  
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
   
   std::string fileName = dirNameLLTxt_+"result_minimum_";
@@ -811,7 +796,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   
   TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
   
-  g->Fit(parabola,"R");
+  g->Fit(parabola,"RWME");
   
   double outputWidth = parabola->GetMinimumX(fitmin, fitmax);
   double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin-interval, outputWidth);
@@ -828,7 +813,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   for (int i = 0; i < nn; i++)
     LLreduced[i] = LLvalues[i] - parabola->Eval(outputWidth);
   TGraph *g2 = new TGraph(nn, evalWidths, LLreduced);
-  g2->Fit(parabola,"R");
+  g2->Fit(parabola,"RWME");
   
   if (makeNewFile)
   {
@@ -880,6 +865,11 @@ int Likelihood::InitPull(int nPsExp)
   return nPsExp;
 }
 
+void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  this->AddPsExp(thisPsExp, scaleFactor, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, isTTbar, isData);
+}
+
 void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
   if (isData) std::cerr << "Likelihood::Pull: Will not use data for pseudo experiments..." << std::endl;
@@ -894,7 +884,7 @@ void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassFo
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
-      loglike_pull_[iWidth][thisPsExp] += loglike_per_evt_[iWidth][1]*scaleFactor*thisWidthSF_;
+      loglike_pull_[iWidth][thisPsExp] += loglike_per_evt_[iWidth]*scaleFactor*thisWidthSF_;
     }
   }
   else std::cerr << "Likelihood::Pull: Did not calculate likelihoods! Cannot get input for pseudo experiments..." << thisPsExp << std::endl;
@@ -937,7 +927,7 @@ void Likelihood::CalculatePull(double inputWidth)
   //std::cout << "Input width  : " << thisInputWidth[0].first << " ;   sigma : " << thisInputWidth[0].second << std::endl;
   std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
   
-  WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
+  this->WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
   gStyle->SetOptStat(1110);  // display entries, mean & RMS, but no title
   hAveWidthOut->Write();
   hAveWidthIn->Write();
@@ -1018,6 +1008,7 @@ void Likelihood::CalculateFractions(std::vector<std::string> datasetNames)
 {
   std::string fileName = "";
   int nDatasets = datasetNames.size();
+  mkdir(dirNameNEvents_.c_str(),0777);
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     for (int d = 0; d < nDatasets; d++)
@@ -1043,7 +1034,7 @@ void Likelihood::GetFractions(double *fractions, int nCats, std::string width, s
   const int nDatasets = datasetNames.size();
   std::vector<double> nEvents[nDatasets];
   double totEvents[nCats_];
-  ClearArray(nCats_, totEvents);
+  this->ClearArray(nCats_, totEvents);
   double totalNbEvents = 0.;
   
   for (int d = 0; d < nDatasets; d++)
@@ -1089,67 +1080,6 @@ void Likelihood::GetFractions(double *fractions, int nCats, std::string width, s
       std::cout << "%  " << std::endl;
     }
   }
-}
-
-void Likelihood::Make2DGraph(std::string name, bool makeNewFile)
-{
-  TGraph2D *g = new TGraph2D;
-  TGraph2D *g2 = new TGraph2D;
-  for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-  {
-    for (int iMass = 0; iMass < nMasses_; iMass++)
-    {
-      g->SetPoint(g->GetN(), widthArray_[iWidth], massArray_[iMass], loglike_[iWidth][iMass]);
-      if ( widthArray_[iWidth] > 0.2 && widthArray_[iWidth] < 1.9 )
-        g2->SetPoint(g2->GetN(), widthArray_[iWidth], massArray_[iMass], loglike_[iWidth][iMass]);
-    }
-  }
-  
-  
-  if (makeNewFile)
-  {
-    filePlots_ = new TFile((dirNameLLTxt_+"File_"+name+".root").c_str(), "RECREATE");
-    filePlots_->cd();
-  }
-  
-  TCanvas *c = new TCanvas(name.c_str(), name.c_str());
-  c->cd();
-  gStyle->SetPalette(1);
-  g->SetMaxIter(500000);
-  g->Draw("AP");
-  g->SetName(name.c_str());
-  g->SetTitle((name+";#Gamma_{t}/#Gamma_{t,gen}; M_{t}; L(m_{r}|#Gamma_{t},M_{t})").c_str());
-  g->GetXaxis()->SetTitleOffset(1.7);
-  g->GetYaxis()->SetTitleOffset(1.7);
-  g->Draw("surf3");
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_surf3.png").c_str());
-  c->SetName((name+"_zoom").c_str());
-  g->GetXaxis()->SetRangeUser(0.1,2.);
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_surf3_zoom.png").c_str());
-  c->SetName((name+"_colz_zoom").c_str());
-  g->Draw("colz");
-  g->GetXaxis()->SetRangeUser(0.1,2.);
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_colz_zoom.png").c_str());
-  c->SetName((name+"_colz_hardzoom").c_str());
-  g2->Draw("colz");
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_colz_hardzoom.png").c_str());
-  
-  if (makeNewFile)
-  {
-    filePlots_->Close();
-    delete filePlots_;
-  }
-  
-  delete c;
-  delete g;
 }
 
 void Likelihood::DrawGraph(TH1D* h, TGraph* g, std::string name)
@@ -1328,7 +1258,7 @@ void Likelihood::WritePsExpOutput(std::pair<double,double> *outputWidth, std::pa
 
 void Likelihood::WriteFuncOutput(int nPoints, double *arrayCentre, double *arrayContent, std::string name)
 {
-  std::string outputTxtName = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+"_mass"+thisMass_+".txt";
+  std::string outputTxtName = outputDirName_+dirNameTGraphTxt_+"output_func_"+name+".txt";
   txtOutput_.open(outputTxtName.c_str());
   
   for (int i = 0; i < nPoints; i++)
@@ -1344,7 +1274,7 @@ void Likelihood::WriteOutput(int nPoints, double width, double *arrayCentre, dou
   std::string dimension = "";
   if ( dim == 1 ) dimension = "1d";
   else if ( dim == 2 ) dimension = "2d";
-  std::string outputTxtName = outputDirName_+dirNameTGraphTxt_+"output_tgraph"+dimension+"_"+name+"_mass"+thisMass_+".txt";
+  std::string outputTxtName = outputDirName_+dirNameTGraphTxt_+"output_tgraph"+dimension+"_"+name+".txt";
   txtOutput_.open(outputTxtName.c_str());
   
   for (int i = 0; i < nPoints; i++)
@@ -1358,10 +1288,10 @@ void Likelihood::WriteOutput(int nPoints, double width, double *arrayCentre, dou
 
 void Likelihood::CombineOutput()
 {
-  std::ofstream combFile((outputDirName_+dirNameTGraphTxt_+"output_tgraph2d_total"+"_mass"+thisMass_+".txt").c_str());
+  std::ofstream combFile((outputDirName_+dirNameTGraphTxt_+"output_tgraph2d_total"+".txt").c_str());
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    std::string inFileName = outputDirName_+dirNameTGraphTxt_+"output_tgraph2d_widthx"+stringWidthArray_[iWidth]+"_mass"+thisMass_+".txt";
+    std::string inFileName = outputDirName_+dirNameTGraphTxt_+"output_tgraph2d_widthx"+stringWidthArray_[iWidth]+".txt";
     std::ifstream infile(inFileName.c_str());
     combFile << infile.rdbuf();
     infile.close();
@@ -1380,7 +1310,7 @@ void Likelihood::PrintLikelihoodOutput(std::string llFileName)
   txtOutputLogLike << std::endl << "LLikelihood: ";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    txtOutputLogLike << std::setw(12) << std::right << loglike_[iWidth][1] << "  ";
+    txtOutputLogLike << std::setw(12) << std::right << loglike_[iWidth] << "  ";
   }
   txtOutputLogLike << std::endl;
   txtOutputLogLike.close();
@@ -1409,7 +1339,7 @@ void Likelihood::PrintMtmLikelihoodOutput(std::string llFileName)
   txtOutputLogLike << "likelihood values (all MC) : {";
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
-    txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_[iWidth][1];
+    txtOutputLogLike << std::fixed << std::setprecision(15) << loglike_[iWidth];
     if ( iWidth != nWidths_-1 ) txtOutputLogLike << ", ";
   }
   txtOutputLogLike << "};" << std::endl;
