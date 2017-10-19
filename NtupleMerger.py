@@ -16,11 +16,11 @@ yy = str(now.year-2000)
 #date = "160602"
 #date = "17_1_2016"
 #date = yy+mm+dd
-date = "170907"
+date = "171015"
 
 #channels = ["mu","el"] 
 channels = ["mu"]
-isData = True
+isData = False
 runSyst = False
 
 for chan in channels:

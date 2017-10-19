@@ -65,7 +65,7 @@ map<string,TH2F*> histo2D;
 bool test = false;
 bool fillLooseTree = false;
 bool makeCutFlow = true;
-bool runData = true;
+bool runData = false;
 bool runSystematics = false;
 
 
@@ -259,6 +259,14 @@ Double_t sumWeight1004;
 Double_t sumWeight1005;
 Double_t sumWeight1007;
 Double_t sumWeight1009;
+
+std::map<std::string,double> fragMap;
+Double_t upFragWeight;
+Double_t centralFragWeight;
+Double_t downFragWeight;
+Double_t petersonFragWeight;
+Double_t semilepbrUp;
+Double_t semilepbrDown;
 
 Double_t nloWeight; // for amc@nlo samples
 Double_t btagSF;
@@ -511,24 +519,24 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   }
   else
   {
-    statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
-    statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
-    statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
-    statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
+//     statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
+//     statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
+//     statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
+//     statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
     if (isTTbar)
     {
-      statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
+//       statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
       statTree->Branch("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, "nofTTEventsWithoutAGenTop/L");
-      statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
-      statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
-      statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
-      statTree->Branch("nofTTEventsWithoutAGenTopWithStatus22", &nofTTEventsWithoutAGenTopWithStatus22, "nofTTEventsWithoutAGenTopWithStatus22/L");
-      statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
-      statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
-      statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
-      statTree->Branch("nofTTEventsWithoutAGenTopWithStatus62", &nofTTEventsWithoutAGenTopWithStatus62, "nofTTEventsWithoutAGenTopWithStatus62/L");
-      statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
-      statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
+//       statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
+//       statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
+//       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
+//       statTree->Branch("nofTTEventsWithoutAGenTopWithStatus22", &nofTTEventsWithoutAGenTopWithStatus22, "nofTTEventsWithoutAGenTopWithStatus22/L");
+//       statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
+//       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
+//       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
+//       statTree->Branch("nofTTEventsWithoutAGenTopWithStatus62", &nofTTEventsWithoutAGenTopWithStatus62, "nofTTEventsWithoutAGenTopWithStatus62/L");
+//       statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
+//       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
       
       statTree->Branch("sumWeight1001", &sumWeight1001, "sumWeight1001/D");
       statTree->Branch("sumWeight1002", &sumWeight1002, "sumWeight1002/D");
@@ -566,15 +574,15 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     looseTree->Branch("hasErasedBadOrCloneLooseMuon",&hasErasedBadOrCloneLooseMuon,"hasErasedBadOrCloneLooseMuon/O");
   }
   
-  myTree->Branch("filterPV",&filterPV,"filterPV/O");
-  myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
-  myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
-  myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
-  myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
-  myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
-  myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
-  myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
-  myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
+//   myTree->Branch("filterPV",&filterPV,"filterPV/O");
+//   myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
+//   myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
+//   myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
+//   myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
+//   myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
+//   myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
+//   myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
+//   myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
   
   if (isData)
   {
@@ -699,11 +707,11 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
     myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
     myTree->Branch("hasGenTop", &hasGenTop, "hasGenTop/O");
-    myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
-    myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
+//     myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
+//     myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
     myTree->Branch("hasGenAntiTop", &hasGenAntiTop, "hasGenAntiTop/O");
-    myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
-    myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
+//     myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
+//     myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
   }
   
   
@@ -720,6 +728,13 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
       myTree->Branch("weight1005", &weight1005, "weight1005/D");
       myTree->Branch("weight1007", &weight1007, "weight1007/D");
       myTree->Branch("weight1009", &weight1009, "weight1009/D");
+      
+      myTree->Branch("upFragWeight", &upFragWeight, "upFragWeight/D");
+      myTree->Branch("centralFragWeight", &centralFragWeight, "centralFragWeight/D");
+      myTree->Branch("downFragWeight", &downFragWeight, "downFragWeight/D");
+      myTree->Branch("petersonFragWeight", &petersonFragWeight, "petersonFragWeight/D");
+      myTree->Branch("semilepbrUp", &semilepbrUp, "semilepbrUp/D");
+      myTree->Branch("semilepbrDown", &semilepbrDown, "semilepbrDown/D");
     }
     if (isAmc) myTree->Branch("nloWeight",&nloWeight,"nloWeight/D");
     myTree->Branch("btagSF",&btagSF,"btagSF/D");
@@ -795,19 +810,20 @@ void ClearMeta()
   nofSelEventsRunEF = 0;
   nofSelEventsRunG = 0;
   nofSelEventsRunH = 0;
-  nofEventsWithGenTop = 0;
-  nofEventsWithGenTopWithStatus22or62 = 0;
-  nofEventsWithGenAntiTop = 0;
-  nofEventsWithGenAntiTopWithStatus22or62 = 0;
-  nofTTEventsWithoutBothGenTops = 0;
-  nofTTEventsWithoutGenTop = 0;
-  nofTTEventsWithoutGenAntiTop = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-  nofTTEventsWithoutGenTopWithStatus22 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-  nofTTEventsWithoutGenTopWithStatus62 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+//   nofEventsWithGenTop = 0;
+//   nofEventsWithGenTopWithStatus22or62 = 0;
+//   nofEventsWithGenAntiTop = 0;
+//   nofEventsWithGenAntiTopWithStatus22or62 = 0;
+//   nofTTEventsWithoutBothGenTops = 0;
+//  nofTTEventsWithoutGenTop = 0;
+//   nofTTEventsWithoutGenAntiTop = 0;
+//   nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
+//   nofTTEventsWithoutGenTopWithStatus22 = 0;
+//   nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
+//   nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
+//   nofTTEventsWithoutGenTopWithStatus62 = 0;
+//   nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+  nofTTEventsWithoutAGenTop = 0;
   
   sumWeight1001 = 0.;
   sumWeight1002 = 0.;
@@ -895,6 +911,13 @@ void ClearObjects()
   weight1005 = 1.;
   weight1007 = 1.;
   weight1009 = 1.;
+  
+  upFragWeight       = 1.;
+  centralFragWeight  = 1.;
+  downFragWeight     = 1.;
+  petersonFragWeight = 1.;
+  semilepbrUp        = 1.;
+  semilepbrDown      = 1.;
   
   nloWeight = 1.; // for amc@nlo samples
   btagSF = 1.;
@@ -1264,47 +1287,47 @@ void FillMCParticles(bool isTTbar)
     mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
     mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
     
-    if ( mc_pdgId[iMC] == 6 )
-    {
-      hasGenTop = true;
-      nofEventsWithGenTop++;
-      if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-      {
-        nofEventsWithGenTopWithStatus22or62++;
-        if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
-        else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
-      }
-    }
-    else if ( mc_pdgId[iMC] == -6 )
-    {
-      hasGenAntiTop = true;
-      nofEventsWithGenAntiTop++;
-      if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-      {
-        nofEventsWithGenAntiTopWithStatus22or62++;
-        if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
-        else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
-      }
-    }
+//     if ( mc_pdgId[iMC] == 6 )
+//     {
+//       hasGenTop = true;
+//       nofEventsWithGenTop++;
+//       if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+//       {
+//         nofEventsWithGenTopWithStatus22or62++;
+//         if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
+//         else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
+//       }
+//     }
+//     else if ( mc_pdgId[iMC] == -6 )
+//     {
+//       hasGenAntiTop = true;
+//       nofEventsWithGenAntiTop++;
+//       if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
+//       {
+//         nofEventsWithGenAntiTopWithStatus22or62++;
+//         if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
+//         else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
+//       }
+//     }
   }
   
-  if (isTTbar)
-  {
-    if (! hasGenTop && ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
-    else if (! hasGenTop) nofTTEventsWithoutGenTop++;
-    else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
-    //if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
-    
-    if (! hasGenTopWithStatus22 && ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
-    else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
-    else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
-    if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutAGenTopWithStatus22++;
-    
-    if (! hasGenTopWithStatus62 && ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
-    else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
-    else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
-    if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutAGenTopWithStatus62++;
-  }
+//   if (isTTbar)
+//   {
+//     if (! hasGenTop && ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
+//     else if (! hasGenTop) nofTTEventsWithoutGenTop++;
+//     else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
+//     //if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
+//     
+//     if (! hasGenTopWithStatus22 && ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
+//     else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
+//     else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
+//     if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutAGenTopWithStatus22++;
+//     
+//     if (! hasGenTopWithStatus62 && ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
+//     else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
+//     else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
+//     if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutAGenTopWithStatus62++;
+//   }
 }
 
 void FillFilters(bool isData)
@@ -1407,6 +1430,29 @@ void FillRenFacScaleFactors()
     sumWeight1007 += weight1007;
     sumWeight1009 += weight1009;
   }
+}
+
+/// std::map<std::string,double> getBFragmentationWeights() const {return bFragWeights_;}
+//  event->getBFrag....
+//
+//  bfragwgt["upFragWeight"]
+//	bfragwgt["centralFragWeight"]
+//	bfragwgt["downFragWeight"]
+//	bfragwgt["petersonFragWeight"]
+//	bfragwgt["semilepbrUp"]
+//	bfragwgt["semilepbrDown"]
+//  USE: mymap.find("upFragWeight")->second
+
+void FillFragmentationScaleFactors()
+{
+  fragMap.clear();
+  fragMap = event->getBFragmentationWeights();
+  upFragWeight       = fragMap.find("upFragWeight")->second;
+  centralFragWeight  = fragMap.find("centralFragWeight")->second;
+  downFragWeight     = fragMap.find("downFragWeight")->second;
+  petersonFragWeight = fragMap.find("petersonFragWeight")->second;
+  semilepbrUp        = fragMap.find("semilepbrUp")->second;
+  semilepbrDown      = fragMap.find("semilepbrDown")->second;
 }
 
 void FillaMCScaleFactors()
@@ -1633,6 +1679,8 @@ int main (int argc, char *argv[])
   else if (applyJERup)   sysString = "JERup";
   else if (applyJERdown) sysString = "JERdown";
   
+  if (runSystematics) sysString = dName;
+  
   
   /// xml file
   const char *xmlfile = xmlFileName.c_str();
@@ -1746,11 +1794,11 @@ int main (int argc, char *argv[])
   cout << " - Loading b tag scale factors ...";
   if (! applyBTagSF) { cout << "     --- At the moment these are not used in the analysis" << endl;}
   bTagCalib = new BTagCalibration("CSVv2", pathCalBTag+"CSVv2Moriond17_2017_1_26_BtoH.csv");
-  bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "central");
+  bTagReader_M = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "central");
   if (! calculateBTagSF)
   {
-    bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "up");
-    bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "mujets", "down");
+    bTagReader_M_up = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "up");
+    bTagReader_M_down = new BTagCalibrationReader(bTagCalib, BTagEntry::OP_MEDIUM, "comb", "down");
   }
   
   
@@ -1844,14 +1892,14 @@ int main (int argc, char *argv[])
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
       //  bTagHistoTool_M = new BTagWeightTools(bTagReader_M, pathBTagHistos+"BTagSFs_"+dataSetName+"_comb_central.root", false, 20., 600., 2.4);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "input/PlotsForBTagSFs_nominal_central.root", false, 30., 250., 2.4);
-      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "input/PlotsForBTagSFs_nominal_central.root", false, 30., 250., 2.4);
-      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "input/PlotsForBTagSFs_nominal_central.root", false, 30., 250., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "input/PlotsForBTagSFs_"+sysString+".root", false, 30., 250., 2.4);
+      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "input/PlotsForBTagSFs_"+sysString+".root", false, 30., 250., 2.4);
+      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "input/PlotsForBTagSFs_"+sysString+".root", false, 30., 250., 2.4);
     }
     else if (calculateBTagSF && ! isData)
     {
       mkdir(("BTagHistos/"+dateString).c_str(),0777);
-      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_central.root", true, 30., 250., 2.4);
+      bTagHistoTool_M = new BTagWeightTools(bTagReader_M, "BTagHistos/"+dateString+"/BTagSFs_"+dataSetName+"_"+sysString+"_"+ConvertIntToString(jobNum,0)+"_comb.root", true, 30., 250., 2.4);
 //      bTagHistoTool_M_up = new BTagWeightTools(bTagReader_M_up, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_up.root", false, 30., 250., 2.4);
 //      bTagHistoTool_M_down = new BTagWeightTools(bTagReader_M_down, "BTagHistos/"+dateString+"/BTagSFs_"+sysString+"_"+dataSetName+"_"+ConvertIntToString(jobNum,0)+"_mujets_down.root", false, 30., 250., 2.4);
     }
@@ -2156,7 +2204,10 @@ int main (int argc, char *argv[])
           cutFlowWeighted[1] += 1.;
           cutFlow2Weighted[1] += 1.;
         }
-        if (isGoodPV)
+        
+        FillFilters(isData);
+        
+        if (isGoodPV && passedMETFilter)
         {
           if (! isData && ! calculateBTagSF) FillPUScaleFactors();
           
@@ -2174,18 +2225,14 @@ int main (int argc, char *argv[])
           /// Fill tree with loose objects before event selection
           if ( fillLooseTree && ! calculateBTagSF && selectedMuons.size() > 0)
           {
-            FillFilters(isData);
-            if (passedMETFilter)
-            {
-              FillJetVars(selectedJets);
-              FillLooseJetVars(selectedLooseJets);
-              FillMuonVars(selectedMuons);
-              FillLooseMuonVars(selectedLooseMuons);
-              FillMuonScaleFactors(selectedMuons);
-              FillLooseMuonScaleFactors(selectedLooseMuons);
-              
-              looseTree->Fill();
-            }
+            FillJetVars(selectedJets);
+            FillLooseJetVars(selectedLooseJets);
+            FillMuonVars(selectedMuons);
+            FillLooseMuonVars(selectedLooseMuons);
+            FillMuonScaleFactors(selectedMuons);
+            FillLooseMuonScaleFactors(selectedLooseMuons);
+            
+            looseTree->Fill();
           }
           
           if ( selectedMuons.size() == 1 )
@@ -2292,7 +2339,7 @@ int main (int argc, char *argv[])
               }  // no veto electrons
             }  // no additional loose muons (tight muon is also loose muon)
           }  // 1 good muon
-        }  // good PV
+        }  // good PV & MET filters
       }  // trigged
       
       
@@ -2324,7 +2371,11 @@ int main (int argc, char *argv[])
       FillMetVars(mets, mets_corrected);
       FillFilters(isData);
       if (! isData && ! isHerwig) FillMCParticles(isTTbar);
-      if (isTTbar) FillRenFacScaleFactors();
+      if (isTTbar)
+      {
+        FillRenFacScaleFactors();
+        FillFragmentationScaleFactors();
+      }
       
       
       if (! calculateBTagSF)

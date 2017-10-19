@@ -8,13 +8,13 @@ from datetime import datetime
 
 # Define time variable
 #date = "test"
-date = "170731"
+date = "171013"
 
 scalesys = "nominal"
 #scalesys = "JERup"
 
-sys = ["central","up","down"]
-systype = "mujets"
+#sys = ["central","up","down"]
+systype = "comb"
 
 
 #Define path where btag histos are stored
@@ -25,8 +25,8 @@ if not os.path.exists(pathMerged):
     os.makedirs(pathMerged)
 
 # get filenames from the xml!!!
-#tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
-tree = ET.ElementTree(file='config/topWidth_syst_loc.xml')
+tree = ET.ElementTree(file='config/topWidth_MC_loc.xml')
+#tree = ET.ElementTree(file='config/topWidth_syst_loc.xml')
 
 
 # get the list of dataset
@@ -50,12 +50,11 @@ listOfZombies= []
 
 # loop over data set to search root files
 for n in datasetNames:
-    for s in sys:
-        filenames = glob.glob(pathNonMerged + "/*" + n + "*" + s + ".root")
-        hadd = "hadd -f " + pathMerged + "/BTagSFs_"+ n + "_" + systype + "_" + s + ".root"
+        filenames = glob.glob(pathNonMerged + "/*" + n + "*.root")
+        hadd = "hadd -f " + pathMerged + "/BTagSFs_"+ n + "_" + systype + ".root"
 
         if (len(filenames) == 0):
-            print "no root files found in directory" , pathNonMerged ,  " for dataset " , n , " and sys " , s , " !!"
+            print "no root files found in directory" , pathNonMerged ,  " for dataset " , n , " !!"
         else :
             # loop over root files
             for f in filenames:
@@ -67,7 +66,7 @@ for n in datasetNames:
                 else:
                     print f
                     hadd = hadd + " " + f
-            print "Merging btag SF histos for " + n + " " + s
+            print "Merging btag SF histos for " + n
             os.system(hadd)
 
 print "\n\n"
@@ -75,8 +74,8 @@ print "\n\n"
 # print the list of zombies
 print "The total number of zombie files is ", len(listOfZombies)
 if (len(listOfZombies) > 0):
-    outfile = open (pathMerged+"/Zombie_"+sys+".txt", 'a')
-    print "And the list of the zombie is put in "+pathMerged+"/Zombie_"+sys+".txt "
+    outfile = open (pathMerged+"/Zombie_.txt", 'a')
+    print "And the list of the zombie is put in "+pathMerged+"/Zombie_.txt "
     for zombie in listOfZombies:
         print >> outfile, zombie
 
@@ -87,12 +86,11 @@ print "\n\n"
 mergeData=False   # exclude TT_nominal_backup (already in TT_nominal) and TT_widthxX
 
 if (mergeData):
-    for s in sys:
         # combining all the dataset histos in one
         dataList=glob.glob(pathMerged+"*"+s+".root")
 
-        cmd = "hadd " + pathMerged + "/PlotsForBTagSFs_" + scalesys + "_" + s + ".root"
+        cmd = "hadd " + pathMerged + "/PlotsForBTagSFs_" + scalesys + ".root"
         for data in dataList:
             cmd = cmd + " " + data
-        print "Merging btag SF histos for sys " + s
+        print "Merging btag SF histos"
         os.system(cmd)
