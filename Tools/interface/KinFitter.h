@@ -20,6 +20,8 @@
 #include "TopTreeAnalysisBase/KinFitter/interface/TKinFitter.h"
 #include "TopTreeAnalysisBase/KinFitter/interface/TAbsFitParticle.h"
 #include "TopTreeAnalysisBase/KinFitter/interface/TFitConstraintM.h"
+#include "TopTreeAnalysisBase/KinFitter/interface/TFitConstraintEp.h"
+#include "TopTreeAnalysisBase/KinFitter/interface/TFitParticleEtThetaPhi.h"
 #include "TopTreeAnalysisBase/KinFitter/interface/TFitParticleEtThetaPhiEMomFix.h"
 
 // load user defined
@@ -45,9 +47,12 @@ class KinFitter{
     TAbsFitParticle *jet4_;
     TAbsFitParticle *lepton_;
     TAbsFitParticle *neutrino_;
-    TFitConstraintM *consMW_;
+    TFitConstraintM *consMWhad_;
+    TFitConstraintM *consMWlep_;
     TFitConstraintM *consMNu_;
     TFitConstraintM *consEqM_;
+    TFitConstraintEp *consSumPx_;
+    TFitConstraintEp *consSumPy_;
     TMatrixD mErr = TMatrixD(3,3);
     TMatrixD mErrJet1 = TMatrixD(3,3);
     TMatrixD mErrJet2 = TMatrixD(3,3);
