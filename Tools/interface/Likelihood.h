@@ -128,7 +128,7 @@ class Likelihood{
     TFile *file_;
     TFile *fileTGraphs_;
     TFile *filePlots_;
-    TGraph2D *gLL2D_;
+    //TGraph2D *gLL2D_;
     std::ofstream txtOutput_;
     std::ofstream txtOutputLL_;
     std::ofstream txtOutputPsExp_;

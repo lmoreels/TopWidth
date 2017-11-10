@@ -5,7 +5,8 @@ const double Likelihood2D::widthArray_[] = {0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
 //const double Likelihood2D::massArray_[] = {169.5, 170., 170.5, 171., 171.25, 171.5, 171.75, 172., 172.1, 172.2, 172.3, 172.4, 172.5, 172.6, 172.7, 172.8, 172.9, 173., 173.25, 173.5, 173.75, 174., 174.5, 175., 175.5};
 const double Likelihood2D::massArray_[] = {171., 171.05, 171.1, 171.15, 171.2, 171.25, 171.3, 171.35, 171.4, 171.45, 171.5, 171.55, 171.6, 171.65, 171.7, 171.75, 171.8, 171.85, 171.9, 171.95, 172., 172.05, 172.1, 172.15, 172.2, 172.25, 172.3, 172.35, 172.4, 172.45, 172.5, 172.55, 172.6, 172.65, 172.7, 172.75, 172.8, 172.85, 172.9, 172.95, 173., 173.05, 173.1, 173.15, 173.2, 173.25, 173.3, 173.35, 173.4, 173.45, 173.5, 173.55, 173.6, 173.65, 173.7, 173.75, 173.8, 173.85, 173.9, 173.95, 174.};
 
-const std::string Likelihood2D::listCats_[] = {"CM", "WM", "UM"};
+//const std::string Likelihood2D::listCats_[] = {"CM", "WM", "UM"};
+const std::string Likelihood2D::listCats_[] = {"CM", "UM"};
 
 const int Likelihood2D::nWidths_ = sizeof(widthArray_)/sizeof(widthArray_[0]);
 const int Likelihood2D::nCats_ = sizeof(listCats_)/sizeof(listCats_[0]);
@@ -358,7 +359,12 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
     //this->GetFractions(fracCatsTemp[iMass], nCats_-1, stringMassArray_[iMass], datasetNames, includeDataset);
     this->GetFractions(fracCats[iMass], nCats_, datasetNames, includeDataset);
     this->GetFractions(fracCatsTemp[iMass], nCats_-1, datasetNames, includeDataset);
-    //if (verbose_) std::cout << "Mass : " << setw(6) << massArray_[iMass] << "   # CM: " << fracCats[iMass][0] << "*100%   # WM: " << fracCats[iMass][1] << "*100%   # UM: " << fracCats[iMass][2] << "*100%  " << std::endl;
+//     if (verbose_)
+//     {
+//       for (int iCat = 0; iCat < nCats_; iCat++)
+//       std::cout << "   # " << listCats_[iCat] << ": " << fracCats[iCat] << "*100%";
+//       std::cout << std::endl;
+//     }
   }
   
   /// Make output file
@@ -447,16 +453,16 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
           histoTotal_[stringSuffix_[0][iMass]]->SetTitle("#frac{n_{CM}}{n_{tot}} * f_{CM}(x|#Gamma) + #frac{n_{WM}}{n_{tot}} * f_{WM}(x) + #frac{n_{UM}}{n_{tot}} * f_{UM}(x)");
 
           this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
-          this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0][iMass], 1);
+          this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0][iMass], 1);
         }
-        else if ( iCat == 1 )  // outputValues = CM + WM
+        else if ( listCats_[iCat].find("WM") != std::string::npos && iCat != nCats_-1 )  // outputValues = CM + WM
         {
           histoTotal_[stringSuffix_[0][iMass]]->Add(histoSm_[histoName_]);
 
           this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM_", false);
-          this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0][iMass], 1);
+          this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0][iMass], 1);
         }
-        else  // outputValues = CM + WM + UM
+        else if ( iCat == nCats_-1 ) // outputValues = CM + WM + UM
         {
           histoTotal_[stringSuffix_[0][iMass]]->Add(histoSm_[histoName_]);
           histoTotal_[stringSuffix_[0][iMass]]->Write();
@@ -472,8 +478,8 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
 //           }
           
           this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValues, "likelihood_", false);
-          this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0][iMass], 1);  // for TGraph
-          this->WriteOutput(nEval, iWidth, evalPoints, likelihoodValues, stringSuffix_[0][iMass], 2);  // for TGraph2D
+          this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValues, stringSuffix_[0][iMass], 1);  // for TGraph
+          this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValues, stringSuffix_[0][iMass], 2);  // for TGraph2D
         }
         
       }  // end cats
@@ -925,6 +931,8 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
   std::cout << "Index of minimum LL value is (" << locMin.first << ", " << locMin.second << ")" << "           " << LLvalues[locMin.first][locMin.second] << std::endl;
   
   double temp;
+  std::ofstream txtLL((dirNameLLTxt_+"likelihoodValues_"+plotName+".txt").c_str());
+  std::ofstream txtLLshort(("likelihoodValues_"+plotName+"_short.txt").c_str());
   //TGraph *g = new TGraph(nn, evalWidths, LLvalues);
   TGraph2D *g = new TGraph2D();
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -935,7 +943,10 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
       if ( temp < 50. )
       {
         g->SetPoint(g->GetN(), evalWidths[iWidth], massArray_[iMass], temp);
-        if (verbose_) std::cout << evalWidths[iWidth] << "   " << massArray_[iMass] << "   " << std::setprecision(10) << temp << std::endl;
+        //if (verbose_) std::cout << evalWidths[iWidth] << "   " << massArray_[iMass] << "   " << std::setprecision(10) << temp << std::endl;
+        txtLL << evalWidths[iWidth] << "   " << massArray_[iMass] << "   " << std::setprecision(10) << temp << std::endl;
+        if ( temp < 20. )
+          txtLLshort << evalWidths[iWidth] << "   " << massArray_[iMass] << "   " << std::setprecision(10) << temp << std::endl;
       }
     }
   }
@@ -1009,7 +1020,8 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
 //  parabola->SetParLimits(1, fitmin, fitmax);
   //parabola->SetParLimits(3, fitminY, fitmaxY);
   //parabola->SetParLimits(4, LLvalues[locMin.first][locMin.second] - 30., LLvalues[locMin.first][locMin.second] + 30.);
-  parabola->SetParameters(0., 200., 50., 100., 400., -0.1, 1.);
+  parabola->SetParameters(6e+6, -180., 100, -69000., 200., 0.001, 0.001);
+  //parabola->FixParameter(6, 0.);
   
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultTolerance(1e-3);
@@ -1263,9 +1275,17 @@ void Likelihood2D::CalculateFractions(std::vector<std::string> datasetNames)
   {
     for (int d = 0; d < nDatasets; d++)
     {
-      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+stringMassArray_[iMass]+".txt";
+      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+stringMassArray_[iMass]+"_CM.txt";
       txtOutputFractions_.open(fileName.c_str());
-      txtOutputFractions_ << nEventsCMFractions_[iMass][d] << "   " << nEventsWMFractions_[iMass][d] << "   " << nEventsUMFractions_[iMass][d] << std::endl;
+      txtOutputFractions_ << nEventsCMFractions_[iMass][d] << std::endl;
+      txtOutputFractions_.close();
+      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+stringMassArray_[iMass]+"_WM.txt";
+      txtOutputFractions_.open(fileName.c_str());
+      txtOutputFractions_ << nEventsWMFractions_[iMass][d] << std::endl;
+      txtOutputFractions_.close();
+      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+stringMassArray_[iMass]+"_UM.txt";
+      txtOutputFractions_.open(fileName.c_str());
+      txtOutputFractions_ << nEventsUMFractions_[iMass][d] << std::endl;
       txtOutputFractions_.close();
     }  // end datasets
   }  // end masses
@@ -1290,25 +1310,32 @@ void Likelihood2D::GetFractions(double *fractions, int nCats, std::string mass, 
   for (int d = 0; d < nDatasets; d++)
   {
     nEvents[d].clear();
-    fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+mass+".txt";
-    if (! tls_->fexists(fileName.c_str()) )
+    for (int iCat = 0; iCat < nCats_; iCat++)
     {
-      std::cerr << "WARNING: File " << fileName << " does not exist." << std::endl;
+      fileName = dirNameNEvents_+"nEvents_"+datasetNames[d]+"_mass"+mass+"_"+listCats_[iCat]+".txt";
+      if (! tls_->fexists(fileName.c_str()) )
+      {
+        std::cerr << "WARNING: File " << fileName << " does not exist." << std::endl;
+        exit(1);
+      }
+      fileIn_.open(fileName.c_str());
+      if (verbose_) std::cout << "Opening " << fileName << "..." << std::endl;
+      while( getline(fileIn_, line) )
+      {
+        std::istringstream iss(line);
+        while ( iss >> val )
+        {
+          //iss >> val;
+          (nEvents[d]).push_back(val);
+        }
+      }
+      fileIn_.close();
+    }  // end cats
+    if ( (nEvents[d]).size() != nCats_ )
+    {
+      std::cerr << "Something wrong with number of categories..." << std::endl;
       exit(1);
     }
-    fileIn_.open(fileName.c_str());
-    if (verbose_) std::cout << "Opening " << fileName << "..." << std::endl;
-    while( getline(fileIn_, line) )
-    {
-      std::istringstream iss(line);
-      while ( iss >> val )
-      {
-        //iss >> val;
-        (nEvents[d]).push_back(val);
-      }
-    }
-    fileIn_.close();
-    if ( (nEvents[d]).size() != nCats_ ) std::cerr << "Something wrong with number of categories..." << std::endl;
     
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
@@ -1325,9 +1352,10 @@ void Likelihood2D::GetFractions(double *fractions, int nCats, std::string mass, 
     fractions[iCat] = totEvents[iCat] / totalNbEvents;
     if ( verbose_ && iCat == nCats-1 )
     {
-      std::cout << "Mass: " << mass << "   # CM: " << 100.*fractions[0] << "%   # WM: " << 100.*fractions[1];
-      if ( nCats > 2 ) std::cout << "%   # UM: " << 100.*fractions[2];
-      std::cout << "%  " << std::endl;
+      std::cout << "Mass: " << mass;
+      for (int iCat = 0; iCat < nCats_; iCat++)
+        std::cout << "   # " << listCats_[iCat] << ": " << 100.*fractions[iCat] << "%";
+      std::cout << std::endl;
     }
   }
 }
@@ -1346,13 +1374,27 @@ void Likelihood2D::Make2DGraph(std::string name, bool makeNewFile)
     }
   }
   
-  
   if (makeNewFile)
   {
     filePlots_ = new TFile((dirNameLLTxt_+"File_"+name+".root").c_str(), "RECREATE");
     filePlots_->cd();
   }
   
+  this->Make2DGraph(g, name);
+  this->Make2DGraph(g2, name+"_hardzoom");
+  
+  if (makeNewFile)
+  {
+    filePlots_->Close();
+    delete filePlots_;
+  }
+  
+  delete g;
+  delete g2;
+}
+
+void Likelihood2D::Make2DGraph(TGraph2D* g, std::string name)
+{
   TCanvas *c = new TCanvas(name.c_str(), name.c_str());
   c->cd();
   gStyle->SetPalette(1);
@@ -1366,36 +1408,24 @@ void Likelihood2D::Make2DGraph(std::string name, bool makeNewFile)
   c->Update();
   c->Write();
   c->SaveAs((dirNameLLTxt_+name+"_surf3.png").c_str());
-  c->SetName((name+"_zoom").c_str());
-  g->GetXaxis()->SetRangeUser(0.1,2.);
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_surf3_zoom.png").c_str());
-  c->SetName((name+"_colz_zoom").c_str());
+//   c->SetName((name+"_zoom").c_str());
+//   g->GetXaxis()->SetRangeUser(0.1,2.);
+//   c->Update();
+//   c->Write();
+//   c->SaveAs((dirNameLLTxt_+name+"_surf3_zoom.png").c_str());
+  c->SetName((name+"_colz").c_str());
   g->Draw("colz");
-  g->GetXaxis()->SetLimits(0.1,2.);
+//  g->GetXaxis()->SetLimits(0.1,2.);
   c->Update();
   c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_colz_zoom.png").c_str());
-  c->SetName((name+"_colz_hardzoom").c_str());
-  g2->Draw("colz");
+  c->SaveAs((dirNameLLTxt_+name+"_colz.png").c_str());
+  c->SetName((name+"_cont1z").c_str());
+  g->Draw("cont1z");
   c->Update();
   c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_colz_hardzoom.png").c_str());
-  c->SetName((name+"_cont1z_hardzoom").c_str());
-  g2->Draw("cont1z");
-  c->Update();
-  c->Write();
-  c->SaveAs((dirNameLLTxt_+name+"_cont1z_hardzoom.png").c_str());
-  
-  if (makeNewFile)
-  {
-    filePlots_->Close();
-    delete filePlots_;
-  }
+  c->SaveAs((dirNameLLTxt_+name+"_cont1z.png").c_str());
   
   delete c;
-  delete g;
 }
 
 void Likelihood2D::DrawGraph(TH1D* h, TGraph* g, std::string name)

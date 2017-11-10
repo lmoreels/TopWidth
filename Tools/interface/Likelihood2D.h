@@ -79,6 +79,7 @@ class Likelihood2D{
     void CalculateFractions(std::vector<std::string> datasetNames);
     /// Make 2D likelihood plot
     void Make2DGraph(std::string name, bool makeNewFile);
+    void Make2DGraph(TGraph2D* g, std::string name);
     void DrawOutputLogLikelihood(TGraph2D* g, TF2* f, double minX, double maxX, double minY, double maxY, std::string name, bool writeToFile);
     void DrawOutputLogLikelihood(TGraph2D* g, TF2* f, double minWidth, double minMass, double minimum, std::string name, bool writeToFile);
     /// Write output from likelihood calculation to file
