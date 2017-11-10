@@ -10,11 +10,11 @@
 
 //const std::string ResolutionFunctions::histoNames[] = {"Eparton_vs_Eparton-Ebjet", "Etparton_vs_Etparton-Etbjet", "Ptparton_vs_Ptparton-Ptbjet", "Eparton_vs_Thparton-Thbjet", "Eparton_vs_Etaparton-Etabjet", "Eparton_vs_Phiparton-Phibjet", "Eparton_vs_Eparton-Enonbjet", "Etparton_vs_Etparton-Etnonbjet", "Ptparton_vs_Ptparton-Ptnonbjet", "Eparton_vs_Thparton-Thnonbjet", "Eparton_vs_Etaparton-Etanonbjet", "Eparton_vs_Phiparton-Phinonbjet", "EgenMu_vs_EgenMu-ErecMu", "EtgenMu_vs_EtgenMu-EtrecMu", "PtgenMu_vs_PtgenMu-PtrecMu", "PtgenMu_vs_ThgenMu-ThrecMu", "PtgenMu_vs_EtagenMu-EtarecMu", "PtgenMu_vs_PhigenMu-PhirecMu", "EgenEl_vs_EgenEl-ErecEl", "EtgenEl_vs_EtgenEl-EtrecEl", "PtgenEl_vs_PtgenEl-PtrecEl", "genEl_vs_ThgenEl-ThrecEl", "EgenEl_vs_EtagenEl-EtarecEl", "EgenEl_vs_PhigenEl-PhirecEl", "Etparton_vs_Etparton-Etbjet_B", "Etparton_vs_Etparton-Etbjet_O", "Etparton_vs_Etparton-Etbjet_E", "Etparton_vs_Etparton-Etnonbjet_B", "Etparton_vs_Etparton-Etnonbjet_O", "Etparton_vs_Etparton-Etnonbjet_E"};
 
-const std::string ResolutionFunctions::histoNames[] = {"Etbjet_vs_Etparton-Etbjet_B", "Etbjet_vs_Etparton-Etbjet_O", "Etbjet_vs_Etparton-Etbjet_E", "Etbjet_vs_Thparton-Thbjet_B", "Etbjet_vs_Thparton-Thbjet_O", "Etbjet_vs_Thparton-Thbjet_E", "Etbjet_vs_Phiparton-Phibjet_B", "Etbjet_vs_Phiparton-Phibjet_O", "Etbjet_vs_Phiparton-Phibjet_E", "Etnonbjet_vs_Etparton-Etnonbjet_B", "Etnonbjet_vs_Etparton-Etnonbjet_O", "Etnonbjet_vs_Etparton-Etnonbjet_E", "Etnonbjet_vs_Thparton-Thnonbjet_B", "Etnonbjet_vs_Thparton-Thnonbjet_O", "Etnonbjet_vs_Thparton-Thnonbjet_E", "Etnonbjet_vs_Phiparton-Phinonbjet_B", "Etnonbjet_vs_Phiparton-Phinonbjet_O", "Etnonbjet_vs_Phiparton-Phinonbjet_E"};
+const std::string ResolutionFunctions::histoNames[] = {"Etbjet_vs_Etparton-Etbjet_B", "Etbjet_vs_Etparton-Etbjet_O", "Etbjet_vs_Etparton-Etbjet_E", "Etbjet_vs_Thparton-Thbjet_B", "Etbjet_vs_Thparton-Thbjet_O", "Etbjet_vs_Thparton-Thbjet_E", "Etbjet_vs_Phiparton-Phibjet_B", "Etbjet_vs_Phiparton-Phibjet_O", "Etbjet_vs_Phiparton-Phibjet_E", "Etnonbjet_vs_Etparton-Etnonbjet_B", "Etnonbjet_vs_Etparton-Etnonbjet_O", "Etnonbjet_vs_Etparton-Etnonbjet_E", "Etnonbjet_vs_Thparton-Thnonbjet_B", "Etnonbjet_vs_Thparton-Thnonbjet_O", "Etnonbjet_vs_Thparton-Thnonbjet_E", "Etnonbjet_vs_Phiparton-Phinonbjet_B", "Etnonbjet_vs_Phiparton-Phinonbjet_O", "Etnonbjet_vs_Phiparton-Phinonbjet_E", "EtrecMu_vs_EtgenMu-EtrecMu_B", "EtrecMu_vs_EtgenMu-EtrecMu_O", "EtrecMu_vs_EtgenMu-EtrecMu_E", "EtrecMu_vs_ThgenMu-ThrecMu_B", "EtrecMu_vs_ThgenMu-ThrecMu_O", "EtrecMu_vs_ThgenMu-ThrecMu_E", "EtrecMu_vs_PhigenMu-PhirecMu_B", "EtrecMu_vs_PhigenMu-PhirecMu_O", "EtrecMu_vs_PhigenMu-PhirecMu_E"};
 
 //const std::string ResolutionFunctions::histoDescription[] = {"b jet energy", "b jet Et", "b jet pt", "b jet theta", "b jet eta", "b jet phi", "non-b jet energy", "non-b jet Et", "non-b jet pt", "non-b jet theta", "non-b jet eta", "non-b jet phi", "muon energy", "muon Et", "muon pt", "muon theta", "muon eta", "muon phi", "electron energy", "electron Et", "electron pt", "electron theta", "electron eta", "electron phi", "b jet Et barrel", "b jet Et overlap area", "b jet Et endcap", "non-b jet Et barrel", "non-b jet Et overlap area", "non-b jet Et endcap"};
 
-const std::string ResolutionFunctions::histoDescription[] = {"b jet Et barrel", "b jet Et overlap area", "b jet Et endcap", "b jet theta barrel", "b jet theta overlap area", "b jet theta endcap", "b jet phi barrel", "b jet phi overlap area", "b jet phi endcap", "non-b jet Et barrel", "non-b jet Et overlap area", "non-b jet Et endcap", "non-b jet theta barrel", "non-b jet theta overlap area", "non-b jet theta endcap", "non-b jet phi barrel", "non-b jet phi overlap area", "non-b jet phi endcap"};
+const std::string ResolutionFunctions::histoDescription[] = {"b jet Et barrel", "b jet Et overlap area", "b jet Et endcap", "b jet theta barrel", "b jet theta overlap area", "b jet theta endcap", "b jet phi barrel", "b jet phi overlap area", "b jet phi endcap", "non-b jet Et barrel", "non-b jet Et overlap area", "non-b jet Et endcap", "non-b jet theta barrel", "non-b jet theta overlap area", "non-b jet theta endcap", "non-b jet phi barrel", "non-b jet phi overlap area", "non-b jet phi endcap", "muon Et barrel", "muon Et overlap", "muon Et endcap", "muon theta barrel", "muon theta overlap", "muon theta endcap", "muon phi barrel", "muon phi overlap", "muon phi endcap"};
 
 Double_t ResolutionFunctions::sGaus(Double_t *x, Double_t *par)
 {
@@ -46,7 +46,7 @@ Double_t ResolutionFunctions::dblGausParFill(Double_t *x, Double_t *par)
 }
 
 ResolutionFunctions::ResolutionFunctions(bool calculateResolutionFunctions, bool _verbose):
-verbose(true), muon(false), electron(false), getHistos(false), histoRes2D(), inputFileName("PlotsForResolutionFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0]))
+verbose(true), muon(false), electron(false), getHistos(false), histoRes2D(), inputFileName("PlotsForResolutionFunctions.root"), nHistos(sizeof(histoNames)/sizeof(histoNames[0])), nJets(4)
 {
   verbose = _verbose;
   if (verbose) std::cout << "ResolutionFunctions::ResolutionFunctions - Initialising..." << std::endl;
@@ -112,6 +112,9 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Etbjet_vs_Etparton-Etbjet_B"] = new TH2F("Etbjet_vs_Etparton-Etbjet_B","; E_{T} (b jet); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
   histoRes2D["Etbjet_vs_Etparton-Etbjet_O"] = new TH2F("Etbjet_vs_Etparton-Etbjet_O","; E_{T} (b jet); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
   histoRes2D["Etbjet_vs_Etparton-Etbjet_E"] = new TH2F("Etbjet_vs_Etparton-Etbjet_E","; E_{T} (b jet); E_{T} (parton) - E_{T} (b jet)", 6, 0, 250, 100, -100, 100);
+  histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_B"] = new TH2F("EtrecMu_vs_EtgenMu-EtrecMu_B","; E_{T} (#mu_{reco}); E_{T} (#mu_{gen}) - E_{T} (#mu_{reco})", 4, 0, 200, 60, -3, 3);
+  histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_O"] = new TH2F("EtrecMu_vs_EtgenMu-EtrecMu_O","; E_{T} (#mu_{reco}); E_{T} (#mu_{gen}) - E_{T} (#mu_{reco})", 4, 0, 200, 60, -3, 3);
+  histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_E"] = new TH2F("EtrecMu_vs_EtgenMu-EtrecMu_E","; E_{T} (#mu_{reco}); E_{T} (#mu_{gen}) - E_{T} (#mu_{reco})", 4, 0, 200, 60, -3, 3);
   
   /// pT
   histoRes2D["Ptparton_vs_Ptnonbjet"] = new TH2F("Ptparton_vs_Ptnonbjet","Ptparton_vs_Ptnonbjet", 30, 0, 300, 30, 0, 300);
@@ -150,6 +153,9 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Etbjet_vs_Thparton-Thbjet_B"] = new TH2F("Etbjet_vs_Thparton-Thbjet_B","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
   histoRes2D["Etbjet_vs_Thparton-Thbjet_O"] = new TH2F("Etbjet_vs_Thparton-Thbjet_O","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
   histoRes2D["Etbjet_vs_Thparton-Thbjet_E"] = new TH2F("Etbjet_vs_Thparton-Thbjet_E","; E_{T} (b jet); #theta(parton) - #theta(b jet)", 5, 0, 250, 120, -0.1, 0.1);
+  histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_B"] = new TH2F("EtrecMu_vs_ThgenMu-ThrecMu_B","; E_{T} (#mu_{reco}); #theta(#mu_{gen}) - #theta(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
+  histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_O"] = new TH2F("EtrecMu_vs_ThgenMu-ThrecMu_O","; E_{T} (#mu_{reco}); #theta(#mu_{gen}) - #theta(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
+  histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_E"] = new TH2F("EtrecMu_vs_ThgenMu-ThrecMu_E","; E_{T} (#mu_{reco}); #theta(#mu_{gen}) - #theta(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
   
   /// Eta
   histoRes2D["Etaparton_vs_Etanonbjet"] = new TH2F("Etaparton_vs_Etanonbjet","Etaparton_vs_Etanonbjet", 60, -2.5, 2.5, 60, 0, 2.5);
@@ -198,6 +204,9 @@ void ResolutionFunctions::bookHistograms()
   histoRes2D["Etbjet_vs_Phiparton-Phibjet_B"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_B","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 120, -0.18, 0.18);
   histoRes2D["Etbjet_vs_Phiparton-Phibjet_O"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_O","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 100, -0.18, 0.18);
   histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"] = new TH2F("Etbjet_vs_Phiparton-Phibjet_E","; E_{T} (b jet); #phi(parton) - #phi(b jet)", 5, 0, 250, 100, -0.18, 0.18);
+  histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_B"] = new TH2F("EtrecMu_vs_PhigenMu-PhirecMu_B","; E_{T} (#mu_{reco}); #phi(#mu_{gen}) - #phi(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
+  histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_O"] = new TH2F("EtrecMu_vs_PhigenMu-PhirecMu_O","; E_{T} (#mu_{reco}); #phi(#mu_{gen}) - #phi(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
+  histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_E"] = new TH2F("EtrecMu_vs_PhigenMu-PhirecMu_E","; E_{T} (#mu_{reco}); #phi(#mu_{gen}) - #phi(#mu_{reco})", 4, 0, 200, 80, -0.002, 0.002);
   
   if (verbose) std::cout << "                                    - Histograms booked" << std::endl;
 }
@@ -205,6 +214,8 @@ void ResolutionFunctions::bookHistograms()
 void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vector<TLorentzVector> &jet)
 {
   /// 0,1: light jets from W; 2: hadronic b jet; 3: leptonic b jet
+  nJets = parton.size();
+  if ( jet.size() < nJets ) nJets = jet.size();
   
   /// Energy
   histoRes2D["Eparton_vs_Enonbjet"]->Fill(parton[0].E(),jet[0].E());
@@ -213,8 +224,11 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Enonbjet_vs_Eparton-Enonbjet"]->Fill(jet[1].E(),parton[1].E()-jet[1].E());
   histoRes2D["Eparton_vs_Ebjet"]->Fill(parton[2].E(),jet[2].E());
   histoRes2D["Ebjet_vs_Eparton-Ebjet"]->Fill(jet[2].E(),parton[2].E()-jet[2].E());
-  histoRes2D["Eparton_vs_Ebjet"]->Fill(parton[3].E(),jet[3].E());
-  histoRes2D["Ebjet_vs_Eparton-Ebjet"]->Fill(jet[3].E(),parton[3].E()-jet[3].E());
+  if ( nJets > 3 )
+  {
+    histoRes2D["Eparton_vs_Ebjet"]->Fill(parton[3].E(),jet[3].E());
+    histoRes2D["Ebjet_vs_Eparton-Ebjet"]->Fill(jet[3].E(),parton[3].E()-jet[3].E());
+  }
   
   /// Et
   histoRes2D["Etparton_vs_Etnonbjet"]->Fill(parton[0].Et(),jet[0].Et());
@@ -223,9 +237,12 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Etnonbjet_vs_Etparton-Etnonbjet"]->Fill(jet[1].Et(),parton[1].Et()-jet[1].Et());
   histoRes2D["Etparton_vs_Etbjet"]->Fill(parton[2].Et(),jet[2].Et());
   histoRes2D["Etbjet_vs_Etparton-Etbjet"]->Fill(jet[2].Et(),parton[2].Et()-jet[2].Et());
-  histoRes2D["Etparton_vs_Etbjet"]->Fill(parton[3].Et(),jet[3].Et());
-  histoRes2D["Etbjet_vs_Etparton-Etbjet"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
-      
+  if ( nJets > 3 )
+  {
+    histoRes2D["Etparton_vs_Etbjet"]->Fill(parton[3].Et(),jet[3].Et());
+    histoRes2D["Etbjet_vs_Etparton-Etbjet"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
+  }
+  
   /// pT
   histoRes2D["Ptparton_vs_Ptnonbjet"]->Fill(parton[0].Pt(),jet[0].Pt());
   histoRes2D["Ptnonbjet_vs_Ptparton-Ptnonbjet"]->Fill(jet[0].Pt(),parton[0].Pt()-jet[0].Pt());
@@ -233,8 +250,11 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Ptnonbjet_vs_Ptparton-Ptnonbjet"]->Fill(jet[1].Pt(),parton[1].Pt()-jet[1].Pt());
   histoRes2D["Ptparton_vs_Ptbjet"]->Fill(parton[2].Pt(),jet[2].Pt());
   histoRes2D["Ptbjet_vs_Ptparton-Ptbjet"]->Fill(jet[2].Pt(),parton[2].Pt()-jet[2].Pt());
-  histoRes2D["Ptparton_vs_Ptbjet"]->Fill(parton[3].Pt(),jet[3].Pt());
-  histoRes2D["Ptbjet_vs_Ptparton-Ptbjet"]->Fill(jet[3].Pt(),parton[3].Pt()-jet[3].Pt());
+  if ( nJets > 3 )
+  {
+    histoRes2D["Ptparton_vs_Ptbjet"]->Fill(parton[3].Pt(),jet[3].Pt());
+    histoRes2D["Ptbjet_vs_Ptparton-Ptbjet"]->Fill(jet[3].Pt(),parton[3].Pt()-jet[3].Pt());
+  }
   
   /// Theta
   histoRes2D["Thparton_vs_Thnonbjet"]->Fill(parton[0].Theta(),jet[0].Theta());
@@ -243,17 +263,23 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Thnonbjet_vs_Thparton-Thnonbjet"]->Fill(jet[1].Theta(),parton[1].Theta()-jet[1].Theta());
   histoRes2D["Thparton_vs_Thbjet"]->Fill(parton[2].Theta(),jet[2].Theta());
   histoRes2D["Thbjet_vs_Thparton-Thbjet"]->Fill(jet[2].Theta(),parton[2].Theta()-jet[2].Theta());
-  histoRes2D["Thparton_vs_Thbjet"]->Fill(parton[3].Theta(),jet[3].Theta());
-  histoRes2D["Thbjet_vs_Thparton-Thbjet"]->Fill(jet[3].Theta(),parton[3].Theta()-jet[3].Theta());
+  if ( nJets > 3 )
+  {
+    histoRes2D["Thparton_vs_Thbjet"]->Fill(parton[3].Theta(),jet[3].Theta());
+    histoRes2D["Thbjet_vs_Thparton-Thbjet"]->Fill(jet[3].Theta(),parton[3].Theta()-jet[3].Theta());
+  }
   histoRes2D["Eparton_vs_Thnonbjet"]->Fill(parton[0].E(),jet[0].Theta());
   histoRes2D["Enonbjet_vs_Thparton-Thnonbjet"]->Fill(jet[0].E(),parton[0].Theta()-jet[0].Theta());
   histoRes2D["Eparton_vs_Thnonbjet"]->Fill(parton[1].E(),jet[1].Theta());
   histoRes2D["Enonbjet_vs_Thparton-Thnonbjet"]->Fill(jet[1].E(),parton[1].Theta()-jet[1].Theta());
   histoRes2D["Eparton_vs_Thbjet"]->Fill(parton[2].E(),jet[2].Theta());
   histoRes2D["Ebjet_vs_Thparton-Thbjet"]->Fill(jet[2].E(),parton[2].Theta()-jet[2].Theta());
-  histoRes2D["Eparton_vs_Thbjet"]->Fill(parton[3].E(),jet[3].Theta());
-  histoRes2D["Ebjet_vs_Thparton-Thbjet"]->Fill(jet[3].E(),parton[3].Theta()-jet[3].Theta());
-
+  if ( nJets > 3 )
+  {
+    histoRes2D["Eparton_vs_Thbjet"]->Fill(parton[3].E(),jet[3].Theta());
+    histoRes2D["Ebjet_vs_Thparton-Thbjet"]->Fill(jet[3].E(),parton[3].Theta()-jet[3].Theta());
+  }
+  
   /// Eta
   histoRes2D["Etaparton_vs_Etanonbjet"]->Fill(parton[0].Eta(),jet[0].Eta());
   histoRes2D["Etanonbjet_vs_Etaparton-Etanonbjet"]->Fill(fabs(jet[0].Eta()),parton[0].Eta()-jet[0].Eta());
@@ -261,16 +287,22 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Etanonbjet_vs_Etaparton-Etanonbjet"]->Fill(fabs(jet[1].Eta()),parton[1].Eta()-jet[1].Eta());
   histoRes2D["Etaparton_vs_Etabjet"]->Fill(parton[2].Eta(),jet[2].Eta());
   histoRes2D["Etabjet_vs_Etaparton-Etabjet"]->Fill(fabs(jet[2].Eta()),parton[2].Eta()-jet[2].Eta());
-  histoRes2D["Etaparton_vs_Etabjet"]->Fill(parton[3].Eta(),jet[3].Eta());
-  histoRes2D["Etabjet_vs_Etaparton-Etabjet"]->Fill(fabs(jet[3].Eta()),parton[3].Eta()-jet[3].Eta());
+  if ( nJets > 3 )
+  {
+    histoRes2D["Etaparton_vs_Etabjet"]->Fill(parton[3].Eta(),jet[3].Eta());
+    histoRes2D["Etabjet_vs_Etaparton-Etabjet"]->Fill(fabs(jet[3].Eta()),parton[3].Eta()-jet[3].Eta());
+  }
   histoRes2D["Eparton_vs_Etanonbjet"]->Fill(parton[0].E(),jet[0].Eta());
   histoRes2D["Enonbjet_vs_Etaparton-Etanonbjet"]->Fill(jet[0].E(),parton[0].Eta()-jet[0].Eta());
   histoRes2D["Eparton_vs_Etanonbjet"]->Fill(parton[1].E(),jet[1].Eta());
   histoRes2D["Enonbjet_vs_Etaparton-Etanonbjet"]->Fill(jet[1].E(),parton[1].Eta()-jet[1].Eta());
   histoRes2D["Eparton_vs_Etabjet"]->Fill(parton[2].E(),jet[2].Eta());
   histoRes2D["Ebjet_vs_Etaparton-Etabjet"]->Fill(jet[2].E(),parton[2].Eta()-jet[2].Eta());
-  histoRes2D["Eparton_vs_Etabjet"]->Fill(parton[3].E(),jet[3].Eta());
-  histoRes2D["Ebjet_vs_Etaparton-Etabjet"]->Fill(jet[3].E(),parton[3].Eta()-jet[3].Eta());
+  if ( nJets > 3 )
+  {
+    histoRes2D["Eparton_vs_Etabjet"]->Fill(parton[3].E(),jet[3].Eta());
+    histoRes2D["Ebjet_vs_Etaparton-Etabjet"]->Fill(jet[3].E(),parton[3].Eta()-jet[3].Eta());
+  }
 
   /// Phi
   histoRes2D["Phiparton_vs_Phinonbjet"]->Fill(parton[0].Phi(),jet[0].Phi());
@@ -285,15 +317,19 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
   histoRes2D["Enonbjet_vs_Phiparton-Phinonbjet"]->Fill(jet[1].E(),DeltaPhi_nonbjet2);
 
   histoRes2D["Phiparton_vs_Phibjet"]->Fill(parton[2].Phi(),jet[2].Phi());
-  histoRes2D["Phiparton_vs_Phibjet"]->Fill(parton[3].Phi(),jet[3].Phi());
+  if ( nJets > 3 ) histoRes2D["Phiparton_vs_Phibjet"]->Fill(parton[3].Phi(),jet[3].Phi());
   histoRes2D["Eparton_vs_Phibjet"]->Fill(parton[2].E(),jet[2].Phi());
-  histoRes2D["Eparton_vs_Phibjet"]->Fill(parton[3].E(),jet[3].Phi());
-  float DeltaPhi_bjet1 = ROOT::Math::VectorUtil::DeltaPhi(parton[2],jet[3]);
+  if ( nJets > 3 ) histoRes2D["Eparton_vs_Phibjet"]->Fill(parton[3].E(),jet[3].Phi());
+  float DeltaPhi_bjet1 = ROOT::Math::VectorUtil::DeltaPhi(parton[2],jet[2]);
   histoRes2D["Phibjet_vs_Phiparton-Phibjet"]->Fill(jet[2].Phi(),DeltaPhi_bjet1);
   histoRes2D["Ebjet_vs_Phiparton-Phibjet"]->Fill(jet[2].E(),DeltaPhi_bjet1);
-  float DeltaPhi_bjet2 = ROOT::Math::VectorUtil::DeltaPhi(parton[3],jet[3]);
-  histoRes2D["Phibjet_vs_Phiparton-Phibjet"]->Fill(jet[3].Phi(),DeltaPhi_bjet2);
-  histoRes2D["Ebjet_vs_Phiparton-Phibjet"]->Fill(jet[3].E(),DeltaPhi_bjet2);
+  float DeltaPhi_bjet2 = 999.;
+  if ( nJets > 3 )
+  {
+    DeltaPhi_bjet2 = ROOT::Math::VectorUtil::DeltaPhi(parton[3],jet[3]);
+    histoRes2D["Phibjet_vs_Phiparton-Phibjet"]->Fill(jet[3].Phi(),DeltaPhi_bjet2);
+    histoRes2D["Ebjet_vs_Phiparton-Phibjet"]->Fill(jet[3].E(),DeltaPhi_bjet2);
+  }
   
   /// Et, theta, phi binned in eta
   float eta0 = fabs(jet[0].Eta());
@@ -362,27 +398,30 @@ void ResolutionFunctions::fillJets(std::vector<TLorentzVector> &parton, std::vec
     histoRes2D["Etbjet_vs_Thparton-Thbjet_E"]->Fill(jet[2].Et(),parton[2].Theta()-jet[2].Theta());
     histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"]->Fill(jet[2].Et(),DeltaPhi_bjet1);
   }
-  float eta3 = fabs(jet[3].Eta());
-  if ( eta3 <= 1.3 )
+  if ( nJets > 3 )
   {
-    histoRes2D["Etparton_vs_Etbjet_B"]->Fill(parton[3].Et(),jet[3].Et());
-    histoRes2D["Etbjet_vs_Etparton-Etbjet_B"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
-    histoRes2D["Etbjet_vs_Thparton-Thbjet_B"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
-    histoRes2D["Etbjet_vs_Phiparton-Phibjet_B"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
-  }
-  else if ( eta3 > 1.3 && eta3 <= 1.5 )
-  {
-    histoRes2D["Etparton_vs_Etbjet_O"]->Fill(parton[3].Et(),jet[3].Et());
-    histoRes2D["Etbjet_vs_Etparton-Etbjet_O"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
-    histoRes2D["Etbjet_vs_Thparton-Thbjet_O"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
-    histoRes2D["Etbjet_vs_Phiparton-Phibjet_O"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
-  }
-  else
-  {
-    histoRes2D["Etparton_vs_Etbjet_E"]->Fill(parton[3].Et(),jet[3].Et());
-    histoRes2D["Etbjet_vs_Etparton-Etbjet_E"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
-    histoRes2D["Etbjet_vs_Thparton-Thbjet_E"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
-    histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
+    float eta3 = fabs(jet[3].Eta());
+    if ( eta3 <= 1.3 )
+    {
+      histoRes2D["Etparton_vs_Etbjet_B"]->Fill(parton[3].Et(),jet[3].Et());
+      histoRes2D["Etbjet_vs_Etparton-Etbjet_B"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
+      histoRes2D["Etbjet_vs_Thparton-Thbjet_B"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
+      histoRes2D["Etbjet_vs_Phiparton-Phibjet_B"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
+    }
+    else if ( eta3 > 1.3 && eta3 <= 1.5 )
+    {
+      histoRes2D["Etparton_vs_Etbjet_O"]->Fill(parton[3].Et(),jet[3].Et());
+      histoRes2D["Etbjet_vs_Etparton-Etbjet_O"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
+      histoRes2D["Etbjet_vs_Thparton-Thbjet_O"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
+      histoRes2D["Etbjet_vs_Phiparton-Phibjet_O"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
+    }
+    else
+    {
+      histoRes2D["Etparton_vs_Etbjet_E"]->Fill(parton[3].Et(),jet[3].Et());
+      histoRes2D["Etbjet_vs_Etparton-Etbjet_E"]->Fill(jet[3].Et(),parton[3].Et()-jet[3].Et());
+      histoRes2D["Etbjet_vs_Thparton-Thbjet_E"]->Fill(jet[3].Et(),parton[3].Theta()-jet[3].Theta());
+      histoRes2D["Etbjet_vs_Phiparton-Phibjet_E"]->Fill(jet[3].Et(),DeltaPhi_bjet2);
+    }
   }
 }
 
@@ -415,6 +454,27 @@ void ResolutionFunctions::fillMuon(TLorentzVector genMu, TLorentzVector recMu)
   float DeltaPhi = ROOT::Math::VectorUtil::DeltaPhi(genMu,recMu);
   histoRes2D["PhirecMu_vs_PhigenMu-PhirecMu"]->Fill(recMu.Phi(),DeltaPhi);
   histoRes2D["PtrecMu_vs_PhigenMu-PhirecMu"]->Fill(recMu.Pt(),DeltaPhi);
+  
+  /// Et, theta, phi binned in eta
+  float eta = fabs(recMu.Eta());
+  if ( eta <= 0.9 )
+  {
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_B"]->Fill(recMu.Et(),genMu.Et()-recMu.Et());
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_B"]->Fill(recMu.Et(),genMu.Theta()-recMu.Theta());
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_B"]->Fill(recMu.Et(),DeltaPhi);
+  }
+  else if ( eta > 0.9 && eta <= 1.2 )
+  {
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_O"]->Fill(recMu.Et(),genMu.Et()-recMu.Et());
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_O"]->Fill(recMu.Et(),genMu.Theta()-recMu.Theta());
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_O"]->Fill(recMu.Et(),DeltaPhi);
+  }
+  else
+  {
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_E"]->Fill(recMu.Et(),genMu.Et()-recMu.Et());
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_E"]->Fill(recMu.Et(),genMu.Theta()-recMu.Theta());
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_E"]->Fill(recMu.Et(),DeltaPhi);
+  }
   
 }
 
@@ -544,6 +604,16 @@ void ResolutionFunctions::writeHistograms()
     histoRes2D["ThrecMu_vs_ThgenMu-ThrecMu"]->Write();
     histoRes2D["EtarecMu_vs_EtagenMu-EtarecMu"]->Write();
     histoRes2D["PhirecMu_vs_PhigenMu-PhirecMu"]->Write();
+    
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_B"]->Write();
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_O"]->Write();
+    histoRes2D["EtrecMu_vs_EtgenMu-EtrecMu_E"]->Write();
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_B"]->Write();
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_O"]->Write();
+    histoRes2D["EtrecMu_vs_ThgenMu-ThrecMu_E"]->Write();
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_B"]->Write();
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_O"]->Write();
+    histoRes2D["EtrecMu_vs_PhigenMu-PhirecMu_E"]->Write();
   }
   
   if (electron)
@@ -590,13 +660,19 @@ void ResolutionFunctions::makeFit()
     
     // now: 0-2: b jet Et (BOE), 3-5: b jet theta (BOE), 6-8: b jet phi (BOE), 9-11: non-b jet Et (BOE), 12-14: non-b jet theta (BOE), 15-17: non-b jet phi (BOE)
     
-    bool fitEt = false, fitTheta = false, fitPhi = false;
-    if ( f == 0 || f == 1 || f == 2 || f == 9 || f == 10 || f == 11 ) fitEt = true;
-    else if ( f == 3 || f == 4 || f == 5 || f == 12 || f == 13 || f == 14 ) fitTheta = true;
-    else if ( f == 6 || f == 7 || f == 8 || f == 15 || f == 16 || f == 17 ) fitPhi = true;
+    bool fitEt = false, fitTheta = false, fitPhi = false, fitEtMu = false, fitThetaMu = false, fitPhiMu = false;
+    if      ( f ==  0 || f ==  1 || f ==  2 || f ==  9 || f == 10 || f == 11 ) fitEt = true;
+    else if ( f ==  3 || f ==  4 || f ==  5 || f == 12 || f == 13 || f == 14 ) fitTheta = true;
+    else if ( f ==  6 || f ==  7 || f ==  8 || f == 15 || f == 16 || f == 17 ) fitPhi = true;
+    else if ( f == 18 || f == 19 || f == 20 ) fitEtMu = true;
+    else if ( f == 21 || f == 22 || f == 23 ) fitThetaMu = true;
+    else if ( f == 24 || f == 25 || f == 26 ) fitPhiMu = true;
     else continue;
     
-    if ( f < 9 ) continue;  // TEMPORARILY (disable b jet fits)
+    bool fitAnglesMuon = false;
+    //if ( fitThetaMu || fitPhiMu ) fitAnglesMuon = true;
+    
+    //if ( f < 9 ) continue;  // TEMPORARILY (disable b jet fits)
     
     std::cout << "  ***Current histogram:  " << histoNames[f] << "***" << std::endl;
     
@@ -650,7 +726,7 @@ void ResolutionFunctions::makeFit()
       
       double maxX = 0.;
       double fitEdge = 100.;  // largest for Et
-      if ( fitTheta )
+      if (fitTheta)
       {
         fitEdge = 0.08;
         if ( xBin > 1 ) fitEdge = 0.06;
@@ -665,13 +741,27 @@ void ResolutionFunctions::makeFit()
           if ( xBin > 4 ) fitEdge = 0.05;
         }
       }
-      else if ( fitPhi )
+      else if (fitPhi)
       {
         fitEdge = 0.18;
         if ( xBin > 1 ) fitEdge = 0.13;
         if ( xBin > 2 ) fitEdge = 0.08;
         if ( xBin > 3 ) fitEdge = 0.06;
         if ( histoNames[f].find("_B") == std::string::npos && xBin > 4 ) fitEdge = 0.05;
+      }
+      else if (fitEtMu)
+      {
+        fitEdge = 3.;
+        if ( xBin == 1 ) fitEdge = 2.5;
+      }
+      else if (fitThetaMu)
+      {
+        fitEdge = 0.0015;
+        if ( histoNames[f].find("_B") == std::string::npos ) fitEdge = 0.001;
+      }
+      else if (fitPhiMu)
+      {
+        fitEdge = 0.0015;
       }
       
       if (useSingleG)
@@ -686,10 +776,11 @@ void ResolutionFunctions::makeFit()
           if ( xBin > 3 ) fitEdge = 1.5*(hp->GetStdDev());
         }
       }
-      if (useSingleG /*&& ! fitEt*/) nPar = 4;
+      if (useSingleG || fitAnglesMuon /*&& ! fitEt*/) nPar = 4;
       
       TF1 *myfit;
       if (useSingleG /*&& ! fitEt*/) myfit = new TF1("myfit", sGaus, maxX - fitEdge, maxX + fitEdge, nPar);
+      else if (fitAnglesMuon) myfit = new TF1("myfit", sGaus, -fitEdge, fitEdge, nPar);
       else myfit = new TF1("myfit", dblGaus, -fitEdge, fitEdge, nPar);
       
       //  Give names to the parameters
@@ -699,7 +790,7 @@ void ResolutionFunctions::makeFit()
                                   // sGaus: amplitude
       myfit->SetParName(3,"a4");  // central value of second, broad gaussian
                                   // sGaus: shift up/down (because of second, non-fitted gaus)
-      if (! useSingleG /*|| fitEt*/)
+      if (! useSingleG && ! fitAnglesMuon /*|| fitEt*/)
       {
         myfit->SetParName(4,"a5");  // sigma value of second, broad gaussian
         myfit->SetParName(5,"a6");  // amplitude
@@ -711,7 +802,7 @@ void ResolutionFunctions::makeFit()
         // Mean around zero
         //myfit->SetParLimits(0,-10,10);
         myfit->SetParLimits(0, hp->GetMean() - hp->GetRMS()/1.5, hp->GetMean() + hp->GetRMS()/1.5);
-        if (! useSingleG) myfit->SetParLimits(3, -35., 35.);
+        if (! useSingleG) myfit->SetParLimits(3, -50., 35.);
         // Restrict sigma to be positive
         myfit->SetParLimits(1, 2., 28.);
         if (! useSingleG) myfit->SetParLimits(4, 8., 110.);
@@ -739,8 +830,9 @@ void ResolutionFunctions::makeFit()
           else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.9, 5., 30.0, 1.);
           if (! useSingleG)
           {
-            myfit->SetParLimits(1, 8., 14.);
-            myfit->SetParLimits(3, 4.4 - 23., 4.4 + 23.);
+            if ( xBin == 3 ) myfit->SetParLimits(1, 8., 11.);
+            else myfit->SetParLimits(1, 11., 13.);
+            myfit->SetParLimits(3, -25., 25.);
             myfit->SetParLimits(4, 18., 50.);
           }
         }
@@ -750,7 +842,7 @@ void ResolutionFunctions::makeFit()
           else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 2., 6.6, 50., 1.);
           if (! useSingleG)
           {
-            myfit->SetParLimits(1, 13., 20.);
+            myfit->SetParLimits(1, 12.5, 15.);
             myfit->SetParLimits(4, 25., 125.);
           }
           //if ( f > 6 )  // Et, pt of non-b jet
@@ -760,7 +852,11 @@ void ResolutionFunctions::makeFit()
         {
           if (useSingleG) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/2., 1., 0.);
           else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 2., 6.6, 50., 1.);
-          if (! useSingleG) myfit->SetParLimits(4, 28., 125.);
+          if (! useSingleG)
+          {
+            myfit->SetParLimits(1, 13.5, 17.);
+            myfit->SetParLimits(4, 28., 135.);
+          }
           //if ( f > 6 )  // Et, pt of non-b jet
             //fix such that small gaussian has smallest width
         }
@@ -777,7 +873,8 @@ void ResolutionFunctions::makeFit()
         
         if (! useSingleG)
         {
-          myfit->SetParLimits(2,0.06,0.6);
+          if (fitTheta) myfit->SetParLimits(2,0.05,0.6);
+          else myfit->SetParLimits(2,0.06,0.6);
           myfit->SetParLimits(3,-0.05,0.05);  // mean around zero
           myfit->SetParLimits(4,1e-2,3e-1);   // sigma positive
         }
@@ -814,6 +911,10 @@ void ResolutionFunctions::makeFit()
                 if ( histoNames[f].find("_B") != std::string::npos ) myfit->SetParLimits(1,13e-3,18e-3);
               }
             }
+            else if ( xBin == 3 && fitTheta && histoNames[f].find("_E") != std::string::npos )
+            {
+              myfit->SetParLimits(1,3e-3,5e-3);
+            }
             myfit->SetParameter(2, 0.2);
           }
         }
@@ -825,18 +926,90 @@ void ResolutionFunctions::makeFit()
           {
             if (fitTheta)
             {
-              if ( xBin == 4 ) myfit->SetParLimits(1, 2e-3, 8e-3);
-              else myfit->SetParLimits(1, 2e-3, 75e-4);
+              if ( xBin == 4 ) myfit->SetParLimits(1, 25e-4, 8e-3);
+              else myfit->SetParLimits(1, 25e-4, 7e-3);
               if ( histoNames[f].find("_E") != std::string::npos )
               {
                 myfit->SetParLimits(1, 2e-3, 35e-4);
                 if ( xBin > 4 ) myfit->SetParLimits(1, 1e-3, 3e-3);
               }
+              else if ( xBin > 4 && histoNames[f].find("_O") != std::string::npos ) myfit->SetParLimits(1, 25e-4, 6e-3);
             }
             myfit->SetParameter(2, 0.1);
             myfit->SetParLimits(2,0.06,0.45);
             myfit->SetParLimits(4,7e-3,3e-1);
             if (fitPhi) myfit->SetParLimits(4,15e-3,3e-1);
+            if ( fitPhi && xBin > 4 && histoNames[f].find("_E") != std::string::npos ) myfit->SetParLimits(1,5e-3,1e-2);
+          }
+        }
+      }
+      
+      /////////
+      /// MUON
+      /////////
+      
+      else if (fitEtMu)   /// muon Et (BOE)
+      {
+        // Mean around zero
+        myfit->SetParLimits(0,-0.5,0.5);
+        // Restrict sigma to be positive
+        myfit->SetParLimits(1,5e-2,2.);
+        if (! useSingleG)
+        {
+          myfit->SetParLimits(2,0.01,0.6);
+          myfit->SetParLimits(3,-1.,1.);
+          myfit->SetParLimits(4,8e-1,30.);
+        }
+        
+        myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.3, hp->GetMean(), hp->GetRMS()*1.5, 0.03);
+//         if ( xBin < 3 && histoNames[f].find("_B") != std::string::npos )
+//         {
+//           if ( xBin == 1 ) myfit->SetParLimits(1,5e-2,0.42);
+//           else myfit->SetParLimits(1,5e-2,0.85);
+//         }
+        //if ( xBin == 3 /*&& histoNames[f].find("_B") != std::string::npos*/ ) myfit->SetParLimits(1,5e-2,1.6);
+        //if ( ! useSingleG && xBin == 4 && histoNames[f].find("_B") != std::string::npos )
+        if ( xBin > 2 )
+        {
+          if ( xBin == 3 ) myfit->SetParLimits(1,0.8,1.6);
+          else myfit->SetParLimits(1,0.8,2.);
+          if (! useSingleG) myfit->SetParLimits(2,0.01,1.5);
+        }
+      }
+      else if (fitThetaMu || fitPhiMu)
+      {
+        // Mean around zero
+        myfit->SetParLimits(0,-0.001,0.001);
+        // Restrict sigma to be positive
+        myfit->SetParLimits(1,9e-5,3e-4);
+        if (fitPhiMu) myfit->SetParLimits(1,9e-5,25e-5);
+        if (! useSingleG && ! fitAnglesMuon)
+        {
+          if (fitThetaMu) myfit->SetParLimits(2,0.05,0.8);
+          //else myfit->SetParLimits(2,0.06,0.8);
+          myfit->SetParLimits(4,2e-4,8e-4);
+        }
+        
+        if (fitAnglesMuon) myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.1, 0.);
+        else myfit->SetParameters(hp->GetMean(), hp->GetRMS()/3., 0.25, hp->GetMean(), hp->GetRMS()*1.5, 0.03);
+        
+        if ( histoNames[f].find("_B") != std::string::npos )
+        {
+          myfit->SetParLimits(1,1e-4,3e-4);
+          if (fitPhiMu) myfit->SetParLimits(1,7e-5,25e-5);
+          if (! useSingleG)
+          {
+            if (fitThetaMu) myfit->SetParLimits(2,0.2,0.3);
+          }
+        }
+        //else if ( fitPhiMu && histoNames[f].find("_O") != std::string::npos ) myfit->SetParLimits(1,9e-5,25e-5);
+        else if ( histoNames[f].find("_E") != std::string::npos )
+        {
+          myfit->SetParLimits(1,6e-5,3e-4);
+          //if (fitPhiMu) myfit->SetParLimits(1,1e-4,25e-5);
+          if (! useSingleG)
+          {
+            if (fitThetaMu) myfit->SetParLimits(2,0.07,0.3);
           }
         }
       }
@@ -883,12 +1056,14 @@ void ResolutionFunctions::makeFit()
       hp->Fit(myfit, "R");
       gStyle->SetOptFit(0111);
       
-      if (! useSingleG && myfit->GetParameter(1) > myfit->GetParameter(4) )
+      if (! useSingleG && ! fitAnglesMuon && myfit->GetParameter(1) > myfit->GetParameter(4) )
       {
         double temp = myfit->GetParameter(1);
         double tempErr = myfit->GetParError(1);
         double addErr = 0.003;
         if (fitEt) addErr = 3.;
+        else if (fitEtMu) addErr = 0.2;
+        else if (fitThetaMu || fitPhiMu) addErr = 0.00002;
         myfit->SetParameter(1, myfit->GetParameter(4));
         myfit->SetParError(1, myfit->GetParError(4)+addErr);
         myfit->SetParameter(4, temp);
@@ -899,13 +1074,14 @@ void ResolutionFunctions::makeFit()
       if ( hp->GetEntries() < 2000 )
       {
         double tempErr = myfit->GetParError(1);
-        if ( fitEt && tempErr < 1. ) myfit->SetParError(1, 5.*tempErr);
-        else if ( tempErr < 0.002 ) myfit->SetParError(1, 3.*tempErr);
+        if ( fitEt && tempErr < 1. ) myfit->SetParError(1, 3.*tempErr);
+        else if ( tempErr/myfit->GetParameter(1) < 0.01 ) myfit->SetParError(1, 3.*tempErr);
       }
       
       if (! useSingleG && fitEt )
       {
         double tempErr = myfit->GetParError(1);
+        if ( tempErr < 5e-2 ) myfit->SetParError(1, 1.);
         if ( xBin == 4 && histoNames[f].find("_O") != std::string::npos )
         {
           if ( tempErr < 0.1 ) myfit->SetParError(1, 3.*tempErr);
@@ -918,13 +1094,13 @@ void ResolutionFunctions::makeFit()
           if ( tempErr < 5e-2 ) myfit->SetParError(1, 1.);
         }
       }
-      if (! useSingleG && (fitTheta || fitPhi) && xBin < 3 )
+      if (! useSingleG && (fitTheta || fitPhi) && xBin < 4 )
       {
         double tempErr = myfit->GetParError(1);
         if (fitTheta)
         {
           //myfit->SetParError(1, 3.*tempErr);
-          if ( tempErr < 4e-5 ) myfit->SetParError(1, 0.005);
+          if ( tempErr < 4e-5 ) myfit->SetParError(1, 0.0005);
         }
         else if (fitPhi)
         {
@@ -936,6 +1112,11 @@ void ResolutionFunctions::makeFit()
       {
         double tempErr = myfit->GetParError(1);
         myfit->SetParError(1, 1.5*tempErr);
+      }
+      if (! useSingleG && fitEtMu )
+      {
+        double tempErr = myfit->GetParError(1);
+        if ( tempErr < 1e-3 ) myfit->SetParError(1, 0.5);
       }
       
       int npFits = myfit->GetNumberFitPoints();
@@ -974,14 +1155,16 @@ void ResolutionFunctions::makeFit()
 //      maxfit2 = histo->GetXaxis()->GetBinUpEdge(5) - 1e-5;
 //    else if ( fitPhi && histoNames[f].find("_E") != std::string::npos )
 //      maxfit2 = histo->GetXaxis()->GetBinUpEdge(4) - 1e-5;
+    if (fitEtMu) maxfit2 = histo->GetXaxis()->GetBinUpEdge(3) - 1e-5;
+    
     
     TF1 *myfit2;
-    if (fitEt) myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
+    if (fitEt || fitEtMu) myfit2 = new TF1("myfit2", "[0]+[1]*x", minfit2, maxfit2);
     else myfit2 = new TF1("myfit2", "[0]+[1]*x+[2]*sqrt(x)", minfit2, maxfit2);
     // Give names to the parameters
     myfit2->SetParName(0,"ai0");
     myfit2->SetParName(1,"ai1");
-    if (fitTheta || fitPhi) myfit2->SetParName(2,"ai2");
+    if (! fitEt && ! fitEtMu) myfit2->SetParName(2,"ai2");
 
     for (int iPar = 0; iPar < nPar; iPar++){
       int paramname = iPar+1;
@@ -1021,10 +1204,10 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
     if ( fin->GetListOfKeys()->Contains((histoNames[iHisto]).c_str()) )
     {
       fitHisto2D[histoNames[iHisto]] = (TH2F*) fin->Get((histoNames[iHisto]).c_str());
-      if ( iHisto == 12 || iHisto == 13 || iHisto == 14 || iHisto == 15 || iHisto == 16 || iHisto == 17)
-        muon = true;
-      if ( iHisto == 18 || iHisto == 19 || iHisto == 20 || iHisto == 21 || iHisto == 22 || iHisto == 23)
-        electron = true;
+//       if ( iHisto == 12 || iHisto == 13 || iHisto == 14 || iHisto == 15 || iHisto == 16 || iHisto == 17)
+//         muon = true;
+//       if ( iHisto == 18 || iHisto == 19 || iHisto == 20 || iHisto == 21 || iHisto == 22 || iHisto == 23)
+//         electron = true;
     }
   }
   

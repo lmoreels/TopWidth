@@ -65,6 +65,7 @@ class ResolutionFunctions{
     //std::map<std::string,std::vector<std::array<double, 2> > > fitParams;
     std::string inputFileName;
     int nHistos;
+    unsigned int nJets;
     static const std::string histoNames[];
     static const std::string histoDescription[];
     static Double_t sGaus(Double_t *x, Double_t *par);
