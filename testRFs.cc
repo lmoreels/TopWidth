@@ -139,9 +139,9 @@ int main (int argc, char *argv[])
   
   ResolutionFunctions* rf = new ResolutionFunctions(false, true);
   
-  string inputFileName = "PlotsForResolutionFunctions.root";
+  string inputFileName = "input/PlotsForResolutionFunctions_171025.root";
   
-  string rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit.root";
+  string rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit_171025.root";
   //TFile *foutRF = new TFile(rfFileName.c_str(), "RECREATE");
   //foutRF->cd();
   //TDirectory* rootDir = foutRF->mkdir(dateString.c_str());
@@ -154,7 +154,7 @@ int main (int argc, char *argv[])
   
   if (testRead)
   {
-    rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit_170608.root";
+    rfFileName = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/PlotsForResolutionFunctions_testFit_171025.root";
     
     TF2* f2 = (TF2*) rf->getFitFunction2D(rfFileName, "Et", "bjet", "B");
     DrawFunction(f2, "b jet Et (barrel)", "RF_bjet_Et_B_fitF");

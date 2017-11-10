@@ -28,7 +28,7 @@
 
 // user defined
 #include "Tools/interface/HelperTools.h"
-#include "Tools/interface/Likelihood.h"
+#include "Tools/interface/Likelihood2D.h"
 
 using namespace std;
 
@@ -58,10 +58,10 @@ int main (int argc, char *argv[])
   mkdir(("OutputLikelihood/"+outputDir).c_str(),0777);
   outputDir += dateString;
   
-  string inputDir = "LikelihoodTemplates/171011_1932/";
-  Likelihood* like = new Likelihood(0.6, 1.4, inputDir, outputDir, false, false, true);  // makeTGraphs, verbose
+  string inputDir = "LikelihoodTemplates/171102_1053/";
+  Likelihood2D* like = new Likelihood2D(0.6, 1.4, inputDir, outputDir, false, false, true);  // makeTGraphs, verbose
   
-  string pathFile = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/OutputLikelihood/171011_224/";
+  string pathFile = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/OutputLikelihood/171102_1340/";
   string llFileName = "likelihoodValues.txt";
   
 //   vector<double> vecWidths, vecMasses, vecLLValues;
@@ -105,18 +105,18 @@ int main (int argc, char *argv[])
 //   std::pair<int,int> locMin = like->LocMinArray(nn, LLvalues);
 //   std::cout << "Index of minimum LL value is (" << locMin.first << ", " << locMin.second << ")" << "           " << LLvalues[locMin.first][locMin.second] << std::endl;
 
-  std::pair<double,double> locMin = std::pair<double,double>(0.95,172.5);
+  std::pair<double,double> locMin = std::pair<double,double>(0.9,172.55);
   double centreVal = locMin.first;
   
-  double interval = 0.15;
+  double interval = 0.1;
   if ( centreVal <= interval ) interval = centreVal - 0.1;
   if ( centreVal > 2.8 ) interval = 0.4;
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
   
-  double fitminY = locMin.second - 0.25;
+  double fitminY = locMin.second - 0.2;
   if ( fitminY < 169.5 ) fitminY = 169.5;
-  double fitmaxY = locMin.second + 0.25;
+  double fitmaxY = locMin.second + 0.2;
   if ( fitmaxY > 175.5 ) fitmaxY = 175.5;
   
   if (verbose_)
@@ -128,10 +128,10 @@ int main (int argc, char *argv[])
   filePlots_->cd();
   
   TGraph2D *g = new TGraph2D((pathFile+llFileName).c_str());
-  g->SetMaxIter(500000);
+  g->SetMaxIter(50000000);
   
   //TF2 *parabola = new TF2("parabola", "[0]++[1]*x++[2]*x*x++[3]*y++[4]*y*y++[5]*x*x*y++[6]*x*y*y++[7]*x*x*x", fitmin, fitmax, fitminY, fitmaxY);
-  TF2 *parabola = new TF2("parabola", "1260541.164*[0] + [1]*x + [2]*x*x + [3]*y + [4]*y*y + [5]*x*y*y + [6]*y*y*y*y", fitmin, fitmax, fitminY, fitmaxY);
+  TF2 *parabola = new TF2("parabola", "[0] + [1]*x + [2]*x*x + [3]*y + [4]*y*y + [5]*x*y*y + [6]*y*y*y*y", fitmin, fitmax, fitminY, fitmaxY);
   //TF2 *parabola = new TF2("parabola", "1260541.164 + [1]*(x - 172.5)*(x - 172.5) + [2]*y", fitmin, fitmax, fitminY, fitmaxY);
   //TF2 *parabola = new TF2("parabola", "[0] + [1]*x + [2]*x*x + [3]*y + [4]*y*y + [5]*x*y + [6]*x*x*y + [7]*x*y*y", fitmin, fitmax, fitminY, fitmaxY);
   //TF2 *parabola = new TF2("parabola", "x*x*[0] + x*[1] + y*y*[2] + y*[3] + [4] + x*y*[5] + x*x*y*[6] + x*y*y*[7] + x*x*x*[8] + y*y*y*[9]", fitmin, fitmax, fitminY, fitmaxY);
@@ -145,13 +145,18 @@ int main (int argc, char *argv[])
   //parabola->SetParLimits(4, LLvalues[locMin.first][locMin.second] - 30., LLvalues[locMin.first][locMin.second] + 30.);
   //parabola->SetParameters(10229.4, 5.50558e+06,-40805.9,7.02645e+06,-4.02035e+08,-63944.6,-57.6472,185.66,-75.6738,78.9921);
   //parabola->Write();
-  parabola->SetParameter(0, 1.);
-  parabola->SetParameter(6, 0.01);
+  //parabola->SetParameter(0, 1.);
+  //parabola->SetParameter(6, 0.01);
+  parabola->SetParameters(6e+6, -180., 100, -69000., 200., 0.001, 0.001);
+  //parabola->SetParLimits(0, -10., 0.);
+  //parabola->FixParameter(6,0.);
+  //parabola->SetParLimits(6,2e-3,1e-1);
   
   //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS2");
-  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit","Simplex");
+  //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit","Simplex");
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultTolerance(1e-3);
-  TFitResultPtr p = g->Fit(parabola,"SWRMEV");
+  TFitResultPtr p = g->Fit(parabola,"SWRME");
   if (verbose_) p->Print("V");
   
   // Choose method upon creation between:
@@ -201,8 +206,9 @@ int main (int argc, char *argv[])
   
   std::cout << "For an input width of 1 the minimum can be found at " << outputWidth << " and the uncertainty is " << sigma << std::endl;
   
-  like->DrawOutputLogLikelihood(g, fitresult, fitmin, fitmax, fitminY, fitmaxY, plotName, true);
+  like->DrawOutputLogLikelihood(g, fitresult, fitmin, fitmax, fitminY+0.1, fitmaxY-0.1, plotName, true);
   like->DrawOutputLogLikelihood(g, fitresult, outputWidth, outputMass, minimum, plotName, true);
+  like->Make2DGraph(g, plotName);
   
   filePlots_->Close();
   cout << "File closed" << endl;
@@ -210,9 +216,9 @@ int main (int argc, char *argv[])
   
   delete parbx;
   delete parby;
-  delete fitresult;
+  //delete fitresult;
   delete parabola;
-  delete g;
+  //delete g;
   
   //like->GetOutputWidth(llFileName, "", inputWidths[iWidth]);
   
