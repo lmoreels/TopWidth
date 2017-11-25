@@ -123,7 +123,7 @@ for chan in channels:
                 # Combine multiple root files in a single job
                 listOfFiles.append(topTrees[f])
                 #temp copy 
-                CopyCmdlistOfFiles.append("dccp dcap://maite.iihe.ac.be:"+topTrees[f]+" /$TMPDIR/TOPTREE_"+str(f)+".root")
+                CopyCmdlistOfFiles.append("dccp dcap://maite.iihe.ac.be"+topTrees[f]+" /$TMPDIR/TOPTREE_"+str(f)+".root")
                 listOfScratchFiles.append(" /scratch/$PBS_JOBID/TOPTREE_"+str(f)+".root")
                 listOfTmpDirFiles.append(" /$TMPDIR/TOPTREE_"+str(f)+".root")            
 
@@ -157,7 +157,7 @@ for chan in channels:
 
 
 
-                    print >> outfile, commandString, files_str, " ", JES, " " , JER, " " , fillBhisto, " ", chan , " " , str(N_job+1) , " 0" , " 50000000"
+                    print >> outfile, commandString, files_str, " ", JES, " " , JER, " " , fillBhisto, " ", chan , " " , str(N_job+1) , " 0" , " 500000000"
 
                     # cleaning
                     listOfFiles=[]
