@@ -50,22 +50,24 @@ bool applyBTagSF = true;
 
 bool doReweighting = false;
 bool applyMassSF = false;
-double scaleMass = 172.5.;
+double scaleMass = 172.5;
+bool applyWidthSF = false;
+double scaleWidth = 1.;
 
 string systStr = "nominal";
-string ntupleSystDate = "170803";
+string ntupleSystDate = "171108";
 pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170712","170920");
+    return pair<string,string>("171121","171021");
   }
-  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
-  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
+  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("171022","171021");
+  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("171023","171021");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170920");
+    return pair<string,string>("171109","171021");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -180,14 +182,7 @@ Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
 Bool_t          hasErasedBadOrCloneMuon;
-Bool_t          filterHBHENoise;
-Bool_t          filterHBHEIso;
-Bool_t          filterCSCTightHalo;
-Bool_t          filterEcalDeadCell;
-Bool_t          filterEEBadSc;
-Bool_t          filterBadChCand;
-Bool_t          filterBadMuon;
-Bool_t          passedMETFilter;
+Bool_t          passedMETFilter = 1;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
 Double_t        muon_pt[1];   //[nMuons]
@@ -241,28 +236,11 @@ Bool_t          mc_isPromptFinalState[200];   //[nMCParticles]
 Bool_t          mc_isHardProcess[200];   //[nMCParticles]
 Bool_t          mc_fromHardProcessFinalState[200];   //[nMCParticles]
 Bool_t          hasGenTop;
-Bool_t          hasGenTopWithStatus22;
-Bool_t          hasGenTopWithStatus62;
 Bool_t          hasGenAntiTop;
-Bool_t          hasGenAntiTopWithStatus22;
-Bool_t          hasGenAntiTopWithStatus62;
 
 Long64_t        nEvents;
 Long64_t        nEventsSel;
-Long64_t        nofEventsWithGenTop;
-Long64_t        nofEventsWithGenTopWithStatus22or62;
-Long64_t        nofEventsWithGenAntiTop;
-Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
-Long64_t        nofTTEventsWithoutBothGenTops;
 Long64_t        nofTTEventsWithoutAGenTop;
-Long64_t        nofTTEventsWithoutGenTop;
-Long64_t        nofTTEventsWithoutGenAntiTop;
-Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
-Long64_t        nofTTEventsWithoutGenTopWithStatus22;
-Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
-Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
-Long64_t        nofTTEventsWithoutGenTopWithStatus62;
-Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
 
 // List of branches
 TBranch        *b_run_num;   //!
@@ -275,14 +253,6 @@ TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
 TBranch        *b_hasErasedBadOrCloneMuon;   //!
-TBranch        *b_filterHBHENoise;   //!
-TBranch        *b_filterHBHEIso;   //!
-TBranch        *b_filterCSCTightHalo;   //!
-TBranch        *b_filterEcalDeadCell;   //!
-TBranch        *b_filterEEBadSc;   //!
-TBranch        *b_filterBadChCand;   //!
-TBranch        *b_filterBadMuon;   //!
-TBranch        *b_passedMETFilter;   //!
 TBranch        *b_nMuons;   //!
 TBranch        *b_muon_charge;   //!
 TBranch        *b_muon_pt;   //!
@@ -336,31 +306,14 @@ TBranch        *b_mc_isPromptFinalState;   //!
 TBranch        *b_mc_isHardProcess;   //!
 TBranch        *b_mc_fromHardProcessFinalState;   //!
 TBranch        *b_hasGenTop;   //!
-TBranch        *b_hasGenTopWithStatus22;   //!
-TBranch        *b_hasGenTopWithStatus62;   //!
 TBranch        *b_hasGenAntiTop;   //!
-TBranch        *b_hasGenAntiTopWithStatus22;   //!
-TBranch        *b_hasGenAntiTopWithStatus62;   //!
 
 TBranch        *b_nEvents;   //!
 TBranch        *b_nEventsSel;   //!
-TBranch        *b_nofEventsWithGenTop;   //!
-TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
-TBranch        *b_nofEventsWithGenAntiTop;   //!
-TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
 TBranch        *b_nofTTEventsWithoutAGenTop;   //!
-TBranch        *b_nofTTEventsWithoutGenTop;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutGenTopWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
-TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
-TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
-TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 
 
-double lumiWeight, numWeight, scaleFactor, massSF;
+double lumiWeight, numWeight, scaleFactor, massSF, widthSF;
 bool foundTop62, foundAntiTop62;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
@@ -410,11 +363,11 @@ double matched_mlb_wrong, matched_ttbarMass_wrong, matched_dR_lep_b_wrong;
 
 /// Input samples & reweighting
 int thisGenMassId;
-double genMassArray[] = {169.5, 172.5, 175.5};
-string genMassString[] = {"g169p5", "g172p5", "g175p5"};
+double genMassArray[] = {169.5, 171.5, 172.5, 173.5, 175.5};
+string genMassString[] = {"g169p5", "g171p5", "g172p5", "g173p5", "g175p5"};
 const int nGenMasses = sizeof(genMassArray)/sizeof(genMassArray[0]);
 
-int nEventsTT[] = {56273062, 153843293, 39649356};
+int nEventsTT[] = {58540996, 19578294, 154652276, 19323035, 59252096};
 
 double reweightArray[] = {169.5, 171.5, 172.5, 173.5, 175.5};
 string reweightString[] = {"s169p5", "s171p5", "s172p5", "s173p5", "s175p5"};
@@ -605,7 +558,10 @@ int main(int argc, char* argv[])
     {
       isTTbar = true;
       doReweighting = true;
-      thisGenMassId = 1;
+      applyMassSF = true;
+      applyWidthSF = true;
+      scaleWidth = 1.;
+      thisGenMassId = 2;
       pathNtuples = pathNtuplesMC;
       if ( dataSetName.find("mass") != std::string::npos || dataSetName.find("Mass") != std::string::npos )
       {
@@ -614,13 +570,28 @@ int main(int argc, char* argv[])
         {
           thisGenMassId = 0;
           scaleMass = 169.5;
+          scaleWidth = 0.9424;  //1.065;  // width +-2%/GeV --> in sample = 1.23
+        }
+        else if ( dataSetName.find("171") != std::string::npos )
+        {
+          thisGenMassId = 1;
+          scaleMass = 171.5;
+          scaleWidth = 0.9776; //1.0234;  // width +-2%/GeV --> in sample = 1.28
+        }
+        else if ( dataSetName.find("173") != std::string::npos )
+        {
+          thisGenMassId = 3;
+          scaleMass = 173.5;
+          scaleWidth = 1.0234;  //0.9776;  // width +-2%/GeV --> in sample = 1.34
         }
         else if ( dataSetName.find("175") != std::string::npos )
         {
-          thisGenMassId = 2;
+          thisGenMassId = 4;
           scaleMass = 175.5;
+          scaleWidth = 1.065;  //0.9424;  // width +-2%/GeV --> in sample = 1.39
         }
         applyMassSF = false;
+        applyWidthSF = true;
         doReweighting = false;
       }
     }
@@ -649,7 +620,7 @@ int main(int argc, char* argv[])
     
     // Scale number of events
     //numWeight = TMath::MinElement(nEventsTT)/nEventsTT[d];  // Don't scale up events
-    numWeight = (double)nEventsTT[1]/(double)nEventsTT[thisGenMassId];  // Don't put extra SFs on reweighted samples
+    numWeight = (double)nEventsTT[2]/(double)nEventsTT[thisGenMassId];  // Don't put extra SFs on reweighted samples
     
     /// Get data
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
@@ -738,6 +709,9 @@ int main(int argc, char* argv[])
       
       if (! applyMassSF ) massSF = 1.;
       else if ( applyMassSF && ! isTTbar ) massSF = 1.;  // also for data
+      
+      if (! applyWidthSF ) widthSF = 1.;
+      else if ( applyWidthSF && ! isTTbar ) widthSF = 1.;  // also for data
       
       
       
@@ -849,7 +823,7 @@ int main(int argc, char* argv[])
       
       if ( applyMassSF && isTTbar )
       {
-        massSF = rew->MassEventWeightCalculatorNonRel(massHadTopQ, scaleMass);
+        massSF = rew->MassEventWeightCalculatorNonRel(massHadTopQ, scaleMass) * rew->MassEventWeightCalculatorNonRel(massLepTopQ, scaleMass);
         
         if ( massSF != massSF )  // massSF = NaN
         {
@@ -952,12 +926,14 @@ int main(int argc, char* argv[])
             m_lept = m_top;
           }
           
-          if (doReweighting && makeReweightedPlots)
+          if (applyMassSF && makeReweightedPlots)
           {
             for (int s = 0; s < nReweightings; s++)
             {
               evWeight_hadr = rew->MassEventWeightCalculatorNonRel(m_hadr, reweightArray[s]);
               evWeight_lept = rew->MassEventWeightCalculatorNonRel(m_lept, reweightArray[s]);
+              //evWeight_hadr = rew->MassEventWeightCalculator(m_hadr, reweightArray[s]);
+              //evWeight_lept = rew->MassEventWeightCalculator(m_lept, reweightArray[s]);
               evWeight_prod = evWeight_hadr*evWeight_lept;
               
               histo1D[("top_mass_hadr_gen_"+reweightString[s]).c_str()]->Fill(m_hadr, evWeight_hadr);
@@ -1002,6 +978,38 @@ int main(int argc, char* argv[])
             histo2D["top_mass_hadr_bqq_gen_"+genMassString[thisGenMassId]]->Fill(m_hadr, m_bqq, numWeight);
             histo2D["top_mass_lept_blv_gen_"+genMassString[thisGenMassId]]->Fill(m_lept, m_blv, numWeight);
             histo2D["top_mass_bqq_blv_gen_"+genMassString[thisGenMassId]]->Fill(m_bqq, m_blv, numWeight);
+            
+            if (applyWidthSF)
+            {
+              widthSF = rew->BEventWeightCalculatorNonRel(m_hadr, genMassArray[thisGenMassId], genMassArray[thisGenMassId], scaleWidth, 1.) * rew->BEventWeightCalculatorNonRel(m_lept, genMassArray[thisGenMassId], genMassArray[thisGenMassId], scaleWidth, 1.);
+              //widthSF = rew->EventWeightCalculator(m_hadr, scaleWidth, genMassArray[thisGenMassId]) * rew->EventWeightCalculator(m_lept, scaleWidth, genMassArray[thisGenMassId]);
+              
+              histo1D[("top_mass_hadr_gen_"+genMassString[thisGenMassId]+"_corrWidth").c_str()]->Fill(m_hadr, numWeight*widthSF);
+              histo1D[("top_mass_hadr_gen_"+genMassString[thisGenMassId]+"_corrWidth_fewerBins").c_str()]->Fill(m_hadr, numWeight*widthSF);
+              histo1D[("top_mass_lept_gen_"+genMassString[thisGenMassId]+"_corrWidth").c_str()]->Fill(m_lept, numWeight*widthSF);
+              histo1D[("bqq_mass_gen_"+genMassString[thisGenMassId]+"_corrWidth").c_str()]->Fill(m_bqq, numWeight*widthSF);
+              histo1D[("blv_mass_gen_"+genMassString[thisGenMassId]+"_corrWidth").c_str()]->Fill(m_blv, numWeight*widthSF);
+
+              histo2D["top_mass_hadr_lept_gen_"+genMassString[thisGenMassId]+"_corrWidth"]->Fill(m_hadr, m_lept, numWeight*widthSF);
+              histo2D["top_mass_hadr_bqq_gen_"+genMassString[thisGenMassId]+"_corrWidth"]->Fill(m_hadr, m_bqq, numWeight*widthSF);
+              histo2D["top_mass_lept_blv_gen_"+genMassString[thisGenMassId]+"_corrWidth"]->Fill(m_lept, m_blv, numWeight*widthSF);
+              histo2D["top_mass_bqq_blv_gen_"+genMassString[thisGenMassId]+"_corrWidth"]->Fill(m_bqq, m_blv, numWeight*widthSF);
+            }
+            
+            if ( thisGenMassId == 1 )
+            {
+              evWeight_prod = rew->BEventWeightCalculatorNonRel(m_hadr, genMassArray[thisGenMassId], 172.5, scaleWidth, scaleWidth) * rew->BEventWeightCalculatorNonRel(m_lept, genMassArray[thisGenMassId], 172.5, scaleWidth, scaleWidth);
+              histo1D["top_mass_hadr_gen_171p5To172p5_fewerBins"]->Fill(m_hadr, evWeight_prod);
+              widthSF = rew->BEventWeightCalculatorNonRel(m_hadr, genMassArray[thisGenMassId], 172.5, scaleWidth, 1.) * rew->BEventWeightCalculatorNonRel(m_lept, genMassArray[thisGenMassId], 172.5, scaleWidth, 1.);
+              histo1D["top_mass_hadr_gen_171p5To172p5_corrWidth_fewerBins"]->Fill(m_hadr, widthSF);
+            }
+            else if ( thisGenMassId == 3 )
+            {
+              evWeight_prod = rew->BEventWeightCalculatorNonRel(m_hadr, genMassArray[thisGenMassId], 172.5, scaleWidth, scaleWidth) * rew->BEventWeightCalculatorNonRel(m_lept, genMassArray[thisGenMassId], 172.5, scaleWidth, scaleWidth);
+              histo1D["top_mass_hadr_gen_173p5To172p5_fewerBins"]->Fill(m_hadr, evWeight_prod);
+              widthSF = rew->BEventWeightCalculatorNonRel(m_hadr, genMassArray[thisGenMassId], 172.5, scaleWidth, 1.) * rew->BEventWeightCalculatorNonRel(m_lept, genMassArray[thisGenMassId], 172.5, scaleWidth, 1.);
+              histo1D["top_mass_hadr_gen_173p5To172p5_corrWidth_fewerBins"]->Fill(m_hadr, widthSF);
+            }
           }
         }
       }
@@ -1207,20 +1215,7 @@ void GetMetaData(TTree* tree, bool isData)
   
   tree->SetBranchAddress("nEvents", &nEvents, &b_nEvents);
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
-  tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
-  tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
-  tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
-  tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
   tree->SetBranchAddress("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, &b_nofTTEventsWithoutAGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
 }
 
 void InitTree(TTree* tree, bool isData)
@@ -1239,14 +1234,6 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
   tree->SetBranchAddress("hasErasedBadOrCloneMuon", &hasErasedBadOrCloneMuon, &b_hasErasedBadOrCloneMuon);
-  tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
-  tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
-  tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
-  tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
-  tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
-  tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
-  tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
-  tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -1302,11 +1289,7 @@ void InitTree(TTree* tree, bool isData)
     tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
     tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
     tree->SetBranchAddress("hasGenTop", &hasGenTop, &b_hasGenTop);
-    tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
-    tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
     tree->SetBranchAddress("hasGenAntiTop", &hasGenAntiTop, &b_hasGenAntiTop);
-    tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
-    tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
   }
 }
 
@@ -1336,7 +1319,17 @@ void InitHisto1DGen()
     histo1D[("bqq_mass_gen_"+genMassString[g]).c_str()] = new TH1F(("bqq_mass_gen_"+genMassString[g]).c_str(), "Mass of generated bqq quarks; M_{bqq} [GeV]", 2000, 50, 300);
     histo1D[("blv_mass_gen_"+genMassString[g]).c_str()] = new TH1F(("blv_mass_gen_"+genMassString[g]).c_str(), "Mass of generated b, lepton and neutrino; M_{blv} [GeV]", 2000, 50, 300);
     
+    histo1D["top_mass_hadr_gen_"+genMassString[g]+"_corrWidth"] = new TH1F(("top_mass_hadr_gen_"+genMassString[g]+"_corrWidth").c_str(), "Mass of generated top quark with hadronic decay (width corr); M_{t_{hadr}} [GeV]", 4000, 120, 220);
+    histo1D["top_mass_hadr_gen_"+genMassString[g]+"_corrWidth_fewerBins"] = new TH1F(("top_mass_hadr_gen_"+genMassString[g]+"_corrWidth_fewerBins").c_str(), "Mass of generated top quark with hadronic decay (width corr); M_{t_{hadr}} [GeV]", 800, 120, 220);
+    histo1D["top_mass_lept_gen_"+genMassString[g]+"_corrWidth"] = new TH1F(("top_mass_lept_gen_"+genMassString[g]+"_corrWidth").c_str(), "Mass of generated top quark with leptonic decay (width corr); M_{t_{lept}} [GeV]", 4000, 120, 220);
+    histo1D["bqq_mass_gen_"+genMassString[g]+"_corrWidth"] = new TH1F(("bqq_mass_gen_"+genMassString[g]+"_corrWidth").c_str(), "Mass of generated bqq quarks (width corr); M_{bqq} [GeV]", 2000, 50, 300);
+    histo1D["blv_mass_gen_"+genMassString[g]+"_corrWidth"] = new TH1F(("blv_mass_gen_"+genMassString[g]+"_corrWidth").c_str(), "Mass of generated b, lepton and neutrino (width corr); M_{blv} [GeV]", 2000, 50, 300);
   }
+  
+  histo1D["top_mass_hadr_gen_171p5To172p5_fewerBins"] = new TH1F("top_mass_hadr_gen_171p5To172p5_fewerBins", "Reweight mass of generated top quark with hadronic decay from 171.5 to 172.5; M_{t_{hadr}} [GeV]", 800, 120, 220);
+  histo1D["top_mass_hadr_gen_173p5To172p5_fewerBins"] = new TH1F("top_mass_hadr_gen_173p5To172p5_fewerBins", "Reweight mass of generated top quark with hadronic decay from 173.5 to 172.5; M_{t_{hadr}} [GeV]", 800, 120, 220);
+  histo1D["top_mass_hadr_gen_171p5To172p5_corrWidth_fewerBins"] = new TH1F("top_mass_hadr_gen_171p5To172p5_corrWidth_fewerBins", "Reweight mass of generated top quark with hadronic decay from 171.5 to 172.5 (width corr); M_{t_{hadr}} [GeV]", 800, 120, 220);
+  histo1D["top_mass_hadr_gen_173p5To172p5_corrWidth_fewerBins"] = new TH1F("top_mass_hadr_gen_173p5To172p5_corrWidth_fewerBins", "Reweight mass of generated top quark with hadronic decay from 173.5 to 172.5 (width corr); M_{t_{hadr}} [GeV]", 800, 120, 220);
   
 //   histo1D["top_mass_hadr_gen_g0p2_th"] = new TH1F("top_mass_hadr_gen_g0p2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
 //   histo1D["top_mass_hadr_gen_g0p5_th"] = new TH1F("top_mass_hadr_gen_g0p5_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 2000, 120, 220);
@@ -1390,6 +1383,11 @@ void InitHisto2DGen()
     histo2D["top_mass_hadr_bqq_gen_"+genMassString[g]] = new TH2F(("top_mass_hadr_bqq_gen_"+genMassString[g]).c_str(),("Generated mass of bqq quarks vs. hadronically decaying top quark mass ("+genMassString[g]+"); m_{t_{hadr}} [GeV]; m_{bqq} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
     histo2D["top_mass_lept_blv_gen_"+genMassString[g]] = new TH2F(("top_mass_lept_blv_gen_"+genMassString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass ("+genMassString[g]+"); m_{t_{lept}} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
     histo2D["top_mass_bqq_blv_gen_"+genMassString[g]] = new TH2F(("top_mass_bqq_blv_gen_"+genMassString[g]).c_str(),("Mass of generated b, lepton and neutrino vs. mass of bqq quarks ("+genMassString[g]+"); m_{bqq} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    
+    histo2D["top_mass_hadr_lept_gen_"+genMassString[g]+"_corrWidth"] = new TH2F(("top_mass_hadr_lept_gen_"+genMassString[g]+"_corrWidth").c_str(),("Mass of generated top quark with leptonic decay vs. hadronic decay ("+genMassString[g]+") (width corr); m_{t_{hadr}} [GeV]; m_{t_{lept}} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_hadr_bqq_gen_"+genMassString[g]+"_corrWidth"] = new TH2F(("top_mass_hadr_bqq_gen_"+genMassString[g]+"_corrWidth").c_str(),("Generated mass of bqq quarks vs. hadronically decaying top quark mass ("+genMassString[g]+") (width corr); m_{t_{hadr}} [GeV]; m_{bqq} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_lept_blv_gen_"+genMassString[g]+"_corrWidth"] = new TH2F(("top_mass_lept_blv_gen_"+genMassString[g]+"_corrWidth").c_str(),("Mass of generated b, lepton and neutrino vs. leptonically decaying top quark mass ("+genMassString[g]+") (width corr); m_{t_{lept}} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
+    histo2D["top_mass_bqq_blv_gen_"+genMassString[g]+"_corrWidth"] = new TH2F(("top_mass_bqq_blv_gen_"+genMassString[g]+"_corrWidth").c_str(),("Mass of generated b, lepton and neutrino vs. mass of bqq quarks ("+genMassString[g]+") (width corr); m_{bqq} [GeV]; m_{blv} [GeV]").c_str(), 1000, 50, 300, 1000, 50, 300);
   }
 }
 
@@ -1508,19 +1506,7 @@ void ClearMetaData()
 {
   nEvents = 0;
   nEventsSel = 0;
-  nofEventsWithGenTop = 0;
-  nofEventsWithGenTopWithStatus22or62 = 0;
-  nofEventsWithGenAntiTop = 0;
-  nofEventsWithGenAntiTopWithStatus22or62 = 0;
-  nofTTEventsWithoutBothGenTops = 0;
-  nofTTEventsWithoutGenTop = 0;
-  nofTTEventsWithoutGenAntiTop = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-  nofTTEventsWithoutGenTopWithStatus22 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-  nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-  nofTTEventsWithoutGenTopWithStatus62 = 0;
-  nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+  nofTTEventsWithoutAGenTop = 0;
 
   
   strSyst = "";
@@ -1603,11 +1589,7 @@ void ClearLeaves()
       mc_M[i] = 0.;
     }
     hasGenTop = false;
-    hasGenTopWithStatus22 = false;
-    hasGenTopWithStatus62 = false;
     hasGenAntiTop = false;
-    hasGenAntiTopWithStatus22 = false;
-    hasGenAntiTopWithStatus62 = false;
   }
 }
 
@@ -1690,6 +1672,7 @@ void ClearVars()
   labelB2 = -9999;
   massHadTopQ = 0.01;
   massLepTopQ = 0.01;
+  widthSF = 1.;
 }
 
 void ClearObjects()

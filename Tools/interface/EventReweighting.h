@@ -20,6 +20,10 @@ class EventReweighting{
     double EventWeightCalculatorNonRel(double topMass, double scale);
     double MassEventWeightCalculator(double topMass, double scale);
     double MassEventWeightCalculatorNonRel(double topMass, double scale);
+    double BEventWeightCalculator(double topMass, double mass, double scaleW);
+    double BEventWeightCalculator(double topMass, double mass1, double mass2, double width1, double width2);
+    double BEventWeightCalculatorNonRel(double topMass, double mass, double scaleW);
+    double BEventWeightCalculatorNonRel(double topMass, double mass1, double mass2, double width1, double width2);
   
   private:
     bool useEvtCorr_;
@@ -31,6 +35,8 @@ class EventReweighting{
     double BreitWignerNonRel(double topMass, double scale);
     double MassBreitWigner(double topMass, double scale);
     double MassBreitWignerNonRel(double topMass, double scale);
+    double BBreitWigner(double topMass, double mass, double scaleW);
+    double BBreitWignerNonRel(double topMass, double mass, double scaleW);
 };
 
 
