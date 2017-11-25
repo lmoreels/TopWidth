@@ -71,7 +71,7 @@ class ResolutionFunctions{
     static Double_t sGaus(Double_t *x, Double_t *par);
     static Double_t dblGaus(Double_t *x, Double_t *par);
     static Double_t dblGausParFill(Double_t *x, Double_t *par);
-    std::vector<std::array<double, 2> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName);
+    std::vector<std::array<double, 3> > getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName);
 };
 
 

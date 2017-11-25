@@ -32,12 +32,12 @@ Double_t ResolutionFunctions::dblGaus(Double_t *x, Double_t *par)
 
 Double_t ResolutionFunctions::dblGausParFill(Double_t *x, Double_t *par)
 {
-  Double_t par0 = par[0] + x[0] * par[1];
-  Double_t par1 = par[2] + x[0] * par[3];
-  Double_t par2 = par[4] + x[0] * par[5];
-  Double_t par3 = par[6] + x[0] * par[7];
-  Double_t par4 = par[8] + x[0] * par[9];
-  Double_t par5 = par[10] + x[0] * par[11];
+  Double_t par0 = par[0] + x[0] * par[1] + sqrt(x[0]) * par[2];
+  Double_t par1 = par[3] + x[0] * par[4] + sqrt(x[0]) * par[5];
+  Double_t par2 = par[6] + x[0] * par[7] + sqrt(x[0]) * par[8];
+  Double_t par3 = par[9] + x[0] * par[10] + sqrt(x[0]) * par[11];
+  Double_t par4 = par[12] + x[0] * par[13] + sqrt(x[0]) * par[14];
+  Double_t par5 = par[15] + x[0] * par[16] + sqrt(x[0]) * par[17];
   
   Double_t norm = 1./TMath::Sqrt(2.*TMath::Pi()) * par5/TMath::Sqrt( pow(par1, 2) + par2*pow(par4, 2) );
   Double_t narrowGaus = TMath::Exp( - TMath::Power( (x[1] - par0)/par1 , 2) /2. );
@@ -1231,7 +1231,7 @@ void ResolutionFunctions::makeFit(std::string inputFileName, std::string outputF
   delete foutRF;
 }
 
-std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName)
+std::vector<std::array<double, 3> > ResolutionFunctions::getParameters(std::string inputFileName, std::string varName, std::string objName, std::string binName)
 {
   int varId = -1, objId = -1, binId = -1;
   if ( varName.std::string::find("Et") != std::string::npos ) varId = 0;
@@ -1267,13 +1267,14 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
   int nParams = ((TF1*) rf->Get((histoNames[f]+"_sliceXbin1_Fitted").c_str()))->GetNpar();
   if (verbose) std::cout << "ResolutionFunctions::Number of parameters: " << nParams << std::endl;
   
-  std::vector<std::array<double, 2> > params;
+  std::vector<std::array<double, 3> > params;
   params.clear();
   for (int iPar = 0; iPar < nParams; iPar++)
   {
     std::string name = histoNames[f]+"_a"+toStr(iPar+1)+"_Fitted";
     TF_par = (TF1*)rf->Get(name.c_str());
-    params.push_back({TF_par->GetParameter(0),TF_par->GetParameter(1)});
+    if ( varId == 0 ) params.push_back({TF_par->GetParameter(0),TF_par->GetParameter(1), 0.});
+    else              params.push_back({TF_par->GetParameter(0),TF_par->GetParameter(1), TF_par->GetParameter(2)});
   }
   
   rf->Close();
@@ -1283,7 +1284,7 @@ std::vector<std::array<double, 2> > ResolutionFunctions::getParameters(std::stri
 
 TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::string varName, std::string objName, std::string binName)
 {
-  std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, binName);
+  std::vector<std::array<double, 3> > params = this->getParameters(inputFileName, varName, objName, binName);
   
   if ( params.size() < 6 )
   {
@@ -1295,12 +1296,12 @@ TF2* ResolutionFunctions::getFitFunction2D(std::string inputFileName, std::strin
   if ( varName.std::string::find("theta") != std::string::npos ) { funcMin = -0.1; funcMax = 0.1; }
   if ( varName.std::string::find("phi") != std::string::npos ) { funcMin = -0.15; funcMax = 0.15; }
   
-  TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,funcMin,funcMax, 12);
-  for (int iPar = 0; iPar < 12; iPar++)
+  TF2 *f2 = new TF2("f2",dblGausParFill,0.,200.,funcMin,funcMax, 18);
+  for (int iPar = 0; iPar < 18; iPar++)
   {
-    int par = (int) ((double)iPar/2.);
+    int par = (int) ((double)iPar/3.);
     //if ( iPar%2 != 0 ) par += 1;
-    f2->SetParameter(iPar, params[par][iPar%2]);
+    f2->SetParameter(iPar, params[par][iPar%3]);
     //if (verbose) std::cout << "Parameter " << iPar << " set to " << params[par][iPar%2] << std::endl;
   }
   
@@ -1322,12 +1323,15 @@ TF1* ResolutionFunctions::getFitFunction1D(std::string inputFileName, std::strin
 
 TF1* ResolutionFunctions::getResolutionFunction(std::string inputFileName, std::string varName, std::string objName, std::string binName)
 {
-  std::vector<std::array<double, 2> > params = this->getParameters(inputFileName, varName, objName, binName);
+  std::vector<std::array<double, 3> > params = this->getParameters(inputFileName, varName, objName, binName);
   
-  TF1 *f = new TF1("f", "[0] + [1]*x", 0., 250.);
+  TF1 *f;
+  //f = new TF1("f", "[0] + [1]*x", 0., 250.);
+  f = new TF1("f", "[0] + [1]*x + [2]*sqrt(x)", 0., 250.);
   // fill params for narrow gaussian sigma
   f->FixParameter(0, params[1][0]);
   f->FixParameter(1, params[1][1]);
+  f->FixParameter(2, params[1][2]);
   
   return f; 
 }
