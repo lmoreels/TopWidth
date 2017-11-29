@@ -111,6 +111,7 @@ string pathCalLept = "../TopTreeAnalysisBase/Calibrations/LeptonSF/MuonSF/201704
 string pathCalBTag = "../TopTreeAnalysisBase/Calibrations/BTagging/";
 string pathCalPileup = "../TopTreeAnalysisBase/Calibrations/PileUpReweighting/";
 string pathCalJEC = "../TopTreeAnalysisBase/Calibrations/JECFiles/";
+string pathCalJESSyst = "JESCorrections/171124_2004/";
 
 // Leptons
 MuonSFWeight* muonSFWeightID_T_BCDEF;
@@ -141,6 +142,13 @@ LumiReWeighting LumiWeights_down;
 // JEC
 vector<JetCorrectorParameters> vCorrParam;
 JetCorrectionUncertainty *jecUnc;
+TFile *jessystfile;
+TGraph* h_jesExtraBBarrel;
+TGraph* h_jesExtraBEndcap;
+TGraph* h_jesExtraLightBarrel;
+TGraph* h_jesExtraLightEndcap;
+Double_t corr;
+bool applyExtraJESCorr = false;
 
 
 /// Define output trees
@@ -184,21 +192,8 @@ Long64_t nofSelEventsRunG;
 Long64_t nofSelEventsRunH;
 
 Long64_t nofEventsWithGenTop;
-Long64_t nofEventsWithGenTopWithStatus22or62;
 Long64_t nofEventsWithGenAntiTop;
-Long64_t nofEventsWithGenAntiTopWithStatus22or62;
-Long64_t nofTTEventsWithoutBothGenTops;
 Long64_t nofTTEventsWithoutAGenTop;
-Long64_t nofTTEventsWithoutGenTop;
-Long64_t nofTTEventsWithoutGenAntiTop;
-Long64_t nofTTEventsWithoutBothGenTopsWithStatus22;
-Long64_t nofTTEventsWithoutAGenTopWithStatus22;
-Long64_t nofTTEventsWithoutGenTopWithStatus22;
-Long64_t nofTTEventsWithoutGenAntiTopWithStatus22;
-Long64_t nofTTEventsWithoutBothGenTopsWithStatus62;
-Long64_t nofTTEventsWithoutAGenTopWithStatus62;
-Long64_t nofTTEventsWithoutGenTopWithStatus62;
-Long64_t nofTTEventsWithoutGenAntiTopWithStatus62;
 
 // event related variables
 Int_t run_num;
@@ -237,11 +232,7 @@ Bool_t isDataRunH;
 Bool_t hasPosWeight;
 Bool_t hasNegWeight;
 Bool_t hasGenTop;
-Bool_t hasGenTopWithStatus22;
-Bool_t hasGenTopWithStatus62;
 Bool_t hasGenAntiTop;
-Bool_t hasGenAntiTopWithStatus22;
-Bool_t hasGenAntiTopWithStatus62;
 
 /// Renormalisation/factorisation
 Double_t baseweight;
@@ -276,11 +267,6 @@ Double_t sumSemilepbrUp;
 Double_t sumSemilepbrDown;
 
 /// PDF
-Double_t x1;
-Double_t x2;
-Int_t id1;
-Int_t id2;
-Double_t q;
 Double_t pdfWeights[100];
 Double_t pdfAlphaSUp;
 Double_t pdfAlphaSDown;
@@ -331,22 +317,29 @@ Double_t looseMuonTrackSF_nPV[maxLooseMuons];
 
 /// Variables for muons
 Int_t nMuons;
-Float_t muon_charge[maxMuons];
+Double_t muon_charge[maxMuons];
 Double_t muon_pt[maxMuons];
 Double_t muon_phi[maxMuons];
 Double_t muon_eta[maxMuons];
 Double_t muon_E[maxMuons];
 Double_t muon_M[maxMuons];
 Double_t muon_d0[maxMuons];
+Double_t muon_dz[maxMuons];
 Double_t muon_chargedHadronIso[maxMuons];
 Double_t muon_neutralHadronIso[maxMuons];
 Double_t muon_photonIso[maxMuons];
 Double_t muon_puChargedHadronIso[maxMuons];
 Double_t muon_relIso[maxMuons];
 Double_t muon_pfIso[maxMuons];
+Double_t muon_chi2[maxMuons];             // chi2 of global Muon
+Int_t muon_nofValidHits[maxMuons];        // nof hits of inner track
+Int_t muon_nofValidMuHits[maxMuons];      // nof hits on the global fit
+Int_t muon_nofValidPixelHits[maxMuons];   // nof pixel hits of inner track
+Int_t muon_nofMatchedStations[maxMuons];  // number of stations with matched segments
+Int_t muon_nofTrackerLayersWithMeasurement[maxMuons];
 
 Int_t nLooseMuons;
-Float_t muon_loose_charge[maxLooseMuons];
+Double_t muon_loose_charge[maxLooseMuons];
 Double_t muon_loose_pt[maxLooseMuons];
 Double_t muon_loose_phi[maxLooseMuons];
 Double_t muon_loose_eta[maxLooseMuons];
@@ -360,7 +353,7 @@ Bool_t isTrackerLooseMuon[maxLooseMuons];
 Int_t nJets;
 Int_t jet_nConstituents[maxJets];
 Int_t jet_nChConstituents[maxJets];
-Float_t jet_charge[maxJets];
+Double_t jet_charge[maxJets];
 Double_t jet_pt[maxJets];
 Double_t jet_phi[maxJets];
 Double_t jet_eta[maxJets];
@@ -372,13 +365,14 @@ Double_t jet_hadronFlavour[maxJets];
 Int_t nLooseJets;
 Int_t jet_loose_nConstituents[maxLooseJets];
 Int_t jet_loose_nChConstituents[maxLooseJets];
-Float_t jet_loose_charge[maxLooseJets];
+Double_t jet_loose_charge[maxLooseJets];
 Double_t jet_loose_pt[maxLooseJets];
 Double_t jet_loose_phi[maxLooseJets];
 Double_t jet_loose_eta[maxLooseJets];
 Double_t jet_loose_E[maxLooseJets];
 Double_t jet_loose_M[maxLooseJets];
 Double_t jet_loose_bdiscr[maxLooseJets];
+Double_t jet_loose_hadronFlavour[maxLooseJets];
 
 /// met
 Double_t met_px;
@@ -400,7 +394,7 @@ Double_t met_corr_E;
 /// gen jets
 Int_t nGenJets;
 Int_t genJet_pdgId[maxLooseJets];
-Float_t genJet_charge[maxLooseJets];
+Double_t genJet_charge[maxLooseJets];
 Double_t genJet_pt[maxLooseJets];
 Double_t genJet_phi[maxLooseJets];
 Double_t genJet_eta[maxLooseJets];
@@ -550,46 +544,30 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   }
   else
   {
-//     statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
-//     statTree->Branch("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, "nofEventsWithGenTopWithStatus22or62/L");
-//     statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
-//     statTree->Branch("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, "nofEventsWithGenAntiTopWithStatus22or62/L");
+    statTree->Branch("nofEventsWithGenTop", &nofEventsWithGenTop, "nofEventsWithGenTop/L");
+    statTree->Branch("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, "nofEventsWithGenAntiTop/L");
     if (isTTbar)
     {
-//       statTree->Branch("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, "nofTTEventsWithoutBothGenTops/L");
       statTree->Branch("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, "nofTTEventsWithoutAGenTop/L");
-//       statTree->Branch("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, "nofTTEventsWithoutGenTop/L");
-//       statTree->Branch("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, "nofTTEventsWithoutGenAntiTop/L");
-//       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, "nofTTEventsWithoutBothGenTopsWithStatus22/L");
-//       statTree->Branch("nofTTEventsWithoutAGenTopWithStatus22", &nofTTEventsWithoutAGenTopWithStatus22, "nofTTEventsWithoutAGenTopWithStatus22/L");
-//       statTree->Branch("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, "nofTTEventsWithoutGenTopWithStatus22/L");
-//       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, "nofTTEventsWithoutGenAntiTopWithStatus22/L");
-//       statTree->Branch("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, "nofTTEventsWithoutBothGenTopsWithStatus62/L");
-//       statTree->Branch("nofTTEventsWithoutAGenTopWithStatus62", &nofTTEventsWithoutAGenTopWithStatus62, "nofTTEventsWithoutAGenTopWithStatus62/L");
-//       statTree->Branch("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, "nofTTEventsWithoutGenTopWithStatus62/L");
-//       statTree->Branch("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, "nofTTEventsWithoutGenAntiTopWithStatus62/L");
       
-      if (! runSystematics)
-      {
-        statTree->Branch("sumWeight1001", &sumWeight1001, "sumWeight1001/D");
-        statTree->Branch("sumWeight1002", &sumWeight1002, "sumWeight1002/D");
-        statTree->Branch("sumWeight1003", &sumWeight1003, "sumWeight1003/D");
-        statTree->Branch("sumWeight1004", &sumWeight1004, "sumWeight1004/D");
-        statTree->Branch("sumWeight1005", &sumWeight1005, "sumWeight1005/D");
-        statTree->Branch("sumWeight1007", &sumWeight1007, "sumWeight1007/D");
-        statTree->Branch("sumWeight1009", &sumWeight1009, "sumWeight1009/D");
-        
-        statTree->Branch("sumUpFragWeight", &sumUpFragWeight, "sumUpFragWeight/D");
-        statTree->Branch("sumCentralFragWeight", &sumCentralFragWeight, "sumCentralFragWeight/D");
-        statTree->Branch("sumDownFragWeight", &sumDownFragWeight, "sumDownFragWeight/D");
-        statTree->Branch("sumPetersonFragWeight", &sumPetersonFragWeight, "sumPetersonFragWeight/D");
-        statTree->Branch("sumSemilepbrUp", &sumSemilepbrUp, "sumSemilepbrUp/D");
-        statTree->Branch("sumSemilepbrDown", &sumSemilepbrDown, "sumSemilepbrDown/D");
-        
-        statTree->Branch("sumPdfWeights", &sumPdfWeights, "sumPdfWeights[100]/D");
-        statTree->Branch("sumPdfAlphaSUp", &sumPdfAlphaSUp, "sumPdfAlphaSUp/D");
-        statTree->Branch("sumPdfAlphaSDown", &sumPdfAlphaSDown, "sumPdfAlphaSDown/D");
-      }
+      statTree->Branch("sumWeight1001", &sumWeight1001, "sumWeight1001/D");
+      statTree->Branch("sumWeight1002", &sumWeight1002, "sumWeight1002/D");
+      statTree->Branch("sumWeight1003", &sumWeight1003, "sumWeight1003/D");
+      statTree->Branch("sumWeight1004", &sumWeight1004, "sumWeight1004/D");
+      statTree->Branch("sumWeight1005", &sumWeight1005, "sumWeight1005/D");
+      statTree->Branch("sumWeight1007", &sumWeight1007, "sumWeight1007/D");
+      statTree->Branch("sumWeight1009", &sumWeight1009, "sumWeight1009/D");
+      
+      statTree->Branch("sumUpFragWeight", &sumUpFragWeight, "sumUpFragWeight/D");
+      statTree->Branch("sumCentralFragWeight", &sumCentralFragWeight, "sumCentralFragWeight/D");
+      statTree->Branch("sumDownFragWeight", &sumDownFragWeight, "sumDownFragWeight/D");
+      statTree->Branch("sumPetersonFragWeight", &sumPetersonFragWeight, "sumPetersonFragWeight/D");
+      statTree->Branch("sumSemilepbrUp", &sumSemilepbrUp, "sumSemilepbrUp/D");
+      statTree->Branch("sumSemilepbrDown", &sumSemilepbrDown, "sumSemilepbrDown/D");
+      
+      statTree->Branch("sumPdfWeights", &sumPdfWeights, "sumPdfWeights[100]/D");
+      statTree->Branch("sumPdfAlphaSUp", &sumPdfAlphaSUp, "sumPdfAlphaSUp/D");
+      statTree->Branch("sumPdfAlphaSDown", &sumPdfAlphaSDown, "sumPdfAlphaSDown/D");
     }
   }
   if (isAmc)
@@ -619,15 +597,6 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     looseTree->Branch("hasErasedBadOrCloneLooseMuon",&hasErasedBadOrCloneLooseMuon,"hasErasedBadOrCloneLooseMuon/O");
   }
   
-//   myTree->Branch("filterPV",&filterPV,"filterPV/O");
-//   myTree->Branch("filterHBHENoise",&filterHBHENoise,"filterHBHENoise/O");
-//   myTree->Branch("filterHBHEIso",&filterHBHEIso,"filterHBHEIso/O");
-//   myTree->Branch("filterCSCTightHalo",&filterCSCTightHalo,"filterCSCTightHalo/O");
-//   myTree->Branch("filterEcalDeadCell",&filterEcalDeadCell,"filterEcalDeadCell/O");
-//   myTree->Branch("filterEEBadSc",&filterEEBadSc,"filterEEBadSc/O");  // recommended for data-only
-//   myTree->Branch("filterBadChCand",&filterBadChCand,"filterBadChCand/O");
-//   myTree->Branch("filterBadMuon",&filterBadMuon,"filterBadMuon/O");
-//   myTree->Branch("passedMETFilter", &passedMETFilter,"passedMETFilter/O");
   
   if (isData)
   {
@@ -642,24 +611,31 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   
   // muons
   myTree->Branch("nMuons",&nMuons, "nMuons/I");
-  myTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/F");
+  myTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/D");
   myTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
   myTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
   myTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
   myTree->Branch("muon_E",&muon_E,"muon_E[nMuons]/D");
   myTree->Branch("muon_M",&muon_M,"muon_M[nMuons]/D");
   myTree->Branch("muon_d0",&muon_d0,"muon_d0[nMuons]/D");
+  myTree->Branch("muon_dz",&muon_dz,"muon_dz[nMuons]/D");
   myTree->Branch("muon_chargedHadronIso",&muon_chargedHadronIso,"muon_chargedHadronIso[nMuons]/D");
   myTree->Branch("muon_neutralHadronIso",&muon_neutralHadronIso,"muon_neutralHadronIso[nMuons]/D");
   myTree->Branch("muon_photonIso",&muon_photonIso,"muon_photonIso[nMuons]/D");
   myTree->Branch("muon_puChargedHadronIso",&muon_puChargedHadronIso,"muon_puChargedHadronIso[nMuons]/D");
   myTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
   myTree->Branch("muon_pfIso",&muon_pfIso,"muon_pfIso[nMuons]/D");
+  myTree->Branch("muon_chi2",&muon_chi2,"muon_chi2[nMuons]/D");
+  myTree->Branch("muon_nofValidHits",&muon_nofValidHits,"muon_nofValidHits[nMuons]/I");
+  myTree->Branch("muon_nofValidMuHits",&muon_nofValidMuHits,"muon_nofValidMuHits[nMuons]/I");
+  myTree->Branch("muon_nofValidPixelHits",&muon_nofValidPixelHits,"muon_nofValidPixelHits[nMuons]/I");
+  myTree->Branch("muon_nofMatchedStations",&muon_nofMatchedStations,"muon_nofMatchedStations[nMuons]/I");
+  myTree->Branch("muon_nofTrackerLayersWithMeasurement",&muon_nofTrackerLayersWithMeasurement,"muon_nofTrackerLayersWithMeasurement[nMuons]/I");
   
   if (makeLooseTree)
   {
     looseTree->Branch("nMuons",&nMuons, "nMuons/I");
-    looseTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/F");
+    looseTree->Branch("muon_charge",&muon_charge,"muon_charge[nMuons]/D");
     looseTree->Branch("muon_pt",&muon_pt,"muon_pt[nMuons]/D");
     looseTree->Branch("muon_phi",&muon_phi,"muon_phi[nMuons]/D");
     looseTree->Branch("muon_eta",&muon_eta,"muon_eta[nMuons]/D");
@@ -668,7 +644,7 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     looseTree->Branch("muon_relIso",&muon_relIso,"muon_relIso[nMuons]/D");
     
     looseTree->Branch("nLooseMuons",&nLooseMuons, "nLooseMuons/I");
-    looseTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/F");
+    looseTree->Branch("muon_loose_charge",&muon_loose_charge,"muon_loose_charge[nLooseMuons]/D");
     looseTree->Branch("muon_loose_pt",&muon_loose_pt,"muon_loose_pt[nLooseMuons]/D");
     looseTree->Branch("muon_loose_phi",&muon_loose_phi,"muon_loose_phi[nLooseMuons]/D");
     looseTree->Branch("muon_loose_eta",&muon_loose_eta,"muon_loose_eta[nLooseMuons]/D");
@@ -683,7 +659,7 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   myTree->Branch("nJets",&nJets,"nJets/I");
   myTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
   myTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
-  myTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/F");
+  myTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/D");
   myTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
   myTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
   myTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
@@ -697,24 +673,26 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     looseTree->Branch("nJets",&nJets,"nJets/I");
     looseTree->Branch("jet_nConstituents",&jet_nConstituents,"jet_nConstituents[nJets]/I");
     looseTree->Branch("jet_nChConstituents",&jet_nChConstituents,"jet_nChConstituents[nJets]/I");
-    looseTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/F");
+    looseTree->Branch("jet_charge",&jet_charge,"jet_charge[nJets]/D");
     looseTree->Branch("jet_pt",&jet_pt,"jet_pt[nJets]/D");
     looseTree->Branch("jet_phi",&jet_phi,"jet_phi[nJets]/D");
     looseTree->Branch("jet_eta",&jet_eta,"jet_eta[nJets]/D");
     looseTree->Branch("jet_E",&jet_E,"jet_E[nJets]/D");
     looseTree->Branch("jet_M",&jet_M,"jet_M[nJets]/D");
     looseTree->Branch("jet_bdiscr",&jet_bdiscr,"jet_bdiscr[nJets]/D");
+    myTree->Branch("jet_hadronFlavour",&jet_hadronFlavour,"jet_hadronFlavour[nJets]/D");
     
     looseTree->Branch("nLooseJets",&nLooseJets,"nLooseJets/I");
     looseTree->Branch("jet_loose_nConstituents",&jet_loose_nConstituents,"jet_loose_nConstituents[nLooseJets]/I");
     looseTree->Branch("jet_loose_nChConstituents",&jet_loose_nChConstituents,"jet_loose_nChConstituents[nLooseJets]/I");
-    looseTree->Branch("jet_loose_charge",&jet_loose_charge,"jet_loose_charge[nLooseJets]/F");
+    looseTree->Branch("jet_loose_charge",&jet_loose_charge,"jet_loose_charge[nLooseJets]/D");
     looseTree->Branch("jet_loose_pt",&jet_loose_pt,"jet_loose_pt[nLooseJets]/D");
     looseTree->Branch("jet_loose_phi",&jet_loose_phi,"jet_loose_phi[nLooseJets]/D");
     looseTree->Branch("jet_loose_eta",&jet_loose_eta,"jet_loose_eta[nLooseJets]/D");
     looseTree->Branch("jet_loose_E",&jet_loose_E,"jet_loose_E[nLooseJets]/D");
     looseTree->Branch("jet_loose_M",&jet_loose_M,"jet_loose_M[nLooseJets]/D");
     looseTree->Branch("jet_loose_bdiscr",&jet_loose_bdiscr,"jet_loose_bdiscr[nLooseJets]/D");
+    looseTree->Branch("jet_loose_hadronFlavour",&jet_loose_hadronFlavour,"jet_loose_hadronFlavour[nLooseJets]/D");
   }
   
   // met
@@ -739,7 +717,7 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
   {
     myTree->Branch("nGenJets",&nGenJets,"nGenJets/I");
     myTree->Branch("genJet_pdgId",&genJet_pdgId,"genJet_pdgId[nGenJets]/I");
-    myTree->Branch("genJet_charge",&genJet_charge,"genJet_charge[nGenJets]/F");
+    myTree->Branch("genJet_charge",&genJet_charge,"genJet_charge[nGenJets]/D");
     myTree->Branch("genJet_pt",&genJet_pt,"genJet_pt[nGenJets]/D");
     myTree->Branch("genJet_phi",&genJet_phi,"genJet_phi[nGenJets]/D");
     myTree->Branch("genJet_eta",&genJet_eta,"genJet_eta[nGenJets]/D");
@@ -765,18 +743,14 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
     myTree->Branch("mc_isHardProcess", &mc_isHardProcess, "mc_isHardProcess[nMCParticles]/O");
     myTree->Branch("mc_fromHardProcessFinalState", &mc_fromHardProcessFinalState, "mc_fromHardProcessFinalState[nMCParticles]/O");
     myTree->Branch("hasGenTop", &hasGenTop, "hasGenTop/O");
-//     myTree->Branch("hasGenTopWithStatus22", &hasGenTopWithStatus22, "hasGenTopWithStatus22/O");
-//     myTree->Branch("hasGenTopWithStatus62", &hasGenTopWithStatus62, "hasGenTopWithStatus62/O");
     myTree->Branch("hasGenAntiTop", &hasGenAntiTop, "hasGenAntiTop/O");
-//     myTree->Branch("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, "hasGenAntiTopWithStatus22/O");
-//     myTree->Branch("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, "hasGenAntiTopWithStatus62/O");
   }
   
   
   /// SFs
   if (! isData)
   {
-    if (isTTbar && ! runSystematics)
+    if (isTTbar)
     {
       myTree->Branch("baseweight", &baseweight, "baseweight/D");
       myTree->Branch("weight1001", &weight1001, "weight1001/D");
@@ -794,11 +768,6 @@ void MakeBranches(bool isData, bool isTTbar, bool isAmc, bool makeLooseTree)
       myTree->Branch("semilepbrUp", &semilepbrUp, "semilepbrUp/D");
       myTree->Branch("semilepbrDown", &semilepbrDown, "semilepbrDown/D");
       
-      myTree->Branch("x1",&x1,"x1/D");
-      myTree->Branch("x2",&x2,"x2/D");
-      myTree->Branch("id1",&id1,"id1/I");
-      myTree->Branch("id2",&id2,"id2/I");
-      myTree->Branch("q",&q,"q/D");
       myTree->Branch("pdfWeights", &pdfWeights, "pdfWeights[100]/D");
       myTree->Branch("pdfAlphaSUp", &pdfAlphaSUp, "pdfAlphaSUp/D");
       myTree->Branch("pdfAlphaSDown", &pdfAlphaSDown, "pdfAlphaSDown/D");
@@ -877,19 +846,8 @@ void ClearMeta()
   nofSelEventsRunEF = 0;
   nofSelEventsRunG = 0;
   nofSelEventsRunH = 0;
-//   nofEventsWithGenTop = 0;
-//   nofEventsWithGenTopWithStatus22or62 = 0;
-//   nofEventsWithGenAntiTop = 0;
-//   nofEventsWithGenAntiTopWithStatus22or62 = 0;
-//   nofTTEventsWithoutBothGenTops = 0;
-//  nofTTEventsWithoutGenTop = 0;
-//   nofTTEventsWithoutGenAntiTop = 0;
-//   nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-//   nofTTEventsWithoutGenTopWithStatus22 = 0;
-//   nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-//   nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-//   nofTTEventsWithoutGenTopWithStatus62 = 0;
-//   nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
+  nofEventsWithGenTop = 0;
+  nofEventsWithGenAntiTop = 0;
   nofTTEventsWithoutAGenTop = 0;
   
   sumWeight1001 = 0.;
@@ -978,11 +936,7 @@ void ClearObjects()
   hasPosWeight = false;
   hasNegWeight = false;
   hasGenTop = false;
-  hasGenTopWithStatus22 = false;
-  hasGenTopWithStatus62 = false;
   hasGenAntiTop = false;
-  hasGenAntiTopWithStatus22 = false;
-  hasGenAntiTopWithStatus62 = false;
   
   baseweight = 1.;
   weight1001 = 1.;
@@ -1000,11 +954,6 @@ void ClearObjects()
   semilepbrUp        = 1.;
   semilepbrDown      = 1.;
   
-  x1 = -1.;
-  x2 = -1.;
-  id1 = -1;
-  id2 = -1;
-  q = -1.;
   for (Int_t i = 0; i < 100; i++)
   {
     pdfWeights[i] = 1.;
@@ -1071,12 +1020,19 @@ void ClearObjects()
     muon_E[i] = 0.;
     muon_M[i] = 0.;
     muon_d0[i] = 999.;
+    muon_dz[i] = 999.;
     muon_chargedHadronIso[i] = 999.;
     muon_neutralHadronIso[i] = 999.;
     muon_photonIso[i] = 999.;
     muon_puChargedHadronIso[i] = 999.;
     muon_relIso[i] = 999.;
     muon_pfIso[i] = 999.;
+    muon_chi2[i] = 999.;
+    muon_nofValidHits[i] = -1;
+    muon_nofValidMuHits[i] = -1;
+    muon_nofValidPixelHits[i] = -1;
+    muon_nofMatchedStations[i] = -1;
+    muon_nofTrackerLayersWithMeasurement[i] = -1;
   }
   
   for (Int_t i = 0; i < maxLooseMuons; i++)
@@ -1103,6 +1059,7 @@ void ClearObjects()
     jet_E[i] = 0.;
     jet_M[i] = 0.;
     jet_bdiscr[i] = -1.;
+    jet_hadronFlavour[i] = -99.;
   }
   
   for (Int_t i = 0; i < maxLooseJets; i++)
@@ -1116,6 +1073,7 @@ void ClearObjects()
     jet_loose_E[i] = 0.;
     jet_loose_M[i] = 0.;
     jet_loose_bdiscr[i] = 0.;
+    jet_loose_hadronFlavour[i] = -99.;
   }
   
   met_px = 0.;
@@ -1282,11 +1240,32 @@ vector<TRootPFJet*> JetLeptonCleaning(vector<TRootPFJet*> jets, vector<TRootMuon
   return jets;
 }
 
-void FillJetVars(vector<TRootPFJet*> selectedJets)
+void FillJetVars(vector<TRootPFJet*> selectedJets, bool applyExtraJESCorr = false)
 {
   nJets = selectedJets.size();
-  for(Int_t iJet = 0; iJet < nJets; iJet++)
+  for (Int_t iJet = 0; iJet < nJets; iJet++)
   {
+    /// Apply extra JES corrections to certain systematics
+    if ( runSystematics && applyExtraJESCorr )
+    {
+      if ( selectedJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags() > CSVv2Medium )
+      {
+        if ( selectedJets[iJet]->Eta() < 1.3 )
+          corr = h_jesExtraBBarrel->Eval(selectedJets[iJet]->Pt());
+        else
+          corr = h_jesExtraBEndcap->Eval(selectedJets[iJet]->Pt());
+      }
+      else
+      {
+        if ( selectedJets[iJet]->Eta() < 1.3 )
+          corr = h_jesExtraLightBarrel->Eval(selectedJets[iJet]->Pt());
+        else
+          corr = h_jesExtraLightEndcap->Eval(selectedJets[iJet]->Pt());
+      }
+      selectedJets[iJet]->SetPxPyPzE(corr*selectedJets[iJet]->Px(), corr*selectedJets[iJet]->Py(), corr*selectedJets[iJet]->Pz(), corr*selectedJets[iJet]->E());
+    }  // end syst
+    
+    /// Fill variables
     jet_charge[iJet] = selectedJets[iJet]->charge();
     jet_nConstituents[iJet] = selectedJets[iJet]->nConstituents();
     jet_nChConstituents[iJet] = selectedJets[iJet]->chargedMultiplicity();
@@ -1303,7 +1282,7 @@ void FillJetVars(vector<TRootPFJet*> selectedJets)
 void FillLooseJetVars(vector<TRootPFJet*> selectedLooseJets)
 {
   nLooseJets = selectedLooseJets.size();
-  for(Int_t iJet = 0; iJet < nLooseJets; iJet++)
+  for (Int_t iJet = 0; iJet < nLooseJets; iJet++)
   {
     jet_loose_charge[iJet] = selectedLooseJets[iJet]->charge();
     jet_loose_nConstituents[iJet] = selectedLooseJets[iJet]->nConstituents();
@@ -1314,6 +1293,7 @@ void FillLooseJetVars(vector<TRootPFJet*> selectedLooseJets)
     jet_loose_E[iJet] = selectedLooseJets[iJet]->E();
     jet_loose_M[iJet] = selectedLooseJets[iJet]->M();
     jet_loose_bdiscr[iJet] = selectedLooseJets[iJet]->btag_combinedInclusiveSecondaryVertexV2BJetTags();
+    jet_loose_hadronFlavour[iJet] = selectedLooseJets[iJet]->hadronFlavour();
   }
 }
 
@@ -1329,12 +1309,19 @@ void FillMuonVars(vector<TRootMuon*> selectedMuons)
     muon_E[iMuon] = selectedMuons[iMuon]->E();
     muon_M[iMuon] = selectedMuons[iMuon]->M();
     muon_d0[iMuon] = selectedMuons[iMuon]->d0();
+    muon_dz[iMuon] = selectedMuons[iMuon]->dz();
     muon_chargedHadronIso[iMuon] = selectedMuons[iMuon]->chargedHadronIso(4);
     muon_neutralHadronIso[iMuon] = selectedMuons[iMuon]->neutralHadronIso(4);
     muon_photonIso[iMuon] = selectedMuons[iMuon]->photonIso(4);
     muon_puChargedHadronIso[iMuon] = selectedMuons[iMuon]->puChargedHadronIso(4);
     muon_relIso[iMuon] = ( muon_chargedHadronIso[iMuon] + max( 0.0, muon_neutralHadronIso[iMuon] + muon_photonIso[iMuon] - 0.5*muon_puChargedHadronIso[iMuon] ) ) / muon_pt[iMuon];  // dR = 0.4, dBeta corrected
     muon_pfIso[iMuon] = selectedMuons[iMuon]->relPfIso(4,0);
+    muon_chi2[iMuon] = selectedMuons[iMuon]->chi2();
+    muon_nofValidHits[iMuon] = selectedMuons[iMuon]->nofValidHits();
+    muon_nofValidMuHits[iMuon] = selectedMuons[iMuon]->nofValidMuHits();
+    muon_nofValidPixelHits[iMuon] = selectedMuons[iMuon]->nofValidPixelHits();
+    muon_nofMatchedStations[iMuon] = selectedMuons[iMuon]->nofMatchedStations();
+    muon_nofTrackerLayersWithMeasurement[iMuon] = selectedMuons[iMuon]->nofTrackerLayersWithMeasurement();
   }
 }
 
@@ -1408,48 +1395,7 @@ void FillMCParticles(bool isTTbar)
     mc_isPromptFinalState[iMC] = mcParticles[iMC]->isPromptFinalState();
     mc_isHardProcess[iMC] = mcParticles[iMC]->isHardProcess();
     mc_fromHardProcessFinalState[iMC] = mcParticles[iMC]->fromHardProcessFinalState();
-    
-//     if ( mc_pdgId[iMC] == 6 )
-//     {
-//       hasGenTop = true;
-//       nofEventsWithGenTop++;
-//       if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-//       {
-//         nofEventsWithGenTopWithStatus22or62++;
-//         if ( mc_status[iMC] == 22 ) hasGenTopWithStatus22 = true;
-//         else if ( mc_status[iMC] == 62 ) hasGenTopWithStatus62 = true;
-//       }
-//     }
-//     else if ( mc_pdgId[iMC] == -6 )
-//     {
-//       hasGenAntiTop = true;
-//       nofEventsWithGenAntiTop++;
-//       if ( mc_status[iMC] == 22 || mc_status[iMC] == 62 )
-//       {
-//         nofEventsWithGenAntiTopWithStatus22or62++;
-//         if ( mc_status[iMC] == 22 ) hasGenAntiTopWithStatus22 = true;
-//         else if ( mc_status[iMC] == 62 ) hasGenAntiTopWithStatus62 = true;
-//       }
-//     }
   }
-  
-//   if (isTTbar)
-//   {
-//     if (! hasGenTop && ! hasGenAntiTop) nofTTEventsWithoutBothGenTops++;
-//     else if (! hasGenTop) nofTTEventsWithoutGenTop++;
-//     else if (! hasGenAntiTop) nofTTEventsWithoutGenAntiTop++;
-//     //if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
-//     
-//     if (! hasGenTopWithStatus22 && ! hasGenAntiTopWithStatus22) nofTTEventsWithoutBothGenTopsWithStatus22++;
-//     else if (! hasGenTopWithStatus22) nofTTEventsWithoutGenTopWithStatus22++;
-//     else if (! hasGenAntiTopWithStatus22) nofTTEventsWithoutGenAntiTopWithStatus22++;
-//     if (! hasGenTopWithStatus22 || ! hasGenAntiTopWithStatus22) nofTTEventsWithoutAGenTopWithStatus22++;
-//     
-//     if (! hasGenTopWithStatus62 && ! hasGenAntiTopWithStatus62) nofTTEventsWithoutBothGenTopsWithStatus62++;
-//     else if (! hasGenTopWithStatus62) nofTTEventsWithoutGenTopWithStatus62++;
-//     else if (! hasGenAntiTopWithStatus62) nofTTEventsWithoutGenAntiTopWithStatus62++;
-//     if (! hasGenTopWithStatus62 || ! hasGenAntiTopWithStatus62) nofTTEventsWithoutAGenTopWithStatus62++;
-//   }
 }
 
 void FillFilters(bool isData)
@@ -1586,17 +1532,18 @@ void FillFragmentationScaleFactors()
 
 void FillPdfWeights()
 {
-  x1 = event->xParton1();
-  x2 = event->xParton2();
-  id1 = event->idParton1();
-  id2 = event->idParton2();
-  q = event->factorizationScale();
-  for (Int_t i = 2001; i < 2101; i++)
+  unsigned int index;
+  for (Int_t i = 0; i < 100; i++)
   {
-    pdfWeights[i] = event->getWeight(i)/baseweight;
+    index = 2001+i;
+    pdfWeights[i] = event->getWeight(index)/fabs(event->originalXWGTUP());
+    sumPdfWeights[i] += pdfWeights[i];
   }
-  pdfAlphaSUp = event->getWeight(2101)/baseweight;
-  pdfAlphaSDown = event->getWeight(2102)/baseweight;
+  pdfAlphaSUp = event->getWeight(2101)/fabs(event->originalXWGTUP());
+  pdfAlphaSDown = event->getWeight(2102)/fabs(event->originalXWGTUP());
+  
+  sumPdfAlphaSUp += pdfAlphaSUp;
+  sumPdfAlphaSDown += pdfAlphaSDown;
 }
 
 void FillaMCScaleFactors()
@@ -1641,8 +1588,16 @@ void CheckHasGenTop()
 {
   for (Int_t iMC = 0; iMC < mcParticles.size(); iMC++)
   {
-    if ( mcParticles[iMC]->type() == 6) hasGenTop = true;
-    else if ( mcParticles[iMC]->type() == -6) hasGenAntiTop = true;
+    if ( mcParticles[iMC]->type() == 6 )
+    {
+      hasGenTop = true;
+      nofEventsWithGenTop++;
+    }
+    else if ( mcParticles[iMC]->type() == -6 )
+    {
+      hasGenAntiTop = true;
+      nofEventsWithGenAntiTop++;
+    }
   }
   
   if (! hasGenTop || ! hasGenAntiTop) nofTTEventsWithoutAGenTop++;
@@ -1834,6 +1789,7 @@ int main (int argc, char *argv[])
     }
   }
   
+  
   /// xml file
   const char *xmlfile = xmlFileName.c_str();
   
@@ -1966,6 +1922,14 @@ int main (int argc, char *argv[])
   cout << endl;
   
   
+  /// Extra JES SFs for systematics
+  if (runSystematics)
+  {
+    jessystfile = new TFile((pathCalJESSyst+"PtRatioPlots.root").c_str(), "READ");
+  }
+  
+  
+  
   ////////////////////////////////////
   ///  Loop on datasets
   ////////////////////////////////////
@@ -2039,7 +2003,7 @@ int main (int argc, char *argv[])
     ///  BTag SF  ///
     /////////////////
     
-    if (applyBTagSF)
+    if (applyBTagSF && ! isData)
     {
       /// Use seperate per data set?? (We have these...)
       //  string pathBTagHistos = BTagHistos/160729/Merged/";
@@ -2067,6 +2031,20 @@ int main (int argc, char *argv[])
     InitJEC(isData, dataSetName);
     
     JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
+    
+    applyExtraJESCorr = false;
+    if (runSystematics)
+    {
+      if ( dataSetName.find("fsr") != std::string::npos || dataSetName.find("isr") != std::string::npos || dataSetName.find("herwig") != std::string::npos )
+      {
+        applyExtraJESCorr = true;
+        cout << "Applying extra JES corrections..." << endl;
+        h_jesExtraBBarrel = (TGraph*) jessystfile->Get(("SF_"+sysString+"_B_barrel").c_str())->Clone();
+        h_jesExtraBEndcap = (TGraph*) jessystfile->Get(("SF_"+sysString+"_B_endcap").c_str())->Clone();
+        h_jesExtraLightBarrel = (TGraph*) jessystfile->Get(("SF_"+sysString+"_Light_barrel").c_str())->Clone();
+        h_jesExtraLightEndcap = (TGraph*) jessystfile->Get(("SF_"+sysString+"_Light_endcap").c_str())->Clone();
+      }
+    }
     
     
     
@@ -2229,8 +2207,11 @@ int main (int argc, char *argv[])
       if (! isData)
       {
         genjets = treeLoader.LoadGenJet(ievt,false);
-        treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
-        sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
+        if (! isHerwig)
+        {
+          treeLoader.LoadMCEvent(ievt, 0, mcParticles, false);
+          sort(mcParticles.begin(),mcParticles.end(),HighestPt()); // HighestPt() is included from the Selection class
+        }
       }
       
       
@@ -2335,8 +2316,6 @@ int main (int argc, char *argv[])
       
       
       if (! isData && ! calculateBTagSF && isAmc) FillaMCScaleFactors();
-      
-      if (! calculateBTagSF && isTTbar) CheckHasGenTop();
       
       
       ////// Selection
@@ -2519,11 +2498,15 @@ int main (int argc, char *argv[])
       ///////////////////////////////
       
       FillMuonVars(selectedMuons);
-      FillJetVars(selectedJets);
+      FillJetVars(selectedJets, applyExtraJESCorr);
       FillMetVars(mets, mets_corrected);
       if (! isData) FillGenJetVars(genjets);
-      if (! isData && ! isHerwig) FillMCParticles(isTTbar);
-      if (isTTbar && ! runSystematics)
+      if (! isData && ! isHerwig)
+      {
+        FillMCParticles(isTTbar);
+        if (isTTbar) CheckHasGenTop();
+      }
+      if (isTTbar)
       {
         FillRenFacScaleFactors();
         FillFragmentationScaleFactors();
@@ -2563,9 +2546,12 @@ int main (int argc, char *argv[])
   }  // end loop datasets
   
   /// To write plots b tagging:
-  delete bTagHistoTool_M;
-  delete bTagHistoTool_M_up;
-  delete bTagHistoTool_M_down;
+  if (! isData)
+  {
+    delete bTagHistoTool_M;
+    delete bTagHistoTool_M_up;
+    delete bTagHistoTool_M_down;
+  }
   
   
   delete tcdatasets;
