@@ -33,9 +33,12 @@ negWeights/
 negWeightsCalculator
 nohup_/
 output*/
+submit/
 test*/
 toys/
 AverageMassCalculator
+CalculateExtraJESCorrections
+DrawNormalisedSystematics
 GetFitParams
 Likelihood
 MakeTGraphFromHisto
