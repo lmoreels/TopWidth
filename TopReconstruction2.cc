@@ -40,10 +40,11 @@ using namespace TopTree;
 bool test = false;
 bool testHistos = false;
 bool makePlots = false;
+bool fourJetsOnly = false;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
-double kinFitCutValue = 2.;
+double kinFitCutValue = 5.;
 
 bool doMETCleaning = true;
 
@@ -52,14 +53,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("171015","170920");
+    return pair<string,string>("171015","170921");
   }
-  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170904","170904");
-  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170905","170905");
+  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170922","170921");
+  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170923","170921");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170920");
+    return pair<string,string>("171015","171021");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -462,7 +463,7 @@ bool foundLastCopyTop, foundLastCopyAntitop;
 vector<unsigned int> bJetId;
 double bdiscrTop, bdiscrTop2, tempbdiscr;
 int labelB1, labelB2;
-int labelsReco[4];
+int labelsReco[4], labelsRecoKF[4];
 double massHadTopQ, massLepTopQ;
 
 string catSuffix = "";
@@ -473,6 +474,7 @@ bool isCM, isWM, isUM;
 /// Define TLVs
 TLorentzVector muon, jet, mcpart;
 TLorentzVector WCandidate;
+TLorentzVector neutrino;
 vector<TLorentzVector> selectedLepton;
 vector<TLorentzVector> selectedJets;
 vector<TLorentzVector> selectedBJets;
@@ -515,12 +517,14 @@ bool min01, min02, min12;
 int nofAcceptedKFit = 0;
 double nofAcceptedKFitWeighted = 0.;
 
+Double_t minTopMass = 100., maxTopMass = 245.;
+
 
 /// Variables
 double M3, Ht, min_Mlb, dRLepB;
 double M3_aKF, Ht_aKF;
 double reco_W_mass_bKF, reco_top_mass_bKF, reco_top_pt_bKF, reco_mlb_bKF, reco_dRLepB_lep_bKF, reco_dRLepB_had_bKF, reco_ttbar_mass_bKF;
-double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_pt_aKF, reco_mlb_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_ttbar_mass_aKF;
+double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_mass_alt_aKF, reco_top_pt_aKF, reco_mlb_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_ttbar_mass_aKF;
 double tempDR;
 
 double matched_W_mass_q, matched_top_mass_q;
@@ -615,8 +619,8 @@ int main(int argc, char* argv[])
   
   EventReweighting *rew = new EventReweighting(false);  // no correction for number of events
   ResolutionFunctions* rf = new ResolutionFunctions(false, true);
-  KinFitter *kf01 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
-//  KinFitter *kf02 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
+  KinFitter *kf01 = new KinFitter("input/PlotsForResolutionFunctions_testFit_171023.root", addWMassKF, addEqMassKF);
+  KinFitter *kf02 = new KinFitter("input/PlotsForResolutionFunctions_testFit_171023.root", addWMassKF, addEqMassKF);
 //  KinFitter *kf12 = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
   
   
@@ -658,7 +662,7 @@ int main(int argc, char* argv[])
   ////////////////////////////////////
   
   int endEvent = nEntries;
-  if (test || testHistos) endEvent = 2001;
+  if (test || testHistos) endEvent = 100;
   for (int ievt = 0; ievt < endEvent; ievt++)
   {
     ClearObjects();
@@ -683,10 +687,24 @@ int main(int argc, char* argv[])
     {
       jet.Clear();
       jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-      selectedJets.push_back(jet);
+      if ( jet_pt[iJet] < 250. ) selectedJets.push_back(jet);
     }
     
-    if ( selectedJets.size() > 4 ) continue;
+    if ( selectedJets.size() < 4 ) continue;
+    
+    for (int iJet = 0; iJet < selectedJets.size(); iJet++)
+    {
+      if ( jet_bdiscr[iJet] > CSVv2Medium )
+      {
+        selectedBJets.push_back(selectedJets[iJet]);
+        bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
+      }
+    }
+    
+    if ( selectedBJets.size() < 2 ) continue;
+    
+    
+    if ( fourJetsOnly && selectedJets.size() > 4 ) continue;
     //if ( selectedJets.size() > 5 ) continue;
     nofHardSelected++;
     
@@ -710,15 +728,6 @@ int main(int argc, char* argv[])
     if (skipEvent) continue;
     nofAfterDRmincut++;
     
-    for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-    {
-      if ( jet_bdiscr[iJet] > CSVv2Medium )
-      {
-        selectedBJets.push_back(selectedJets[iJet]);
-        bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
-      }
-    }
-    //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
     
     /// label jets with highest b discr
     for (int iJet = 0; iJet < selectedBJets.size(); iJet++)
@@ -992,6 +1001,7 @@ int main(int argc, char* argv[])
         else if ( selectedJets.size() == 5 ) nofWMnJets[1]++;
         else if ( selectedJets.size() == 6 ) nofWMnJets[2]++;
         else nofWMnJets[3]++;
+        if (test) cout << "Event " << ievt << ": (" << MCPermutation[0].first << "," << MCPermutation[1].first << "," << MCPermutation[2].first << "," << MCPermutation[3].first << ")" << endl;
       }
     }  // end hadrTopMatch
     else  // no match
@@ -1019,29 +1029,114 @@ int main(int argc, char* argv[])
     ///   Kinematic Fit      ///
     ////////////////////////////
     
+    for (int i = 0; i < 4; i++)
+    {
+      labelsRecoKF[i] = labelsReco[i];
+    }
+    
     if (doKinFit)
     {
-      /*if (addEqMassKF)
-       kFitter = kf->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], TLV NEUTRINO, kFitVerbosity);
-       else if (addWMassKF)*/
-      kFitter01 = kf01->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
+      if (addEqMassKF)
+      {
+        cout << "Event " << ievt << ": original combination = (" << labelsReco[0] << "," << labelsReco[1] << "," << labelsReco[2] << "," << labelsReco[3] << ") ====> ";
+        if (isCM) cout << "CM";
+        else if (isWM) cout << "WM";
+        else cout << "UM";
+        cout << endl;
+        neutrino.SetPtEtaPhiE(met_corr_pt, 1e-10, met_corr_phi, met_corr_E);
+        //cout << "Neutrino pt = " << met_corr_pt << " and in TLV: " << neutrino.Pt() << "    Et = " << met_corr_Et << " and in TLV: " << neutrino.Et() << "   E = " << met_corr_E << " and in TLV: " << neutrino.E() << endl;
+        double tempProb, maxProb = 999.;
+        for ( int ijet = 0; ijet < selectedJets.size(); ijet++)
+        {
+          for (int jjet = ijet+1; jjet < selectedJets.size(); jjet++)
+          {
+            //if ( jjet == ijet ) continue;
+            for (int kjet = 0; kjet < selectedJets.size(); kjet++)
+            {
+              if ( kjet == ijet || kjet == jjet ) continue;
+              for (int ljet = 0; ljet < selectedJets.size(); ljet++)
+              {
+                if ( ljet == ijet || ljet == jjet || ljet == kjet ) continue;
+                
+                kFitter02 = kf02->doFit(selectedJets[ijet], selectedJets[jjet], selectedJets[kjet], selectedJets[ljet], selectedLepton[0], neutrino, kFitVerbosity);
+                
+                if ( kFitter02->getStatus() != 0 ) continue;
+                //tempProb = TMath::Log(TMath::Prob(kFitter02->getS(),kFitter02->getNDF()));
+                //if ( tempProb > maxProb)
+                tempProb = fabs(kFitter02->getS()/kFitter02->getNDF() - 1.);
+                if ( tempProb < maxProb )
+                {
+                  maxProb = tempProb;
+                  labelsRecoKF[0] = ijet;
+                  labelsRecoKF[1] = jjet;
+                  labelsRecoKF[2] = kjet;
+                  labelsRecoKF[3] = ljet;
+                  if (test)
+                    cout << "Event " << ievt << ": for combination (" << labelsRecoKF[0] << "," << labelsRecoKF[1] << "," << labelsRecoKF[2] << "," << labelsRecoKF[3] << "), the chi2 value is " << kFitter02->getS() << " and the ndf is " << kFitter02->getNDF() << " ===> " << TMath::Prob(kFitter02->getS(),kFitter02->getNDF()) << endl;
+                }
+              }
+            }
+          }
+        }
+        
+        if ( maxProb == 999. ) continue;
+        kFitter01 = kf01->doFit(selectedJets[labelsRecoKF[0]], selectedJets[labelsRecoKF[1]], selectedJets[labelsRecoKF[2]], selectedJets[labelsRecoKF[3]], selectedLepton[0], neutrino, kFitVerbosity);
+        
+        //kFitter01 = kf01->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], selectedJets[labelsReco[3]], selectedLepton[0], neutrino, kFitVerbosity);
+        //kFitter02 = kf02->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], selectedJets[labelsReco[3]], selectedJets[labelsReco[2]], selectedLepton[0], neutrino, kFitVerbosity);
+      }
+      else if (addWMassKF)
+      {
+        kFitter01 = kf01->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[1]], kFitVerbosity);
 //       kFitter02 = kf02->doFit(selectedJets[labelsReco[0]], selectedJets[labelsReco[2]], kFitVerbosity);
 //       kFitter12 = kf12->doFit(selectedJets[labelsReco[1]], selectedJets[labelsReco[2]], kFitVerbosity);
       
-      if ( kFitter01->getStatus() != 0 /*&& kFitter02->getStatus() != 0 && kFitter12->getStatus() != 0 */)  // did not converge
-      {
-        if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
-        continue;
-      }
-      
-      kFitChi2_01 = kFitter01->getS();
-//       kFitChi2_02 = kFitter02->getS();
-//       kFitChi2_12 = kFitter12->getS();
-//       min01 = false; min02 = false; min12 = false;
-//       if ( kFitter01->getStatus() == 0 && kFitChi2_01 < kFitChi2_min )
+       if ( kFitter01->getStatus() != 0 /*&& kFitter02->getStatus() != 0 && kFitter12->getStatus() != 0 */)  // did not converge
+       {
+         if (test && verbose > 2) cout << "Event " << ievt << ": Fit did not converge..." << endl;
+         continue;
+       }
+     }
+     
+//       if (kFitter01->getStatus() == 0 )
 //       {
-//         min01 = true;
-         kFitChi2_min = kFitChi2_01;
+//         kFitChi2_01 = kFitter01->getS();
+//         if (test)
+//         {
+//           cout << "Event " << ievt << " (";
+//           if (isCM) cout << "CM";
+//           else if (isWM) cout << "WM";
+//           else cout << "UM";
+//           cout << "): for combination 1, the chi2 value is " << kFitChi2_01 << " and the ndf is " << kFitter01->getNDF() << " ===> " << TMath::Prob(kFitChi2_01,kFitter01->getNDF()) << endl;
+//         }
+//       }
+//       if (kFitter02->getStatus() == 0 )
+//       {
+//         kFitChi2_02 = kFitter02->getS();
+//         if (test) cout << "Event " << ievt << "     : for combination 2, the chi2 value is " << kFitChi2_02 << " and the ndf is " << kFitter02->getNDF() << " ===> " << TMath::Prob(kFitChi2_02,kFitter02->getNDF()) << endl;
+//       }
+// //       kFitChi2_02 = kFitter02->getS();
+// //       kFitChi2_12 = kFitter12->getS();
+//       min01 = false; min02 = false; min12 = false;
+// //       if ( kFitter01->getStatus() == 0 && kFitChi2_01 < kFitChi2_min )
+// //       {
+// //         min01 = true;
+//       if (kFitter01->getStatus() == 0 && kFitter02->getStatus() == 0)
+//       {
+//         kFitChi2_min = kFitChi2_01;
+//         if ( kFitChi2_02 < kFitChi2_01 )
+//         {
+//           min02 = true;
+//           kFitChi2_min = kFitChi2_02;
+//         }
+//       }
+//       else if (kFitter02->getStatus() == 0)
+//       {
+//         min02 = true;
+//         kFitChi2_min = kFitChi2_02;
+//       }
+//       else kFitChi2_min = kFitChi2_01;
+
 //         for (int i = 0; i < 3; i++) labelsKF[i] = labelsReco[i];
 //       }
 //       if ( kFitter02->getStatus() == 0 && kFitChi2_02 < kFitChi2_min )
@@ -1071,6 +1166,7 @@ int main(int argc, char* argv[])
       else if (isWM) nofNotCorrectlyMatchedAKFNoCut++;
       else if (isUM) nofUnmatchedAKFNoCut++;
       
+      kFitChi2_min = kFitter01->getS();
       if ( applyKinFitCut && kFitChi2_min > kinFitCutValue ) continue;
       nofAcceptedKFit++;
       nofAcceptedKFitWeighted += scaleFactor;
@@ -1083,7 +1179,7 @@ int main(int argc, char* argv[])
 //       if (min12) selectedJetsKFcorrected = kf12->getCorrectedJets();
 //       else if (min02) selectedJetsKFcorrected = kf02->getCorrectedJets();
 //       else 
-        selectedJetsKFcorrected = kf01->getCorrectedJets();
+      selectedJetsKFcorrected = kf01->getCorrectedJets();
       
     }
     
@@ -1100,39 +1196,57 @@ int main(int argc, char* argv[])
     else if ( selectedJetsKFcorrected.size() == 2 ) selectedJetsKFcorrected.push_back(selectedJets[labelsReco[2]]);
     
     /// Make pT ordered jet collection after KF
-    selectedJetsAKF = selectedJetsKFcorrected;
-    selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
-    std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
+    if (addEqMassKF)
+    {
+      for (int i = 0; i < 4; i++)
+        selectedJetsAKF.push_back(selectedJetsKFcorrected.at(i));
+    }
+    else
+    {
+      selectedJetsAKF = selectedJetsKFcorrected;
+      selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
+      std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
+    }
     
     /// Define variables
     reco_W_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1]).M();
     reco_top_mass_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).M();
+    reco_top_mass_alt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJets[labelsReco[3]]).M();
     reco_top_pt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
     reco_mlb_aKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
     reco_dRLepB_lep_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
     reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
     reco_ttbar_mass_aKF = reco_mlb_aKF + reco_top_mass_aKF;
     
-    if ( fabs(reco_top_mass_aKF - reco_mlb_aKF) < 25 ) continue;
+    //if ( fabs(reco_top_mass_aKF - reco_mlb_aKF) < 25 ) continue;
     
     if ( reco_top_mass_aKF < 0. )
       PrintKFDebug(ievt);
     
-    if (isCM)
+    
+    if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
+    if ( reco_top_mass_alt_aKF < maxTopMass-5 ) continue;
+    
+    
+    if (hadronicTopJetsMatched)
     {
-      if ( selectedJets.size() == 4 ) nofCMnJetsAKF[0]++;
-      else if ( selectedJets.size() == 5 ) nofCMnJetsAKF[1]++;
-      else if ( selectedJets.size() == 6 ) nofCMnJetsAKF[2]++;
-      else nofCMnJetsAKF[3]++;
+      /// Correct match
+      if ( ( labelsRecoKF[0] == MCPermutation[0].first || labelsRecoKF[0] == MCPermutation[1].first || labelsRecoKF[0] == MCPermutation[2].first ) && ( labelsRecoKF[1] == MCPermutation[0].first || labelsRecoKF[1] == MCPermutation[1].first || labelsRecoKF[1] == MCPermutation[2].first ) && ( labelsRecoKF[2] == MCPermutation[0].first || labelsRecoKF[2] == MCPermutation[1].first || labelsRecoKF[2] == MCPermutation[2].first ) )  // correct jets for top quark
+      {
+        if ( selectedJets.size() == 4 ) nofCMnJetsAKF[0]++;
+        else if ( selectedJets.size() == 5 ) nofCMnJetsAKF[1]++;
+        else if ( selectedJets.size() == 6 ) nofCMnJetsAKF[2]++;
+        else nofCMnJetsAKF[3]++;
+      }
+      else  // wrong permutation
+      {
+        if ( selectedJets.size() == 4 ) nofWMnJetsAKF[0]++;
+        else if ( selectedJets.size() == 5 ) nofWMnJetsAKF[1]++;
+        else if ( selectedJets.size() == 6 ) nofWMnJetsAKF[2]++;
+        else nofWMnJetsAKF[3]++;
+      }
     }
-    else if (isWM)
-    {
-      if ( selectedJets.size() == 4 ) nofWMnJetsAKF[0]++;
-      else if ( selectedJets.size() == 5 ) nofWMnJetsAKF[1]++;
-      else if ( selectedJets.size() == 6 ) nofWMnJetsAKF[2]++;
-      else nofWMnJetsAKF[3]++;
-    }
-    else if (isUM)
+    else  // unmatched
     {
       if ( selectedJets.size() == 4 ) nofUMnJetsAKF[0]++;
       else if ( selectedJets.size() == 5 ) nofUMnJetsAKF[1]++;
@@ -1186,23 +1300,29 @@ int main(int argc, char* argv[])
   
   cout << endl;
   cout << " 4 jets:   CM " << setw(6) << right << nofCMnJets[0] << " (" << 100*((float)nofCMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)     WM " << setw(6) << right << nofWMnJets[0] << " (" << 100*((float)nofWMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)     UM " << setw(6) << right << nofUMnJets[0] << " (" << 100*((float)nofUMnJets[0]/(float)(nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0])) << "%)" << endl;
-  cout << " 5 jets:   CM " << setw(6) << right << nofCMnJets[1] << " (" << 100*((float)nofCMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     WM " << setw(6) << right << nofWMnJets[1] << " (" << 100*((float)nofWMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     UM " << setw(6) << right << nofUMnJets[1] << " (" << 100*((float)nofUMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)" << endl;
-  cout << " 6 jets:   CM " << setw(6) << right << nofCMnJets[2] << " (" << 100*((float)nofCMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     WM " << setw(6) << right << nofWMnJets[2] << " (" << 100*((float)nofWMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     UM " << setw(6) << right << nofUMnJets[2] << " (" << 100*((float)nofUMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)" << endl;
-  cout << ">6 jets:   CM " << setw(6) << right << nofCMnJets[3] << " (" << 100*((float)nofCMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     WM " << setw(6) << right << nofWMnJets[3] << " (" << 100*((float)nofWMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     UM " << setw(6) << right << nofUMnJets[3] << " (" << 100*((float)nofUMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)" << endl;
-  
-  int total = nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0] + nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1] + nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2] + nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3];
-  cout << "  total:   CM " << setw(6) << right << nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3] << " (" << 100*((float)(nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3] << " (" << 100*((float)(nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3] << " (" << 100*((float)(nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3])/(float)(total)) << "%)" << endl;
+  if (! fourJetsOnly)
+  {
+    cout << " 5 jets:   CM " << setw(6) << right << nofCMnJets[1] << " (" << 100*((float)nofCMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     WM " << setw(6) << right << nofWMnJets[1] << " (" << 100*((float)nofWMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)     UM " << setw(6) << right << nofUMnJets[1] << " (" << 100*((float)nofUMnJets[1]/(float)(nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1])) << "%)" << endl;
+    cout << " 6 jets:   CM " << setw(6) << right << nofCMnJets[2] << " (" << 100*((float)nofCMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     WM " << setw(6) << right << nofWMnJets[2] << " (" << 100*((float)nofWMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)     UM " << setw(6) << right << nofUMnJets[2] << " (" << 100*((float)nofUMnJets[2]/(float)(nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2])) << "%)" << endl;
+    cout << ">6 jets:   CM " << setw(6) << right << nofCMnJets[3] << " (" << 100*((float)nofCMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     WM " << setw(6) << right << nofWMnJets[3] << " (" << 100*((float)nofWMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)     UM " << setw(6) << right << nofUMnJets[3] << " (" << 100*((float)nofUMnJets[3]/(float)(nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3])) << "%)" << endl;
+    
+    int total = nofCMnJets[0]+nofWMnJets[0]+nofUMnJets[0] + nofCMnJets[1]+nofWMnJets[1]+nofUMnJets[1] + nofCMnJets[2]+nofWMnJets[2]+nofUMnJets[2] + nofCMnJets[3]+nofWMnJets[3]+nofUMnJets[3];
+    cout << "  total:   CM " << setw(6) << right << nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3] << " (" << 100*((float)(nofCMnJets[0]+nofCMnJets[1]+nofCMnJets[2]+nofCMnJets[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3] << " (" << 100*((float)(nofWMnJets[0]+nofWMnJets[1]+nofWMnJets[2]+nofWMnJets[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3] << " (" << 100*((float)(nofUMnJets[0]+nofUMnJets[1]+nofUMnJets[2]+nofUMnJets[3])/(float)(total)) << "%)" << endl;
+  }
   
   
   cout << endl;
   cout << "After KF" << endl;
   cout << " 4 jets:   CM " << setw(6) << right << nofCMnJetsAKF[0] << " (" << 100*((float)nofCMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[0] << " (" << 100*((float)nofWMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[0] << " (" << 100*((float)nofUMnJetsAKF[0]/(float)(nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0])) << "%)" << endl;
-  cout << " 5 jets:   CM " << setw(6) << right << nofCMnJetsAKF[1] << " (" << 100*((float)nofCMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[1] << " (" << 100*((float)nofWMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[1] << " (" << 100*((float)nofUMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)" << endl;
-  cout << " 6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[2] << " (" << 100*((float)nofCMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[2] << " (" << 100*((float)nofWMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[2] << " (" << 100*((float)nofUMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)" << endl;
-  cout << ">6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[3] << " (" << 100*((float)nofCMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[3] << " (" << 100*((float)nofWMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[3] << " (" << 100*((float)nofUMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)" << endl;
-  
-  total = nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0] + nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1] + nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2] + nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3];
-  cout << "  total:   CM " << setw(6) << right << nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3] << " (" << 100*((float)(nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3] << " (" << 100*((float)(nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3] << " (" << 100*((float)(nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3])/(float)(total)) << "%)" << endl;
+  if (! fourJetsOnly)
+  {
+    cout << " 5 jets:   CM " << setw(6) << right << nofCMnJetsAKF[1] << " (" << 100*((float)nofCMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[1] << " (" << 100*((float)nofWMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[1] << " (" << 100*((float)nofUMnJetsAKF[1]/(float)(nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1])) << "%)" << endl;
+    cout << " 6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[2] << " (" << 100*((float)nofCMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[2] << " (" << 100*((float)nofWMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[2] << " (" << 100*((float)nofUMnJetsAKF[2]/(float)(nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2])) << "%)" << endl;
+    cout << ">6 jets:   CM " << setw(6) << right << nofCMnJetsAKF[3] << " (" << 100*((float)nofCMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[3] << " (" << 100*((float)nofWMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[3] << " (" << 100*((float)nofUMnJetsAKF[3]/(float)(nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3])) << "%)" << endl;
+    
+    int total = nofCMnJetsAKF[0]+nofWMnJetsAKF[0]+nofUMnJetsAKF[0] + nofCMnJetsAKF[1]+nofWMnJetsAKF[1]+nofUMnJetsAKF[1] + nofCMnJetsAKF[2]+nofWMnJetsAKF[2]+nofUMnJetsAKF[2] + nofCMnJetsAKF[3]+nofWMnJetsAKF[3]+nofUMnJetsAKF[3];
+    cout << "  total:   CM " << setw(6) << right << nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3] << " (" << 100*((float)(nofCMnJetsAKF[0]+nofCMnJetsAKF[1]+nofCMnJetsAKF[2]+nofCMnJetsAKF[3])/(float)(total)) << "%)     WM " << setw(6) << right << nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3] << " (" << 100*((float)(nofWMnJetsAKF[0]+nofWMnJetsAKF[1]+nofWMnJetsAKF[2]+nofWMnJetsAKF[3])/(float)(total)) << "%)     UM " << setw(6) << right << nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3] << " (" << 100*((float)(nofUMnJetsAKF[0]+nofUMnJetsAKF[1]+nofUMnJetsAKF[2]+nofUMnJetsAKF[3])/(float)(total)) << "%)" << endl;
+  }
   
   
   origNtuple->Close();
@@ -1817,6 +1937,7 @@ void ClearTLVs()
   jet.Clear();
   mcpart.Clear();
   WCandidate.Clear();
+  neutrino.Clear();
   selectedLepton.clear();
   selectedJets.clear();
   selectedBJets.clear();
@@ -1880,6 +2001,7 @@ void ClearVars()
   for (int i = 0; i < 4; i++)
   {
     labelsReco[i] = -9999;
+    labelsRecoKF[i] = -9999;
   }
   massHadTopQ = 0.01;
   massLepTopQ = 0.01;
@@ -1912,6 +2034,7 @@ void ClearVars()
   reco_ttbar_mass_bKF = -1.;
   reco_W_mass_aKF = -1.;
   reco_top_mass_aKF = -1.;
+  reco_top_mass_alt_aKF = -1.;
   reco_top_pt_aKF = -1.;
   reco_mlb_aKF = -1.;
   reco_dRLepB_lep_aKF = -1.;

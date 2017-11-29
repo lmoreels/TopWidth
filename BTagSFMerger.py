@@ -8,12 +8,12 @@ from datetime import datetime
 
 # Define time variable
 #date = "test"
-date = "171031"
+date = "171127"
 
-runSyst = True
+runSyst = False
 
-scalesys = "nominal"
-#scalesys = "JESdown"
+#scalesys = "nominal"
+scalesys = "JERup"
 
 #sys = ["central","up","down"]
 systype = "comb"
