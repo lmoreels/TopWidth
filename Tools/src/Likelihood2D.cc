@@ -22,8 +22,6 @@ double Likelihood2D::loglike_data_[nWidths_][nMasses_] = {{0.}};
 double Likelihood2D::loglike_per_evt_[nWidths_][nMasses_] = {{0.}};
 double Likelihood2D::loglike_CM_[nWidths_][nMasses_] = {{0.}};
 double Likelihood2D::loglike_CM_per_evt_[nWidths_][nMasses_] = {{0.}};
-double Likelihood2D::loglike_temp_[nWidths_][nMasses_] = {{0.}};
-double Likelihood2D::loglike_temp_per_evt_[nWidths_][nMasses_] = {{0.}};
 double Likelihood2D::loglike_gen_[nWidths_][nMasses_] = {{0.}};
 double Likelihood2D::loglike_gen_per_evt_[nWidths_][nMasses_] = {{0.}};
 
@@ -189,7 +187,6 @@ void Likelihood2D::ClearLikelihoods()
       loglike_data_[i][j] = 0.;
       loglike_per_evt_[i][j] = 0.;
       loglike_CM_[i][j] = 0.;
-      loglike_temp_[i][j] = 0.;
       loglike_gen_[i][j] = 0.;
     }
   }
@@ -240,12 +237,6 @@ void Likelihood2D::FillHistograms(double redMass, double relativeSF, double hadT
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
       thisWidth_ = stringWidthArray_[iWidth];
-      if (isTTbar)
-      {
-        if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]);
-        else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, widthArray_[iWidth]);
-      }
-      else thisWidthSF_ = 1.;
       
       for (int iMass = 0; iMass < nMasses_; iMass++)
       {
@@ -253,14 +244,14 @@ void Likelihood2D::FillHistograms(double redMass, double relativeSF, double hadT
         
         if (isTTbar)
         {
-          if (rewHadOnly_) thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, massArray_[iMass]);
-          else thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, massArray_[iMass]) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, massArray_[iMass]);
+          if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, massArray_[iMass], 1., widthArray_[iWidth]);
+          else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, massArray_[iMass], 1., widthArray_[iWidth]) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, massArray_[iMass], 1., widthArray_[iWidth]);
         }
-        else thisMassSF_ = 1.;
+        else thisEventSF_ = 1.;
         
-//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_*thisMassSF_);
-        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_*thisMassSF_);
-//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_100b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_*thisMassSF_);
+//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
+        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
+//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_100b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
       }
     }
   }
@@ -346,19 +337,17 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
   
   /// Define vars for likelihood calculation
   const int nEval = 50;
-  double evalPoints[nEval], outputValues[nEval], outputValuesTemp[nEval], likelihoodValues[nEval], likelihoodValuesTemp[nEval];
+  double evalPoints[nEval], outputValues[nEval], likelihoodValues[nEval];
   this->ClearArray(nEval, evalPoints);
   this->MakeTable(evalPoints, nEval, minRedMass_, maxRedMass_);
   
   /// Determine fractions based on number of events within reduced top mass range
   //  (is not dependent on number of bins, so the same for all widths)
-  double fracCats[nMasses_][nCats_] = {0.}, fracCatsTemp[nMasses_][nCats_-1] = {0.};
+  double fracCats[nMasses_][nCats_] = {0.};
   for (int iMass = 0; iMass < nMasses_; iMass++)
   {
     //this->GetFractions(fracCats[iMass], nCats_, stringMassArray_[iMass], datasetNames, includeDataset);
-    //this->GetFractions(fracCatsTemp[iMass], nCats_-1, stringMassArray_[iMass], datasetNames, includeDataset);
     this->GetFractions(fracCats[iMass], nCats_, datasetNames, includeDataset);
-    this->GetFractions(fracCatsTemp[iMass], nCats_-1, datasetNames, includeDataset);
 //     if (verbose_)
 //     {
 //       for (int iCat = 0; iCat < nCats_; iCat++)
@@ -424,7 +413,6 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
       
       /// Make likelihood functions
       this->ClearArray(nEval, outputValues);
-      this->ClearArray(nEval, outputValuesTemp);
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
 //         if ( iCat == 0 )
@@ -440,11 +428,6 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
           outputValues[i] += fracCats[iMass][iCat] * graph_[histoName_]->Eval(evalPoints[i]);
           if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log(graph_[histoName_]->Eval(evalPoints[i]));
           else likelihoodValues[i] = -TMath::Log(outputValues[i]);
-          if ( iCat < nCats_-1)
-          {
-            outputValuesTemp[i] += fracCatsTemp[iMass][iCat] * graph_[histoName_]->Eval(evalPoints[i]);
-            likelihoodValuesTemp[i] = -TMath::Log(outputValuesTemp[i]);
-          }
         }
         
         if ( iCat == 0 )  // outputValues = CM
@@ -455,16 +438,9 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
           this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValues, "likelihood_CM_", false);
           this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValues, "CorrectMatchLikelihood_"+stringSuffix_[0][iMass], 1);
         }
-        else if ( listCats_[iCat].find("WM") != std::string::npos && iCat != nCats_-1 )  // outputValues = CM + WM
+        else histoTotal_[stringSuffix_[0][iMass]]->Add(histoSm_[histoName_]);
+        if ( iCat == nCats_-1 ) // outputValues = CM + WM + UM
         {
-          histoTotal_[stringSuffix_[0][iMass]]->Add(histoSm_[histoName_]);
-
-          this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValuesTemp, "likelihood_CMWM_", false);
-          this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValuesTemp, "MatchLikelihood_"+stringSuffix_[0][iMass], 1);
-        }
-        else if ( iCat == nCats_-1 ) // outputValues = CM + WM + UM
-        {
-          histoTotal_[stringSuffix_[0][iMass]]->Add(histoSm_[histoName_]);
           histoTotal_[stringSuffix_[0][iMass]]->Write();
           if (verbose_) std::cout << "Likelihood2D::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[stringSuffix_[0][iMass]]->Integral(histoTotal_[stringSuffix_[0][iMass]]->FindBin(minRedMass_), histoTotal_[stringSuffix_[0][iMass]]->FindBin(maxRedMass_)+1) << std::endl;
           this->MakeGraph(0, iMass, nEval, evalPoints, outputValues, "TotalProbability_", false);
@@ -663,7 +639,7 @@ bool Likelihood2D::ConstructTGraphsFromFile(std::vector<std::string> datasetName
 
 void Likelihood2D::CalculateLikelihood(double redMass, double relativeSF, bool isData)
 {
-  this->CalculateLikelihood(redMass, relativeSF, 1., 1., 1., 172.5, false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
+  this->CalculateLikelihood(redMass, relativeSF, 1., 1., 1., 172.5, false, isData);  // isTTbar = false ==> thisEventSF_ = 1.;
 }
 
 std::vector<double> Likelihood2D::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
@@ -676,22 +652,10 @@ std::vector<double> Likelihood2D::CalculateLikelihood(double redMass, double rel
   {
     if (isTTbar)
     {
-      if (rewHadOnly_)
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass);
-      }
-      else
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, inputMass);
-      }
+      if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
     }
-    else
-    {
-      thisWidthSF_ = 1.;
-      thisMassSF_ = 1.;
-    }
+    else thisEventSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
@@ -701,7 +665,7 @@ std::vector<double> Likelihood2D::CalculateLikelihood(double redMass, double rel
         
         loglike_per_evt_[iWidth][iMass] = graph_[histoName_]->Eval(redMass);
         vecLogLike_.push_back(loglike_per_evt_[iWidth][iMass]);
-        if (! isData) loglike_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass]*relativeSF*thisWidthSF_*thisMassSF_;
+        if (! isData) loglike_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass]*relativeSF*thisEventSF_;
         else loglike_data_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass];
       }
     }
@@ -723,22 +687,10 @@ void Likelihood2D::CalculateCMLikelihood(double redMass, double scaleFactor, dou
     
     if (isTTbar)
     {
-      if (rewHadOnly_)
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass);
-      }
-      else
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, inputMass);
-      }
+      if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
     }
-    else
-    {
-      thisWidthSF_ = 1.;
-      thisMassSF_ = 1.;
-    }
+    else thisEventSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
@@ -747,50 +699,7 @@ void Likelihood2D::CalculateCMLikelihood(double redMass, double scaleFactor, dou
         histoName_ = "widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
         
         loglike_CM_per_evt_[iWidth][iMass] = graph_["CorrectMatchLikelihood_"+histoName_]->Eval(redMass);
-        loglike_CM_[iWidth][iMass] += loglike_CM_per_evt_[iWidth][iMass]*scaleFactor*thisWidthSF_*thisMassSF_;
-      }
-    }
-  }
-}
-
-void Likelihood2D::CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
-{
-  if (isData)
-  {
-    std::cerr << "Likelihood2D::Cannot calculate loglikelihood for correctly/wrondly matched events when running over data" << std::endl;
-    std::cerr << "              Something went wrong here... Check..." << std::endl;
-  }
-  else if ( redMass > minRedMass_ && redMass < maxRedMass_ )
-  {
-    if (! calledTempLLCalculation_) calledTempLLCalculation_ = true;
-    
-    if (isTTbar)
-    {
-      if (rewHadOnly_)
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass);
-      }
-      else
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, inputMass);
-      }
-    }
-    else
-    {
-      thisWidthSF_ = 1.;
-      thisMassSF_ = 1.;
-    }
-    
-    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
-    {
-      for (int iMass = 0; iMass < nMasses_; iMass++)
-      {
-        histoName_ = "widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
-        
-        loglike_temp_per_evt_[iWidth][iMass] = graph_["MatchLikelihood_"+histoName_]->Eval(redMass);
-        loglike_temp_[iWidth][iMass] += loglike_temp_per_evt_[iWidth][iMass]*scaleFactor*thisWidthSF_*thisMassSF_;
+        loglike_CM_[iWidth][iMass] += loglike_CM_per_evt_[iWidth][iMass]*scaleFactor*thisEventSF_;
       }
     }
   }
@@ -809,22 +718,10 @@ void Likelihood2D::CalculateGenLikelihood(double redMass, double hadTopMassForWi
     
     if (isTTbar)
     {
-      if (rewHadOnly_)
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass);
-      }
-      else
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, inputMass);
-      }
+      if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
     }
-    else
-    {
-      thisWidthSF_ = 1.;
-      thisMassSF_ = 1.;
-    }
+    else thisEventSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
@@ -833,27 +730,25 @@ void Likelihood2D::CalculateGenLikelihood(double redMass, double hadTopMassForWi
         histoName_ = "widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
         
         loglike_gen_per_evt_[iWidth][iMass] = graph_["CorrectMatchLikelihood_"+histoName_]->Eval(redMass);
-        loglike_gen_[iWidth][iMass] += loglike_gen_per_evt_[iWidth][iMass]*thisWidthSF_*thisMassSF_;
+        loglike_gen_[iWidth][iMass] += loglike_gen_per_evt_[iWidth][iMass]*thisEventSF_;
       }
     }
   }
 }
 
-void Likelihood2D::GetOutputWidth(double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood2D::GetOutputWidth(double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
-  this->GetOutputWidth(inputWidth, "", writeToFile, makeNewFile);
+  this->GetOutputWidth(inputWidth, inputMass, "", writeToFile, makeNewFile);
 }
 
-void Likelihood2D::GetOutputWidth(double inputWidth, std::string type, bool writeToFile, bool makeNewFile)
+void Likelihood2D::GetOutputWidth(double inputWidth, double inputMass, std::string type, bool writeToFile, bool makeNewFile)
 {
   std::string loglikePlotName = "loglikelihood_vs_width_";
   if (! type.empty() ) loglikePlotName += type+"_";
-  loglikePlotName += "widthx"+tls_->DotReplace(inputWidth);
+  loglikePlotName += "widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   if ( type.find("CM") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile, makeNewFile);
-  else if ( type.find("match") != std::string::npos || type.find("Match") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile);
   else if ( type.find("data") != std::string::npos || type.find("Data") != std::string::npos )
@@ -861,38 +756,40 @@ void Likelihood2D::GetOutputWidth(double inputWidth, std::string type, bool writ
   else
     output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile);
   
-  std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
+  std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << std::get<0>(output_) << " and the uncertainty is " << std::get<1>(output_) << std::endl;
+  std::cout << "For an input mass of " << inputMass << " the minimum can be found at " << std::get<2>(output_) << " and the uncertainty is " << std::get<3>(output_) << std::endl;
   
   std::string fileName = dirNameLLTxt_+"result_minimum_";
   if (! type.empty() ) fileName += type+"_";
-  fileName += "widthx"+tls_->DotReplace(inputWidth)+".txt";
+  fileName += "widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass)+".txt";
   txtOutputLL_.open(fileName.c_str());
   if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
   else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
-  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(20) << std::right << std::setprecision(20) << output_.first << "  " << std::setw(20) << std::right << std::setprecision(20) << output_.second << std::endl;
+  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << inputMass << "   " << std::setw(20) << std::right << std::setprecision(20) << std::get<0>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<1>(output_) << std::setw(20) << std::right << std::setprecision(20) << std::get<2>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<3>(output_) << std::endl;
   txtOutputLL_.close();
 }
 
-void Likelihood2D::GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood2D::GetOutputWidth(std::string inputFileName, double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
-  this->GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, writeToFile, makeNewFile);
+  this->GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, inputMass, writeToFile, makeNewFile);
 }
 
-void Likelihood2D::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood2D::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
   if (verbose_) std::cout << "Using LogLikelihood values from file" << std::endl;
   std::string loglikePlotName = "loglikelihood_vs_width_";
   //if (! type.empty() ) loglikePlotName += type+"_";
-  loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth);
+  loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   output_ = this->CalculateOutputWidth(inputFileName, inputDir, loglikePlotName, writeToFile, makeNewFile);
   
-  std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
+  std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << std::get<0>(output_) << " and the uncertainty is " << std::get<1>(output_) << std::endl;
+  std::cout << "For an input mass of " << inputMass << " the minimum can be found at " << std::get<2>(output_) << " and the uncertainty is " << std::get<3>(output_) << std::endl;
 }
 
-std::pair<double,double> Likelihood2D::GetOutputWidth(double inputWidth, int thisPsExp)
+std::tuple<double,double,double,double> Likelihood2D::GetOutputWidth(double inputWidth, double inputMass, int thisPsExp)
 {
-  std::string loglikePlotName = dirNamePull_+"loglikelihood_vs_width_psExp_"+tls_->ConvertIntToString(thisPsExp)+"_widthx"+tls_->DotReplace(inputWidth);
+  std::string loglikePlotName = dirNamePull_+"loglikelihood_vs_width_psExp_"+tls_->ConvertIntToString(thisPsExp)+"_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
@@ -905,12 +802,12 @@ std::pair<double,double> Likelihood2D::GetOutputWidth(double inputWidth, int thi
   return this->CalculateOutputWidth(nWidths_, loglike_pull_single_, loglikePlotName, true, false);
 }
 
-std::pair<double,double> Likelihood2D::CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile, bool makeNewFile)
+std::tuple<double,double,double,double> Likelihood2D::CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile, bool makeNewFile)
 {
   this->ReadLLValuesFromFile(inputFileName, inputDir);
   const int nn = vecWidthFromFile_.size();
   if ( nn == 0 )
-    return std::pair<double,double>(-1.,-1.);
+    return std::make_tuple(-1.,-1.,-1.,-1.);
   double arrWidth[nn], arrLLVals[nn][nMasses_];
   for (int i = 0; i < nn; i++)
   {
@@ -920,19 +817,40 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(std::string inputFil
   return this->CalculateOutputWidth(nn, (double*)arrWidth, arrLLVals, plotName, writeToFile, makeNewFile);
 }
 
-std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double (*LLvalues)[nMasses_], std::string plotName, bool writeToFile, bool makeNewFile)
+std::tuple<double,double,double,double> Likelihood2D::CalculateOutputWidth(int nn, double (*LLvalues)[nMasses_], std::string plotName, bool writeToFile, bool makeNewFile)
 {
   return this->CalculateOutputWidth(nn, (double*)widthArray_, LLvalues, plotName, writeToFile, makeNewFile);
 }
 
-std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* evalWidths, double (*LLvalues)[nMasses_], std::string plotName, bool writeToFile, bool makeNewFile)
+std::tuple<double,double,double,double> Likelihood2D::CalculateOutputWidth(int nn, double* evalWidths, double (*LLvalues)[nMasses_], std::string plotName, bool writeToFile, bool makeNewFile)
 {
   std::pair<int,int> locMin = this->LocMinArray(nn, LLvalues);
   std::cout << "Index of minimum LL value is (" << locMin.first << ", " << locMin.second << ")" << "           " << LLvalues[locMin.first][locMin.second] << std::endl;
   
+  double centreVal = evalWidths[locMin.first];
+  if ( centreVal <= 0.3 )
+  {
+    double tempArray[nn-5][nMasses_];
+    for (int i = 0; i < nn-5; i++)
+    {
+      for (int iMass = 0; iMass < nMasses_; iMass++)
+      {
+        tempArray[i][iMass] = LLvalues[i+5][iMass];
+      }
+    }
+    std::pair<int,int> tempMin = LocMinArray(nn-5, tempArray); //std::cout << tempMin << "  " << evalWidths[tempMin] << std::endl;
+    if ( LLvalues[locMin.first+2][locMin.second] > tempArray[tempMin.first+2][tempMin.second] )
+    {
+      locMin.first = tempMin.first+5;
+      locMin.second = tempMin.second;
+      centreVal = evalWidths[locMin.first];
+      std::cout << "Changed index of minimum LL value. Now equal to (" << locMin.first << ", " << locMin.second << ")" << "           " << LLvalues[locMin.first][locMin.second] << std::endl;
+    }
+  }
+  
   double temp;
   std::ofstream txtLL((dirNameLLTxt_+"likelihoodValues_"+plotName+".txt").c_str());
-  std::ofstream txtLLshort(("likelihoodValues_"+plotName+"_short.txt").c_str());
+  std::ofstream txtLLshort((dirNameLLTxt_+"likelihoodValues_"+plotName+"_short.txt").c_str());
   //TGraph *g = new TGraph(nn, evalWidths, LLvalues);
   TGraph2D *g = new TGraph2D();
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -951,22 +869,6 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
     }
   }
   g->SetMaxIter(500000);
-  
-  double centreVal = evalWidths[locMin.first];
-  if ( centreVal <= 0.3 )
-  {
-    double tempArray[nn-5][nMasses_];
-    for (int i = 0; i < nn-5; i++)
-    {
-      for (int iMass = 0; iMass < nMasses_; iMass++)
-      {
-        tempArray[i][iMass] = LLvalues[i+5][iMass];
-      }
-    }
-    std::pair<int,int> tempMin = LocMinArray(nn-5, tempArray); //std::cout << tempMin << "  " << evalWidths[tempMin] << std::endl;
-    if ( LLvalues[locMin.first+2][locMin.second] > tempArray[tempMin.first+2][tempMin.second] )
-      centreVal = evalWidths[tempMin.first+5];
-  }
   
   
 //   double interval = 0.4;
@@ -989,9 +891,10 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
 //   if ( centreVal < 0.35 && fitmax > 0.4 ) fitmax = 0.4;
 //   if ( centreVal > 0.35 && centreVal < 1.2 ) fitmax = centreVal + (centreVal - fitmin);
   
-  double fitminY = massArray_[locMin.second] - 0.2;
+  double intervalM = 0.1;
+  double fitminY = massArray_[locMin.second] - intervalM;
   if ( fitminY < 169.5 ) fitminY = 169.5;
-  double fitmaxY = massArray_[locMin.second] + 0.2;
+  double fitmaxY = massArray_[locMin.second] + intervalM;
   if ( fitmaxY > 175.5 ) fitmaxY = 175.5;
   
   if (verbose_) std::cout << "Likelihood2D::CalculateOutputWidth: Look for minimum around (" << centreVal << ", " << massArray_[locMin.second] << ")" << std::endl;
@@ -1039,18 +942,30 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
   TF12 *parbx = new TF12("parbx", fitresult, outputMass, "x");
   TF12 *parby = new TF12("parby", fitresult, outputWidth, "y");
   
-  double lowerSigma = parbx->GetX(minimum + 0.5, fitmin-interval, outputWidth);
-  double upperSigma = parbx->GetX(minimum + 0.5, outputWidth, fitmax+interval);
-  double sigma = (upperSigma - lowerSigma)/2.;
-  if ( lowerSigma <= fitmin && upperSigma >= fitmax )
+  double lowerSigmaW = parbx->GetX(minimum + 0.5, fitmin-interval, outputWidth);
+  double upperSigmaW = parbx->GetX(minimum + 0.5, outputWidth, fitmax+interval);
+  double sigmaW = (upperSigmaW - lowerSigmaW)/2.;
+  if ( lowerSigmaW <= fitmin && upperSigmaW >= fitmax )
     std::cerr << "Likelihood2D::CalculateOutputWidth: ERROR: Uncertainty calculation limited by fit boundaries. Do not trust..." << std::endl;
-  else if ( lowerSigma <= fitmin ) sigma = upperSigma - outputWidth;
-  else if ( upperSigma >= fitmax ) sigma = outputWidth - lowerSigma;
+  else if ( lowerSigmaW <= fitmin ) sigmaW = upperSigmaW - outputWidth;
+  else if ( upperSigmaW >= fitmax ) sigmaW = outputWidth - lowerSigmaW;
   
   //std::cout << "Minimum -log(like) value is " << parabola->Eval(outputWidth) << std::endl;
   std::cout << "Minimum -log(like) value is " << minimum << std::endl;
   if (verbose_) std::cout << "Position of minimum is (" << outputWidth << ", " << outputMass << ")" << std::endl;
-  if (verbose_) std::cout << "lowerSigma = " << lowerSigma << " and upperSigma = " << upperSigma << std::endl;
+  if (verbose_) std::cout << "Width: lowerSigma = " << lowerSigmaW << " and upperSigma = " << upperSigmaW << std::endl;
+  
+  double lowerSigmaM = parby->GetX(minimum + 0.5, fitminY-intervalM, outputMass);
+  double upperSigmaM = parby->GetX(minimum + 0.5, outputMass, fitmaxY+intervalM);
+  double sigmaM = (upperSigmaM - lowerSigmaM)/2.;
+  if ( lowerSigmaM <= fitminY && upperSigmaM >= fitmaxY )
+    std::cerr << "Likelihood2D::CalculateOutputWidth: ERROR: Uncertainty calculation limited by fit boundaries. Do not trust..." << std::endl;
+  else if ( lowerSigmaM <= fitminY ) sigmaM = upperSigmaM - outputMass;
+  else if ( upperSigmaM >= fitmaxY ) sigmaM = outputMass - lowerSigmaM;
+  
+  if (verbose_) std::cout << "Mass:  lowerSigma = " << lowerSigmaM << " and upperSigma = " << upperSigmaM << std::endl;
+  
+  std::cout << "===> Minimum at (" << outputWidth << " +- " << sigmaW << ", " << outputMass << " +- " << sigmaM << ")" << std::endl;
   
   //double LLreduced[nn][nMasses_];
   //for (int i = 0; i < nn; i++)
@@ -1088,7 +1003,7 @@ std::pair<double,double> Likelihood2D::CalculateOutputWidth(int nn, double* eval
   delete parabola;
 //  delete g;
   
-  return std::pair<double,double>(outputWidth,sigma);
+  return std::make_tuple(outputWidth,sigmaW,outputMass,sigmaM);
 }
 
 std::pair<double,double> Likelihood2D::ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma)
@@ -1125,37 +1040,25 @@ void Likelihood2D::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMass
   {
     if (isTTbar)
     {
-      if (rewHadOnly_)
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass);
-      }
-      else
-      {
-        thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
-        thisMassSF_ = rew_->MassEventWeightCalculatorNonRel(hadTopMassForWidthSF, inputMass) * rew_->MassEventWeightCalculatorNonRel(lepTopMassForWidthSF, inputMass);
-      }
+      if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
     }
-    else
-    {
-      thisWidthSF_ = 1.;
-      thisMassSF_ = 1.;
-    }
+    else thisEventSF_ = 1.;
     
     for (int iWidth = 0; iWidth < nWidths_; iWidth++)
     {
       for (int iMass = 0; iMass < nMasses_; iMass++)
       {
-        loglike_pull_[iWidth][iMass][thisPsExp] += loglike_per_evt_[iWidth][iMass]*scaleFactor*thisWidthSF_*thisMassSF_;
+        loglike_pull_[iWidth][iMass][thisPsExp] += loglike_per_evt_[iWidth][iMass]*scaleFactor*thisEventSF_;
       }
     }
   }
   else std::cerr << "Likelihood2D::Pull: Did not calculate likelihoods! Cannot get input for pseudo experiments..." << thisPsExp << std::endl;
 }
 
-void Likelihood2D::CalculatePull(double inputWidth)
+void Likelihood2D::CalculatePull(double inputWidth, double inputMass)
 {
-  std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+".root";
+  std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass)+".root";
   TFile *filePull = new TFile(fileName.c_str(),"RECREATE");
   filePull->cd();
   TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 32, -4., 4.);
@@ -1166,23 +1069,24 @@ void Likelihood2D::CalculatePull(double inputWidth)
   
   /// Calculate output width for all pseudo experiments
   //  Transform to input width via calibration curve & calculate average input width
-  std::pair<double,double> thisOutputWidth[nPsExp_], thisInputWidth[nPsExp_];
+  std::tuple<double,double,double,double> thisOutputWidth[nPsExp_];
+  std::pair<double,double> thisInputWidth[nPsExp_];
   double aveInputWidth = 0.;
   
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
     // Clear
-    thisOutputWidth[iPsExp] = std::pair<double,double>(-1.,-1.);
+    thisOutputWidth[iPsExp] = std::make_tuple(-1.,-1.,-1.,-1.);
     thisInputWidth[iPsExp] = std::pair<double,double>(-1.,-1.);
     
     // Fill
-    thisOutputWidth[iPsExp] = this->GetOutputWidth(inputWidth, iPsExp);
-    thisInputWidth[iPsExp] = this->ApplyCalibrationCurve(thisOutputWidth[iPsExp].first, thisOutputWidth[iPsExp].second);
+    thisOutputWidth[iPsExp] = this->GetOutputWidth(inputWidth, inputMass, iPsExp);
+    thisInputWidth[iPsExp] = this->ApplyCalibrationCurve(std::get<0>(thisOutputWidth[iPsExp]), std::get<1>(thisOutputWidth[iPsExp]));
     if ( thisInputWidth[iPsExp].first != -1. ) aveInputWidth += thisInputWidth[iPsExp].first;
     else std::cerr << "Likelihood2D::CalculatePull: Input width for pseudo experiment " << iPsExp << " is equal to -1! Ignoring this pseudo experiment... " << std::endl;
-    hAveWidthOut->Fill(thisOutputWidth[iPsExp].first);
+    hAveWidthOut->Fill(std::get<0>(thisOutputWidth[iPsExp]));
     hAveWidthIn->Fill(thisInputWidth[iPsExp].first);
-    hUncAveWidthOut->Fill(thisOutputWidth[iPsExp].second);
+    hUncAveWidthOut->Fill(std::get<1>(thisOutputWidth[iPsExp]));
     hUncAveWidthIn->Fill(thisInputWidth[iPsExp].second);
   }
   aveInputWidth = aveInputWidth/nPsExp_;
@@ -1190,7 +1094,7 @@ void Likelihood2D::CalculatePull(double inputWidth)
   //std::cout << "Input width  : " << thisInputWidth[0].first << " ;   sigma : " << thisInputWidth[0].second << std::endl;
   std::cout << "Average width for pseudo experiments is " << aveInputWidth << std::endl;
   
-  WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth);
+  WritePsExpOutput(thisOutputWidth, thisInputWidth, inputWidth, inputMass);
   gStyle->SetOptStat(1110);  // display entries, mean & RMS, but no title
   hAveWidthOut->Write();
   hAveWidthIn->Write();
@@ -1269,6 +1173,7 @@ void Likelihood2D::AddToFraction(int d, double scaleFactor, double hadTopMassFor
 
 void Likelihood2D::CalculateFractions(std::vector<std::string> datasetNames)
 {
+  std::cout << "Likelihood2D::CalculateFractions" << std::endl;
   std::string fileName = "";
   int nDatasets = datasetNames.size();
   for (int iMass = 0; iMass < nMasses_; iMass++)
@@ -1690,14 +1595,14 @@ void Likelihood2D::ReadLLValuesFromFile(std::string inputFileName, std::string i
   }
 }
 
-void Likelihood2D::WritePsExpOutput(std::pair<double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth)
+void Likelihood2D::WritePsExpOutput(std::tuple<double,double,double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth, double genMass)
 {
-  std::string outputTxtName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_output_widthx"+tls_->DotReplace(genWidth)+".txt";
+  std::string outputTxtName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_output_widthx"+tls_->DotReplace(genWidth)+"_mass"+tls_->DotReplace(genMass)+".txt";
   txtOutputPsExp_.open(outputTxtName.c_str());
   txtOutputPsExp_ << "iPsExp   output width        unc           input width        unc" << std::endl;
   for (int iPsExp = 0; iPsExp < nPsExp_; iPsExp++)
   {
-    txtOutputPsExp_ << std::setw(4) << std::right << iPsExp << "   " << std::setw(8) << std::left << outputWidth[iPsExp].first << "   " << std::setw(8) << std::left << outputWidth[iPsExp].second << "   " << std::setw(8) << std::left << inputWidth[iPsExp].first << std::setw(8) << std::left << inputWidth[iPsExp].second << std::endl;
+    txtOutputPsExp_ << std::setw(4) << std::right << iPsExp << "   " << std::setw(8) << std::left << std::get<0>(outputWidth[iPsExp]) << "   " << std::setw(8) << std::left << std::get<1>(outputWidth[iPsExp]) << "   " << std::setw(8) << std::left << inputWidth[iPsExp].first << std::setw(8) << std::left << inputWidth[iPsExp].second << std::endl;
   }
   txtOutputPsExp_.close();
 }

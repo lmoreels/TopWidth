@@ -157,7 +157,8 @@ void Likelihood::BookHistograms()
     {
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 60, 0.5, 2.0);
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 125, 0., 2.5);  // 90 bins in range [0.5, 2.0] --> red mlb
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);  /// ONLY FOR NEW VAR !!!
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 100, 0.5, 2.0);
     }
@@ -173,8 +174,8 @@ void Likelihood::FillHistograms(double redMass, double relativeSF, double hadTop
       thisWidth_ = stringWidthArray_[iWidth];
       if (isTTbar)
       {
-        if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]);
-        else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, widthArray_[iWidth]);
+        if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]);
+        else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]);
       }
       else thisWidthSF_ = 1.;
       
@@ -560,8 +561,8 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relat
   {
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -597,8 +598,8 @@ void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, doubl
     
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -630,8 +631,8 @@ void Likelihood::CalculateTempLikelihood(double redMass, double scaleFactor, dou
     
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -658,8 +659,8 @@ void Likelihood::CalculateGenLikelihood(double redMass, double hadTopMassForWidt
     
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -673,16 +674,16 @@ void Likelihood::CalculateGenLikelihood(double redMass, double hadTopMassForWidt
   }
 }
 
-void Likelihood::GetOutputWidth(double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood::GetOutputWidth(double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
-  this->GetOutputWidth(inputWidth, "", writeToFile, makeNewFile);
+  this->GetOutputWidth(inputWidth, inputMass, "", writeToFile, makeNewFile);
 }
 
-void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeToFile, bool makeNewFile)
+void Likelihood::GetOutputWidth(double inputWidth, double inputMass, std::string type, bool writeToFile, bool makeNewFile)
 {
   std::string loglikePlotName = "loglikelihood_vs_width_";
   if (! type.empty() ) loglikePlotName += type+"_";
-  loglikePlotName += "widthx"+tls_->DotReplace(inputWidth);
+  loglikePlotName += "widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   if ( type.find("CM") != std::string::npos )
     output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile, makeNewFile);
@@ -699,34 +700,34 @@ void Likelihood::GetOutputWidth(double inputWidth, std::string type, bool writeT
   
   std::string fileName = dirNameLLTxt_+"result_minimum_";
   if (! type.empty() ) fileName += type+"_";
-  fileName += "widthx"+tls_->DotReplace(inputWidth)+".txt";
+  fileName += "widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass)+".txt";
   txtOutputLL_.open(fileName.c_str());
   if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
   else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
-  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(20) << std::right << std::setprecision(20) << output_.first << "  " << std::setw(20) << std::right << std::setprecision(20) << output_.second << std::endl;
+  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << inputMass << "   " << std::setw(20) << std::right << std::setprecision(20) << output_.first << "  " << std::setw(20) << std::right << std::setprecision(20) << output_.second << std::endl;
   txtOutputLL_.close();
 }
 
-void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood::GetOutputWidth(std::string inputFileName, double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
-  GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, writeToFile, makeNewFile);
+  this->GetOutputWidth(inputFileName, dirNameLLTxt_, inputWidth, inputMass, writeToFile, makeNewFile);
 }
 
-void Likelihood::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile, bool makeNewFile)
+void Likelihood::GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, double inputMass, bool writeToFile, bool makeNewFile)
 {
   if (verbose_) std::cout << "Using LogLikelihood values from file" << std::endl;
   std::string loglikePlotName = "loglikelihood_vs_width_";
   //if (! type.empty() ) loglikePlotName += type+"_";
-  loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth);
+  loglikePlotName += "ff_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   output_ = this->CalculateOutputWidth(inputFileName, inputDir, loglikePlotName, writeToFile, makeNewFile);
   
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
 }
 
-std::pair<double,double> Likelihood::GetOutputWidth(double inputWidth, int thisPsExp)
+std::pair<double,double> Likelihood::GetOutputWidth(double inputWidth, double inputMass, int thisPsExp)
 {
-  std::string loglikePlotName = dirNamePull_+"loglikelihood_vs_width_psExp_"+tls_->ConvertIntToString(thisPsExp)+"_widthx"+tls_->DotReplace(inputWidth);
+  std::string loglikePlotName = dirNamePull_+"loglikelihood_vs_width_psExp_"+tls_->ConvertIntToString(thisPsExp)+"_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
@@ -784,6 +785,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   //if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
   if ( centreVal > 0.55 && fitmin < 0.4 ) fitmin = 0.4;
+  if ( centreVal > 0.65 && fitmin < 0.45 ) fitmin = 0.45;
   if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
   
@@ -791,7 +793,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 0.35 && centreVal < 1.2 ) fitmax = centreVal + (centreVal - fitmin);
   
   
-  if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum around " << centreVal << std::endl;
+  if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum in interval [" << fitmin << "," << fitmax << "] around " << centreVal << std::endl;
   
   TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
   
@@ -807,6 +809,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   else if ( upperSigma >= fitmax ) sigma = outputWidth - lowerSigma;
   
   std::cout << "Minimum -log(like) value is " << parabola->Eval(outputWidth) << std::endl;
+  std::cout << "===> Minimum at " << outputWidth << " +- " << sigma << std::endl;
   
   double LLreduced[nn];
   for (int i = 0; i < nn; i++)
@@ -876,8 +879,8 @@ void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassFo
   {
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, inputWidth) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -891,7 +894,12 @@ void Likelihood::AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassFo
 
 void Likelihood::CalculatePull(double inputWidth)
 {
-  std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+".root";
+  this->CalculatePull(inputWidth, 172.5);
+}
+
+void Likelihood::CalculatePull(double inputWidth, double inputMass)
+{
+  std::string fileName = dirNameLLTxt_+dirNamePull_+"PseudoExperiments_widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass)+".root";
   TFile *filePull = new TFile(fileName.c_str(),"RECREATE");
   filePull->cd();
   TH1D *hPull = new TH1D("hPull", "; (#Gamma_{j} - <#Gamma>)/#sigma_{#Gamma_{j}}", 32, -4., 4.);
@@ -912,7 +920,7 @@ void Likelihood::CalculatePull(double inputWidth)
     thisInputWidth[iPsExp] = std::pair<double,double>(-1.,-1.);
     
     // Fill
-    thisOutputWidth[iPsExp] = this->GetOutputWidth(inputWidth, iPsExp);
+    thisOutputWidth[iPsExp] = this->GetOutputWidth(inputWidth, inputMass, iPsExp);
     thisInputWidth[iPsExp] = this->ApplyCalibrationCurve(thisOutputWidth[iPsExp].first, thisOutputWidth[iPsExp].second);
     if ( thisInputWidth[iPsExp].first != -1. ) aveInputWidth += thisInputWidth[iPsExp].first;
     else std::cerr << "Likelihood::CalculatePull: Input width for pseudo experiment " << iPsExp << " is equal to -1! Ignoring this pseudo experiment... " << std::endl;
@@ -992,8 +1000,8 @@ void Likelihood::AddToFraction(int d, double scaleFactor, double hadTopMassForWi
     /// Calculate widthSF
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]);
-      else thisWidthSF_ = rew_->EventWeightCalculatorNonRel(hadTopMassForWidthSF, widthArray_[iWidth]) * rew_->EventWeightCalculatorNonRel(lepTopMassForWidthSF, widthArray_[iWidth]);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., widthArray_[iWidth]);
     }
     else thisWidthSF_ = 1.;
     

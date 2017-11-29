@@ -60,15 +60,16 @@ class Likelihood{
     void CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     /// Get output width
-    void GetOutputWidth(double inputWidth, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(double inputWidth, std::string type, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(double inputWidth, double inputMass, std::string type, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(std::string inputFileName, double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
     void AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculatePull(double inputWidth);
+    void CalculatePull(double inputWidth, double inputMass);
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Calculate fractions
@@ -170,7 +171,7 @@ class Likelihood{
     void MakeGraphSmooth(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
     bool ReadInput(std::string name);
     /// Get output width for pseudo experiments
-    std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
+    std::pair<double,double> GetOutputWidth(double inputWidth, double inputMass, int thisPsExp);
     /// Calculate output width (used in getters)
     std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);

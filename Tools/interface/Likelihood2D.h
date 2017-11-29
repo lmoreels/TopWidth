@@ -17,6 +17,7 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <tuple>
 #include <TLine.h>
 #include <TProfile.h>
 #include <TH1.h>
@@ -61,17 +62,16 @@ class Likelihood2D{
     void CalculateLikelihood(double redMass, double relativeSF, bool isData);
     std::vector<double> CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
-    void CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     /// Get output width
-    void GetOutputWidth(double inputWidth, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(double inputWidth, std::string type, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(std::string inputFileName, double inputWidth, bool writeToFile = false, bool makeNewFile = false);
-    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(double inputWidth, double inputMass, std::string type, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(std::string inputFileName, double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
+    void GetOutputWidth(std::string inputFileName, std::string inputDir, double inputWidth, double inputMass, bool writeToFile = false, bool makeNewFile = false);
     /// Use pseudo experiments
     int InitPull(int nPsExp);
     void AddPsExp(int thisPsExp, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
-    void CalculatePull(double inputWidth);
+    void CalculatePull(double inputWidth, double inputMass);
     /// Calibration curve
     std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
     /// Calculate fractions
@@ -123,8 +123,6 @@ class Likelihood2D{
     static double loglike_per_evt_[][61];
     static double loglike_CM_[][61];
     static double loglike_CM_per_evt_[][61];
-    static double loglike_temp_[][61];
-    static double loglike_temp_per_evt_[][61];
     static double loglike_gen_[][61];
     static double loglike_gen_per_evt_[][61];
     
@@ -137,6 +135,7 @@ class Likelihood2D{
     
     std::string thisWidth_;
     std::string thisMass_;
+    double thisEventSF_;
     double thisWidthSF_;
     double thisMassSF_;
     TFile *file_;
@@ -157,13 +156,12 @@ class Likelihood2D{
     
     bool calledLLCalculation_;
     bool calledCMLLCalculation_;
-    bool calledTempLLCalculation_;
     bool calledGenLLCalculation_;
     
     std::ifstream fileIn_;
     std::vector<double> vecWidthFromFile_;
     std::vector<double> vecLLValsFromFile_;
-    std::pair<double,double> output_;
+    std::tuple<double,double,double,double> output_;
     
     static const double calCurvePar_[2];
     static const double calCurveParUnc_[2];
@@ -186,11 +184,11 @@ class Likelihood2D{
     void MakeGraphSmooth(int iCat, int iMass, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
     bool ReadInput(std::string name);
     /// Get output width for pseudo experiments
-    std::pair<double,double> GetOutputWidth(double inputWidth, int thisPsExp);
+    std::tuple<double,double,double,double> GetOutputWidth(double inputWidth, double inputMass, int thisPsExp);
     /// Calculate output width (used in getters)
-    std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
-    std::pair<double,double> CalculateOutputWidth(int nn, double (*LLvalues)[61], std::string plotName, bool writeToFile = false, bool makeNewFile = false);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double (*LLvalues)[61], std::string plotName, bool writeToFile = false, bool makeNewFile = false);
+    std::tuple<double,double,double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
+    std::tuple<double,double,double,double> CalculateOutputWidth(int nn, double (*LLvalues)[61], std::string plotName, bool writeToFile = false, bool makeNewFile = false);
+    std::tuple<double,double,double,double> CalculateOutputWidth(int nn, double* evalWidths, double (*LLvalues)[61], std::string plotName, bool writeToFile = false, bool makeNewFile = false);
     /// Calculate & get fractions for TGraphs
     void GetFractions(double *fractions, int nCats, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     void GetFractions(double *fractions, int nCats, std::string mass, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
@@ -204,7 +202,7 @@ class Likelihood2D{
     /// Read file
     void ReadLLValuesFromFile(std::string inputFileName, std::string inputDir);
     /// Write file
-    void WritePsExpOutput(std::pair<double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth);
+    void WritePsExpOutput(std::tuple<double,double,double,double> *outputWidth, std::pair<double,double> *inputWidth, double genWidth, double genMass);
     void WriteFuncOutput(int nPoints, double *arrayCentre, double *arrayContent, std::string name);
     void WriteOutput(int nPoints, double width, double *arrayCentre, double *arrayContent, std::string name, int dim);
     void CombineOutput(std::string mass);
