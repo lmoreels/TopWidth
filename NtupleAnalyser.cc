@@ -54,6 +54,7 @@ bool doGenOnly = false;
 bool makePlots = false;
 bool makeControlPlots = false;
 bool makeLikelihoodPlots = false;
+bool calculateSumWeights = false;
 bool calculateAverageMassAllMC = false;
 bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
@@ -62,7 +63,7 @@ bool makeTGraphs = false;
 bool useTTTemplates = false;
 bool calculateLikelihood = true;
 bool doPseudoExps = false;
-bool useNewVar = true;
+bool useNewVar = false;
 
 bool doLikeW = true;
 bool doLikeM = false;
@@ -87,6 +88,8 @@ bool runOther = true;
 bool rewHadTopOnly = false;
 bool applyWidthSF = false;
 double scaleWidth = 0.6;
+bool applyMassSF = false;
+double scaleMass = 172.5;
 
 
 bool runListWidths = false;
@@ -94,6 +97,10 @@ double listWidths[] = {0.2, 0.4, 0.5, 0.6, 0.8, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4
 int nWidths = sizeof(listWidths)/sizeof(listWidths[0]);
 double thisWidth, thisMass;
 double origWidth = 1., origMass = 172.5;
+
+bool runListMasses = false;
+double listMasses[] = {171.5, 171.7, 171.9, 172.1, 172.3, 172.5, 172.7, 172.9, 173.1, 173.3, 173.5};
+int nMasses = sizeof(listMasses)/sizeof(listMasses[0]);
 
 bool runSystematics = false;
 bool runRateSystematics = false;
@@ -104,7 +111,7 @@ int nSystematics;
 string thisSystematic;
 string thisDataSetName = "";
 
-string listRateSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "lumiup", "lumidown", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009","fragUp", "fragCentral", "fragDown", "fragPeterson", "fragSemiLepBrUp", "fragSemiLepBrDown"};
+string listRateSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "lumiup", "lumidown", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009","fragUp", "fragCentral", "fragDown", "fragPeterson", "fragSemiLepBrUp", "fragSemiLepBrDown", "pdfAlphaSUp", "pdfAlphaSDown"};
 int nRateSystematics = sizeof(listRateSyst)/sizeof(listRateSyst[0]);
 string listSampleSyst[] = {"tuneup", "tunedown", "isrup", "isrdown", "fsrup", "fsrdown", "hdampup", "hdampdown", "mpiERD", "qcdERD", "gluonMove", "gluonMoveERD", "mass169p5", "mass171p5", "mass173p5", "mass175p5", "herwig"};
 string dataSetNameSyst[] = {"TT_tune_up", "TT_tune_down", "TT_isr_up", "TT_isr_down", "TT_fsr_up", "TT_fsr_down", "TT_hdamp_up", "TT_hdamp_down", "TT_erdOn", "TT_QCD_erdOn", "TT_gluon_move_erdOff", "TT_gluon_move_erdOn", "TT_mass169p5", "TT_mass171p5", "TT_mass173p5", "TT_mass175p5", "TT_herwigpp"};
@@ -137,6 +144,7 @@ pair<string,string> whichDate(string syst)
     return pair<string,string>("171023","171021");
   }
   else if ( syst.find("JERup") != std::string::npos ) return pair<string,string>("171128","171126");
+  else if ( syst.find("JERdown") != std::string::npos ) return pair<string,string>("171130","171201");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
@@ -155,7 +163,20 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "171128_2250/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.2 -> 2.1, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
+//string inputDateLL = "171206_1226/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171206_1121/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
+string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171205_1615/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
+//string inputDateLL = "171205_1346/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
+//string inputDateLL = "171205_1148/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171204_1505/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220, min dR(b,j) > 0.8 + cuts
+//string inputDateLL = "171201_1725/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171203_1158/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 210 + cuts
+//string inputDateLL = "171201_1702/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240 + cuts
+//string inputDateLL = "171201_1/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
+//string inputDateLL = "171203_1024/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 200 + cuts
+//string inputDateLL = "171129_2002/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
+//string inputDateLL = "171128_2250/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.2 -> 2.1, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
 //string inputDateLL = "171128_1923/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
 //string inputDateLL = "171128_1721/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
 //string inputDateLL = "171128_1351/";  // 1D likelihood; no WM; new redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
@@ -302,8 +323,23 @@ double CSVv2Tight  = 0.9535;
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WM/UM, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CM/WM/UM cats (unlike name suggests)
 const int nofAveMasses = 16;
+//  KF chi2 < 20
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.396, 167.900, 167.885, 168.141, 168.753, 166.170, 167.510, 170.361, 171.150, 168.524, 168.777, 168.653};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_1210
+//  KF chi2 < 12
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.407, 169.026, 168.985, 171.667, 169.219, 167.939, 168.641, 170.869, 171.684, 169.010, 169.251, 169.133};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_1108
 //  KF chi2 < 15
-std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 0.6->1.4 + cuts 28_1707
+std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.462, 168.430, 170.200, 169.001, 167.231, 168.564, 170.665, 171.576, 168.807, 169.033, 168.922};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_0949
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.413, 168.436, 168.404, 170.200, 168.994, 167.174, 168.604, 170.585, 171.607, 168.803, 169.025, 168.917};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 30 < mlb < 220 + cuts 1205_1554
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.629, 170.477, 170.424, 174.348, 169.865, 169.800, 171.510, 171.877, 173.030, 169.695, 169.915, 169.808};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 30 < mlb < 220 + cuts 1205_1332
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.629, 170.506, 170.453, 174.348, 169.872, 169.874, 171.458, 171.956, 172.990, 169.700, 169.923, 169.814};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1205_1126
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.900, 171.624, 171.606, 171.766, 170.459, 170.900, 172.107, 173.580, 174.579, 170.418, 170.534, 170.477};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220, min dR(b,j) > 0.8 + cuts 1203_1453
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.462, 168.430, 170.200, 169.001, 167.231, 168.564, 170.665, 171.576, 168.807, 169.033, 168.922};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1201_1118
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.473, 168.441, 170.340, 169.005, 167.297, 168.570, 170.701, 171.771, 168.803, 169.039, 168.924};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 210 + cuts 1203_1141
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 1201_1423
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.411, 168.482, 168.446, 170.567, 168.999, 167.204, 168.792, 170.768, 171.787, 168.800, 169.035, 168.92};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 240 + cuts 1201_1333
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.413, 168.485, 168.458, 169.843, 169.012, 167.176, 168.534, 170.687, 171.802, 168.801, 169.044, 168.925};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 200 + cuts 30_1623
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.411, 168.482, 168.446, 170.567, 168.999, 167.204, 168.792, 170.768, 171.787, 168.800, 169.035, 168.920};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 240 + cuts 29_1948
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 0.6->1.4 + cuts 28_1707
 //std::array<double, 14> aveTopMass = {172.028, 173.264, 170.350, 170.994, 170.944, 174.429, 170.502, 168.937, 170.578, 173.522, 173.469, 170.274, 170.556, 170.419};   // Res 171025, 35 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 27_1543
 //std::array<double, 14> aveTopMass = {172.139, 175.837, 171.244, 173.307, 173.252, 177.886, 171.866, 168.288, 172.296, 175.581, 176.613, 171.728, 171.937, 171.836};   // Res 171025, 40 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 27_1433
 //std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 25_1515
@@ -380,7 +416,7 @@ vector<int> includeDataSets;
 
 ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMUM, txtMassRecoUM, txtMassRecoWM, txtMassReco;
 double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
-Double_t aveMlbMass = 99.9389, aveMlbMassCM = 97.9464;
+Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.6331;
 
 /// Function prototypes
 struct HighestPt
@@ -434,6 +470,9 @@ void SetUpSelectionTable();
 void FillSelectionTable(int d, string dataSetName);
 void FillSelectionTable2(int d, string dataSetName);
 void WriteSelectionTable();
+void AddWeights();
+void PrintWeights();
+void SetSumWeights();
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU);
 void PrintKFDebug(int ievt);
 
@@ -776,7 +815,9 @@ double xSection;
 double lumiWeight, scaleFactor, widthSF, relativeSF, eqLumi_TT;
 double thisLeptonSF, thisLeptonIdSF, thisLeptonIsoSF, thisLeptonTrigSF;
 double renFacSumNom, renFacSum1002, renFacSum1003, renFacSum1004, renFacSum1005, renFacSum1007, renFacSum1009;
-double fragUpSum, fragCentralSum, fragDownSum, fragPetersonSum, semilepbrUpSum, semilepbrDownSum;
+double fragUpSum, fragCentralSum, fragDownSum, fragPetersonSum, semilepbrUpSum, semilepbrDownSum, pdfAlphaSUpSum, pdfAlphaSDownSum;
+double tmpSumWeight1001, tmpSumWeight1002, tmpSumWeight1003, tmpSumWeight1004, tmpSumWeight1005, tmpSumWeight1007, tmpSumWeight1009, tmpSumFragUp, tmpSumFragCentral, tmpSumFragDown, tmpSumFragPeterson, tmpSumSemiLepUp, tmpSumSemiLepDown, tmpSumPdf[100], tmpSumPdfAlphaSUp, tmpSumPdfAlphaSDown;
+
 double topPtRewSF, topPtSF, antiTopPtSF;
 bool foundTop22, foundAntiTop22;
 bool foundTop62, foundAntiTop62;
@@ -840,7 +881,7 @@ double nofAcceptedKFitWeighted = 0.;
 
 /// Likelihood
 //Double_t aveTopMassLL = aveTopMass[2];  // only CM events
-Double_t aveTopMassLL = 169.073; //175.984; //168.058; //167.647; // 100 < mt < 245  // 168.879; // all MC events with 100 < mt < 250  //220.651;  // all MC events
+Double_t aveTopMassLL = 169.065; //169.073; //175.984; //168.058; //167.647; // 100 < mt < 245  // 168.879; // all MC events with 100 < mt < 250  //220.651;  // all MC events
 Double_t aveTopMassCM = aveTopMass[2];
 Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
 Double_t minTopMass = 100., maxTopMass = 245.;
@@ -943,8 +984,21 @@ int main(int argc, char* argv[])
   {
     for (int i = 1; i < argc; i++)
     {
+      /// Reweight top quark width
       if ( strcmp(argv[i], "--runWidth") == 0 )
       {
+        /// No width or mass scaling when running systematics
+        if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply width scale factor..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos || systStr.find("JER") != std::string::npos)
+        {
+          cerr << "Running systematic JES/JER... Will not apply width scale factor..." << endl;
+          continue;
+        }
+        
         if ( i+1 >= argc )
         {
           cerr << "Cannot find argument. Exiting..." << endl;
@@ -959,8 +1013,52 @@ int main(int argc, char* argv[])
         calculateLikelihood = true;
         makePlots = false;
       }
-      else if ( strcmp(argv[i], "--runSyst") == 0 || strcmp(argv[i], "--runSystematics") == 0 )
+      
+      /// Reweight top quark mass
+      if ( strcmp(argv[i], "--runMass") == 0 )
       {
+        /// No width or mass scaling when running systematics
+        if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply mass scale factor..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos || systStr.find("JER") != std::string::npos)
+        {
+          cerr << "Running systematic JES/JER... Will not apply width scale factor..." << endl;
+          continue;
+        }
+        
+        if ( i+1 >= argc )
+        {
+          cerr << "Cannot find argument. Exiting..." << endl;
+          exit(1);
+        }
+        double argi = strtod(argv[i+1], NULL);
+        applyMassSF = true;
+        scaleMass = argi;
+        
+        calculateFractions = false;
+        makeTGraphs = false;
+        calculateLikelihood = true;
+        makePlots = false;
+      }
+      
+      /// Apply systematics
+      if ( strcmp(argv[i], "--runSyst") == 0 || strcmp(argv[i], "--runSystematics") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos || systStr.find("JER") != std::string::npos)
+        {
+          cerr << "Running systematic JES/JER... Will not apply other systematic..." << endl;
+          continue;
+        }
+        
         if ( i+2 >= argc )
         {
           cerr << "Cannot find argument. Exiting..." << endl;
@@ -1006,6 +1104,140 @@ int main(int argc, char* argv[])
 //         makePlots = false;
       }
       
+      if ( strcmp(argv[i], "--JESup") == 0 || strcmp(argv[i], "--JesUp") == 0 || strcmp(argv[i], "--jesUp") == 0  || strcmp(argv[i], "--jesUP") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JER") != std::string::npos )
+        {
+          cerr << "Running systematic JER... Will not apply JES..." << endl;
+          continue;
+        }
+        
+        systStr = "JESup";
+      }
+      else if ( strcmp(argv[i], "--JESdown") == 0 || strcmp(argv[i], "--JesDown") == 0 || strcmp(argv[i], "--jesDown") == 0  || strcmp(argv[i], "--jesDOWN") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JER") != std::string::npos )
+        {
+          cerr << "Running systematic JER... Will not apply JES..." << endl;
+          continue;
+        }
+        
+        systStr = "JESdown";
+      }
+      if ( strcmp(argv[i], "--JES") == 0 || strcmp(argv[i], "--Jes") == 0 || strcmp(argv[i], "--jes") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JER") != std::string::npos )
+        {
+          cerr << "Running systematic JER... Will not apply JES..." << endl;
+          continue;
+        }
+        
+        if ( strcmp(argv[i+1], "UP") == 0 || strcmp(argv[i+1], "Up") == 0 || strcmp(argv[i+1], "up") == 0 )
+          systStr = "JESup";
+        else if ( strcmp(argv[i+1], "DOWN") == 0 || strcmp(argv[i+1], "Down") == 0 || strcmp(argv[i+1], "down") == 0 )
+          systStr = "JESdown";
+      }
+      
+      if ( strcmp(argv[i], "--JERup") == 0 || strcmp(argv[i], "--JerUp") == 0 || strcmp(argv[i], "--jerUp") == 0  || strcmp(argv[i], "--jerUP") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos )
+        {
+          cerr << "Running systematic JES... Will not apply JER..." << endl;
+          continue;
+        }
+        
+        systStr = "JERup";
+      }
+      else if ( strcmp(argv[i], "--JERdown") == 0 || strcmp(argv[i], "--JerDown") == 0 || strcmp(argv[i], "--jerDown") == 0  || strcmp(argv[i], "--jerDOWN") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos )
+        {
+          cerr << "Running systematic JES... Will not apply JER..." << endl;
+          continue;
+        }
+        
+        systStr = "JERdown";
+      }
+      if ( strcmp(argv[i], "--JER") == 0 || strcmp(argv[i], "--Jer") == 0 || strcmp(argv[i], "--jer") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos )
+        {
+          cerr << "Running systematic JES... Will not apply JER..." << endl;
+          continue;
+        }
+        
+        if ( strcmp(argv[i+1], "UP") == 0 || strcmp(argv[i+1], "Up") == 0 || strcmp(argv[i+1], "up") == 0 )
+          systStr = "JERup";
+        else if ( strcmp(argv[i+1], "DOWN") == 0 || strcmp(argv[i+1], "Down") == 0 || strcmp(argv[i+1], "down") == 0 )
+          systStr = "JERdown";
+      }
+      
       if ( strcmp(argv[i], "--makePlots") == 0 || strcmp(argv[i], "--plots") == 0 )
       {
         makePlots = true;
@@ -1027,6 +1259,7 @@ int main(int argc, char* argv[])
     doPseudoExps = false;
     doKinFit = false;
     runListWidths = false;
+    runListMasses = false;
     runSystematics = false;
   }
   if (calculateAverageMass)
@@ -1039,6 +1272,7 @@ int main(int argc, char* argv[])
     makePlots = false;
     doGenOnly = false;
     runListWidths = false;
+    runListMasses = false;
     runSystematics = false;
   }
   if (test) makePlots = false;
@@ -1049,6 +1283,7 @@ int main(int argc, char* argv[])
     doGenOnly = false;
     makeTGraphs = false;
     runListWidths = false;
+    runListMasses = false;
     runSystematics = false;
   }
   if (doGenOnly)
@@ -1061,12 +1296,14 @@ int main(int argc, char* argv[])
     calculateLikelihood = false;
     doPseudoExps = false;
     runListWidths = false;
+    runListMasses = false;
     runSystematics = false;
   }
   if (makeTGraphs)
   {
     calculateFractions = true;
     runListWidths = false;
+    runListMasses = false;
     calculateLikelihood = false;
   }
   if (calculateLikelihood) makeTGraphs = false;
@@ -1079,8 +1316,14 @@ int main(int argc, char* argv[])
   {
     makePlots = false;
     runListWidths = false;
+    runListMasses = false;
   }
   if (runListWidths)
+  {
+    makePlots = false;
+    unblind = false;
+  }
+  if (runListMasses)
   {
     makePlots = false;
     unblind = false;
@@ -1088,6 +1331,7 @@ int main(int argc, char* argv[])
   if (runSystematics)
   {
     runListWidths = false;
+    runListMasses = false;
     unblind = false;
     if (! makeMassTemplates && ! makePlots)
     {
@@ -1142,13 +1386,14 @@ int main(int argc, char* argv[])
   if (useNewVar)
   {
     /// m_bjj/m_jj
-    minCutRedTopMass = 1.5;
-    maxCutRedTopMass = 2.6;
+//    minCutRedTopMass = 1.5;
+//    maxCutRedTopMass = 2.6;
     /// red mlb
-    minCutRedTopMass = 0.2;
-    maxCutRedTopMass = 2.1;
+    minCutRedTopMass = 0.3;
+    maxCutRedTopMass = 2.0;
   }
   
+  ntupleDate = whichDate(systStr);
   pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
   pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
@@ -1160,6 +1405,8 @@ int main(int argc, char* argv[])
   if (doGenOnly) cout << "Running only matching..." << endl;
   if (applyWidthSF) cout << "TTbar sample width will be scaled by a factor " << scaleWidth << endl;
   else scaleWidth = 1.;
+  if (applyMassSF) cout << "TTbar sample mass will be scaled by a factor " << scaleMass << endl;
+  else scaleMass = 172.5;
   
   bool saveSetUp[] = {makePlots, makeControlPlots, makeLikelihoodPlots, calculateFractions, makeTGraphs, useTTTemplates, calculateLikelihood, doPseudoExps};
   
@@ -1325,7 +1572,7 @@ int main(int argc, char* argv[])
   }
   
   /// Selection table
-  if (! runListWidths && ! runSystematics && systStr.find("nominal") != std::string::npos )
+  if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos )
   {
     //SelectionTables *selTab = new SelectionTables(datasets);
     SetUpSelectionTable();
@@ -1398,7 +1645,8 @@ int main(int argc, char* argv[])
   else if (runSampleSystematics) nSystematics = nSampleSystematics;
   int endSys = nSystematics;
   if (runListWidths) endSys = nWidths;
-  if (! runSystematics && ! runListWidths) endSys = 1;
+  if (runListMasses) endSys = nMasses;
+  if (! runSystematics && ! runListWidths && ! runListMasses) endSys = 1;
   for (int iSys = 0; iSys < endSys; iSys++)
   {
     if (runListWidths)
@@ -1411,8 +1659,16 @@ int main(int argc, char* argv[])
       thisWidth = scaleWidth;
       cout << endl << "Width for ttbar sample is " << thisWidth << " x SM width..." << endl;
     }
-    
-    thisMass = 172.5;
+    if (runListMasses)
+    {
+      thisMass = listMasses[iSys];
+      cout << "Running over masses... Now at mass " << thisMass << " GeV... " << endl << endl;
+    }
+    else
+    {
+      thisMass = scaleMass;
+      cout << "Mass for ttbar sample is " << thisMass << " GeV..." << endl << endl;
+    }
     
     if (runRateSystematics)
     {
@@ -1528,9 +1784,15 @@ int main(int argc, char* argv[])
           else if ( dataSetName.find("x4") != std::string::npos ) thisWidth = 4.;
           else if ( dataSetName.find("x8") != std::string::npos ) thisWidth = 8.;
           applyWidthSF = false;
+          applyMassSF = false;
           if (runListWidths)
           {
             runListWidths = false;
+            endSys = 1;
+          }
+          else if (runListMasses)
+          {
+            runListMasses = false;
             endSys = 1;
           }
           else if (runSystematics)
@@ -1545,6 +1807,8 @@ int main(int argc, char* argv[])
         {
           applyWidthSF = false;
           runListWidths = false;
+          applyMassSF = false;
+          runListMasses = false;
         }
       }
       else if ( dataSetName.find("ST") != std::string::npos )
@@ -1575,7 +1839,7 @@ int main(int argc, char* argv[])
         continue;
       }
       
-      if (isData && (runListWidths || runSystematics) && ! makePlots)
+      if (isData && (runListWidths || runListMasses || runSystematics) && ! makePlots)
       {
         cout << "Skipping data";
         if (runSystematics) cout << " when running systematics";
@@ -1590,7 +1854,7 @@ int main(int argc, char* argv[])
       }
       
       doReweighting = false;
-      if ( isTTbar && (applyWidthSF || runListWidths) ) doReweighting = true;
+      if ( isTTbar && (applyWidthSF || runListWidths || applyMassSF || runListMasses) ) doReweighting = true;
       
       if (! isData)
       {
@@ -1666,7 +1930,7 @@ int main(int argc, char* argv[])
       if (isData)
       {
         lumiWeight = 1.;
-        if (! runListWidths && ! runSystematics && systStr.find("nominal") != std::string::npos )
+        if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos )
           selTab->SetEqLumi(d, Luminosity);
       }
       else
@@ -1678,7 +1942,7 @@ int main(int argc, char* argv[])
         }
         xSection = datasets[d]->Xsection();  // pb
         eqLumi = (double)nEventsDataSet/xSection;  // 1/pb
-        if (! runListWidths && ! runSystematics && systStr.find("nominal") != std::string::npos )
+        if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos )
           selTab->SetEqLumi(d, eqLumi);
         if (isTTbar) eqLumi_TT = eqLumi;
         
@@ -1743,27 +2007,29 @@ int main(int argc, char* argv[])
       
       if (runSystematics && isTTbar )
       {
-        if ( thisSystematic.find("renFac") != std::string::npos )
-        {
-          renFacSumNom = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1001", isData);
-          renFacSum1002 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1002", isData);
-          renFacSum1003 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1003", isData);
-          renFacSum1004 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1004", isData);
-          renFacSum1005 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1005", isData);
-          renFacSum1007 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1007", isData);
-          renFacSum1009 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1009", isData);
-          cout << endl << "            Sum weight1001: " << (long)renFacSumNom << endl;
-        }
-        else if ( thisSystematic.find("frag") != std::string::npos )
-        {
-          renFacSumNom = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1001", isData);
-          fragUpSum       = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumUpFragWeight", isData);
-          fragCentralSum  = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumCentralFragWeight", isData);
-          fragDownSum     = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumDownFragWeight", isData);
-          fragPetersonSum = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumPetersonFragWeight", isData);
-          semilepbrUpSum   = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumSemilepbrUp", isData);
-          semilepbrDownSum = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumSemilepbrDown", isData);
-        }
+//         if ( thisSystematic.find("renFac") != std::string::npos )
+//         {
+//           renFacSumNom = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1001", isData);
+//           renFacSum1002 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1002", isData);
+//           renFacSum1003 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1003", isData);
+//           renFacSum1004 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1004", isData);
+//           renFacSum1005 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1005", isData);
+//           renFacSum1007 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1007", isData);
+//           renFacSum1009 = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1009", isData);
+//           cout << endl << "            Sum weight1001: " << (long)renFacSumNom << endl;
+//         }
+//         else if ( thisSystematic.find("frag") != std::string::npos )
+//         {
+//           renFacSumNom = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumWeight1001", isData);
+//           fragUpSum       = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumUpFragWeight", isData);
+//           fragCentralSum  = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumCentralFragWeight", isData);
+//           fragDownSum     = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumDownFragWeight", isData);
+//           fragPetersonSum = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumPetersonFragWeight", isData);
+//           semilepbrUpSum   = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumSemilepbrUp", isData);
+//           semilepbrDownSum = GetNEvents(tStatsTree[(dataSetName).c_str()], "sumSemilepbrDown", isData);
+//         }
+        if ( thisSystematic.find("renFac") != std::string::npos || thisSystematic.find("frag") != std::string::npos || thisSystematic.find("pdf") != std::string::npos )
+          SetSumWeights();
       }
       
       // Set branch addresses and branch pointers
@@ -1864,6 +2130,15 @@ int main(int argc, char* argv[])
                 else if ( thisSystematic.find("fragSemiLepBrUp") != std::string::npos )   scaleFactor *= semilepbrUp * renFacSumNom/semilepbrUpSum;
                 else if ( thisSystematic.find("fragSemiLepBrDown") != std::string::npos ) scaleFactor *= semilepbrDown * renFacSumNom/semilepbrDownSum;
               }
+              else if ( thisSystematic.find("pdf") != std::string::npos  && isTTbar )
+              {
+                if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
+                if (applyBTagSF) { scaleFactor *= btagSF;}
+                if (applyPU) { scaleFactor *= puSF;}
+                
+                if      ( thisSystematic.find("AlphaSUp") != std::string::npos )   scaleFactor *= pdfAlphaSUp * renFacSumNom/pdfAlphaSUpSum;
+                else if ( thisSystematic.find("AlphaSDown") != std::string::npos ) scaleFactor *= pdfAlphaSDown * renFacSumNom/pdfAlphaSDownSum;
+              }
               else
               {
                 if (applyLeptonSF) { scaleFactor *= thisLeptonSF;}
@@ -1919,7 +2194,7 @@ int main(int argc, char* argv[])
         {
           jet.Clear();
           jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-          if ( jet_pt[iJet] < 250. ) selectedJets.push_back(jet);
+          if ( jet_pt[iJet] > 30. && jet_pt[iJet] < 250. ) selectedJets.push_back(jet);
         }
         
         if ( selectedJets.size() < 4 ) continue;
@@ -2505,6 +2780,7 @@ int main(int argc, char* argv[])
 //        if ( reco_dRlight_bKF > 4. ) continue;
 //        if ( reco_dRblight_min_bKF > 3.5 ) continue;
         
+        //if ( reco_dRblight_min_bKF < 0.8 ) continue;
         
 //         if ( reco_dRlight_bKF > 2.4 ) continue;
 //         if ( reco_dRblight_min_bKF > 2.2 ) continue;
@@ -2734,7 +3010,8 @@ int main(int argc, char* argv[])
 //        if ( fabs(reco_top_mass_aKF - reco_top_mass_alt_aKF) < 20. ) continue;
         
         if ( reco_top_mass_alt_aKF < maxTopMass-5 ) continue;
-        if ( reco_mlb_aKF > maxTopMass-5 ) continue;
+        if ( reco_mlb_aKF > 220. ) continue;
+        //if ( fabs(reco_top_mass_aKF - reco_top_mass_bKF) > 40. ) continue;
         
         //if ( reco_mbjj_div_mjj_bKF < 1.5 || reco_mbjj_div_mjj_bKF > 2.6 ) continue;
         
@@ -2743,6 +3020,9 @@ int main(int argc, char* argv[])
 //         else if (isUM) nofUM_gate2 += lumiWeight*scaleFactor*widthSF;
         
         nofAfterLastCut++;
+        
+        if ( reco_top_mass_aKF < 0. )
+          PrintKFDebug(ievt);
         
         if (calculateAverageMassAllMC && ! isData)
         {
@@ -2758,10 +3038,14 @@ int main(int argc, char* argv[])
           }
         }
         
-        if ( reco_top_mass_aKF < 0. )
-          PrintKFDebug(ievt);
+        if (calculateAverageMass)
+          txtMassReco << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
         
-        if (calculateAverageMass) txtMassReco << ievt << "  " << reco_top_mass_aKF << "  " << scaleFactor << "  " << lumiWeight << endl;
+        if (calculateSumWeights && isTTbar)
+        {
+          AddWeights();
+        }
+        
         
         if ( doKinFit && makePlots )
         {
@@ -3004,6 +3288,10 @@ int main(int argc, char* argv[])
         
       }  // end loop events
       
+      if (calculateSumWeights && isTTbar)
+      {
+        PrintWeights();
+      }
       
       if (calculateAverageMassAllMC)
       {
@@ -3012,11 +3300,11 @@ int main(int argc, char* argv[])
           aveTopMassLL = sumTopMass/sumEvents;
           cout << endl << "Average top mass for all MC is    " << aveTopMassLL << endl;
           //aveTopMassCM = sumCMTopMass/sumCMEvents;
-          cout << endl << "Average top mass for CM events is " << aveTopMassCM << endl;
+          cout << "Average top mass for CM events is " << aveTopMassCM << endl;
           
           aveMlbMass = sumMlb/sumEvents;
           aveMlbMassCM = sumCMMlb/sumCMEvents;
-          cout << endl << "Average M_{lb} mass is " << aveMlbMass << " and for CM events " << aveMlbMassCM << endl;
+          cout << "Average M_{lb} mass is " << aveMlbMass << " and for CM events " << aveMlbMassCM << endl << endl;
           
           /// Rerun with new average top mass
           if ( saveSetUp[0] || saveSetUp[1] || saveSetUp[2] || saveSetUp[3] ||saveSetUp[4] || saveSetUp[5] || saveSetUp[6] || saveSetUp[7] )
@@ -3134,7 +3422,7 @@ int main(int argc, char* argv[])
       
       
       /// Make selection table
-      if (! runListWidths && ! runSystematics && ! calculateResolutionFunctions && ! calculateAverageMass && systStr.find("nominal") != std::string::npos )
+      if (! runListWidths && ! runListMasses && ! runSystematics && ! calculateResolutionFunctions && ! calculateAverageMass && systStr.find("nominal") != std::string::npos )
         FillSelectionTable(d, dataSetName);
       
       
@@ -3146,7 +3434,7 @@ int main(int argc, char* argv[])
       
     }  // end loop datasets
     
-    if (! runListWidths && ! runSystematics && systStr.find("nominal") != std::string::npos ) WriteSelectionTable();
+    if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos ) WriteSelectionTable();
     
     if (! doGenOnly && ! testTTbarOnly)
     {
@@ -3206,7 +3494,7 @@ int main(int argc, char* argv[])
 //       like->PrintMtmLikelihoodOutput(llFileName+"_Mtm.txt");
       
       /// Calculate output width
-      if ( runSystematics || runListWidths)
+      if ( runSystematics || runListWidths || runListMasses)
       {
         if (runSystematics) cout << "Output width for " << thisSystematic << ": " << endl;
         else cout << endl << "Standard output width: " << endl;
@@ -3312,13 +3600,13 @@ int main(int argc, char* argv[])
     
     
     ///  Check Shape Changing Systematics
-    if (! testTTbarOnly && runAll && ! runListWidths && ! runSystematics && ! useTTTemplates && ! doPseudoExps && systStr.find("nominal") != std::string::npos)
+    if (! testTTbarOnly && runAll && ! runListWidths && ! runListMasses && ! runSystematics && ! useTTTemplates && ! doPseudoExps && systStr.find("nominal") != std::string::npos)
       CheckSystematics(vJER, vJES, vPU);
     
     
   }  // end loop systematics/widths
   
-  if ( calculateLikelihood && (runRateSystematics || runSampleSystematics || runListWidths) )
+  if ( calculateLikelihood && (runRateSystematics || runSampleSystematics || runListWidths || runListMasses) )
   {
     fileWidths->Close();
     delete fileWidths;
@@ -3565,6 +3853,7 @@ void InitSetUp()
     
     if (runRateSystematics || runSampleSystematics) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths_syst.root").c_str(), "RECREATE");
     else if (runListWidths) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputWidths.root").c_str(), "RECREATE");
+    else if (runListMasses) fileWidths = new TFile(("OutputLikelihood/"+dateString+"/OutputMasses.root").c_str(), "RECREATE");
   }
   
   if (doPseudoExps)
@@ -4464,6 +4753,26 @@ void ClearMetaData()
     }
     sumPdfAlphaSUp = 0.;
     sumPdfAlphaSDown = 0.;
+    
+    tmpSumWeight1001   = 0.;
+    tmpSumWeight1002 = 0.;
+    tmpSumWeight1003 = 0.;
+    tmpSumWeight1004 = 0.;
+    tmpSumWeight1005 = 0.;
+    tmpSumWeight1007 = 0.;
+    tmpSumWeight1009 = 0.;
+    tmpSumFragUp = 0.;
+    tmpSumFragCentral = 0.;
+    tmpSumFragDown = 0.;
+    tmpSumFragPeterson = 0.;
+    tmpSumSemiLepUp = 0.;
+    tmpSumSemiLepDown = 0.;
+    for (int i = 0; i < 100; i++)
+    {
+      tmpSumPdf[i] = 0.;
+    }
+    tmpSumPdfAlphaSUp = 0.;
+    tmpSumPdfAlphaSDown = 0.;
   }
   
   strSyst = "";
@@ -5361,6 +5670,88 @@ void WriteSelectionTable()
   }
   selTabKF->CalculateTable(false);
   selTabKF->Write("SelectionTableKF_semiMu.tex", false, true, false, true);
+}
+
+void AddWeights()
+{
+  tmpSumWeight1001   += weight1001;
+  tmpSumWeight1002   += weight1002;
+  tmpSumWeight1003   += weight1003;
+  tmpSumWeight1004   += weight1004;
+  tmpSumWeight1005   += weight1005;
+  tmpSumWeight1007   += weight1007;
+  tmpSumWeight1009   += weight1009;
+  tmpSumFragUp       += upFragWeight;
+  tmpSumFragCentral  += centralFragWeight;
+  tmpSumFragDown     += downFragWeight;
+  tmpSumFragPeterson += petersonFragWeight;
+  tmpSumSemiLepUp    += semilepbrUp;
+  tmpSumSemiLepDown  += semilepbrDown;
+//   for (int i = 0; i < 100; i++)
+//   {
+//     tmpSumPdf[i] += pdfWeights[i];
+//   }
+  tmpSumPdfAlphaSUp   += pdfAlphaSUp;
+  tmpSumPdfAlphaSDown += pdfAlphaSDown;
+}
+
+void PrintWeights()
+{
+  cout << endl;
+  cout << "------------Printing sum of weights-------------" << endl;
+  cout << "Sum weight 1001   = " << tmpSumWeight1001 << endl;
+  cout << "Sum weight 1002   = " << tmpSumWeight1002 << endl;
+  cout << "Sum weight 1003   = " << tmpSumWeight1003 << endl;
+  cout << "Sum weight 1004   = " << tmpSumWeight1004 << endl;
+  cout << "Sum weight 1005   = " << tmpSumWeight1005 << endl;
+  cout << "Sum weight 1007   = " << tmpSumWeight1007 << endl;
+  cout << "Sum weight 1009   = " << tmpSumWeight1009 << endl;
+  cout << "Sum frag up       = " << tmpSumFragUp << endl;
+  cout << "Sum frag central  = " << tmpSumFragCentral << endl;
+  cout << "Sum frag down     = " << tmpSumFragDown << endl;
+  cout << "Sum frag Peterson = " << tmpSumFragPeterson << endl;
+  cout << "Sum semilep up    = " << tmpSumSemiLepUp << endl;
+  cout << "Sum semilep down  = " << tmpSumSemiLepDown << endl;
+  cout << "Sum PDF a_s up    = " << tmpSumPdfAlphaSUp << endl;
+  cout << "Sum PDF a_s down  = " << tmpSumPdfAlphaSDown << endl;
+  cout << "------------Making function---------------------" << endl;
+  cout << "void SetSumWeights()" << endl << "{" << endl;
+  cout << "renFacSumNom     = " << std::setprecision(20) << tmpSumWeight1001    << ";" << endl;
+  cout << "renFacSum1002    = " << std::setprecision(20) << tmpSumWeight1002    << ";" << endl;
+  cout << "renFacSum1003    = " << std::setprecision(20) << tmpSumWeight1003    << ";" << endl;
+  cout << "renFacSum1004    = " << std::setprecision(20) << tmpSumWeight1004    << ";" << endl;
+  cout << "renFacSum1005    = " << std::setprecision(20) << tmpSumWeight1005    << ";" << endl;
+  cout << "renFacSum1007    = " << std::setprecision(20) << tmpSumWeight1007    << ";" << endl;
+  cout << "renFacSum1009    = " << std::setprecision(20) << tmpSumWeight1009    << ";" << endl;
+  cout << "fragUpSum        = " << std::setprecision(20) << tmpSumFragUp        << ";" << endl;
+  cout << "fragCentralSum   = " << std::setprecision(20) << tmpSumFragCentral   << ";" << endl;
+  cout << "fragDownSum      = " << std::setprecision(20) << tmpSumFragDown      << ";" << endl;
+  cout << "fragPetersonSum  = " << std::setprecision(20) << tmpSumFragPeterson  << ";" << endl;
+  cout << "semilepbrUpSum   = " << std::setprecision(20) << tmpSumSemiLepUp     << ";" << endl;
+  cout << "semilepbrDownSum = " << std::setprecision(20) << tmpSumSemiLepDown   << ";" << endl;
+  cout << "pdfAlphaSUpSum   = " << std::setprecision(20) << tmpSumPdfAlphaSUp   << ";" << endl;
+  cout << "pdfAlphaSDownSum = " << std::setprecision(20) << tmpSumPdfAlphaSDown << ";" << endl;
+  cout << "}" << endl;
+  cout << "------------------------------------------------" << endl;
+}
+
+void SetSumWeights()
+{
+  renFacSumNom     = 176288.;
+  renFacSum1002    = 172812.;
+  renFacSum1003    = 180833.;
+  renFacSum1004    = 159833.;
+  renFacSum1005    = 155582.;
+  renFacSum1007    = 193558.;
+  renFacSum1009    = 196855.;
+  fragUpSum        = 180777.;
+  fragCentralSum   = 176865.;
+  fragDownSum      = 174204.;
+  fragPetersonSum  = 183227.;
+  semilepbrUpSum   = 175632.;
+  semilepbrDownSum = 177359.;
+  pdfAlphaSUpSum   = 174138.;
+  pdfAlphaSDownSum = 177590.;
 }
 
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)
