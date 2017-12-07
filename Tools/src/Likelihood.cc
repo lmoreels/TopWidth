@@ -155,12 +155,11 @@ void Likelihood::BookHistograms()
     
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_60b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 60, 0.5, 2.0);
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
-      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 125, 0., 2.5);  // 90 bins in range [0.5, 2.0] --> red mlb
-      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);  /// ONLY FOR NEW VAR !!!
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 100, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      /// red mlb
+      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 125, 0., 2.5);  // 150 bins?
+      /// New var
+      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);
     }
   }
 }
@@ -179,10 +178,7 @@ void Likelihood::FillHistograms(double redMass, double relativeSF, double hadTop
       }
       else thisWidthSF_ = 1.;
       
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_60b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_75b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_100b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
     }
   }
 }
@@ -546,12 +542,12 @@ void Likelihood::CalculateLikelihood(double redMass, double relativeSF, bool isD
   this->CalculateLikelihood(redMass, relativeSF, 1., 1., 1., false, isData);  // isTTbar = false ==> thisWidthSF_ = 1.;
 }
 
-std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
 {
-  return this->CalculateLikelihood(redMass, relativeSF, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, isTTbar, isData);
+  return this->CalculateLikelihood(redMass, relativeSF, hadTopMassForWidthSF, lepTopMassForWidthSF, inputWidth, 172.5, isTTbar, isData);
 }
 
-std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData)
+std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
 {
   if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
   
@@ -561,8 +557,8 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relat
   {
     if (isTTbar)
     {
-      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
-      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, 172.5, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, 172.5, 1., inputWidth);
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
     }
     else thisWidthSF_ = 1.;
     
@@ -783,7 +779,7 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
   if ( centreVal > 0.35 && fitmin < 0.3 ) fitmin = 0.3;
   //if ( centreVal > 0.4 && fitmin < 0.3 ) fitmin = 0.3;
-  //if ( centreVal > 0.5 && fitmin < 0.3 ) fitmin = 0.3;
+  if ( centreVal > 0.5 && fitmin < 0.35 ) fitmin = 0.35;
   if ( centreVal > 0.55 && fitmin < 0.4 ) fitmin = 0.4;
   if ( centreVal > 0.65 && fitmin < 0.45 ) fitmin = 0.45;
   if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
