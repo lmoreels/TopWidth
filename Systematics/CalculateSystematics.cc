@@ -23,8 +23,14 @@ string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_
 string listFileName = "list_syst.txt";
 
 /// 1D
-const double calCurvePar_[2] = {-0.193055, 1.05465};  // new redTopMass  //{-0.132933, 1.07876};  // old redTopMass
-const double calCurveParUnc_[2] = {0.036635, 0.0168618};  // new redTopMass  //{0.0439721, 0.0183862};  // old redTopMass
+// no dR cut
+//const double calCurvePar_[2] = {-0.111927, 1.0752};
+//const double calCurveParUnc_[2] = {0.04433, 0.0183196};
+// parameter = redTopMass_old
+const double calCurvePar_[2] = {-0.124131, 1.07867};  // cut = 3   // {-0.111927, 1.0752};  // cut = 2
+const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // cut = 3   // {0.04433, 0.0183196};  // cut = 2
+//const double calCurvePar_[2] = {-0.193055, 1.05465};  // new redTopMass  //{-0.132933, 1.07876};  // old redTopMass
+//const double calCurveParUnc_[2] = {0.036635, 0.0168618};  // new redTopMass  //{0.0439721, 0.0183862};  // old redTopMass
 /// 2D
 const double calCurveParW_[2] = {-0.197866, 1.07643};
 const double calCurveParUncW_[2] = {0.0451828, 0.0180112};
@@ -38,8 +44,12 @@ double thisWidth, thisMass, thisWidthValue, thisWidthUnc, thisMassValue, thisMas
 pair<double,double> thisCorrWidthValue, thisCorrMassValue;
 pair<double,double> testData;
 
+bool isRate[70] = {0};
+
 int nSys = -1;
 vector<string> systName;
+vector<double> genWidths;
+vector<double> genMasses;
 vector<double> systWidthValue;
 vector<double> systWidthUnc;
 vector<double> systMassValue;
@@ -56,7 +66,7 @@ double shiftUp, shiftDown, tmp;
 
 
 int indexNom;
-int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN;
+int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN, indexPdfAlphaSUP, indexPdfAlphaSDOWN;
 
 void ClearIndices();
 void ClearVars();
@@ -159,6 +169,8 @@ int main()
         else thisCorrWidthValue = ApplyCalibrationCurve(thisWidthValue, thisWidthUnc);
         
         systName.push_back(thisSyst);
+        genWidths.push_back(thisWidth);
+        genMasses.push_back(thisMass);
         systWidthValue.push_back(thisCorrWidthValue.first);
         systWidthUnc.push_back(thisCorrWidthValue.second);
         if (is2D)
@@ -222,7 +234,7 @@ int main()
   cout << "Total systematic uncertainty is +" << totalShiftUp << " and -" << totalShiftDown << endl;
   
   // Test on fake data
-  testData = ApplyCalibrationCurve(0.745395, 0.171136);
+  testData = ApplyCalibrationCurve(0.798205, 0.193303);
   cout << "For MC:   width = " << nomVal << " +- " << nomValUnc << endl;
   cout << "For data: width = " << testData.first << " +- " << testData.second << " (stat.) +" << totalShiftUp << " -" << totalShiftDown << " (syst.)" << endl;
   
@@ -299,6 +311,11 @@ int main()
   if ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexFragSemiLepBrUP, indexFragSemiLepBrDOWN));
+    shiftUp += tmp*tmp;
+  }
+  if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+  {
+    tmp = isPositive(GetMaximum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
     shiftUp += tmp*tmp;
   }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
@@ -395,6 +412,11 @@ int main()
     tmp = isNegative(GetMinimum(indexFragSemiLepBrUP, indexFragSemiLepBrDOWN));
     shiftDown += tmp*tmp;
   }
+  if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+  {
+    tmp = isNegative(GetMinimum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
+    shiftDown += tmp*tmp;
+  }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexTuneUP, indexTuneDOWN));
@@ -418,7 +440,7 @@ int main()
   shiftDown = sqrt(shiftDown);
   
   cout << "Systematic up: " << shiftUp << "; systematic down: " << shiftDown << endl;
-  cout << "=====> Data: " << 1.31*testData.first << " +- " << 1.31*testData.second << " (stat.) +" << 1.31*shiftUp << " -" << 1.31*shiftDown << " (syst.)" << endl;
+  cout << "=====> Data: " << 1.31*testData.first << " +- " << 1.31*testData.second << " (stat.) +" << 1.31*shiftUp << " -" << 1.31*shiftDown << " (syst.)   = +" << 1.31*sqrt((testData.second)*(testData.second) + shiftUp*shiftUp) << " -" << 1.31*sqrt((testData.second)*(testData.second) + shiftDown*shiftDown) << " (total)" << endl;
   
   WriteShiftTable();
   WriteShiftTable(1.31);
@@ -465,6 +487,7 @@ void ClearIndices()
   indexHerwig = -1;
   indexJesUP = -1; indexJesDOWN = -1;
   indexJerUP = -1; indexJerDOWN = -1;
+  indexPdfAlphaSUP = -1; indexPdfAlphaSDOWN = -1;
 }
 
 void ClearVars()
@@ -475,6 +498,8 @@ void ClearVars()
   nomValUnc = 0.001;
   
   systName.clear();
+  genWidths.clear();
+  genMasses.clear();
   systWidthValue.clear();
   systWidthUnc.clear();
   systMassValue.clear();
@@ -505,16 +530,96 @@ double GetMinimum(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8
 {
   vector<double> v;
   v.clear();
-  if ( i1 != -1 )  v.push_back(systDifference[i1]);
-  if ( i2 != -1 )  v.push_back(systDifference[i2]);
-  if ( i3 != -1 )  v.push_back(systDifference[i3]);
-  if ( i4 != -1 )  v.push_back(systDifference[i4]);
-  if ( i5 != -1 )  v.push_back(systDifference[i5]);
-  if ( i6 != -1 )  v.push_back(systDifference[i6]);
-  if ( i7 != -1 )  v.push_back(systDifference[i7]);
-  if ( i8 != -1 )  v.push_back(systDifference[i8]);
-  if ( i9 != -1 )  v.push_back(systDifference[i9]);
-  if ( i10 != -1 ) v.push_back(systDifference[i10]);
+  if ( i1 != -1 )
+  {
+    if ( isRate[i1] ) v.push_back(systDifference[i1]);
+    else
+    {
+      if ( fabs(systDifference[i1]) >= fabs(systDifferenceUnc[i1]) ) v.push_back(systDifference[i1]);
+      else v.push_back(systDifferenceUnc[i1]*systDifference[i1]/fabs(systDifference[i1]));
+    }
+  }
+  if ( i2 != -1 )
+  {
+    if ( isRate[i2] ) v.push_back(systDifference[i2]);
+    else
+    {
+      if ( fabs(systDifference[i2]) >= fabs(systDifferenceUnc[i2]) ) v.push_back(systDifference[i2]);
+      else v.push_back(systDifferenceUnc[i2]*systDifference[i2]/fabs(systDifference[i2]));
+    }
+  }
+  if ( i3 != -1 )
+  {
+    if ( isRate[i3] ) v.push_back(systDifference[i3]);
+    else
+    {
+      if ( fabs(systDifference[i3]) >= fabs(systDifferenceUnc[i3]) ) v.push_back(systDifference[i3]);
+      else v.push_back(systDifferenceUnc[i3]*systDifference[i3]/fabs(systDifference[i3]));
+    }
+  }
+  if ( i4 != -1 )
+  {
+    if ( isRate[i4] ) v.push_back(systDifference[i4]);
+    else
+    {
+      if ( fabs(systDifference[i4]) >= fabs(systDifferenceUnc[i4]) ) v.push_back(systDifference[i4]);
+      else v.push_back(systDifferenceUnc[i4]*systDifference[i4]/fabs(systDifference[i4]));
+    }
+  }
+  if ( i5 != -1 )
+  {
+    if ( isRate[i5] ) v.push_back(systDifference[i5]);
+    else
+    {
+      if ( fabs(systDifference[i5]) >= fabs(systDifferenceUnc[i5]) ) v.push_back(systDifference[i5]);
+      else v.push_back(systDifferenceUnc[i5]*systDifference[i5]/fabs(systDifference[i5]));
+    }
+  }
+  if ( i6 != -1 )
+  {
+    if ( isRate[i6] ) v.push_back(systDifference[i6]);
+    else
+    {
+      if ( fabs(systDifference[i6]) >= fabs(systDifferenceUnc[i6]) ) v.push_back(systDifference[i6]);
+      else v.push_back(systDifferenceUnc[i6]*systDifference[i6]/fabs(systDifference[i6]));
+    }
+  }
+  if ( i7 != -1 )
+  {
+    if ( isRate[i7] ) v.push_back(systDifference[i7]);
+    else
+    {
+      if ( fabs(systDifference[i7]) >= fabs(systDifferenceUnc[i7]) ) v.push_back(systDifference[i7]);
+      else v.push_back(systDifferenceUnc[i7]*systDifference[i7]/fabs(systDifference[i7]));
+    }
+  }
+  if ( i8 != -1 )
+  {
+    if ( isRate[i8] ) v.push_back(systDifference[i8]);
+    else
+    {
+      if ( fabs(systDifference[i8]) >= fabs(systDifferenceUnc[i8]) ) v.push_back(systDifference[i8]);
+      else v.push_back(systDifferenceUnc[i8]*systDifference[i8]/fabs(systDifference[i8]));
+    }
+  }
+  if ( i9 != -1 )
+  {
+    if ( isRate[i9] ) v.push_back(systDifference[i9]);
+    else
+    {
+      if ( fabs(systDifference[i9]) >= fabs(systDifferenceUnc[i9]) ) v.push_back(systDifference[i9]);
+      else v.push_back(systDifferenceUnc[i9]*systDifference[i9]/fabs(systDifference[i9]));
+    }
+  }
+  if ( i10 != -1 )
+  {
+    if ( isRate[i10] ) v.push_back(systDifference[i10]);
+    else
+    {
+      if ( fabs(systDifference[i10]) >= fabs(systDifferenceUnc[i10]) ) v.push_back(systDifference[i10]);
+      else v.push_back(systDifferenceUnc[i10]*systDifference[i10]/fabs(systDifference[i10]));
+    }
+  }
   
   if ( v.size() == 0 ) return 0.;
   else if ( v.size() == 1 ) return v[0];
@@ -529,16 +634,96 @@ double GetMaximum(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8
 {
   vector<double> v;
   v.clear();
-  if ( i1 != -1 )  v.push_back(systDifference[i1]);
-  if ( i2 != -1 )  v.push_back(systDifference[i2]);
-  if ( i3 != -1 )  v.push_back(systDifference[i3]);
-  if ( i4 != -1 )  v.push_back(systDifference[i4]);
-  if ( i5 != -1 )  v.push_back(systDifference[i5]);
-  if ( i6 != -1 )  v.push_back(systDifference[i6]);
-  if ( i7 != -1 )  v.push_back(systDifference[i7]);
-  if ( i8 != -1 )  v.push_back(systDifference[i8]);
-  if ( i9 != -1 )  v.push_back(systDifference[i9]);
-  if ( i10 != -1 ) v.push_back(systDifference[i10]);
+  if ( i1 != -1 )
+  {
+    if ( isRate[i1] ) v.push_back(systDifference[i1]);
+    else
+    {
+      if ( fabs(systDifference[i1]) >= fabs(systDifferenceUnc[i1]) ) v.push_back(systDifference[i1]);
+      else v.push_back(systDifferenceUnc[i1]*systDifference[i1]/fabs(systDifference[i1]));
+    }
+  }
+  if ( i2 != -1 )
+  {
+    if ( isRate[i2] ) v.push_back(systDifference[i2]);
+    else
+    {
+      if ( fabs(systDifference[i2]) >= fabs(systDifferenceUnc[i2]) ) v.push_back(systDifference[i2]);
+      else v.push_back(systDifferenceUnc[i2]*systDifference[i2]/fabs(systDifference[i2]));
+    }
+  }
+  if ( i3 != -1 )
+  {
+    if ( isRate[i3] ) v.push_back(systDifference[i3]);
+    else
+    {
+      if ( fabs(systDifference[i3]) >= fabs(systDifferenceUnc[i3]) ) v.push_back(systDifference[i3]);
+      else v.push_back(systDifferenceUnc[i3]*systDifference[i3]/fabs(systDifference[i3]));
+    }
+  }
+  if ( i4 != -1 )
+  {
+    if ( isRate[i4] ) v.push_back(systDifference[i4]);
+    else
+    {
+      if ( fabs(systDifference[i4]) >= fabs(systDifferenceUnc[i4]) ) v.push_back(systDifference[i4]);
+      else v.push_back(systDifferenceUnc[i4]*systDifference[i4]/fabs(systDifference[i4]));
+    }
+  }
+  if ( i5 != -1 )
+  {
+    if ( isRate[i5] ) v.push_back(systDifference[i5]);
+    else
+    {
+      if ( fabs(systDifference[i5]) >= fabs(systDifferenceUnc[i5]) ) v.push_back(systDifference[i5]);
+      else v.push_back(systDifferenceUnc[i5]*systDifference[i5]/fabs(systDifference[i5]));
+    }
+  }
+  if ( i6 != -1 )
+  {
+    if ( isRate[i6] ) v.push_back(systDifference[i6]);
+    else
+    {
+      if ( fabs(systDifference[i6]) >= fabs(systDifferenceUnc[i6]) ) v.push_back(systDifference[i6]);
+      else v.push_back(systDifferenceUnc[i6]*systDifference[i6]/fabs(systDifference[i6]));
+    }
+  }
+  if ( i7 != -1 )
+  {
+    if ( isRate[i7] ) v.push_back(systDifference[i7]);
+    else
+    {
+      if ( fabs(systDifference[i7]) >= fabs(systDifferenceUnc[i7]) ) v.push_back(systDifference[i7]);
+      else v.push_back(systDifferenceUnc[i7]*systDifference[i7]/fabs(systDifference[i7]));
+    }
+  }
+  if ( i8 != -1 )
+  {
+    if ( isRate[i8] ) v.push_back(systDifference[i8]);
+    else
+    {
+      if ( fabs(systDifference[i8]) >= fabs(systDifferenceUnc[i8]) ) v.push_back(systDifference[i8]);
+      else v.push_back(systDifferenceUnc[i8]*systDifference[i8]/fabs(systDifference[i8]));
+    }
+  }
+  if ( i9 != -1 )
+  {
+    if ( isRate[i9] ) v.push_back(systDifference[i9]);
+    else
+    {
+      if ( fabs(systDifference[i9]) >= fabs(systDifferenceUnc[i9]) ) v.push_back(systDifference[i9]);
+      else v.push_back(systDifferenceUnc[i9]*systDifference[i9]/fabs(systDifference[i9]));
+    }
+  }
+  if ( i10 != -1 )
+  {
+    if ( isRate[i10] ) v.push_back(systDifference[i10]);
+    else
+    {
+      if ( fabs(systDifference[i10]) >= fabs(systDifferenceUnc[i10]) ) v.push_back(systDifference[i10]);
+      else v.push_back(systDifferenceUnc[i10]*systDifference[i10]/fabs(systDifference[i10]));
+    }
+  }
   
   if ( v.size() == 0 ) return 0.;
   else if ( v.size() == 1 ) return v[0];
@@ -565,9 +750,16 @@ void IndexSystematics()
 {
   for (int iSys = 0; iSys < nSys; iSys++)
   {
-    if ( systName[iSys].find("nominal") != std::string::npos ) indexNom = iSys;
+    if ( systName[iSys].find("nominal") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( genWidths[iSys] == 1 && genMasses[iSys] == 172.5 ) indexNom = iSys;
+      else if ( genWidths[iSys] == 1 && genMasses[iSys] == 171.5 ) indexMassDOWN = iSys;
+      else if ( genWidths[iSys] == 1 && genMasses[iSys] == 173.5 ) indexMassUP = iSys;
+    }
     else if ( systName[iSys].find("lepton") != std::string::npos || systName[iSys].find("Lepton") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( systName[iSys].find("Id") != std::string::npos || systName[iSys].find("ID") != std::string::npos || systName[iSys].find("id") != std::string::npos )
       {
         if ( foundUP(systName[iSys]) ) indexLepIdUP = iSys;
@@ -591,27 +783,36 @@ void IndexSystematics()
     }
     else if ( systName[iSys].find("bTag") != std::string::npos || systName[iSys].find("BTag") != std::string::npos || systName[iSys].find("btag") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( foundUP(systName[iSys]) ) indexBTagUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexBTagDOWN = iSys;
     }
     else if ( systName[iSys].find("hdamp") != std::string::npos || systName[iSys].find("Hdamp") != std::string::npos )
     {
+      isRate[iSys] = false;
       if ( foundUP(systName[iSys]) ) indexHdampUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexHdampDOWN = iSys;
     }
     else if ( systName[iSys].find("Pu") != std::string::npos || systName[iSys].find("PU") != std::string::npos || systName[iSys].find("pu") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( foundUP(systName[iSys]) ) indexPuUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexPuDOWN = iSys;
     }
     else if ( systName[iSys].find("Lumi") != std::string::npos || systName[iSys].find("LUMI") != std::string::npos || systName[iSys].find("lumi") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( foundUP(systName[iSys]) ) indexLumiUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexLumiDOWN = iSys;
     }
-    else if ( systName[iSys].find("topPt") != std::string::npos || systName[iSys].find("TopPt") != std::string::npos || systName[iSys].find("TOPPT") != std::string::npos || systName[iSys].find("toppt") != std::string::npos ) indexTopPt = iSys;
+    else if ( systName[iSys].find("topPt") != std::string::npos || systName[iSys].find("TopPt") != std::string::npos || systName[iSys].find("TOPPT") != std::string::npos || systName[iSys].find("toppt") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      indexTopPt = iSys;
+    }
     else if ( systName[iSys].find("renFac") != std::string::npos || systName[iSys].find("RenFac") != std::string::npos || systName[iSys].find("RENFAC") != std::string::npos || systName[iSys].find("renfac") != std::string::npos )
     {
+      isRate[iSys] = true;
       if      ( systName[iSys].find("1002") != std::string::npos ) indexRenFac1002 = iSys;
       else if ( systName[iSys].find("1003") != std::string::npos ) indexRenFac1003 = iSys;
       else if ( systName[iSys].find("1004") != std::string::npos ) indexRenFac1004 = iSys;
@@ -621,6 +822,7 @@ void IndexSystematics()
     }
     else if ( systName[iSys].find("frag") != std::string::npos || systName[iSys].find("Frag") != std::string::npos || systName[iSys].find("FRAG") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( systName[iSys].find("semiLepBr") != std::string::npos || systName[iSys].find("SemiLepBr") != std::string::npos )
       {
         if ( foundUP(systName[iSys]) ) indexFragSemiLepBrUP = iSys;
@@ -631,52 +833,67 @@ void IndexSystematics()
       else if ( foundUP(systName[iSys]) )        indexFragUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexFragDOWN = iSys;
     }
+    else if ( systName[iSys].find("pdf") != std::string::npos || systName[iSys].find("Pdf") != std::string::npos || systName[iSys].find("PDF") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( systName[iSys].find("alpha") != std::string::npos || systName[iSys].find("Alpha") != std::string::npos )
+      {
+        if ( foundUP(systName[iSys]) ) indexPdfAlphaSUP = iSys;
+        else if ( foundDOWN(systName[iSys]) ) indexPdfAlphaSDOWN = iSys;
+      }
+    }
     else if ( systName[iSys].find("isr") != std::string::npos || systName[iSys].find("ISR") != std::string::npos || systName[iSys].find("Isr") != std::string::npos )
     {
+      isRate[iSys] = false;
       if ( foundUP(systName[iSys]) ) indexIsrUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexIsrDOWN = iSys;
     }
     else if ( systName[iSys].find("fsr") != std::string::npos || systName[iSys].find("FSR") != std::string::npos || systName[iSys].find("Fsr") != std::string::npos )
     {
+      isRate[iSys] = false;
       if ( foundUP(systName[iSys]) ) indexFsrUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexFsrDOWN = iSys;
     }
-    else if ( systName[iSys].find("mass") != std::string::npos || systName[iSys].find("MASS") != std::string::npos || systName[iSys].find("Mass") != std::string::npos )
-    {
-      if ( systName[iSys].find("169") != std::string::npos ) indexMassDOWN = iSys;
-      //if ( systName[iSys].find("171") != std::string::npos ) indexMassDOWN = iSys;
-      //else if ( systName[iSys].find("173") != std::string::npos ) indexMassUP = iSys;
-      else if ( systName[iSys].find("175") != std::string::npos ) indexMassUP = iSys;
-    }
-    else if ( systName[iSys].find("hdamp") != std::string::npos || systName[iSys].find("Hdamp") != std::string::npos )
-    {
-      if ( foundUP(systName[iSys]) ) indexHdampUP = iSys;
-      else if ( foundDOWN(systName[iSys]) ) indexHdampDOWN = iSys;
-    }
+//     else if ( systName[iSys].find("mass") != std::string::npos || systName[iSys].find("MASS") != std::string::npos || systName[iSys].find("Mass") != std::string::npos )
+//     {
+//       if ( systName[iSys].find("169") != std::string::npos ) indexMassDOWN = iSys;
+//       //if ( systName[iSys].find("171") != std::string::npos ) indexMassDOWN = iSys;
+//       //else if ( systName[iSys].find("173") != std::string::npos ) indexMassUP = iSys;
+//       else if ( systName[iSys].find("175") != std::string::npos ) indexMassUP = iSys;
+//     }
     else if ( systName[iSys].find("tune") != std::string::npos )
     {
+      isRate[iSys] = false;
       if ( foundUP(systName[iSys]) ) indexTuneUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexTuneDOWN = iSys;
     }
     else if ( systName[iSys].find("ERD") != std::string::npos )
     {
+      isRate[iSys] = false;
       if ( systName[iSys].find("mpi") != std::string::npos ) indexCrErd = iSys;
       else if ( systName[iSys].find("qcd") != std::string::npos ) indexCrQcdErd = iSys;
       else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMoveErd = iSys;
     }
-    else if ( systName[iSys].find("gluon") != std::string::npos ) indexCrGluonMove = iSys;
+    else if ( systName[iSys].find("gluon") != std::string::npos )
+    {
+      isRate[iSys] = false;
+      indexCrGluonMove = iSys;
+    }
     else if ( systName[iSys].find("jes") != std::string::npos || systName[iSys].find("JES") != std::string::npos || systName[iSys].find("Jes") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( foundUP(systName[iSys]) ) indexJesUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexJesDOWN = iSys;
     }
     else if ( systName[iSys].find("jer") != std::string::npos || systName[iSys].find("JER") != std::string::npos || systName[iSys].find("Jer") != std::string::npos )
     {
+      isRate[iSys] = true;
       if ( foundUP(systName[iSys]) ) indexJerUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexJerDOWN = iSys;
     }
     else if ( systName[iSys].find("herwig") != std::string::npos || systName[iSys].find("Herwig") != std::string::npos )
     {
+      isRate[iSys] = false;
       indexHerwig = iSys;
     }
     //else if ( systName[iSys].find("") != std::string::npos )
@@ -762,7 +979,7 @@ void WriteShiftTable(double scale)
   if ( scale != 1. ) fileName += "x"+DotReplace(scale);
   ofstream fileOut((fileName+suffix+".tex").c_str());
   fileOut << "\\begin{table}[htp]" << endl;
-  fileOut << " \\caption{\\fixme{Put caption here}}" << endl;
+  fileOut << " \\caption{\\fixme{Systematics compared to $" << scale << "\\times s$, for $m_r = m_t/<m_t>_{\\CM}$, range 0.65 to 1.4}}" << endl;
   fileOut << " \\begin{center}" << endl;
   fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
   fileOut << "   \\begin{center}" << endl;
@@ -874,6 +1091,14 @@ void WriteShiftTable(double scale)
     fileOut << space << "\\bq\\ \\semilep\\ BR & " << scale*systDifference[indexFragSemiLepBrUP] << " &  & " << scale*systDifference[indexFragSemiLepBrDOWN] << " &  \\\\" << endl;
   }
   
+  if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{PDF} &  &  &  &  \\\\" << endl;
+    if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+      fileOut << space << "\\tabsp $\\alpha_{s}$ & " << scale*systDifference[indexPdfAlphaSUP] << " &  & " << scale*systDifference[indexPdfAlphaSDOWN] << " &  \\\\" << endl;
+  }
+  
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     fileOut << interline << endl;
@@ -893,21 +1118,23 @@ void WriteShiftTable(double scale)
       fileOut << space << "\\tabsp Gluon move (ERD) &  &  & " << scale*systDifference[indexCrGluonMoveErd] << " & " << scale*systDifferenceUnc[indexCrGluonMoveErd] << " \\\\" << endl;
   }
   
-  if ( indexHerwig != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "Herwig &  &  & " << scale*systDifference[indexHerwig] << " & " << scale*systDifferenceUnc[indexHerwig] << " \\\\" << endl;
-  }
+//   if ( indexHerwig != -1 )
+//   {
+//     fileOut << interline << endl;
+//     fileOut << space << "Herwig &  &  & " << scale*systDifference[indexHerwig] << " & " << scale*systDifferenceUnc[indexHerwig] << " \\\\" << endl;
+//   }
   
   if ( indexJesUP != -1 && indexJesDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "JES & " << scale*systDifference[indexJesUP] << " & " << scale*systDifferenceUnc[indexJesUP] << " & " << scale*systDifference[indexJesDOWN] << " & " << scale*systDifferenceUnc[indexJesDOWN] << " \\\\" << endl;
+    fileOut << space << "JES & " << scale*systDifference[indexJesUP] << " &  & " << scale*systDifference[indexJesDOWN] << " &  \\\\" << endl;
+    //fileOut << space << "JES & " << scale*systDifference[indexJesUP] << " & " << scale*systDifferenceUnc[indexJesUP] << " & " << scale*systDifference[indexJesDOWN] << " & " << scale*systDifferenceUnc[indexJesDOWN] << " \\\\" << endl;
   }
   if ( indexJerUP != -1 && indexJerDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifferenceUnc[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " & " << scale*systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
+    fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " &  & " << scale*systDifference[indexJerDOWN] << " &  \\\\" << endl;
+    //fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifferenceUnc[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " & " << scale*systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
   }
   
   //....

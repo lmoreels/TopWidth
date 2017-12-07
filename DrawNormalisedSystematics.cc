@@ -29,7 +29,7 @@ int main()
   
   string suffixName = "";
   
-  string sysNames[] = {"nominal", "tune_up", "tune_down", "ISR_up", "ISR_down", "FSR_up", "FSR_down", "hdamp_up", "hdamp_down", "CR_ERD", "CR_QCD_ERD", "CR_gluon_move", "CR_GM_ERD", "herwig", "JES_up", "JES_down"};
+  string sysNames[] = {"nominal", "tune_up", "tune_down", "ISR_up", "ISR_down", "FSR_up", "FSR_down", "hdamp_up", "hdamp_down", "CR_ERD", "CR_QCD_ERD", "CR_gluon_move", "CR_GM_ERD", "herwig", "JES_up", "JES_down", "JER_up", "JER_down"};
   int drawSys[] = {0, 3, 4, 5, 6, 7, 8}; suffixName = "_shower";
   //int drawSys[] = {0, 1, 2, 9, 10, 11, 12}; suffixName = "_CR";
   //int drawSys[] = {0, 13}; suffixName = "_herwig";
@@ -37,7 +37,9 @@ int main()
   //int nSys = sizeof(sysNames)/sizeof(sysNames[0])
   
   /// chi2 < 15
-  pair<string,string> input[] = {pair<string,string>("nominal", "171116_1324"), pair<string,string>("tune up", "171113_1712"), pair<string,string>("tune down", "171113_1714"), pair<string,string>("ISR up", "171113_1722"), pair<string,string>("ISR down", "171113_1724"),pair<string,string>("FSR up", "171113_1726"), pair<string,string>("FSR down", "171113_1728"), pair<string,string>("hdamp up", "171113_1730"), pair<string,string>("hdamp down", "171113_1732"), pair<string,string>("CR ERD", "171113_1734"), pair<string,string>("CR QCD ERD", "171113_1736"), pair<string,string>("CR gluon move", "171113_1717"), pair<string,string>("CR gluon move ERD", "171113_1718"), pair<string,string>("herwig", "171113_1720")};
+  //pair<string,string> input[] = {pair<string,string>("nominal", "171116_1324"), pair<string,string>("tune up", "171113_1712"), pair<string,string>("tune down", "171113_1714"), pair<string,string>("ISR up", "171113_1722"), pair<string,string>("ISR down", "171113_1724"),pair<string,string>("FSR up", "171113_1726"), pair<string,string>("FSR down", "171113_1728"), pair<string,string>("hdamp up", "171113_1730"), pair<string,string>("hdamp down", "171113_1732"), pair<string,string>("CR ERD", "171113_1734"), pair<string,string>("CR QCD ERD", "171113_1736"), pair<string,string>("CR gluon move", "171113_1717"), pair<string,string>("CR gluon move ERD", "171113_1718"), pair<string,string>("herwig", "171113_1720")};
+  // mlb < 220 GeV
+  pair<string,string> input[] = {pair<string,string>("nominal", "171204_1701"), pair<string,string>("tune up", "171204_1800"), pair<string,string>("tune down", ""), pair<string,string>("ISR up", "171204_1805"), pair<string,string>("ISR down", "171204_1807"),pair<string,string>("FSR up", "171204_1808"), pair<string,string>("FSR down", "171205_1009"), pair<string,string>("hdamp up", "171204_1813"), pair<string,string>("hdamp down", "171204_1815"), pair<string,string>("CR ERD", "171204_1817"), pair<string,string>("CR QCD ERD", "171204_1819"), pair<string,string>("CR gluon move", "171204_1803"), pair<string,string>("CR gluon move ERD", "171204_1804"), pair<string,string>("herwig", ""), pair<string,string>("JES up", "171204_1827"), pair<string,string>("JES down", "171204_1825"), pair<string,string>("JER up", "171204_1823"), pair<string,string>("JES down", "171205_1011")};
   
   string date = "171107_";
   /// chi2 < 5
@@ -72,6 +74,8 @@ int main()
   {
     if ( sysNames[drawSys[iSys]].find("JES_up") != std::string::npos ) fileName = "NtuplePlots_JESup.root";
     else if ( sysNames[drawSys[iSys]].find("JES_down") != std::string::npos ) fileName = "NtuplePlots_JESdown.root";
+    else if ( sysNames[drawSys[iSys]].find("JER_up") != std::string::npos ) fileName = "NtuplePlots_JERup.root";
+    else if ( sysNames[drawSys[iSys]].find("JER_down") != std::string::npos ) fileName = "NtuplePlots_JERdown.root";
     else fileName = "NtuplePlots_nominal.root";
     
     TFile *fileIn = new TFile((pathFiles+input[drawSys[iSys]].second+"/"+fileName).c_str(),"read");
