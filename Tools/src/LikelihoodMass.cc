@@ -154,8 +154,8 @@ void LikelihoodMass::BookHistograms()
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 60, 0.5, 2.0);
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
+//      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 125, 0., 2.5);  // 90 bins in range [0.5, 2.0] --> red mlb
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);  /// ONLY FOR NEW VAR !!!
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_100b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 100, 0.5, 2.0);
@@ -178,8 +178,8 @@ void LikelihoodMass::FillHistograms(double redMass, double relativeSF, double ha
       else thisMassSF_ = 1.;
       
 //      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_60b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
-      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
+      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_100b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
     }
   }
@@ -210,7 +210,7 @@ void LikelihoodMass::GetHistogram(int iCat)
 
   /// Get histo to smooth
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
-  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
+  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_75b"]->Clone(histoName_.c_str());
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
   histoSm_[histoName_]->Write();
 
@@ -282,21 +282,23 @@ void LikelihoodMass::ConstructTGraphsFromHisto(std::string tGraphFileName, std::
   fileTGraphs_->cd();
   
   
-  /// Make arrays as input for TGraph
-  const int nPoints = (vecBinCentres_[listCats_[1]+"_"+stringSuffix_[1]]).size();
-  double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
-  
   
   /// Loop over masses
   for (int iMass = 0; iMass < nMasses_; iMass++)
   {
-    this->ClearArray(nPoints, binCentreArray);
-    
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
       stringSuffix_[iCat] = "mass"+stringMassArray_[iMass];
       this->GetHistogram(iCat);
-      
+    }
+    
+    /// Make arrays as input for TGraph
+    const int nPoints = (vecBinCentres_[listCats_[0]+"_"+stringSuffix_[0]]).size();
+    double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
+    this->ClearArray(nPoints, binCentreArray);
+    
+    for (int iCat = 0; iCat < nCats_; iCat++)
+    {
       this->ClearArray(nPoints, binContentArray[iCat]);
       for (int i = 0; i < nPoints; i++)
       {
@@ -305,7 +307,7 @@ void LikelihoodMass::ConstructTGraphsFromHisto(std::string tGraphFileName, std::
       }
       
       this->WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
-      this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_", true);
+      this->MakeGraph(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_", true);
       
       /// Make likelihood functions
       this->ClearArray(nEval, outputValues);
@@ -480,7 +482,7 @@ bool LikelihoodMass::ConstructTGraphsFromFile(std::vector<std::string> datasetNa
       }
       
       /// Make TGraphs
-      this->MakeGraphSmooth(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_");
+      this->MakeGraph(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_");
       
       /// Make likelihood functions
       this->ClearArray(nEval, outputValues);
@@ -739,7 +741,7 @@ std::pair<double,double> LikelihoodMass::CalculateOutputMass(int nn, double* eva
   }
   
   
-  double interval = 0.4;
+  double interval = 0.15;
 //   if ( centreVal <= interval ) interval = centreVal - 0.1;
 //   if ( centreVal > 3.8 ) interval = 0.8;
   double fitmax = centreVal + interval;
@@ -1004,7 +1006,7 @@ void LikelihoodMass::CalculateFractions(std::vector<std::string> datasetNames)
 
 void LikelihoodMass::GetFractions(double *fractions, int nCats, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
 {
-  LikelihoodMass::GetFractions(fractions, nCats, "1", datasetNames, includeDataset);
+  LikelihoodMass::GetFractions(fractions, nCats, "172p5", datasetNames, includeDataset);
 }
 
 void LikelihoodMass::GetFractions(double *fractions, int nCats, std::string mass, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
@@ -1151,7 +1153,7 @@ void LikelihoodMass::DrawOutputLogLikelihood(TGraph* g, TF1* f, double minX, dou
   g->GetXaxis()->SetRangeUser(minX,maxX);
   g->GetYaxis()->SetRangeUser(-0.05*maxY,maxY);
   g->GetXaxis()->SetTitle("M_{t}");
-  g->GetYaxis()->SetTitle("\\Delta\\mathscr{L}(\\mathit{m_{t}})");
+  g->GetYaxis()->SetTitle("\\Delta\\mathscr{L}(\\mathrm{M_{t}})");
   g->SetMarkerStyle(2);  //kPlus
   g->Draw("AP");
   //if (writeToFile) g->Write();
