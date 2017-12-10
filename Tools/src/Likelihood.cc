@@ -155,9 +155,9 @@ void Likelihood::BookHistograms()
     
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
       /// red mlb
-      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 125, 0., 2.5);  // 150 bins?
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 90, 0., 2.5);  // 75 bins
       /// New var
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);
     }
@@ -769,12 +769,14 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   }
   
   
-  double interval = 0.4;
+  //double interval = 0.4;
+  double interval = 0.3;  // mlb
   if ( centreVal <= interval ) interval = centreVal - 0.1;
-  if ( centreVal > 3.8 ) interval = 0.8;
+  //if ( centreVal > 3.8 ) interval = 0.8;
+  if ( centreVal > 3.8 ) interval = 0.6;  // mlb
   double fitmax = centreVal + interval;
   double fitmin = centreVal - interval;
-  //if ( centreVal < 1.6 ) fitmin += 0.1;
+  
   if ( centreVal > 0.15 && fitmin < 0.15 ) fitmin = 0.15;
   if ( centreVal > 0.2 && fitmin < 0.2 ) fitmin = 0.2;
   if ( centreVal > 0.35 && fitmin < 0.3 ) fitmin = 0.3;
@@ -784,6 +786,12 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 0.65 && fitmin < 0.45 ) fitmin = 0.45;
   if ( centreVal > 0.75 && fitmin < 0.5 ) fitmin = 0.5;
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
+  
+  // mlb
+  if ( centreVal < 1.6 ) fitmin += 0.05;
+  //if ( centreVal < 1.1 )  fitmin += 0.05;  // --> += 0.1
+  if ( fitmin > centreVal ) fitmin = centreVal - 0.05;
+  
   
   if ( centreVal < 0.35 && fitmax > 0.4 ) fitmax = 0.4;
   if ( centreVal > 0.35 && centreVal < 1.2 ) fitmax = centreVal + (centreVal - fitmin);
