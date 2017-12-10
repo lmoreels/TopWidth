@@ -63,7 +63,7 @@ bool makeTGraphs = false;
 bool useTTTemplates = false;
 bool calculateLikelihood = true;
 bool doPseudoExps = false;
-bool useNewVar = false;
+bool useNewVar = true;
 
 bool doLikeW = true;
 bool doLikeM = false;
@@ -163,18 +163,27 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-//string inputDateLL = "171206_1226/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171206_1121/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
-string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171205_1615/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
-//string inputDateLL = "171205_1346/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
-//string inputDateLL = "171205_1148/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171204_1505/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220, min dR(b,j) > 0.8 + cuts
-//string inputDateLL = "171201_1725/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171203_1158/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 210 + cuts
-//string inputDateLL = "171201_1702/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171201_1/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
-//string inputDateLL = "171203_1024/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 200 + cuts
+string inputDateLL = "171210_2014/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb_alt > 150, m_lb < 220 + cuts
+//string inputDateLL = "171210_1626/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb_alt > 140, m_lb < 220 + cuts
+//string inputDateLL = "171210_1342/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
+//string inputDateLL = "171210_1031/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.4 -> 1.9, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
+//string inputDateLL = "171209_2302/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
+//string inputDateLL = "171209_1705/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
+//string inputDateLL = "171209_1213/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171207_1412/";  // 1D likelihood MASS; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171206_1226/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171206_1121/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171205_1615/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
+//string inputDateLL = "171205_1346/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
+//string inputDateLL = "171205_1148/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171204_1505/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220, min dR(b,j) > 0.8 + cuts
+//string inputDateLL = "171201_1725/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
+//string inputDateLL = "171203_1158/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 210 + cuts
+//string inputDateLL = "171201_1702/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
+//string inputDateLL = "171201_1/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
+//string inputDateLL = "171203_1024/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 200 + cuts
 //string inputDateLL = "171129_2002/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
 //string inputDateLL = "171128_2250/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.2 -> 2.1, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
 //string inputDateLL = "171128_1923/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
@@ -285,6 +294,8 @@ int nofTThadr = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
+int nofLeptMatchedEvents = 0;
+int nofLeptMatchedEventsAKF = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
 int nofUnmatched = 0;
@@ -307,6 +318,8 @@ double nofCM_weighted = 0., nofWM_weighted = 0., nofUM_weighted = 0., nofUM_TTse
 double nofCMout_weighted = 0., nofWMout_weighted = 0., nofUMout_weighted = 0., nofUMout_TTsemilep_weighted = 0., nofUMout_TTother_weighted = 0., nofUMout_other_weighted = 0.;
 double nofCM_gate1 = 0., nofWM_gate1 = 0., nofUM_gate1 = 0.;
 double nofCM_gate2 = 0., nofWM_gate2 = 0., nofUM_gate2 = 0.;
+double nofCM_gate3 = 0., nofWM_gate3 = 0., nofUM_gate3 = 0.;
+double nofCM_gate4 = 0., nofWM_gate4 = 0., nofUM_gate4 = 0.;
 double nofBKF_weighted[15], nofAKF_weighted[15];
 
 /// Lumi per data era
@@ -416,7 +429,10 @@ vector<int> includeDataSets;
 
 ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMUM, txtMassRecoUM, txtMassRecoWM, txtMassReco;
 double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
-Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.6331;
+//Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.6331;
+//Double_t aveMlbMass = 102.817, aveMlbMassCM = 102.738;  // mlb_alt > 140., reco_top_mass_alt_aKF > 240.
+//Double_t aveMlbMass = 103.154, aveMlbMassCM = 102.401;  // mlb_alt > 140.
+Double_t aveMlbMass = 104.041, aveMlbMassCM = 103.249;  // mlb_alt > 150.
 
 /// Function prototypes
 struct HighestPt
@@ -856,6 +872,8 @@ bool all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are mat
 bool all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
 bool hadronicTopJetsMatched = false;
 bool hadronicTopJetsMatched_MCdef_ = false;
+bool leptonicTopMatched = false;
+bool leptonicBMatched = false;
 pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
@@ -911,8 +929,8 @@ double nEvtsInPseudoExpW[nPseudoExps][15] = {0.};
 /// Variables
 double M3, Ht, min_Mlb, dRLepB;
 double M3_aKF, Ht_aKF;
-double reco_W_mass_bKF, reco_top_mass_bKF, reco_top_mass_alt_bKF, reco_top_mass_rescaled_bKF, reco_W_pt_bKF, reco_top_pt_bKF, reco_top_pt_alt_bKF, reco_mlb_bKF, reco_dRLepB_lep_bKF, reco_dRLepB_had_bKF, reco_dRlight_bKF, reco_dRblight_qsum_bKF, reco_dRblight_min_bKF, reco_dRblight_max_bKF, reco_dRbW_bKF, reco_dRbb_bKF, reco_dPhi_bb_bKF, reco_dPhi_light_bKF, reco_dPhi_bW_bKF, reco_ttbar_mass_bKF, redTopMass_old_bKF, redTopMass_new_bKF, redTopMass_bKF, redMlbMass_bKF, reco_mbjj_div_mjj_bKF, reco_mTW_bKF;
-double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_mass_alt_aKF, reco_W_pt_aKF, reco_top_pt_aKF, reco_top_pt_alt_aKF, reco_mlb_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_dRlight_aKF, reco_dRblight_qsum_aKF, reco_dRblight_min_aKF, reco_dRblight_max_aKF, reco_dRbW_aKF, reco_dRbb_aKF, reco_dPhi_bb_aKF, reco_dPhi_light_aKF, reco_dPhi_bW_aKF, reco_ttbar_mass_aKF, redTopMass_old, redTopMass_new, redTopMass, redMlbMass, reco_mbjj_div_mjj, reco_new_var, reco_mTW_aKF;
+double reco_W_mass_bKF, reco_top_mass_bKF, reco_top_mass_alt_bKF, reco_top_mass_rescaled_bKF, reco_W_pt_bKF, reco_top_pt_bKF, reco_top_pt_alt_bKF, reco_mlb_bKF, reco_mlb_alt_bKF, reco_dRLepB_lep_bKF, reco_dRLepB_had_bKF, reco_dRlight_bKF, reco_dRblight_qsum_bKF, reco_dRblight_min_bKF, reco_dRblight_max_bKF, reco_dRbW_bKF, reco_dRbb_bKF, reco_dPhi_bb_bKF, reco_dPhi_light_bKF, reco_dPhi_bW_bKF, reco_ttbar_mass_bKF, redTopMass_old_bKF, redTopMass_new_bKF, redTopMass_bKF, redMlbMass_bKF, reco_mbjj_div_mjj_bKF, reco_mTW_bKF;
+double reco_W_mass_aKF, reco_top_mass_aKF, reco_top_mass_alt_aKF, reco_W_pt_aKF, reco_top_pt_aKF, reco_top_pt_alt_aKF, reco_mlb_aKF, reco_mlb_alt_aKF, reco_dRLepB_lep_aKF, reco_dRLepB_had_aKF, reco_dRlight_aKF, reco_dRblight_qsum_aKF, reco_dRblight_min_aKF, reco_dRblight_max_aKF, reco_dRbW_aKF, reco_dRbb_aKF, reco_dPhi_bb_aKF, reco_dPhi_light_aKF, reco_dPhi_bW_aKF, reco_ttbar_mass_aKF, redTopMass_old, redTopMass_new, redTopMass, redMlbMass, reco_mbjj_div_mjj, reco_new_var, reco_mTW_aKF;
 double tempDR;
 
 double matched_W_mass_q, matched_top_mass_q;
@@ -1389,8 +1407,8 @@ int main(int argc, char* argv[])
 //    minCutRedTopMass = 1.5;
 //    maxCutRedTopMass = 2.6;
     /// red mlb
-    minCutRedTopMass = 0.3;
-    maxCutRedTopMass = 2.0;
+    minCutRedTopMass = 0.35;
+    maxCutRedTopMass = 1.95;
   }
   
   ntupleDate = whichDate(systStr);
@@ -1730,6 +1748,7 @@ int main(int argc, char* argv[])
     nofCM_weighted = 0.; nofWM_weighted = 0.; nofUM_weighted = 0.; nofUM_TTsemilep_weighted = 0.; nofUM_TTother_weighted = 0.; nofUM_other_weighted = 0.;
     nofCMout_weighted = 0.; nofWMout_weighted = 0.; nofUMout_weighted = 0.; nofUMout_TTsemilep_weighted = 0.; nofUMout_TTother_weighted = 0.; nofUMout_other_weighted = 0.;
     nofCM_gate1 = 0.; nofWM_gate1 = 0.; nofUM_gate1 = 0.; nofCM_gate2 = 0.; nofWM_gate2 = 0.; nofUM_gate2 = 0.;
+    nofCM_gate3 = 0.; nofWM_gate3 = 0.; nofUM_gate3 = 0.; nofCM_gate4 = 0.; nofWM_gate4 = 0.; nofUM_gate4 = 0.;
     for (unsigned int i = 0; i < dMSPmax; i++)
     {
       nofBKF_weighted[i] = 0.;
@@ -2686,33 +2705,67 @@ int main(int argc, char* argv[])
         
         if (! isData)
         {
-          if (hadronicTopJetsMatched)
+          if (useNewVar)
           {
-            /// Correct match
-            if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+            if ( leptonicTopMatched )
             {
-              isCM = true;
-              nofCorrectlyMatched++;
+              if ( labelsReco[3] == MCPermutation[3].first )  // correct b jet for leptonic top quark
+              {
+                isCM = true;
+                nofCorrectlyMatched++;
+              }
+              else  // wrong b jet
+              {
+                isWM = true;
+                nofNotCorrectlyMatched++;
+              }
             }
-            else  // wrong permutation
+            else  // no match
             {
-              isWM = true;
-              nofNotCorrectlyMatched++;
+              isUM = true;
+              nofUnmatched++;
+              if (isTTsemilep)
+              {
+                isUM_TTsemilep = true;
+                nofUnmatchedTTsemilep++;
+              }
+              else if (isTTother)
+              {
+                isUM_TTother = true;
+                nofUnmatchedTTother++;
+              }
             }
-          }  // end hadrTopMatch
-          else  // no match
+          }
+          else
           {
-            isUM = true;
-            nofUnmatched++;
-            if (isTTsemilep)
+            if (hadronicTopJetsMatched)
             {
-              isUM_TTsemilep = true;
-              nofUnmatchedTTsemilep++;
-            }
-            else if (isTTother)
+              /// Correct match
+              if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+              {
+                isCM = true;
+                nofCorrectlyMatched++;
+              }
+              else  // wrong permutation
+              {
+                isWM = true;
+                nofNotCorrectlyMatched++;
+              }
+            }  // end hadrTopMatch
+            else  // no match
             {
-              isUM_TTother = true;
-              nofUnmatchedTTother++;
+              isUM = true;
+              nofUnmatched++;
+              if (isTTsemilep)
+              {
+                isUM_TTsemilep = true;
+                nofUnmatchedTTsemilep++;
+              }
+              else if (isTTother)
+              {
+                isUM_TTother = true;
+                nofUnmatchedTTother++;
+              }
             }
           }
           
@@ -2746,6 +2799,7 @@ int main(int argc, char* argv[])
         reco_top_pt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[2]]).Pt();
         reco_top_pt_alt_bKF = (selectedJets[labelsReco[0]] + selectedJets[labelsReco[1]] + selectedJets[labelsReco[3]]).Pt();
         reco_mlb_bKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
+        reco_mlb_alt_bKF = (selectedLepton[0] + selectedJets[labelsReco[2]]).M();
         reco_dRLepB_lep_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
         reco_dRLepB_had_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
         reco_dRlight_bKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[0]], selectedJets[labelsReco[1]] );  // deltaR between light jets
@@ -2817,7 +2871,11 @@ int main(int argc, char* argv[])
           FillMSPlots(dMSP, doneKinFit);
           //FillControlPlots(datasetsMSP, dMSP);
           
-          if (! isData) histo2D["qqb1_vs_qqb2"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF, widthSF);
+          if (! isData)
+          {
+            histo2D["qqb1_vs_qqb2"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF, widthSF);
+            histo2D["lb1_vs_lb2"+catSuffix]->Fill(reco_mlb_bKF, reco_mlb_alt_bKF, widthSF);
+          }
           
           MSPlot["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
           for (int iJet = 0; iJet < selectedJets.size(); iJet++)
@@ -2897,6 +2955,7 @@ int main(int argc, char* argv[])
           nofAcceptedKFit++;
           nofAcceptedKFitWeighted += scaleFactor;
           if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
+          if (leptonicTopMatched) nofLeptMatchedEventsAKF++;
           if (isCM) nofCorrectlyMatchedAKF++;
           else if (isWM) nofNotCorrectlyMatchedAKF++;
           else if (isUM)
@@ -2964,6 +3023,7 @@ int main(int argc, char* argv[])
         reco_top_pt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJetsKFcorrected[2]).Pt();
         reco_top_pt_alt_aKF = (selectedJetsKFcorrected[0] + selectedJetsKFcorrected[1] + selectedJets[labelsReco[3]]).Pt();
         reco_mlb_aKF = (selectedLepton[0] + selectedJets[labelsReco[3]]).M();
+        reco_mlb_alt_aKF = (selectedLepton[0] + selectedJets[labelsReco[2]]).M();
         reco_dRLepB_lep_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[3]], selectedLepton[0] );  // deltaR between lepton and leptonic b jet
         reco_dRLepB_had_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJets[labelsReco[2]], selectedLepton[0] );  // deltaR between lepton and hadronic b jet
         reco_dRlight_aKF = ROOT::Math::VectorUtil::DeltaR( selectedJetsKFcorrected[0], selectedJetsKFcorrected[1] );  // deltaR between light jets
@@ -2998,9 +3058,9 @@ int main(int argc, char* argv[])
         //reco_new_var = reco_mbjj_div_mjj;
         reco_new_var = redMlbMass;
         
-//         if (isCM)      nofCM_gate1 += lumiWeight*scaleFactor*widthSF;
-//         else if (isWM) nofWM_gate1 += lumiWeight*scaleFactor*widthSF;
-//         else if (isUM) nofUM_gate1 += lumiWeight*scaleFactor*widthSF;
+        if (isCM)      nofCM_gate3 += lumiWeight*scaleFactor*widthSF;
+        else if (isWM) nofWM_gate3 += lumiWeight*scaleFactor*widthSF;
+        else if (isUM) nofUM_gate3 += lumiWeight*scaleFactor*widthSF;
         
         if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
         //if ( reco_top_mass_aKF - reco_top_mass_bKF > 25 || reco_top_mass_aKF - reco_top_mass_bKF < -25 ) continue;
@@ -3009,15 +3069,16 @@ int main(int argc, char* argv[])
         
 //        if ( fabs(reco_top_mass_aKF - reco_top_mass_alt_aKF) < 20. ) continue;
         
-        if ( reco_top_mass_alt_aKF < maxTopMass-5 ) continue;
+        //if ( reco_top_mass_alt_aKF < maxTopMass-5 ) continue;
+        if ( reco_mlb_alt_aKF < 150. ) continue;
         if ( reco_mlb_aKF > 220. ) continue;
         //if ( fabs(reco_top_mass_aKF - reco_top_mass_bKF) > 40. ) continue;
         
         //if ( reco_mbjj_div_mjj_bKF < 1.5 || reco_mbjj_div_mjj_bKF > 2.6 ) continue;
         
-//         if (isCM)      nofCM_gate2 += lumiWeight*scaleFactor*widthSF;
-//         else if (isWM) nofWM_gate2 += lumiWeight*scaleFactor*widthSF;
-//         else if (isUM) nofUM_gate2 += lumiWeight*scaleFactor*widthSF;
+        if (isCM)      nofCM_gate4 += lumiWeight*scaleFactor*widthSF;
+        else if (isWM) nofWM_gate4 += lumiWeight*scaleFactor*widthSF;
+        else if (isUM) nofUM_gate4 += lumiWeight*scaleFactor*widthSF;
         
         nofAfterLastCut++;
         
@@ -3329,6 +3390,7 @@ int main(int argc, char* argv[])
             nofCM_weighted = 0.; nofWM_weighted = 0.; nofUM_weighted = 0.; nofUM_TTsemilep_weighted = 0.; nofUM_TTother_weighted = 0.; nofUM_other_weighted = 0.;
             nofCMout_weighted = 0.; nofWMout_weighted = 0.; nofUMout_weighted = 0.; nofUMout_TTsemilep_weighted = 0.; nofUMout_TTother_weighted = 0.; nofUMout_other_weighted = 0.;
             nofCM_gate1 = 0.; nofWM_gate1 = 0.; nofUM_gate1 = 0.; nofCM_gate2 = 0.; nofWM_gate2 = 0.; nofUM_gate2 = 0.;
+            nofCM_gate3 = 0.; nofWM_gate3 = 0.; nofUM_gate3 = 0.; nofCM_gate4 = 0.; nofWM_gate4 = 0.; nofUM_gate4 = 0.;
             
             hasFoundTTbar = false;
             doReweighting = false;
@@ -3360,9 +3422,13 @@ int main(int argc, char* argv[])
       {
         cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
         cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofAfterDRmaxcut) << "%)" << endl;
-        if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAfterLastCut) << "%)" << endl;
+        if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
+        cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofAfterDRmaxcut) << "%)" << endl;
+        if (doKinFit) cout << "Number of events with leptonic top matched (after KF):  " << setw(8) << right << nofLeptMatchedEventsAKF << " (" << 100*((float)nofLeptMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
         if (! doGenOnly)
         {
+          if (useNewVar) cout << "--- Matching leptonic top quark ---" << endl;
+          else cout << "--- Matching hadronic top quark ---" << endl;
           cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatched << endl;
           cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatched << endl;
           cout << "Unmatched reconstructed events            : " << setw(8) << right << nofUnmatched << endl;
@@ -3449,8 +3515,10 @@ int main(int argc, char* argv[])
     if (! doGenOnly)
     {
       cout << endl;
-      cout << "Number of events before cut:  CM: " << nofCM_gate1 << " (" << 100*nofCM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   WM: " << nofWM_gate1 << " (" << 100*nofWM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   UM: " << nofUM_gate1 << " (" << 100*nofUM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   Total: " << nofCM_gate1+nofWM_gate1+nofUM_gate1 << endl;
-      cout << "Number of events after cut :  CM: " << nofCM_gate2 << " (" << 100*nofCM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   WM: " << nofWM_gate2 << " (" << 100*nofWM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   UM: " << nofUM_gate2 << " (" << 100*nofUM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   Total: " << nofCM_gate2+nofWM_gate2+nofUM_gate2 << endl;
+      cout << "Number of events before cut    :  CM: " << nofCM_gate1 << " (" << 100*nofCM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   WM: " << nofWM_gate1 << " (" << 100*nofWM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   UM: " << nofUM_gate1 << " (" << 100*nofUM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   Total: " << nofCM_gate1+nofWM_gate1+nofUM_gate1 << endl;
+      cout << "Number of events after cut     :  CM: " << nofCM_gate2 << " (" << 100*nofCM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   WM: " << nofWM_gate2 << " (" << 100*nofWM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   UM: " << nofUM_gate2 << " (" << 100*nofUM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   Total: " << nofCM_gate2+nofWM_gate2+nofUM_gate2 << endl;
+      cout << "Number of events aKF before cut:  CM: " << nofCM_gate3 << " (" << 100*nofCM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   WM: " << nofWM_gate3 << " (" << 100*nofWM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   UM: " << nofUM_gate3 << " (" << 100*nofUM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   Total: " << nofCM_gate3+nofWM_gate3+nofUM_gate3 << endl;
+      cout << "Number of events aKF after cut :  CM: " << nofCM_gate4 << " (" << 100*nofCM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   WM: " << nofWM_gate4 << " (" << 100*nofWM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   UM: " << nofUM_gate4 << " (" << 100*nofUM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   Total: " << nofCM_gate4+nofWM_gate4+nofUM_gate4 << endl;
     }
     
     
@@ -4202,7 +4270,8 @@ void InitMSPlots()
     MSPlot["top_pt_cand_diff"] = new MultiSamplePlot(datasetsMSP, "P_{T} difference between top quark candidates before kinFitter", 60, -150, 150, "p_{T,t} - p_{T,t'}", "GeV");
   
   MSPlot["mlb"] = new MultiSamplePlot(datasetsMSP, "mlb before kinFitter", 80, 0, 800, "m_{lb}", "GeV");
-  MSPlot["red_mlb_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass before kinFitter", 100, 0., 2.5, "m_{lb,r}");
+  MSPlot["mlb_alt"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb before kinFitter", 80, 0, 800, "m_{lb,alt}", "GeV");
+  MSPlot["red_mlb_mass"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass before kinFitter", 120, 0., 3.0, "m_{lb,r}");
   
   MSPlot["ttbar_mass"] = new MultiSamplePlot(datasetsMSP, "ttbar mass before kinFitter", 50, 0, 1000, "m_{t#bar{t}}", "GeV");
   MSPlot["mass_bjj_div_m_jj"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by W boson mass before kinfit cut", 50, 1., 3.5, "m_{bjj} /m_{jj}");
@@ -4243,7 +4312,8 @@ void InitMSPlots()
     MSPlot["lept_b_jet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "p_{T} of the leptonic b jet after KF cuts", 80, 0, 400, "p_{T}", "GeV");
     
     MSPlot["mlb_aKF"] = new MultiSamplePlot(datasetsMSP, "mlb after kinFitter", 80, 0, 800, "m_{lb}", "GeV");
-    MSPlot["red_mlb_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass after kinFitter", 100, 0., 2.5, "m_{lb,r}");
+    MSPlot["mlb_alt_aKF"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb after kinFitter", 80, 0, 800, "m_{lb,alt}", "GeV");
+    MSPlot["red_mlb_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass after kinFitter", 120, 0., 3.0, "m_{lb,r}");
     
     MSPlot["ttbar_mass_aKF"] = new MultiSamplePlot(datasetsMSP, "ttbar mass after kinFitter", 50, 0, 1000, "m_{t#bar{t}}", "GeV");
     MSPlot["mass_bjj_div_m_jj_aKF"] = new MultiSamplePlot(datasetsMSP, "Top quark mass divided by W boson mass", 50, 1., 3.5, "m_{bjj} /m_{jj}");
@@ -4354,6 +4424,9 @@ void InitHisto1D()
   histo1D["mlb_CM"]  = new TH1F("minMlb_CM","m_{lb} mass for events that have a correct hadronic top match (CM); m_{lb} [GeV]", 400, 0, 800);
   histo1D["mlb_WM"]  = new TH1F("minMlb_WM","m_{lb} for events that have a wrong hadronic top match (WM); m_{lb} [GeV]", 400, 0, 800);
   histo1D["mlb_UM"]  = new TH1F("minMlb_UM","m_{lb} for events that have no hadronic top match (UM); m_{lb} [GeV]", 400, 0, 800);
+  histo1D["mlb_alt_CM"]  = new TH1F("minMlb_alt_CM","Alternative m_{lb} mass for events that have a correct match (CM); m_{lb} [GeV]", 400, 0, 800);
+  histo1D["mlb_alt_WM"]  = new TH1F("minMlb_alt_WM","Alternative m_{lb} for events that have a wrong match (WM); m_{lb} [GeV]", 400, 0, 800);
+  histo1D["mlb_alt_UM"]  = new TH1F("minMlb_alt_UM","Alternative m_{lb} for events that have no match (UM); m_{lb} [GeV]", 400, 0, 800);
   histo1D["red_mlb_mass_TT_CM"] = new TH1F("red_mlb_mass_TT_CM","Reduced m_{lb} mass for matched TT sample (reco, correct top match); m_{lb,r}", 100, 0., 2.5);
   histo1D["red_mlb_mass_TT_WMUM"] = new TH1F("red_mlb_mass_TT_WMUM","Reduced m_{lb} mass for unmatched TT sample (reco, no correct top match); m_{lb,r}", 100, 0., 2.5);
   histo1D["red_mlb_mass_TT_UM"] = new TH1F("red_mlb_mass_TT_UM","Reduced m_{lb} mass for unmatched TT sample (reco, no top match); m_{lb,r}", 100, 0., 2.5);
@@ -4448,6 +4521,13 @@ void InitHisto2D()
   histo2D["qqb1_vs_qqb2_aKF_CM"] = new TH2F("qqb1_vs_qqb2_aKF_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{qqb_{1}} [GeV]; m_{qqb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
   histo2D["qqb1_vs_qqb2_aKF_WM"] = new TH2F("qqb1_vs_qqb2_aKF_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{qqb_{1}} [GeV]; m_{qqb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
   histo2D["qqb1_vs_qqb2_aKF_UM"] = new TH2F("qqb1_vs_qqb2_aKF_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{qqb_{1}} [GeV]; m_{qqb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  
+  histo2D["lb1_vs_lb2_CM"] = new TH2F("lb1_vs_lb2_CM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, correct match); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  histo2D["lb1_vs_lb2_WM"] = new TH2F("lb1_vs_lb2_WM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  histo2D["lb1_vs_lb2_UM"] = new TH2F("lb1_vs_lb2_UM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  histo2D["lb1_vs_lb2_aKF_CM"] = new TH2F("lb1_vs_lb2_aKF_CM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, correct match); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  histo2D["lb1_vs_lb2_aKF_WM"] = new TH2F("lb1_vs_lb2_aKF_WM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
+  histo2D["lb1_vs_lb2_aKF_UM"] = new TH2F("lb1_vs_lb2_aKF_UM","Reconstructed mlb mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{lb_{1}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
   
   //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
@@ -4699,9 +4779,17 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
     if ( MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 )
       hadronicTopJetsMatched_MCdef_ = true;
   }
+  if ( MCPermutation[3].first != 9999 )
+    leptonicBMatched = true;
   
   if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
     muonmatched = true;
+  
+  if ( muonmatched && leptonicBMatched )
+  {
+    leptonicTopMatched = true;
+    nofLeptMatchedEvents++;
+  }
 }
 
 void ClearMetaData()
@@ -4793,6 +4881,8 @@ void ClearMetaData()
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofHadrMatchedEventsAKF = 0;
+  nofLeptMatchedEvents = 0;
+  nofLeptMatchedEventsAKF = 0;
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
   nofUnmatched = 0;
@@ -4978,6 +5068,8 @@ void ClearMatching()
   all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
   hadronicTopJetsMatched = false;
   hadronicTopJetsMatched_MCdef_ = false;
+  leptonicTopMatched = false;
+  leptonicBMatched = false;
   for (int i = 0; i < 4; i++)
   {
     MCPermutation[i] = pair<unsigned int,unsigned int>(9999,9999);
@@ -5062,6 +5154,7 @@ void ClearVars()
   reco_top_pt_bKF = -1.;
   reco_top_pt_alt_bKF = -1.;
   reco_mlb_bKF = -1.;
+  reco_mlb_alt_bKF = -1.;
   reco_dRLepB_lep_bKF = -1.;
   reco_dRLepB_had_bKF = -1.;
   reco_dRlight_bKF = -1.;
@@ -5087,6 +5180,7 @@ void ClearVars()
   reco_top_pt_aKF = -1.;
   reco_top_pt_alt_aKF = -1.;
   reco_mlb_aKF = -1.;
+  reco_mlb_alt_aKF = -1.;
   reco_dRLepB_lep_aKF = -1.;
   reco_dRLepB_had_aKF = -1.;
   reco_dRlight_aKF = -1.;
@@ -5333,6 +5427,7 @@ void FillCatsPlots(string catSuffix)
     histo1D["mass_bjj_div_m_jj"+catSuffix]->Fill(reco_mbjj_div_mjj, widthSF);
     histo1D["mass_bjj_div_m_jj_2"+catSuffix]->Fill(80.385/172.5*reco_mbjj_div_mjj, widthSF);
     histo1D["mlb"+catSuffix]->Fill(reco_mlb_aKF, widthSF);
+    histo1D["mlb_alt"+catSuffix]->Fill(reco_mlb_alt_aKF, widthSF);
     histo1D["dR_lep_b_lep"+catSuffix]->Fill(reco_dRLepB_lep_aKF, widthSF);
     histo1D["dR_lep_b_had"+catSuffix]->Fill(reco_dRLepB_had_aKF, widthSF);
     histo1D["ttbar_mass"+catSuffix]->Fill(reco_ttbar_mass_aKF, widthSF);
@@ -5342,6 +5437,7 @@ void FillCatsPlots(string catSuffix)
     histo2D["dR_bW_dR_light"+catSuffix]->Fill(reco_dRbW_aKF, reco_dRlight_aKF, widthSF);
     histo2D["ttbar_mass_vs_minMlb"+catSuffix]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
     histo2D["qqb1_vs_qqb2_aKF"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, widthSF);
+    histo2D["lb1_vs_lb2_aKF"+catSuffix]->Fill(reco_mlb_aKF, reco_mlb_alt_aKF, widthSF);
 //    if ( reco_dRLepB_lep < 3. )
 //    {
 //      histo2D[("ttbar_mass_vs_minMlb_dRlepCut"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
@@ -5422,6 +5518,7 @@ void FillMSPlots(int d, bool doneKinFit)
     MSPlot["lept_b_jet_pT"]->Fill(selectedJets[labelsReco[3]].Pt(), datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     
     MSPlot["mlb"]->Fill(reco_mlb_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["mlb_alt"]->Fill(reco_mlb_alt_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["red_mlb_mass"]->Fill(redMlbMass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["ttbar_mass"]->Fill(reco_ttbar_mass_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["mass_bjj_div_m_jj"]->Fill(reco_mbjj_div_mjj_bKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
@@ -5475,6 +5572,7 @@ void FillMSPlots(int d, bool doneKinFit)
     MSPlot["lept_b_jet_pT"+suffix]->Fill(selectedJets[labelsReco[3]].Pt(), datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     
     MSPlot["mlb"+suffix]->Fill(reco_mlb_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlot["mlb_alt"+suffix]->Fill(reco_mlb_alt_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["red_mlb_mass"+suffix]->Fill(redMlbMass, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["ttbar_mass"+suffix]->Fill(reco_ttbar_mass_aKF, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlot["mass_bjj_div_m_jj"+suffix]->Fill(reco_mbjj_div_mjj, datasetsMSP[d], true, lumiWeight*scaleFactor*widthSF);
