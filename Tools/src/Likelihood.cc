@@ -157,7 +157,12 @@ void Likelihood::BookHistograms()
     {
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
       /// red mlb
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 90, 0., 2.5);  // 75 bins
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 55, 0., 2.5);  // 75,90 bins
+//       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_79b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_79b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 79, 0., 2.5);
+//       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_82b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_82b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 82, 0., 2.5);
+//       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_86b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_86b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 86, 0., 2.5);
+       /// dR(lep,b)
+       //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; dR(l,b_{l})").c_str(), 80, 0.4, 4.4);  // 75,90 bins
       /// New var
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);
     }
@@ -179,6 +184,10 @@ void Likelihood::FillHistograms(double redMass, double relativeSF, double hadTop
       else thisWidthSF_ = 1.;
       
       histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_90b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+      // mlb
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_79b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_82b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
+//      histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_86b").c_str()]->Fill(redMass, relativeSF*thisWidthSF_);
     }
   }
 }
@@ -209,7 +218,31 @@ void Likelihood::GetHistogram(int iCat)
   /// Get histo to smooth
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
   histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
+  
+  int nBins = histoSm_[histoName_]->GetNbinsX();
+  // Remove high spikes in flanks
+  for (int i = 2; i < nBins-1; i++)
+  {
+    if ( histoSm_[histoName_]->GetBinCenter(i) < 0.9 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+2) )
+      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+    //else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.2 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+    else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.5 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+  }
+  // Remove small dips due to stats
+  for (int i = 2; i < nBins-1; i++)
+  {
+    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+  }
+  for (int i = 2; i < nBins-1; i++) // second iteration
+  {
+    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+  }
+  
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
+  //else histoSm_[histoName_]->Smooth(1);
   histoSm_[histoName_]->Write();
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
@@ -386,6 +419,9 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
     /// Fill TGraph2D
     for (int iCentre = 0; iCentre < nEval; iCentre++)
     {
+      //if ( likelihoodValues[iCentre] < 1. )
+      //if ( widthArray_[iWidth] > 0.35 && widthArray_[iWidth] < 0.65 && evalPoints[iCentre] > 0.7 && evalPoints[iCentre] < 0.78 )
+      //  std::cout << "Point " << gLL2D_->GetN() << ":  " << evalPoints[iCentre] << "  " << widthArray_[iWidth] << "   " << likelihoodValues[iCentre] << std::endl;
       gLL2D_->SetPoint(gLL2D_->GetN(), evalPoints[iCentre], widthArray_[iWidth], likelihoodValues[iCentre]);
     }
     
