@@ -23,12 +23,15 @@ string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_
 string listFileName = "list_syst.txt";
 
 /// 1D
-// no dR cut
-//const double calCurvePar_[2] = {-0.111927, 1.0752};
-//const double calCurveParUnc_[2] = {0.04433, 0.0183196};
+// parameter = dR(lep,b)
+//const double calCurvePar_[2] = {0.5741, 0.1593};
+//const double calCurveParUnc_[2] = {0.03484, 0.0152};
+// parameter = redMlb
+const double calCurvePar_[2] = {-0.124131, 1.07867};       // UPDATE !!
+const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // UPDATE !!
 // parameter = redTopMass_old
-const double calCurvePar_[2] = {-0.124131, 1.07867};  // cut = 3   // {-0.111927, 1.0752};  // cut = 2
-const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // cut = 3   // {0.04433, 0.0183196};  // cut = 2
+//const double calCurvePar_[2] = {-0.124131, 1.07867};  // cut = 3   // {-0.111927, 1.0752};  // cut = 2
+//const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // cut = 3   // {0.04433, 0.0183196};  // cut = 2
 //const double calCurvePar_[2] = {-0.193055, 1.05465};  // new redTopMass  //{-0.132933, 1.07876};  // old redTopMass
 //const double calCurveParUnc_[2] = {0.036635, 0.0168618};  // new redTopMass  //{0.0439721, 0.0183862};  // old redTopMass
 /// 2D

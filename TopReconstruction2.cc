@@ -53,14 +53,14 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("171015","170921");
+    return pair<string,string>("171121","171021");
   }
-  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("170922","170921");
-  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("170923","170921");
+  else if ( syst.find("JESup") != std::string::npos ) return pair<string,string>("171022","171021");
+  else if ( syst.find("JESdown") != std::string::npos ) return pair<string,string>("171023","171021");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("171015","171021");
+    return pair<string,string>("171121","171021");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
@@ -78,6 +78,8 @@ int nofAfterDRmincut = 0;
 int nofMatchedEvents = 0;
 int nofHadrMatchedEvents = 0;
 int nofHadrMatchedEventsAKF = 0;
+int nofLeptMatchedEvents = 0;
+int nofLeptMatchedEventsAKF = 0;
 int nofCorrectlyMatched = 0;
 int nofNotCorrectlyMatched = 0;
 int nofUnmatched = 0;
@@ -87,6 +89,12 @@ int nofUnmatchedAKF = 0;
 int nofCorrectlyMatchedAKFNoCut = 0;
 int nofNotCorrectlyMatchedAKFNoCut = 0;
 int nofUnmatchedAKFNoCut = 0;
+int nofCorrectlyMatchedl = 0;
+int nofNotCorrectlyMatchedl = 0;
+int nofUnmatchedl = 0;
+int nofCorrectlyMatchedlAKF = 0;
+int nofNotCorrectlyMatchedlAKF = 0;
+int nofUnmatchedlAKF = 0;
 
 int corrMatchHadrB = 0;
 
@@ -172,13 +180,6 @@ Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
 Bool_t          hasErasedBadOrCloneMuon;
-// Bool_t          filterHBHENoise;
-// Bool_t          filterHBHEIso;
-// Bool_t          filterCSCTightHalo;
-// Bool_t          filterEcalDeadCell;
-// Bool_t          filterEEBadSc;
-// Bool_t          filterBadChCand;
-// Bool_t          filterBadMuon;
 Bool_t          passedMETFilter = true;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
@@ -233,11 +234,7 @@ Bool_t          mc_isPromptFinalState[200];   //[nMCParticles]
 Bool_t          mc_isHardProcess[200];   //[nMCParticles]
 Bool_t          mc_fromHardProcessFinalState[200];   //[nMCParticles]
 Bool_t          hasGenTop;
-// Bool_t          hasGenTopWithStatus22;
-// Bool_t          hasGenTopWithStatus62;
 Bool_t          hasGenAntiTop;
-// Bool_t          hasGenAntiTopWithStatus22;
-// Bool_t          hasGenAntiTopWithStatus62;
 Double_t        weight1001;
 Double_t        weight1002;
 Double_t        weight1003;
@@ -289,19 +286,10 @@ Int_t           appliedJER;
 Int_t           appliedJES;
 Int_t           appliedPU;
 // Long64_t        nofEventsWithGenTop;
-// Long64_t        nofEventsWithGenTopWithStatus22or62;
 // Long64_t        nofEventsWithGenAntiTop;
-// Long64_t        nofEventsWithGenAntiTopWithStatus22or62;
-// Long64_t        nofTTEventsWithoutBothGenTops;
 Long64_t        nofTTEventsWithoutAGenTop;
 // Long64_t        nofTTEventsWithoutGenTop;
 // Long64_t        nofTTEventsWithoutGenAntiTop;
-// Long64_t        nofTTEventsWithoutBothGenTopsWithStatus22;
-// Long64_t        nofTTEventsWithoutGenTopWithStatus22;
-// Long64_t        nofTTEventsWithoutGenAntiTopWithStatus22;
-// Long64_t        nofTTEventsWithoutBothGenTopsWithStatus62;
-// Long64_t        nofTTEventsWithoutGenTopWithStatus62;
-// Long64_t        nofTTEventsWithoutGenAntiTopWithStatus62;
 Double_t        sumWeight1001;
 Double_t        sumWeight1002;
 Double_t        sumWeight1003;
@@ -321,14 +309,6 @@ TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
 TBranch        *b_hasErasedBadOrCloneMuon;   //!
-// TBranch        *b_filterHBHENoise;   //!
-// TBranch        *b_filterHBHEIso;   //!
-// TBranch        *b_filterCSCTightHalo;   //!
-// TBranch        *b_filterEcalDeadCell;   //!
-// TBranch        *b_filterEEBadSc;   //!
-// TBranch        *b_filterBadChCand;   //!
-// TBranch        *b_filterBadMuon;   //!
-// TBranch        *b_passedMETFilter;   //!
 TBranch        *b_nMuons;   //!
 TBranch        *b_muon_charge;   //!
 TBranch        *b_muon_pt;   //!
@@ -382,11 +362,7 @@ TBranch        *b_mc_isPromptFinalState;   //!
 TBranch        *b_mc_isHardProcess;   //!
 TBranch        *b_mc_fromHardProcessFinalState;   //!
 TBranch        *b_hasGenTop;   //!
-// TBranch        *b_hasGenTopWithStatus22;   //!
-// TBranch        *b_hasGenTopWithStatus62;   //!
 TBranch        *b_hasGenAntiTop;   //!
-// TBranch        *b_hasGenAntiTopWithStatus22;   //!
-// TBranch        *b_hasGenAntiTopWithStatus62;   //!
 TBranch        *b_weight1001;   //!
 TBranch        *b_weight1002;   //!
 TBranch        *b_weight1003;   //!
@@ -432,19 +408,10 @@ TBranch        *b_appliedJER;   //!
 TBranch        *b_appliedJES;   //!
 TBranch        *b_appliedPU;   //!
 // TBranch        *b_nofEventsWithGenTop;   //!
-// TBranch        *b_nofEventsWithGenTopWithStatus22or62;   //!
 // TBranch        *b_nofEventsWithGenAntiTop;   //!
-// TBranch        *b_nofEventsWithGenAntiTopWithStatus22or62;   //!
-// TBranch        *b_nofTTEventsWithoutBothGenTops;   //!
 TBranch        *b_nofTTEventsWithoutAGenTop;   //!
 // TBranch        *b_nofTTEventsWithoutGenTop;   //!
 // TBranch        *b_nofTTEventsWithoutGenAntiTop;   //!
-// TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus22;   //!
-// TBranch        *b_nofTTEventsWithoutGenTopWithStatus22;   //!
-// TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus22;   //!
-// TBranch        *b_nofTTEventsWithoutBothGenTopsWithStatus62;   //!
-// TBranch        *b_nofTTEventsWithoutGenTopWithStatus62;   //!
-// TBranch        *b_nofTTEventsWithoutGenAntiTopWithStatus62;   //!
 TBranch        *b_sumWeight1001;   //!
 TBranch        *b_sumWeight1002;   //!
 TBranch        *b_sumWeight1003;   //!
@@ -469,6 +436,7 @@ double massHadTopQ, massLepTopQ;
 string catSuffix = "";
 string catSuffixList[] = {"_CM", "_WM", "_UM"};
 bool isCM, isWM, isUM;
+bool isCMl, isWMl, isUMl;
 
 
 /// Define TLVs
@@ -494,6 +462,8 @@ bool all4PartonsMatched = false; // True if the 4 ttbar semi-lep partons are mat
 bool all4JetsMatched_MCdef_ = false; // True if the 4 highest pt jets are matched to the 4 ttbar semi-lep partons
 bool hadronicTopJetsMatched = false;
 bool hadronicTopJetsMatched_MCdef_ = false;
+bool leptonicTopMatched = false;
+bool leptonicBMatched = false;
 pair<unsigned int, unsigned int> MCPermutation[4] = {pair<unsigned int,unsigned int>(9999,9999)};
 int topQuark = -9999, antiTopQuark = -9999;
 int genmuon = -9999;
@@ -687,7 +657,7 @@ int main(int argc, char* argv[])
     {
       jet.Clear();
       jet.SetPtEtaPhiE(jet_pt[iJet], jet_eta[iJet], jet_phi[iJet], jet_E[iJet]);
-      if ( jet_pt[iJet] < 250. ) selectedJets.push_back(jet);
+      if ( jet_pt[iJet] > 30. && jet_pt[iJet] < 250. ) selectedJets.push_back(jet);
     }
     
     if ( selectedJets.size() < 4 ) continue;
@@ -922,11 +892,11 @@ int main(int argc, char* argv[])
     
 //    if ( labelsReco[0] == -9999 || labelsReco[1] == -9999 || labelsReco[2] == -9999 ) continue;
     
-//     if ( selectedJets.size() > 4)
+//     if ( selectedJets.size() >= 4)
 //     {
 //       for (int ijet = 0; ijet < selectedJets.size(); ijet++)
 //       {
-//         for (int jjet = ijet; jjet < selectedJets.size(); jjet++)
+//         for (int jjet = ijet+1; jjet < selectedJets.size(); jjet++)
 //         {
 //           for (int kjet = 0; kjet < selectedJets.size(); kjet++)
 //           {
@@ -979,6 +949,24 @@ int main(int argc, char* argv[])
     // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
     // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
     
+    if ( leptonicTopMatched )
+    {
+      if ( labelsReco[3] == MCPermutation[3].first )  // correct b jet for leptonic top quark
+      {
+        isCMl = true;
+        nofCorrectlyMatchedl++;
+      }
+      else  // wrong b jet
+      {
+        isWMl = true;
+        nofNotCorrectlyMatchedl++;
+      }
+    }
+    else  // no match
+    {
+      isUMl = true;
+      nofUnmatchedl++;
+    }
     
     if (hadronicTopJetsMatched)
     {
@@ -1170,10 +1158,14 @@ int main(int argc, char* argv[])
       if ( applyKinFitCut && kFitChi2_min > kinFitCutValue ) continue;
       nofAcceptedKFit++;
       nofAcceptedKFitWeighted += scaleFactor;
+      if (leptonicTopMatched) nofLeptMatchedEventsAKF++;
       if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
       if (isCM) nofCorrectlyMatchedAKF++;
       else if (isWM) nofNotCorrectlyMatchedAKF++;
       else if (isUM) nofUnmatchedAKF++;
+      if (isCMl) nofCorrectlyMatchedlAKF++;
+      else if (isWMl) nofNotCorrectlyMatchedlAKF++;
+      else if (isUMl) nofUnmatchedlAKF++;
       
       selectedJetsKFcorrected.clear();
 //       if (min12) selectedJetsKFcorrected = kf12->getCorrectedJets();
@@ -1266,7 +1258,7 @@ int main(int argc, char* argv[])
   if (nofHadrMatchedEvents > 0 )
   {
     cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
-    cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofMETCleaned) << "%)" << endl;
+    cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofAfterDRmincut) << "%)" << endl;
     if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
     
     
@@ -1278,7 +1270,7 @@ int main(int argc, char* argv[])
     
     if (doKinFit)
     {
-      cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched before kinfitter." << endl;
+      cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofAfterDRmincut << "% of all events is correctly matched before kinfitter." << endl;
       cout << " --- Kinematic fit --- Before chi2 cut --- " << endl;
       cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
       cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
@@ -1295,7 +1287,33 @@ int main(int argc, char* argv[])
       
       cout << "                        " << 100*(float)nofCorrectlyMatchedAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
     }
-    else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofMETCleaned << "% of all events is correctly matched." << endl;
+    else cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofAfterDRmincut << "% of all events is correctly matched." << endl;
+  }
+  cout << endl;
+  if (nofLeptMatchedEvents > 0 )
+  {
+    cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofAfterDRmincut) << "%)" << endl;
+    if (doKinFit) cout << "Number of events with leptonic top matched (after KF):  " << setw(8) << right << nofLeptMatchedEventsAKF << " (" << 100*((float)nofLeptMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
+    
+    
+    cout << "Correctly matched reconstructed events:     " << setw(8) << right << nofCorrectlyMatchedl << endl;
+    cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedl << endl;
+    if ( nofCorrectlyMatchedl != 0 || nofNotCorrectlyMatchedl != 0 )
+      cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedl / (float)(nofCorrectlyMatchedl + nofNotCorrectlyMatchedl) << "% of matched events is correctly matched." << endl;
+    
+    if (doKinFit)
+    {
+      cout << "                        " << 100*(float)nofCorrectlyMatchedl / (float)nofAfterDRmincut << "% of all events is correctly matched before kinfitter." << endl;
+      
+      cout << " --- Kinematic fit --- After chi2 cut --- " << endl;
+      cout << "Correctly matched reconstructed events (after KF): " << setw(8) << right << nofCorrectlyMatchedlAKF << endl;
+      cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedlAKF << endl;
+      if ( nofCorrectlyMatchedlAKF != 0 || nofNotCorrectlyMatchedlAKF != 0 )
+        cout << "   ===> This means that " << 100*(float)nofCorrectlyMatchedlAKF / (float)(nofCorrectlyMatchedlAKF + nofNotCorrectlyMatchedlAKF) << "% of matched events is correctly matched after KF." << endl;
+      
+      cout << "                        " << 100*(float)nofCorrectlyMatchedlAKF / (float)nofAcceptedKFit << "% of all events accepted by kinfitter is correctly matched." << endl;
+    }
+    else cout << "                        " << 100*(float)nofCorrectlyMatchedl / (float)nofAfterDRmincut << "% of all events is correctly matched." << endl;
   }
   
   cout << endl;
@@ -1757,9 +1775,17 @@ void TruthMatching(vector<TLorentzVector> partons, vector<TLorentzVector> select
     if ( MCPermutation[0].first < 4 && MCPermutation[1].first < 4 && MCPermutation[2].first < 4 )
       hadronicTopJetsMatched_MCdef_ = true;
   }
+  if ( MCPermutation[3].first != 9999 )
+    leptonicBMatched = true;
   
   if ( genmuon != -9999 && ROOT::Math::VectorUtil::DeltaR(mcParticles[genmuon], selectedLepton[0]) < 0.1 )
     muonmatched = true;
+  
+  if ( muonmatched && leptonicBMatched )
+  {
+    leptonicTopMatched = true;
+    nofLeptMatchedEvents++;
+  }
 }
 
 void ClearMetaData()
@@ -1777,19 +1803,10 @@ void ClearMetaData()
   appliedJES = 999;
   appliedPU = 999;
 //   nofEventsWithGenTop = 0;
-//   nofEventsWithGenTopWithStatus22or62 = 0;
 //   nofEventsWithGenAntiTop = 0;
-//   nofEventsWithGenAntiTopWithStatus22or62 = 0;
-//   nofTTEventsWithoutBothGenTops = 0;
   nofTTEventsWithoutAGenTop = 0;
 //   nofTTEventsWithoutGenTop = 0;
 //   nofTTEventsWithoutGenAntiTop = 0;
-//   nofTTEventsWithoutBothGenTopsWithStatus22 = 0;
-//   nofTTEventsWithoutGenTopWithStatus22 = 0;
-//   nofTTEventsWithoutGenAntiTopWithStatus22 = 0;
-//   nofTTEventsWithoutBothGenTopsWithStatus62 = 0;
-//   nofTTEventsWithoutGenTopWithStatus62 = 0;
-//   nofTTEventsWithoutGenAntiTopWithStatus62 = 0;
   sumWeight1001 = 0;
   sumWeight1002 = 0;
   sumWeight1003 = 0;
@@ -1810,6 +1827,8 @@ void ClearMetaData()
   nofMatchedEvents = 0;
   nofHadrMatchedEvents = 0;
   nofHadrMatchedEventsAKF = 0;
+  nofLeptMatchedEvents = 0;
+  nofLeptMatchedEventsAKF = 0;
   nofCorrectlyMatched = 0;
   nofNotCorrectlyMatched = 0;
   nofUnmatched = 0;
@@ -1819,6 +1838,12 @@ void ClearMetaData()
   nofCorrectlyMatchedAKFNoCut = 0;
   nofNotCorrectlyMatchedAKFNoCut = 0;
   nofUnmatchedAKFNoCut = 0;
+  nofCorrectlyMatchedl = 0;
+  nofNotCorrectlyMatchedl = 0;
+  nofUnmatchedl = 0;
+  nofCorrectlyMatchedlAKF = 0;
+  nofNotCorrectlyMatchedlAKF = 0;
+  nofUnmatchedlAKF = 0;
   nofAcceptedKFit = 0;
   nofAcceptedKFitWeighted = 0.;
 }
@@ -2009,6 +2034,9 @@ void ClearVars()
   isCM = false;
   isWM = false;
   isUM = false;
+  isCMl = false;
+  isWMl = false;
+  isUMl = false;
   doneKinFit = false;
   kFitVerbosity = false;
   kFitChi2_01 = 99.;
