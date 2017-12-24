@@ -163,7 +163,22 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "171222_1600/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+string inputDateLL = "171224_1628/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171224_1100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 30 < muon pT, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_2151/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_2127/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_2100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_2023/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1609/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.85, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1540/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1510/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1438/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.0, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1414/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1330/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.8, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1225/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.30 -> 1.7, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171223_1154/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.40 -> 1.7, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171222_2301/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.7, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171222_2041/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171222_1301/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171221_1730/";  // 1D likelihood; no WM; dR(lep,b), 30 < jet pT < 250, 0.5 -> 3.2, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171221_1428/";  // 1D likelihood; no WM; dR(lep,b), 30 < jet pT < 250, 0.5 -> 3.2, chi2 < 15, m_lb < 200 + cuts
@@ -459,6 +474,7 @@ double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
 //Double_t aveMlbMass = 95.2375, aveMlbMassCM = 96.6154;  //171214_1151
 //Double_t aveMlbMass = 95.2778, aveMlbMassCM = 96.7818;  //171214_1702
 Double_t aveMlbMass = 95.4439, aveMlbMassCM = 96.7972;  //171221_1152
+//Double_t aveMlbMass = 97.1223, aveMlbMassCM = 98.241;  //171224_1259, muon pT > 30
 
 /// Function prototypes
 struct HighestPt
