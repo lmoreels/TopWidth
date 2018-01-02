@@ -1,4 +1,5 @@
 *.d
+*.dSYM
 *.dylib
 *.o
 *.pcm
@@ -12,6 +13,7 @@
 *Class.C
 *Class.h
 Dict*
+LikelihoodTemplates/
 NtupleContent/
 NtupleOutput/
 Ntupler_an_Isis.cc
@@ -38,6 +40,7 @@ test*/
 toys/
 AverageMassCalculator
 CalculateExtraJESCorrections
+DrawCMTemplates
 DrawNormalisedSystematics
 GetFitParams
 Likelihood

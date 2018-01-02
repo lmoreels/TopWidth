@@ -44,6 +44,7 @@
 using namespace std;
 using namespace TopTree;
 
+bool runLocally = true;
 
 bool test = false;
 bool testHistos = false;
@@ -163,7 +164,9 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "171224_1628/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+string inputDateLL = "171229_1413/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171227_1455/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "171224_1628/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171224_1100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 30 < muon pT, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171223_2151/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171223_2127/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
@@ -473,7 +476,8 @@ double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
 //Double_t aveMlbMass = 93.1117, aveMlbMassCM = 95.0328;
 //Double_t aveMlbMass = 95.2375, aveMlbMassCM = 96.6154;  //171214_1151
 //Double_t aveMlbMass = 95.2778, aveMlbMassCM = 96.7818;  //171214_1702
-Double_t aveMlbMass = 95.4439, aveMlbMassCM = 96.7972;  //171221_1152
+//Double_t aveMlbMass = 95.4439, aveMlbMassCM = 96.7972;  //171221_1152
+Double_t aveMlbMass = 96.0903, aveMlbMassCM = 97.2532;  //171229_1402
 //Double_t aveMlbMass = 97.1223, aveMlbMassCM = 98.241;  //171224_1259, muon pT > 30
 
 /// Function prototypes
@@ -1457,10 +1461,20 @@ int main(int argc, char* argv[])
   }
   
   ntupleDate = whichDate(systStr);
-  pathNtuplesMC = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
-  pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
+  if (runLocally)
+  {
+    pathNtuplesMC   = "/Volumes/LaCie/Ntuples/"+ntupleDate.first+"/";
+    pathNtuplesData = "/Volumes/LaCie/Ntuples/"+ntupleDate.second+"/";
+    pathNtuplesSyst = "/Volumes/LaCie/Ntuples/"+ntupleSystDate+"/";
+  }
+  else
+  {
+    pathNtuplesMC   = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
+    pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
+    pathNtuplesSyst = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleSystDate+"/";
+  }
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
-  pathNtuplesSyst = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleSystDate+"/";
+  
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (calculateLikelihood) cout << "Calculating -loglikelihood values using templates from " << inputDateLL << endl;
   if (doPseudoExps)       cout << "              for pseudo experiments" << endl;
@@ -3222,6 +3236,7 @@ int main(int argc, char* argv[])
         if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
         if ( reco_mlb_aKF > 200. ) continue;
         if ( (reco_top_mass_aKF - reco_mlb_aKF) < 0. ) continue;
+        if ( (reco_top_mass_aKF - reco_mlb_aKF) > 150. ) continue;
         //if ( reco_mbjj_div_mjj_bKF < 1.5 || reco_mbjj_div_mjj_bKF > 2.6 ) continue;
         
         if (isCM)      nofCM_gate6 += lumiWeight*scaleFactor*widthSF;

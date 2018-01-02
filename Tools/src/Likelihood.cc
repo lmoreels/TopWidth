@@ -230,19 +230,19 @@ void Likelihood::GetHistogram(int iCat)
       histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
   }
   // Remove small dips due to stats
-  for (int i = 2; i < nBins-1; i++)
-  {
-    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
-      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
-  }
-  for (int i = 2; i < nBins-1; i++) // second iteration
-  {
-    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
-      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
-  }
+//  for (int i = 2; i < nBins-1; i++)
+//  {
+//    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+//      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+//  }
+//  for (int i = 2; i < nBins-1; i++) // second iteration
+//  {
+//    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+//      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+//  }
   
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
-  //else histoSm_[histoName_]->Smooth(1);
+  else histoSm_[histoName_]->Smooth(1);
   histoSm_[histoName_]->Write();
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
