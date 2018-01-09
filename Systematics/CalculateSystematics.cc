@@ -17,23 +17,33 @@ using namespace std;
 
 
 bool verbose_ = true;
+bool doMass = true;
 bool is2D = false;
 string suffix = "";
 string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
-/// 1D
+/// 1D width
 // parameter = dR(lep,b)
 //const double calCurvePar_[2] = {0.5741, 0.1593};
 //const double calCurveParUnc_[2] = {0.03484, 0.0152};
 // parameter = redMlb
-const double calCurvePar_[2] = {-0.124131, 1.07867};       // UPDATE !!
-const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // UPDATE !!
+//const double calCurvePar_[2] = {-0.124131, 1.09415};       // UPDATE !!
+//const double calCurveParUnc_[2] = {0.0442725, 0.0167612};  // UPDATE !!
 // parameter = redTopMass_old
+//const double calCurvePar_[2] = {-0.12086, 1.07155};        // 180108
+//const double calCurveParUnc_[2] = {0.0451059, 0.0168243};  // 180108
+const double calCurvePar_[2] = {-0.15551, 1.09669};        // 180107
+const double calCurveParUnc_[2] = {0.0469114, 0.0175116};  // 180107
+//const double calCurvePar_[2] = {-0.157852, 1.09451};       // 180103
+//const double calCurveParUnc_[2] = {0.0454934, 0.0170439};  // 180103
 //const double calCurvePar_[2] = {-0.124131, 1.07867};  // cut = 3   // {-0.111927, 1.0752};  // cut = 2
 //const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // cut = 3   // {0.04433, 0.0183196};  // cut = 2
 //const double calCurvePar_[2] = {-0.193055, 1.05465};  // new redTopMass  //{-0.132933, 1.07876};  // old redTopMass
 //const double calCurveParUnc_[2] = {0.036635, 0.0168618};  // new redTopMass  //{0.0439721, 0.0183862};  // old redTopMass
+/// 1D mass
+const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
+const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
 /// 2D
 const double calCurveParW_[2] = {-0.197866, 1.07643};
 const double calCurveParUncW_[2] = {0.0451828, 0.0180112};
@@ -82,6 +92,7 @@ double isNegative(double downVar);
 void IndexSystematics();
 void TestIndexing();
 std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double thisOutputWidthSigma);
+std::pair<double,double> ApplyCalibrationCurveMass(double thisOutputMass, double thisOutputMassSigma);
 std::pair<double,double> ApplyCalibrationCurveW(double thisOutputWidth, double thisOutputWidthSigma);
 std::pair<double,double> ApplyCalibrationCurveM(double thisOutputMass, double thisOutputMassSigma);
 void WriteShiftTable(double scale = 1.);
@@ -141,6 +152,7 @@ int main()
   ClearVars();
   
   if (is2D) suffix = "2D";
+  else if (doMass) suffix = "Mass";
   else suffix = "";
   inputFileDir = "Systematics/temp"+suffix+"/";
   
@@ -169,6 +181,7 @@ int main()
           thisCorrWidthValue = ApplyCalibrationCurveW(thisWidthValue, thisWidthUnc);
           thisCorrMassValue = ApplyCalibrationCurveM(thisMassValue, thisMassUnc);
         }
+        else if (doMass) thisCorrWidthValue = ApplyCalibrationCurveMass(thisWidthValue, thisWidthUnc);
         else thisCorrWidthValue = ApplyCalibrationCurve(thisWidthValue, thisWidthUnc);
         
         systName.push_back(thisSyst);
@@ -210,8 +223,8 @@ int main()
     diff = systWidthValue[iSys] - nomVal;
     if      ( iSys == indexFsrUP )    diff *= 1./sqrt(2.);
     else if ( iSys == indexFsrDOWN )  diff *= 1./sqrt(2.);
-    else if ( iSys == indexMassUP )   diff *= 1./3.;
-    else if ( iSys == indexMassDOWN ) diff *= 1./3.;
+//    else if ( iSys == indexMassUP )   diff *= 1./3.;
+//    else if ( iSys == indexMassDOWN ) diff *= 1./3.;
     
     systDifference.push_back(diff);
     uncDiff = TMath::Sqrt(systWidthUnc[iSys]*systWidthUnc[iSys] + nomValUnc*nomValUnc);
@@ -231,17 +244,6 @@ int main()
   maxCR = *max_element(CR.begin(), CR.end());
   minCR = *min_element(CR.begin(), CR.end());
   cout << "Maximum shift for colour reconnection is " << maxCR << " and minimum " << minCR << endl;
-  
-  totalShiftUp = TMath::Sqrt( (systDifference[indexLepIdUP])*(systDifference[indexLepIdUP]) + (systDifference[indexLepIsoUP])*(systDifference[indexLepIsoUP]) + (systDifference[indexLepTrigUP])*(systDifference[indexLepTrigUP]) + (systDifference[indexLepTrkUP])*(systDifference[indexLepTrkUP]) + (systDifference[indexBTagUP])*(systDifference[indexBTagUP]) + (systDifference[indexPuUP])*(systDifference[indexPuUP]) + (systDifference[indexLumiUP])*(systDifference[indexLumiUP]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + (systDifference[indexMassUP])*(systDifference[indexMassUP]) + (systDifference[indexFragSemiLepBrUP])*(systDifference[indexFragSemiLepBrUP]) + (systDifference[indexFragUP])*(systDifference[indexFragUP]) + (systDifference[indexFragPeterson])*(systDifference[indexFragPeterson]) + maxScale*maxScale + (systDifference[indexTuneUP])*(systDifference[indexTuneUP]) + maxCR*maxCR + (systDifference[indexHdampUP])*(systDifference[indexHdampUP]) + (systDifference[indexJesUP])*(systDifference[indexJesUP]));
-  totalShiftDown = TMath::Sqrt( (systDifference[indexLepIdDOWN])*(systDifference[indexLepIdDOWN]) + (systDifference[indexLepIsoDOWN])*(systDifference[indexLepIsoDOWN]) + (systDifference[indexLepTrigDOWN])*(systDifference[indexLepTrigDOWN]) + (systDifference[indexLepTrkDOWN])*(systDifference[indexLepTrkDOWN]) + (systDifference[indexBTagDOWN])*(systDifference[indexBTagDOWN]) + (systDifference[indexPuDOWN])*(systDifference[indexPuDOWN]) + (systDifference[indexLumiDOWN])*(systDifference[indexLumiDOWN]) + (systDifference[indexTopPt])*(systDifference[indexTopPt]) + (systDifference[indexMassDOWN])*(systDifference[indexMassDOWN]) +  (systDifference[indexFragSemiLepBrDOWN])*(systDifference[indexFragSemiLepBrDOWN]) + (systDifference[indexFragDOWN])*(systDifference[indexFragDOWN]) + (systDifference[indexFragPeterson])*(systDifference[indexFragPeterson]) + minScale*minScale + (systDifference[indexTuneDOWN])*(systDifference[indexTuneDOWN]) + minCR*minCR + (systDifference[indexHdampDOWN])*(systDifference[indexHdampDOWN]) + (systDifference[indexJesDOWN])*(systDifference[indexJesDOWN]));
-  cout << "Total systematic uncertainty is +" << totalShiftUp << " and -" << totalShiftDown << endl;
-  
-  // Test on fake data
-  testData = ApplyCalibrationCurve(0.798205, 0.193303);
-  cout << "For MC:   width = " << nomVal << " +- " << nomValUnc << endl;
-  cout << "For data: width = " << testData.first << " +- " << testData.second << " (stat.) +" << totalShiftUp << " -" << totalShiftDown << " (syst.)" << endl;
-  
-  cout << "Combination of statistical and systematic uncertainty gives +" << TMath::Sqrt( (testData.second)* (testData.second) + totalShiftUp*totalShiftUp ) << " and -" << TMath::Sqrt( (testData.second)* (testData.second) + totalShiftDown*totalShiftDown ) << endl;
   
   
   // Only add positive shift to positive unc & neg. shifts to neg. unc.
@@ -380,7 +382,7 @@ int main()
     tmp = isNegative(GetMinimum(indexLumiUP, indexLumiDOWN));
     shiftDown += tmp*tmp;
   }
-  if ( indexMassUP != -1 && indexMassDOWN != -1 )
+  if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexMassUP, indexMassDOWN));
     shiftDown += tmp*tmp;
@@ -442,11 +444,27 @@ int main()
   }
   shiftDown = sqrt(shiftDown);
   
-  cout << "Systematic up: " << shiftUp << "; systematic down: " << shiftDown << endl;
-  cout << "=====> Data: " << 1.31*testData.first << " +- " << 1.31*testData.second << " (stat.) +" << 1.31*shiftUp << " -" << 1.31*shiftDown << " (syst.)   = +" << 1.31*sqrt((testData.second)*(testData.second) + shiftUp*shiftUp) << " -" << 1.31*sqrt((testData.second)*(testData.second) + shiftDown*shiftDown) << " (total)" << endl;
+  cout << "Total systematic uncertainty: " << endl;
+  cout << "Up: " << shiftUp << "; down: " << shiftDown << endl;
+  
+  // Test on fake data
+  //testData = ApplyCalibrationCurve(0.798205, 0.193303);
+  //testData = ApplyCalibrationCurve(0.638646, 0.131186);  // 180103
+  testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
+  //testData = ApplyCalibrationCurve(0.608204, 0.13216);   // 180108
+  if (doMass) testData = ApplyCalibrationCurveMass(172.152, 0.107253);
+  cout << "Values before calibration curve: " << endl;
+  cout << "   MC:   width = " << nomVal << " +- " << nomValUnc << endl;
+  cout << "   data: width = " << testData.first << " +- " << testData.second << " (stat.) +" << shiftUp << " -" << shiftDown << " (syst.)";
+  if (doMass) cout << "   = +" << sqrt((testData.second)*(testData.second) + shiftUp*shiftUp) << " -" << sqrt((testData.second)*(testData.second) + shiftDown*shiftDown) << " (total)";
+  cout << endl;
+  
+  //cout << "Combination of statistical and systematic uncertainty gives +" << TMath::Sqrt( (testData.second)* (testData.second) + shiftUp*shiftUp ) << " and -" << TMath::Sqrt( (testData.second)* (testData.second) + shiftDown*shiftDown ) << endl;
+  
+  if (! doMass) cout << endl << "=====> Data: " << 1.31*testData.first << " +- " << 1.31*testData.second << " (stat.) +" << 1.31*shiftUp << " -" << 1.31*shiftDown << " (syst.)   = +" << 1.31*sqrt((testData.second)*(testData.second) + shiftUp*shiftUp) << " -" << 1.31*sqrt((testData.second)*(testData.second) + shiftDown*shiftDown) << " (total)" << endl;
   
   WriteShiftTable();
-  WriteShiftTable(1.31);
+  if (! doMass) WriteShiftTable(1.31);
   WriteRelTable();
   
   
@@ -946,6 +964,18 @@ std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double th
   return std::pair<double,double>(thisInputWidth,thisInputWidthSigma);
 }
 
+std::pair<double,double> ApplyCalibrationCurveMass(double thisOutputMass, double thisOutputMassSigma)
+{
+  /// return 'thisInputMass' and uncertainty
+  //  thisOutputMass = ParMass_[0] + ParMass_[1] * thisInputMass
+  
+  double thisInputMass = (thisOutputMass - calCurveParMass_[0])/calCurveParMass_[1];
+  //double thisInputMassSigma = TMath::Sqrt( thisOutputMassSigma*thisOutputMassSigma + calCurveParUncMass_[0]*calCurveParUncMass_[0] + calCurveParUncMass_[1]*calCurveParUncMass_[1]*thisInputMass*thisInputMass )/calCurveParMass_[1];
+  
+  //return std::pair<double,double>(thisInputMass,thisInputMassSigma);
+  return std::pair<double,double>(thisInputMass,thisOutputMassSigma);
+}
+
 std::pair<double,double> ApplyCalibrationCurveW(double thisOutputWidth, double thisOutputWidthSigma)
 {
   /// return 'thisInputWidth' and uncertainty
@@ -988,7 +1018,7 @@ void WriteShiftTable(double scale)
   fileOut << "   \\begin{center}" << endl;
   fileOut << "    %\\hspace{-2.6cm}" << endl;
   fileOut << "    {\\small" << endl;
-  fileOut << "    \\begin{tabular}{l S[table-format=1.4] S[table-format=1.4] S[table-format=1.4] S[table-format=1.4]}" << endl;  /// adapt!!
+  fileOut << "    \\begin{tabular}{l S[table-format=1.4] S[table-format=1.4] S[table-format=2.4] S[table-format=1.4]}" << endl;  /// adapt!!
   
   fileOut << hline << endl;
   fileOut << hline << endl;
@@ -1030,7 +1060,7 @@ void WriteShiftTable(double scale)
     fileOut << space << "Luminosity & " << fixed << setprecision(4) << scale*systDifference[indexLumiUP] << " &  & " << scale*systDifference[indexLumiDOWN] << " &  \\\\" << endl;
   }
   
-  if ( indexMassUP != -1 && indexMassDOWN != -1 )
+  if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
   {
     fileOut << interline << endl;
     fileOut << space << "Top mass & " << fixed << setprecision(4) << scale*systDifference[indexMassUP] << " &  & " << scale*systDifference[indexMassDOWN] << " &  \\\\" << endl;
@@ -1217,7 +1247,7 @@ void WriteRelTable()
     fileOut << space << "Luminosity & +" << fixed << setprecision(4) << systRelDifference[indexLumiUP] << " & " << fixed << setprecision(4) << systRelDifference[indexLumiDOWN] << " \\\\" << endl;
   }
   
-  if ( indexMassUP != -1 && indexMassDOWN != -1 )
+  if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
   {
     fileOut << interline << endl;
     fileOut << space << "Top mass & +" << systRelDifference[indexMassUP] << " & " << systRelDifference[indexMassDOWN] << " \\\\" << endl;

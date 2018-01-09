@@ -153,9 +153,9 @@ void LikelihoodMass::BookHistograms()
     
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 60, 0.5, 2.0);
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_60b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 60, 0.5, 2.0);
       histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_75b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
-//      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 125, 0., 2.5);  // 90 bins in range [0.5, 2.0] --> red mlb
       //histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{3/2}").c_str(), 50, 1., 3.5);  /// ONLY FOR NEW VAR !!!
 //      histo_[("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_mass"+thisMass_+"_100b").c_str(),("Reduced top mass for mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 100, 0.5, 2.0);
@@ -177,9 +177,9 @@ void LikelihoodMass::FillHistograms(double redMass, double relativeSF, double ha
       }
       else thisMassSF_ = 1.;
       
-//      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_60b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
+      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_60b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
       histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
-//      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
+      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
 //      histo_[("Red_top_mass"+catSuffix+"_mass"+thisMass_+"_100b").c_str()]->Fill(redMass, relativeSF*thisMassSF_);
     }
   }
@@ -210,7 +210,7 @@ void LikelihoodMass::GetHistogram(int iCat)
 
   /// Get histo to smooth
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
-  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_75b"]->Clone(histoName_.c_str());
+  histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
   histoSm_[histoName_]->Write();
 
@@ -297,6 +297,10 @@ void LikelihoodMass::ConstructTGraphsFromHisto(std::string tGraphFileName, std::
     double binCentreArray[nPoints], binContentArray[nCats_][nPoints];
     this->ClearArray(nPoints, binCentreArray);
     
+    /// Make likelihood functions
+    this->ClearArray(nEval, outputValues);
+    this->ClearArray(nEval, outputValuesTemp);
+    
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
       this->ClearArray(nPoints, binContentArray[iCat]);
@@ -308,10 +312,6 @@ void LikelihoodMass::ConstructTGraphsFromHisto(std::string tGraphFileName, std::
       
       this->WriteFuncOutput(nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_"+stringSuffix_[iCat]);
       this->MakeGraph(iCat, nPoints, binCentreArray, binContentArray[iCat], listCats_[iCat]+"_", true);
-      
-      /// Make likelihood functions
-      this->ClearArray(nEval, outputValues);
-      this->ClearArray(nEval, outputValuesTemp);
       
       histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
       histoNameSm_ = listCats_[iCat]+"_Sm_"+stringSuffix_[iCat];
@@ -720,26 +720,31 @@ std::pair<double,double> LikelihoodMass::CalculateOutputMass(int nn, double* LLv
 
 std::pair<double,double> LikelihoodMass::CalculateOutputMass(int nn, double* evalMasses, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile)
 {
-  TGraph *g = new TGraph(nn, evalMasses, LLvalues);
-  
   int locMin = LocMinArray(nn, LLvalues);
   //std::cout << "Index of minimum LL value is " << locMin << std::endl;
-  double centreVal = evalMasses[locMin];
-  if ( centreVal <= 171.5 )
+  if ( evalMasses[locMin] <= 171.5 )
   {
     double tempArray[nn-10];
     for (int i = 0; i < nn-10; i++) { tempArray[i] = LLvalues[i+10]; }
     int tempMin = LocMinArray(nn-10, tempArray); //std::cout << tempMin << "  " << evalMasses[tempMin] << std::endl;
-    if ( LLvalues[locMin+2] > tempArray[tempMin+2] ) centreVal = evalMasses[tempMin+10];
+    if ( LLvalues[locMin+2] > tempArray[tempMin+2] ) locMin = tempMin+10;
   }
-  else if ( centreVal > 173.5 )
+  else if ( evalMasses[locMin] > 173.5 )
   {
     double tempArray[nn-10];
     for (int i = 0; i < nn-10; i++) { tempArray[i] = LLvalues[i]; }
     int tempMin = LocMinArray(nn-10, tempArray); //std::cout << tempMin << "  " << evalMasses[tempMin] << std::endl;
-    if ( LLvalues[locMin+2] > tempArray[tempMin+2] ) centreVal = evalMasses[tempMin];
+    if ( LLvalues[locMin+2] > tempArray[tempMin+2] ) locMin = tempMin;
   }
+  double centreVal = evalMasses[locMin];
   
+  double temp;
+  TGraph *g = new TGraph();
+  for (int iMass = 0; iMass < nMasses_; iMass++)
+  {
+    temp = LLvalues[iMass] - LLvalues[locMin];
+    g->SetPoint(g->GetN(), massArray_[iMass], temp);
+  }
   
   double interval = 0.15;
 //   if ( centreVal <= interval ) interval = centreVal - 0.1;
@@ -763,7 +768,10 @@ std::pair<double,double> LikelihoodMass::CalculateOutputMass(int nn, double* eva
   
   if (verbose_) std::cout << "LikelihoodMass::CalculateOutputMass: Look for minimum in interval [" << fitmin << "," << fitmax << "] around " << centreVal << std::endl;
   
-  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+  //TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+  TF1 *parabola = new TF1("parabola", "[0]*(x - [1])*(x - [1]) + [2]", fitmin, fitmax);
+  parabola->SetParameter(0, 10.);
+  parabola->SetParameter(1, centreVal);
   
   g->Fit(parabola,"RWME");
   
@@ -781,8 +789,9 @@ std::pair<double,double> LikelihoodMass::CalculateOutputMass(int nn, double* eva
   
   double LLreduced[nn];
   for (int i = 0; i < nn; i++)
-    LLreduced[i] = LLvalues[i] - parabola->Eval(outputMass);
+    LLreduced[i] = LLvalues[i] - LLvalues[locMin] - parabola->Eval(outputMass);
   TGraph *g2 = new TGraph(nn, evalMasses, LLreduced);
+  //parabola->FixParameter(1, outputMass);
   g2->Fit(parabola,"RWME");
   
   if (makeNewFile)
@@ -1100,14 +1109,22 @@ void LikelihoodMass::DrawGraph(TGraph2D* g, std::string name)
   g->SetTitle((name+"; m_{r}; M_{t}").c_str());
   g->GetXaxis()->SetTitleOffset(1.5);
   g->GetYaxis()->SetTitleOffset(1.5);
+  c->SetName((name+"_surf1").c_str());
   g->Draw("surf1");
   c->Update();
   c->Write();
   c->SaveAs((outputDirName_+name+"_surf1.png").c_str());
+  c->SetName((name+"_contz2").c_str());
+  g->Draw("contz2");
+  c->Update();
+  c->Write();
+  c->SaveAs((outputDirName_+name+"_contz2.png").c_str());
+  c->SetName((name+"_colz").c_str());
   g->Draw("colz");
   c->Update();
   c->Write();
   c->SaveAs((outputDirName_+name+"_colz.png").c_str());
+  c->SetName((name+"_tri1p0").c_str());
   g->SetMarkerSize(0.5);
   g->Draw("tri1 p0");
   c->Update();
@@ -1135,9 +1152,28 @@ void LikelihoodMass::DrawLikelihoods()
   }
   c2->Write();
   c2->SaveAs((outputDirName_+"LogLikelihood_multi.png").c_str());
-  c2->Close();
   
   graph_["likelihood_mass"+stringMassArray_[0]]->SetTitle(temp.c_str());
+  
+  /// CM likelihood
+  c2->Clear();
+  c2->SetName("-log(likelihood) CM");
+  graph_["likelihood_CM_mass"+stringMassArray_[0]]->SetLineColor(colours[0]);
+  temp = graph_["likelihood_CM_mass"+stringMassArray_[0]]->GetTitle();
+  graph_["likelihood_CM_mass"+stringMassArray_[0]]->SetTitle("-LogLikelihood CM");
+  graph_["likelihood_CM_mass"+stringMassArray_[0]]->Draw();
+  c2->Update();
+  for (int i = 1; i < nMasses_; i++)
+  {
+    graph_["likelihood_CM_mass"+stringMassArray_[i]]->SetLineColor(colours[i%10]);
+    graph_["likelihood_CM_mass"+stringMassArray_[i]]->Draw("same");
+    c2->Update();
+  }
+  c2->Write();
+  c2->SaveAs((outputDirName_+"LogLikelihood_CM_multi.png").c_str());
+  c2->Close();
+  
+  graph_["likelihood_CM_mass"+stringMassArray_[0]]->SetTitle(temp.c_str());
   
   delete c2;
 }
