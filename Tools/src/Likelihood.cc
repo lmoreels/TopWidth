@@ -87,11 +87,13 @@ void Likelihood::MakeTable(double* array, int n, double min, double max)
   }
 }
 
-Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
-verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
+Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
+  
+  if (useNewVar) useHadVar_ = false;
   
   rangeRedMass_ = tls_->DotReplace(minRedMass_)+"To"+tls_->DotReplace(maxRedMass_);
   dirNameNEvents_ += rangeRedMass_+"/";
@@ -155,9 +157,9 @@ void Likelihood::BookHistograms()
     
     for (int iCat = 0; iCat < nCats_; iCat++)
     {
-      //histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
+      if (useHadVar_) histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);  // 90 bins in range [0.5, 2.0]
       /// red mlb
-      histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 75, 0., 2.5);  // 75,90 bins
+      else histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 80, 0., 2.5);  // 75 bins
 //       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_79b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_79b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 79, 0., 2.5);
 //       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_82b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_82b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 82, 0., 2.5);
 //       histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_86b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_86b").c_str(),("Reduced top mass for width "+thisWidth_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 86, 0., 2.5);
@@ -219,30 +221,33 @@ void Likelihood::GetHistogram(int iCat)
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat];
   histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
   
-  int nBins = histoSm_[histoName_]->GetNbinsX();
-  // Remove high spikes in flanks
-  for (int i = 2; i < nBins-1; i++)
+  if (! useHadVar_)
   {
-    if ( histoSm_[histoName_]->GetBinCenter(i) < 0.9 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+2) )
-      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
-    //else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.2 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
-    else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.5 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
-      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+    int nBins = histoSm_[histoName_]->GetNbinsX();
+    // Remove high spikes in flanks
+    for (int i = 2; i < nBins-1; i++)
+    {
+      if ( histoSm_[histoName_]->GetBinCenter(i) < 0.9 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+2) )
+        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+      //else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.2 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+      else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.5 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+    }
+    // Remove small dips due to stats
+//    for (int i = 2; i < nBins-1; i++)
+//    {
+//      if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+//        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+//    }
+//    for (int i = 2; i < nBins-1; i++) // second iteration
+//    {
+//      if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
+//        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+//    }
   }
-  // Remove small dips due to stats
-//  for (int i = 2; i < nBins-1; i++)
-//  {
-//    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
-//      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
-//  }
-//  for (int i = 2; i < nBins-1; i++) // second iteration
-//  {
-//    if ( histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) < histoSm_[histoName_]->GetBinContent(i-1) )
-//      histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
-//  }
   
   if ( iCat != 0 ) histoSm_[histoName_]->Smooth(3);
-  else histoSm_[histoName_]->Smooth(1);
+  else if (! useHadVar_) histoSm_[histoName_]->Smooth(1);
   histoSm_[histoName_]->Write();
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
@@ -824,9 +829,9 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   if ( centreVal > 1.1 && fitmin < 0.8 ) fitmin = 0.8;
   
   // mlb
-  if ( centreVal < 1.6 ) fitmin += 0.05;
+  if ( centreVal > 0.3 && centreVal < 1.6 ) fitmin += 0.05;
   //if ( centreVal < 1.1 )  fitmin += 0.05;  // --> += 0.1
-  if ( fitmin > centreVal ) fitmin = centreVal - 0.05;
+  if ( fitmin >= centreVal ) fitmin = centreVal - 0.05;
   
   
   if ( centreVal < 0.35 && fitmax > 0.4 ) fitmax = 0.4;

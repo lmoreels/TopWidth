@@ -1,3 +1,4 @@
+
 #include <TStyle.h>
 #include <TPaveText.h>
 
@@ -44,7 +45,8 @@
 using namespace std;
 using namespace TopTree;
 
-bool runLocally = true;
+bool runLocally = false;
+bool runFromPnfs = true;
 
 bool test = false;
 bool testHistos = false;
@@ -74,6 +76,32 @@ bool doKinFit = true;
 bool applyKinFitCut = true;
 double kinFitCutValue = 15.;
 double kinFitMinCutValue = 0.;
+
+double minTopMass = 100., maxTopMass = 245.;
+
+Double_t minBoundary()
+{
+  if (doLikeM) return 0.65;
+  else if (doLikeW)
+  {
+    if(useNewVar) return 0.35;
+    else return 0.65;
+  }
+  else return 0.65;
+}
+Double_t maxBoundary()
+{
+  if (doLikeM) return 1.4;
+  else if (doLikeW)
+  {
+    if(useNewVar) return 1.95;
+    else return 1.4;
+  }
+  else return 1.4;
+}
+Double_t minCutRedTopMass = minBoundary();
+Double_t maxCutRedTopMass = maxBoundary();
+
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
@@ -164,7 +192,40 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDateLL = "171229_1413/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180109_1148/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
+string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180108_2147/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180108_1650/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180108_1619/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.05, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180108_1338/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180108_1104/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+////////////////////
+//string inputDateLL = "180107_2017/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+////////////////////
+//string inputDateLL = "180107_1752/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180107_1531/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180107_1300/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180107_1100/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180106_2017/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180106_1538/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180106_1456/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180106_1314/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180106_1056/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180105_1955/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180105_1707/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.35, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180105_1641/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.25, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180104_1935/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.05, chi2 < 15, m_lb < 200 + cuts (status 1)
+//string inputDateLL = "180104_1710/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.1, chi2 < 15, m_lb < 200 + cuts (status 1)
+//string inputDateLL = "180104_1555/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts (status 1)
+//string inputDateLL = "180104_1300/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_2041/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_1956/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_1703/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_1432/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_1342/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180103_1257/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//string inputDateLL = "180102_1525/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
+//171.908, 170.684, 168.474, 166.662, 166.667, 166.617, 167.566, 164.861, 165.840, 168.850, 168.239, 167.294, 167.570, 167.432
 //string inputDateLL = "171227_1455/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171224_1628/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "171224_1100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 30 < muon pT, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
@@ -376,7 +437,20 @@ const int nofAveMasses = 16;
 //  KF chi2 < 12
 //std::array<double, 14> aveTopMass = {171.908, 170.684, 169.407, 169.026, 168.985, 171.667, 169.219, 167.939, 168.641, 170.869, 171.684, 169.010, 169.251, 169.133};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_1108
 //  KF chi2 < 15
-std::array<double, 14> aveTopMass = {171.908, 170.684, 167.912, 167.168, 166.886, 167.362, 167.692, 165.810, 166.631, 169.364, 168.952, 167.455, 167.711, 167.583};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 1214_1322
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.228, 168.727, 168.568, 171.717, 168.927, 167.683, 169.015, 173.043, 172.682, 168.818, 168.993, 168.907};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 190, mlb < 200 + cuts 0108_1043
+////////////////////
+std::array<double, 14> aveTopMass = {171.828, 170.636, 169.297, 168.845, 168.698, 173.165, 169.012, 167.864, 169.394, 173.388, 173.075, 168.922, 169.084, 169.004};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0107_2001
+////////////////////
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.401, 169.096, 168.957, 175.058, 169.169, 168.311, 169.790, 173.817, 173.659, 169.122, 169.248, 169.186};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 210, mlb < 200 + cuts 0107_1741
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.524, 169.389, 169.246, 177.632, 169.358, 168.673, 170.210, 174.238, 174.195, 169.277, 169.442, 169.361};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 220, mlb < 200 + cuts 0107_1521
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.293, 168.816, 168.673, 173.035, 168.999, 167.830, 169.362, 173.368, 173.057, 168.910, 169.070, 168.992};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0103_2030
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.226, 168.709, 168.552, 171.662, 168.919, 167.646, 168.986, 173.024, 172.665, 168.807, 168.985, 168.897};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1945
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.226, 169.689, 169.566, 171.899, 169.332, 168.774, 170.260, 173.644, 173.167, 169.208, 169.404, 169.307};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1654
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.155, 169.410, 169.338, 169.970, 169.188, 168.666, 170.008, 173.011, 172.540, 169.081, 169.252, 169.168};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1414
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.887, 167.764, 167.655, 168.593, 168.350, 165.888, 166.861, 170.420, 170.144, 168.191, 168.376, 168.285};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1329
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.937, 168.204, 168.074, 169.224, 168.568, 166.380, 168.023, 171.350, 170.850, 168.388, 168.604, 168.497};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1245
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.474, 166.662, 166.667, 166.617, 167.566, 164.861, 165.840, 168.850, 168.239, 167.294, 167.570, 167.432};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0102_1454
+//std::array<double, 14> aveTopMass = {171.908, 170.684, 167.912, 167.168, 166.886, 167.362, 167.692, 165.810, 166.631, 169.364, 168.952, 167.455, 167.711, 167.583};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 1214_1322
 //std::array<double, 14> aveTopMass = {171.908, 170.684, 166.976, 165.377, 164.282, 165.975, 166.448, 162.556, 163.318, 167.154, 167.727, 165.969, 166.446, 166.208};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 1213_1509
 //std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.462, 168.430, 170.200, 169.001, 167.231, 168.564, 170.665, 171.576, 168.807, 169.033, 168.922};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_0949
 //std::array<double, 14> aveTopMass = {171.908, 170.684, 169.413, 168.436, 168.404, 170.200, 168.994, 167.174, 168.604, 170.585, 171.607, 168.803, 169.025, 168.917};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 30 < mlb < 220 + cuts 1205_1554
@@ -477,8 +551,10 @@ double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
 //Double_t aveMlbMass = 95.2375, aveMlbMassCM = 96.6154;  //171214_1151
 //Double_t aveMlbMass = 95.2778, aveMlbMassCM = 96.7818;  //171214_1702
 //Double_t aveMlbMass = 95.4439, aveMlbMassCM = 96.7972;  //171221_1152
-Double_t aveMlbMass = 96.0903, aveMlbMassCM = 97.2532;  //171229_1402
+//Double_t aveMlbMass = 96.0903, aveMlbMassCM = 97.2532;  //171229_1402
 //Double_t aveMlbMass = 97.1223, aveMlbMassCM = 98.241;  //171224_1259, muon pT > 30
+//Double_t aveMlbMass = 97.1331, aveMlbMassCM = 97.3815;  //180104_1300, no min dR cut
+Double_t aveMlbMass = 97.133, aveMlbMassCM = 97.3437;  //180104_1525, no min dR cut, status 1
 
 /// Function prototypes
 struct HighestPt
@@ -948,8 +1024,6 @@ double nofAcceptedKFitWeighted = 0.;
 Double_t aveTopMassLL = 169.065; //169.073; //175.984; //168.058; //167.647; // 100 < mt < 245  // 168.879; // all MC events with 100 < mt < 250  //220.651;  // all MC events
 Double_t aveTopMassCM = aveTopMass[2];
 Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
-Double_t minTopMass = 100., maxTopMass = 245.;
-Double_t minCutRedTopMass = 0.65, maxCutRedTopMass = 1.4;
 int nWidthsLike = 0, nMassesLike = 0;
 vector<double> widthsLike, massesLike;
 vector<double> loglike_per_evt;
@@ -1168,7 +1242,7 @@ int main(int argc, char* argv[])
 //         makePlots = false;
       }
       
-      if ( strcmp(argv[i], "--JESup") == 0 || strcmp(argv[i], "--JesUp") == 0 || strcmp(argv[i], "--jesUp") == 0  || strcmp(argv[i], "--jesUP") == 0 )
+      if ( strcmp(argv[i], "--JESup") == 0 || strcmp(argv[i], "--JesUp") == 0 || strcmp(argv[i], "--jesUp") == 0 || strcmp(argv[i], "--jesUP") == 0 || strcmp(argv[i], "--jesup") == 0 )
       {
         /// No width or mass scaling when running systematics
         if ( applyWidthSF || applyMassSF )
@@ -1189,7 +1263,7 @@ int main(int argc, char* argv[])
         
         systStr = "JESup";
       }
-      else if ( strcmp(argv[i], "--JESdown") == 0 || strcmp(argv[i], "--JesDown") == 0 || strcmp(argv[i], "--jesDown") == 0  || strcmp(argv[i], "--jesDOWN") == 0 )
+      else if ( strcmp(argv[i], "--JESdown") == 0 || strcmp(argv[i], "--JesDown") == 0 || strcmp(argv[i], "--jesDown") == 0 || strcmp(argv[i], "--jesDOWN") == 0 || strcmp(argv[i], "--jesdown") == 0 )
       {
         /// No width or mass scaling when running systematics
         if ( applyWidthSF || applyMassSF )
@@ -1235,7 +1309,7 @@ int main(int argc, char* argv[])
           systStr = "JESdown";
       }
       
-      if ( strcmp(argv[i], "--JERup") == 0 || strcmp(argv[i], "--JerUp") == 0 || strcmp(argv[i], "--jerUp") == 0  || strcmp(argv[i], "--jerUP") == 0 )
+      if ( strcmp(argv[i], "--JERup") == 0 || strcmp(argv[i], "--JerUp") == 0 || strcmp(argv[i], "--jerUp") == 0 || strcmp(argv[i], "--jerUP") == 0 || strcmp(argv[i], "--jerup") == 0 )
       {
         /// No width or mass scaling when running systematics
         if ( applyWidthSF || applyMassSF )
@@ -1256,7 +1330,7 @@ int main(int argc, char* argv[])
         
         systStr = "JERup";
       }
-      else if ( strcmp(argv[i], "--JERdown") == 0 || strcmp(argv[i], "--JerDown") == 0 || strcmp(argv[i], "--jerDown") == 0  || strcmp(argv[i], "--jerDOWN") == 0 )
+      else if ( strcmp(argv[i], "--JERdown") == 0 || strcmp(argv[i], "--JerDown") == 0 || strcmp(argv[i], "--jerDown") == 0 || strcmp(argv[i], "--jerDOWN") == 0 || strcmp(argv[i], "--jerdown") == 0 )
       {
         /// No width or mass scaling when running systematics
         if ( applyWidthSF || applyMassSF )
@@ -1447,18 +1521,18 @@ int main(int argc, char* argv[])
     inputDirLL = outputDirLL+inputDateLL;
   }
   
-  if (useNewVar)
-  {
-    /// m_bjj/m_jj
-//    minCutRedTopMass = 1.5;
-//    maxCutRedTopMass = 2.6;
-    /// red mlb
-    minCutRedTopMass = 0.35;
-    maxCutRedTopMass = 1.9;
-    /// dR(lep,b_l)
-//    minCutRedTopMass = 0.5;
-//    maxCutRedTopMass = 3.2;
-  }
+//   if (useNewVar)
+//   {
+//     /// m_bjj/m_jj
+// //    minCutRedTopMass = 1.5;
+// //    maxCutRedTopMass = 2.6;
+//     /// red mlb
+//     minCutRedTopMass = 0.35;
+//     maxCutRedTopMass = 2.1;
+//     /// dR(lep,b_l)
+// //    minCutRedTopMass = 0.5;
+// //    maxCutRedTopMass = 3.2;
+//   }
   
   ntupleDate = whichDate(systStr);
   if (runLocally)
@@ -1466,6 +1540,12 @@ int main(int argc, char* argv[])
     pathNtuplesMC   = "/Volumes/LaCie/Ntuples/"+ntupleDate.first+"/";
     pathNtuplesData = "/Volumes/LaCie/Ntuples/"+ntupleDate.second+"/";
     pathNtuplesSyst = "/Volumes/LaCie/Ntuples/"+ntupleSystDate+"/";
+  }
+  else if (runFromPnfs)
+  {
+    pathNtuplesMC   = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleDate.first+"/";
+    pathNtuplesData = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleDate.second+"/";
+    pathNtuplesSyst = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleSystDate+"/";
   }
   else
   {
@@ -2318,7 +2398,7 @@ int main(int argc, char* argv[])
             if ( tempDR < 0.6 ) skipEvent = true;
           }
         }
-        if (skipEvent) continue;
+        //if (skipEvent) continue;
         nofAfterDRmincut++;
         
 //         for (int iJet = 0; iJet < selectedJets.size(); iJet++)
@@ -2463,7 +2543,9 @@ int main(int argc, char* argv[])
               foundMuMinus = true;
               if ( mc_granny[i] == -pdgID_top ) muMinusFromTop = true;  // t~
               
-              if ( mc_status[i] == 23 ) genmuon = i;
+              //if ( mc_status[i] == 23 ) genmuon = i;
+              //else if ( genmuon == -9999 ) genmuon = i;
+              if ( mc_status[i] == 1 ) genmuon = i;
               else if ( genmuon == -9999 ) genmuon = i;
             }
             if ( mc_pdgId[i] == -13 && mc_mother[i] == 24 )		// mu+, W+
@@ -2471,7 +2553,9 @@ int main(int argc, char* argv[])
               foundMuPlus = true;
               if ( mc_granny[i] == pdgID_top ) muPlusFromTop = true;  // t
               
-              if ( mc_status[i] == 23 ) genmuon = i;
+              //if ( mc_status[i] == 23 ) genmuon = i;
+              //else if ( genmuon == -9999 ) genmuon = i;
+              if ( mc_status[i] == 1 ) genmuon = i;
               else if ( genmuon == -9999 ) genmuon = i;
             }
             
@@ -3236,8 +3320,12 @@ int main(int argc, char* argv[])
         if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
         if ( reco_mlb_aKF > 200. ) continue;
         if ( (reco_top_mass_aKF - reco_mlb_aKF) < 0. ) continue;
-        if ( (reco_top_mass_aKF - reco_mlb_aKF) > 150. ) continue;
+        //if ( (reco_top_mass_aKF - reco_mlb_aKF) > 150. ) continue;
         //if ( reco_mbjj_div_mjj_bKF < 1.5 || reco_mbjj_div_mjj_bKF > 2.6 ) continue;
+        //if ( reco_dRLepB_lep_bKF > reco_dRLepB_had_bKF - 0.4 ) continue;
+        //if ( reco_top_mass_alt_aKF < aveTopMassCM ) continue;
+        if ( reco_top_mass_alt_aKF < 200. ) continue;
+        
         
         if (isCM)      nofCM_gate6 += lumiWeight*scaleFactor*widthSF;
         else if (isWM) nofWM_gate6 += lumiWeight*scaleFactor*widthSF;
@@ -4037,13 +4125,13 @@ void InitSetUp()
 {
   if (makeTGraphs || calculateFractions)
   {
-    if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     else if (doLikeM)  likeM = new LikelihoodMass(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
   }
   if (calculateLikelihood)
   {
-    if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     else if (doLikeM)  likeM = new LikelihoodMass(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     
@@ -6046,6 +6134,7 @@ void PrintWeights()
   cout << "Sum PDF a_s up    = " << tmpSumPdfAlphaSUp << endl;
   cout << "Sum PDF a_s down  = " << tmpSumPdfAlphaSDown << endl;
   cout << "------------Making function---------------------" << endl;
+  std::streamsize ss = std::cout.precision();
   cout << "void SetSumWeights()" << endl << "{" << endl;
   cout << "renFacSumNom     = " << std::setprecision(20) << tmpSumWeight1001    << ";" << endl;
   cout << "renFacSum1002    = " << std::setprecision(20) << tmpSumWeight1002    << ";" << endl;
@@ -6063,12 +6152,45 @@ void PrintWeights()
   cout << "pdfAlphaSUpSum   = " << std::setprecision(20) << tmpSumPdfAlphaSUp   << ";" << endl;
   cout << "pdfAlphaSDownSum = " << std::setprecision(20) << tmpSumPdfAlphaSDown << ";" << endl;
   cout << "}" << endl;
+  std::cout.precision (ss);
   cout << "------------------------------------------------" << endl;
 }
 
 void SetSumWeights()
 {
-  renFacSumNom     = 176288.;
+  /* // reco_top_mass_alt_aKF > 220
+  renFacSumNom     = 246056;
+  renFacSum1002    = 241472.329139;
+  renFacSum1003    = 252093.678572;
+  renFacSum1004    = 223209.526599;
+  renFacSum1005    = 217551.210028;
+  renFacSum1007    = 269921.908469;
+  renFacSum1009    = 274252.247374;
+  fragUpSum        = 251866.588826;
+  fragCentralSum   = 246782.675672;
+  fragDownSum      = 243346.422404;
+  fragPetersonSum  = 255256.500537;
+  semilepbrUpSum   = 245172.019865;
+  semilepbrDownSum = 247493.036167;
+  pdfAlphaSUpSum   = 243039.816163;
+  pdfAlphaSDownSum = 247893.618397;*/
+  // reco_top_mass_alt_aKF > 200
+  renFacSumNom     = 309367;
+  renFacSum1002    = 303940.36355;
+  renFacSum1003    = 316574.03647;
+  renFacSum1004    = 280430.81538;
+  renFacSum1005    = 273697.85973;
+  renFacSum1007    = 339663.27183;
+  renFacSum1009    = 344825.19502;
+  fragUpSum        = 315666.08948;
+  fragCentralSum   = 310109.34739;
+  fragDownSum      = 306460.99485;
+  fragPetersonSum  = 319807.98400;
+  semilepbrUpSum   = 308297.97927;
+  semilepbrDownSum = 311104.40796;
+  pdfAlphaSUpSum   = 305555.06586;
+  pdfAlphaSDownSum = 311692.88088;
+/*  renFacSumNom     = 176288.;
   renFacSum1002    = 172812.;
   renFacSum1003    = 180833.;
   renFacSum1004    = 159833.;
@@ -6082,7 +6204,7 @@ void SetSumWeights()
   semilepbrUpSum   = 175632.;
   semilepbrDownSum = 177359.;
   pdfAlphaSUpSum   = 174138.;
-  pdfAlphaSDownSum = 177590.;
+  pdfAlphaSDownSum = 177590.;*/
 }
 
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)

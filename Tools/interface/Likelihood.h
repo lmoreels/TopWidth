@@ -37,7 +37,7 @@
 
 class Likelihood{
   public:
-    Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose);
+    Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose);
     ~Likelihood();
     void ClearLikelihoods();
     std::vector<double> GetWidths();
@@ -83,6 +83,7 @@ class Likelihood{
   private:
     bool verbose_;
     bool rewHadOnly_;
+    bool useHadVar_;
     std::string outputDirName_;
     std::string dirNameTGraphTxt_;
     std::string dirNameNEvents_;
