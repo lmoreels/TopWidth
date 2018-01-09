@@ -114,6 +114,37 @@ verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(
   else mkdir(dirNameLLTxt_.c_str(),0777);
 }
 
+Likelihood::Likelihood(double minhad, double maxhad, double minlep, double maxlep, std::string outputDirName, std::string outputDirName2, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(outputDirName), outputDirName2_(outputDirName2), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(minhad), maxRedMass_(maxhad), minRedMass2_(minlep), maxRedMass2_(maxlep), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
+{
+  if (makeHistograms)
+  {
+    std::cerr << "Likelihood::Likelihood: Cannot make histograms for both variables simulataneously... Exiting..." << std::endl;
+    exit(1);
+  }
+  
+  tls_ = new HelperTools();
+  rew_ = new EventReweighting(false);  // no correction for number of events
+  
+  for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+  {
+    stringWidthArray_[iWidth] = tls_->DotReplace(widthArray_[iWidth]);
+  }
+  
+  this->ClearLikelihoods();
+  
+  bool tmpbool;
+  tmpbool = this->ConstructTGraphsFromFile(outputDirName_, "had_");
+  tmpbool = this->ConstructTGraphsFromFile(outputDirName2_, "lep_");
+  if (! tmpbool)
+  {
+    std::cerr << "Likelihood::Likelihood: Something went wrong when loading graphs... Exiting..." << std::endl;
+    exit(1);
+  }
+  
+  mkdir(dirNameLLTxt_.c_str(),0777);
+}
+
 Likelihood::~Likelihood()
 {
   delete file_;
@@ -448,22 +479,32 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
 
 bool Likelihood::ConstructTGraphsFromFile()
 {
-  return this->ConstructTGraphsFromFile("");
+  return this->ConstructTGraphsFromFile("", outputDirName_, "");
 }
 
 bool Likelihood::ConstructTGraphsFromFile(std::string name)
 {
+  return this->ConstructTGraphsFromFile(name, outputDirName_, "");
+}
+
+bool Likelihood::ConstructTGraphsFromFile(std::string dir, std::string var)
+{
+  return this->ConstructTGraphsFromFile("", dir, var);
+}
+
+bool Likelihood::ConstructTGraphsFromFile(std::string name, std::string dir, std::string var)
+{
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
   {
     suffix_ = name+"widthx"+stringWidthArray_[iWidth];
-    inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
+    inputFileName_ = dir+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
     if ( ! tls_->fexists(inputFileName_.c_str()) )
     {
       std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
       std::cerr << "                              Aborting the likelihood calculation..." << std::endl;
       continue;
     }
-    graph_[suffix_] = new TGraph(inputFileName_.c_str());
+    graph_[var+suffix_] = new TGraph(inputFileName_.c_str());
   }
   std::cout << "Likelihood::ConstructTGraphs: Constructed TGraphs for likelihood measurements (using " << nWidths_ << " widths)" << std::endl;
   return true;
@@ -615,6 +656,30 @@ std::vector<double> Likelihood::CalculateLikelihood(double redMass, double relat
   }
   
   return vecLogLike_;
+}
+
+void Likelihood::CalculateLikelihood(double redMass, double lepMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
+  
+  if ( redMass > minRedMass_ && redMass < maxRedMass_ && lepMass > minRedMass2_ && lepMass < maxRedMass2_ )
+  {
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisWidthSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+    }
+    else thisWidthSF_ = 1.;
+    
+    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+    {
+      histoName_ = "widthx"+stringWidthArray_[iWidth];
+      
+      loglike_per_evt_[iWidth] = graph_["had_"+histoName_]->Eval(redMass)+graph_["lep_"+histoName_]->Eval(lepMass);
+      if (! isData) loglike_[iWidth] += loglike_per_evt_[iWidth]*relativeSF*thisWidthSF_;
+      else loglike_data_[iWidth] += loglike_per_evt_[iWidth];
+    }
+  }
 }
 
 void Likelihood::CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)

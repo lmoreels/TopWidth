@@ -68,9 +68,10 @@ bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool useNewVar = true;
 
-bool doLikeW = true;
+bool doLikeW = false;
 bool doLikeM = false;
 bool doLike2D = false;
+bool doLikeComb = true;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -79,25 +80,19 @@ double kinFitMinCutValue = 0.;
 
 double minTopMass = 100., maxTopMass = 245.;
 
+Double_t minCutRedTopMassHad = 0.65;
+Double_t maxCutRedTopMassHad = 1.4;
+Double_t minCutRedTopMassNewVar = 0.35;
+Double_t maxCutRedTopMassNewVar = 1.95;
 Double_t minBoundary()
 {
-  if (doLikeM) return 0.65;
-  else if (doLikeW)
-  {
-    if(useNewVar) return 0.35;
-    else return 0.65;
-  }
-  else return 0.65;
+  if (useNewVar) return minCutRedTopMassNewVar;
+  else return maxCutRedTopMassHad;
 }
 Double_t maxBoundary()
 {
-  if (doLikeM) return 1.4;
-  else if (doLikeW)
-  {
-    if(useNewVar) return 1.95;
-    else return 1.4;
-  }
-  else return 1.4;
+  if (useNewVar) return maxCutRedTopMassNewVar;
+  else return maxCutRedTopMassHad;
 }
 Double_t minCutRedTopMass = minBoundary();
 Double_t maxCutRedTopMass = maxBoundary();
@@ -192,6 +187,8 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
+string inputDirLLhad = outputDirLL+"180107_2017/";
+string inputDirLLlep = outputDirLL+"180109_1001/";
 //string inputDateLL = "180109_1148/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
 string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_2147/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
@@ -1032,6 +1029,7 @@ int nLikeMasses = sizeof(redTopMassArray)/sizeof(redTopMassArray[0]) - 1;
 Likelihood *likeW;  // like1D
 LikelihoodMass *likeM;  // likeMass
 Likelihood2D *like2D;  // like2D
+Likelihood *likeComb;  // like1D
 
 
 ofstream txtDebugTopMass;
@@ -1909,9 +1907,10 @@ int main(int argc, char* argv[])
     
     if (calculateLikelihood)
     {
-      if (doLikeW)       likeW->ClearLikelihoods();
-      else if (doLikeM)  likeM->ClearLikelihoods();
-      else if (doLike2D) like2D->ClearLikelihoods();
+      if (doLikeW)         likeW->ClearLikelihoods();
+      else if (doLikeM)    likeM->ClearLikelihoods();
+      else if (doLike2D)   like2D->ClearLikelihoods();
+      else if (doLikeComb) likeComb->ClearLikelihoods();
     }
     
     hasFoundTTbar = false;
@@ -3413,6 +3412,7 @@ int main(int argc, char* argv[])
             else if (doLikeM)  loglike_per_evt = likeM->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             else if (doLike2D) loglike_per_evt = like2D->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
           }
+          if (doLikeComb) likeComb->CalculateLikelihood(redTopMass, reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
           {
             if (useNewVar)
@@ -3526,6 +3526,10 @@ int main(int argc, char* argv[])
               if (doLikeW)       likeW->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
               else if (doLikeM)  likeM->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
               else if (doLike2D) like2D->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+            }
+            else if ( doLikeComb && redTopMass > minCutRedTopMassHad && redTopMass < maxCutRedTopMassHad && reco_new_var > minCutRedTopMassNewVar && reco_new_var < maxCutRedTopMassNewVar )
+            {
+              likeComb->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             }
             
             /// Fill plots only for first pseudo experiment
@@ -3825,23 +3829,26 @@ int main(int argc, char* argv[])
           if (runRateSystematics || runSampleSystematics)
           {
             fileWidths->cd();
-            if (doLikeW)       likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
-            else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, false);
-            else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, false);
+            else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
           }
           else
           {
-            if (doLikeW)       likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
-            else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, true);
-            else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, true);
+            else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
           }
         }
         else
         {
           fileWidths->cd();
-          if (doLikeW)       likeW->GetOutputWidth(thisWidth, thisMass, true, false);
-          else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, true, false);
-          else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, true, false);
+          if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, true, false);
+          else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, true, false);
+          else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, true, false);
+          else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, true, false);
         }
 //         if (! useTTTemplates && ! runSystematics)
 //         {
@@ -3870,7 +3877,12 @@ int main(int argc, char* argv[])
           like2D->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
           if (unblind) like2D->GetOutputWidth(thisWidth, thisMass, "data", true, true);
         }
-        if (! doPseudoExps && ! useTTTemplates)
+        else if (doLikeComb)
+        {
+          likeComb->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
+          if (unblind) likeComb->GetOutputWidth(thisWidth, thisMass, "data", true, true);
+        }
+        if (! doPseudoExps && ! useTTTemplates && ! doLikeComb)
         {
           cout << endl << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
           if (doLikeW)       likeW->GetOutputWidth(thisWidth, thisMass, "CM", true, true);
@@ -3888,9 +3900,10 @@ int main(int argc, char* argv[])
     
     if (doPseudoExps)
     {
-      if (doLikeW)       likeW->CalculatePull(thisWidth, thisMass);
-      else if (doLikeM)  likeM->CalculatePull(thisWidth, thisMass);
-      else if (doLike2D) like2D->CalculatePull(thisWidth, thisMass);
+      if (doLikeW)         likeW->CalculatePull(thisWidth, thisMass);
+      else if (doLikeM)    likeM->CalculatePull(thisWidth, thisMass);
+      else if (doLike2D)   like2D->CalculatePull(thisWidth, thisMass);
+      else if (doLikeComb) likeComb->CalculatePull(thisWidth, thisMass);
     }
     
     
@@ -4134,6 +4147,7 @@ void InitSetUp()
     if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     else if (doLikeM)  likeM = new LikelihoodMass(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    else if (doLikeComb) likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad, inputDirLLlep, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     
     if (useTTTemplates)
     {
@@ -4163,13 +4177,14 @@ void InitSetUp()
     }
     widthsLike.clear();
     massesLike.clear();
-    if (doLikeW)       widthsLike = likeW->GetWidths();
-    else if (doLikeM)  massesLike = likeM->GetMasses();
+    if (doLikeW) widthsLike = likeW->GetWidths();
+    else if (doLikeM) massesLike = likeM->GetMasses();
     else if (doLike2D)
     {
       widthsLike = like2D->GetWidths();
       massesLike = like2D->GetMasses();
     }
+    else if (doLikeComb) widthsLike = likeComb->GetWidths();
     nWidthsLike = widthsLike.size();
     nMassesLike = massesLike.size();
     
@@ -4180,9 +4195,10 @@ void InitSetUp()
   
   if (doPseudoExps)
   {
-    if (doLikeW)       nPsExps = likeW->InitPull(nPseudoExps);
-    else if (doLikeM)  nPsExps = likeM->InitPull(nPseudoExps);
-    else if (doLike2D) nPsExps = like2D->InitPull(nPseudoExps);
+    if (doLikeW)         nPsExps = likeW->InitPull(nPseudoExps);
+    else if (doLikeM)    nPsExps = likeM->InitPull(nPseudoExps);
+    else if (doLike2D)   nPsExps = like2D->InitPull(nPseudoExps);
+    else if (doLikeComb) nPsExps = likeComb->InitPull(nPseudoExps);
   }
   
   if (makePlots)

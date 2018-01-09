@@ -17,30 +17,22 @@ using namespace std;
 
 
 bool verbose_ = true;
-bool doMass = true;
+bool doMass = false;
 bool is2D = false;
 string suffix = "";
 string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
 /// 1D width
-// parameter = dR(lep,b)
-//const double calCurvePar_[2] = {0.5741, 0.1593};
-//const double calCurveParUnc_[2] = {0.03484, 0.0152};
+// parameter = comb
+const double calCurvePar_[2] = {-0.2526, 1.084};
+const double calCurveParUnc_[2] = {0.03321, 0.01345};
 // parameter = redMlb
-//const double calCurvePar_[2] = {-0.124131, 1.09415};       // UPDATE !!
-//const double calCurveParUnc_[2] = {0.0442725, 0.0167612};  // UPDATE !!
+//const double calCurvePar_[2] = {-0.245, 1.083};
+//const double calCurveParUnc_[2] = {0.05185, 0.02447};
 // parameter = redTopMass_old
-//const double calCurvePar_[2] = {-0.12086, 1.07155};        // 180108
-//const double calCurveParUnc_[2] = {0.0451059, 0.0168243};  // 180108
-const double calCurvePar_[2] = {-0.15551, 1.09669};        // 180107
-const double calCurveParUnc_[2] = {0.0469114, 0.0175116};  // 180107
-//const double calCurvePar_[2] = {-0.157852, 1.09451};       // 180103
-//const double calCurveParUnc_[2] = {0.0454934, 0.0170439};  // 180103
-//const double calCurvePar_[2] = {-0.124131, 1.07867};  // cut = 3   // {-0.111927, 1.0752};  // cut = 2
-//const double calCurveParUnc_[2] = {0.0545261, 0.0204304};  // cut = 3   // {0.04433, 0.0183196};  // cut = 2
-//const double calCurvePar_[2] = {-0.193055, 1.05465};  // new redTopMass  //{-0.132933, 1.07876};  // old redTopMass
-//const double calCurveParUnc_[2] = {0.036635, 0.0168618};  // new redTopMass  //{0.0439721, 0.0183862};  // old redTopMass
+//const double calCurvePar_[2] = {-0.15551, 1.09669};        // 180107
+//const double calCurveParUnc_[2] = {0.0469114, 0.0175116};  // 180107
 /// 1D mass
 const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
 const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
@@ -448,10 +440,10 @@ int main()
   cout << "Up: " << shiftUp << "; down: " << shiftDown << endl;
   
   // Test on fake data
-  //testData = ApplyCalibrationCurve(0.798205, 0.193303);
+  testData = ApplyCalibrationCurve(0.680374, 0.137884);  // comb
+  //testData = ApplyCalibrationCurve(1.21739, 0.240619);   // mlb
   //testData = ApplyCalibrationCurve(0.638646, 0.131186);  // 180103
-  testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
-  //testData = ApplyCalibrationCurve(0.608204, 0.13216);   // 180108
+  //testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
   if (doMass) testData = ApplyCalibrationCurveMass(172.152, 0.107253);
   cout << "Values before calibration curve: " << endl;
   cout << "   MC:   width = " << nomVal << " +- " << nomValUnc << endl;

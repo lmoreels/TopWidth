@@ -38,6 +38,7 @@
 class Likelihood{
   public:
     Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose);
+    Likelihood(double minhad, double maxhad, double minlep, double maxlep, std::string outputDirName, std::string outputDirName2, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose);
     ~Likelihood();
     void ClearLikelihoods();
     std::vector<double> GetWidths();
@@ -49,11 +50,14 @@ class Likelihood{
     /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
+    bool ConstructTGraphsFromFile(std::string dir, std::string var);
+    bool ConstructTGraphsFromFile(std::string name, std::string dir, std::string var);
     bool ConstructTGraphsFromFile(std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double relativeSF, bool isData);
     std::vector<double> CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     std::vector<double> CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
+    void CalculateLikelihood(double redMass, double lepMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateTempLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, bool isTTbar, bool isData);
@@ -85,6 +89,7 @@ class Likelihood{
     bool rewHadOnly_;
     bool useHadVar_;
     std::string outputDirName_;
+    std::string outputDirName2_;
     std::string dirNameTGraphTxt_;
     std::string dirNameNEvents_;
     std::string dirNameLLTxt_;
@@ -96,6 +101,8 @@ class Likelihood{
     std::string rangeRedMass_;
     double minRedMass_;
     double maxRedMass_;
+    double minRedMass2_;
+    double maxRedMass2_;
     
     HelperTools *tls_;
     EventReweighting *rew_;
@@ -140,6 +147,7 @@ class Likelihood{
     std::map<std::string,TH1D*> histoSm_;
     std::map<std::string,TH1D*> histoTotal_;
     std::map<std::string,TGraph*> graph_;
+    std::map<std::string,TGraph*> graph2_;
     std::map<std::string,std::vector<double>> vecBinCentres_;
     std::map<std::string,std::vector<double>> vecBinContents_;
     
