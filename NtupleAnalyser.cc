@@ -2129,16 +2129,16 @@ int main(int argc, char* argv[])
         if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
                                                    //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
         else nDataEvts = nEventsAKF[d];
-        cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
+        cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << "(53552)" << endl;
         
         if (test)
           cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
         cout << "PseudoExperiments::Lumi/eqLumi = " << toyMax;
-//         if (! isData)
-//         {
-//           toyMax *= 0.908;  // small overshoot in MC --> scale down --> fixed now
-//           cout << " x 0.908 = " << toyMax;
-//         }
+        if (! isData)
+        {
+          toyMax *= 0.965;  // small overshoot in MC --> scale down --> fixed now?
+          cout << " x 0.965 = " << toyMax;
+        }
         cout << endl;
       }
       
@@ -3520,16 +3520,17 @@ int main(int argc, char* argv[])
             if ( toyValues[iPsExp] > toyMax ) continue;
             (nEvtsInPseudoExp[iPsExp][d])++;
             nEvtsInPseudoExpW[iPsExp][d] += scaleFactor;
-            if ( (useNewVar && reco_new_var > minCutRedTopMass && reco_new_var < maxCutRedTopMass) 
-              || (! useNewVar && redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass) )
+            if (doLikeComb)
+            {
+              if ( redTopMass > minCutRedTopMassHad && redTopMass < maxCutRedTopMassHad && reco_new_var > minCutRedTopMassNewVar && reco_new_var < maxCutRedTopMassNewVar )
+                likeComb->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+            }
+            else if ( (useNewVar && reco_new_var > minCutRedTopMass && reco_new_var < maxCutRedTopMass)
+               || (! useNewVar && redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass) )
             {
               if (doLikeW)       likeW->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
               else if (doLikeM)  likeM->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
               else if (doLike2D) like2D->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
-            }
-            else if ( doLikeComb && redTopMass > minCutRedTopMassHad && redTopMass < maxCutRedTopMassHad && reco_new_var > minCutRedTopMassNewVar && reco_new_var < maxCutRedTopMassNewVar )
-            {
-              likeComb->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             }
             
             /// Fill plots only for first pseudo experiment
