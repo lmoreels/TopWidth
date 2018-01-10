@@ -1,3 +1,4 @@
+*.cc.bk
 *.d
 *.dSYM
 *.dylib

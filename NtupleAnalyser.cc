@@ -68,10 +68,10 @@ bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool useNewVar = true;
 
-bool doLikeW = false;
+bool doLikeW = true;
 bool doLikeM = false;
 bool doLike2D = false;
-bool doLikeComb = true;
+bool doLikeComb = false;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -98,7 +98,6 @@ Double_t minCutRedTopMass = minBoundary();
 Double_t maxCutRedTopMass = maxBoundary();
 
 
-bool doMETCleaning = true;
 bool applyLeptonSF = true;
 bool applyPU = true;
 bool applyBTagSF = true;
@@ -189,11 +188,7 @@ string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
 string inputDirLLhad = outputDirLL+"180107_2017/";
 string inputDirLLlep = outputDirLL+"180109_1001/";
-//string inputDateLL = "180109_1148/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
 string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180108_2147/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180108_1650/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180108_1619/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.05, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1338/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1104/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 ////////////////////
@@ -202,166 +197,12 @@ string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < 
 //string inputDateLL = "180107_1752/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180107_1531/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180107_1300/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180107_1100/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180106_2017/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180106_1538/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180106_1456/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180106_1314/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180106_1056/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180105_1955/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180105_1707/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.35, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180105_1641/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.25, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180104_1935/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.05, chi2 < 15, m_lb < 200 + cuts (status 1)
-//string inputDateLL = "180104_1710/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.1, chi2 < 15, m_lb < 200 + cuts (status 1)
-//string inputDateLL = "180104_1555/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts (status 1)
-//string inputDateLL = "180104_1300/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_2041/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_1956/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_1703/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_1432/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_1342/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180103_1257/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "180102_1525/";  // 1D likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
-//171.908, 170.684, 168.474, 166.662, 166.667, 166.617, 167.566, 164.861, 165.840, 168.850, 168.239, 167.294, 167.570, 167.432
-//string inputDateLL = "171227_1455/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171224_1628/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171224_1100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 30 < muon pT, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_2151/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_2127/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_2100/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_2023/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1609/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.85, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1540/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1510/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1438/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 2.0, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1414/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1330/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.8, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1225/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.30 -> 1.7, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171223_1154/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.40 -> 1.7, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171222_2301/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.7, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171222_2041/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171222_1301/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171221_1730/";  // 1D likelihood; no WM; dR(lep,b), 30 < jet pT < 250, 0.5 -> 3.2, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171221_1428/";  // 1D likelihood; no WM; dR(lep,b), 30 < jet pT < 250, 0.5 -> 3.2, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171221_1152/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 200 + cuts
-//string inputDateLL = "171221_1102/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 180 + cuts
-//string inputDateLL = "171215_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.85, chi2 < 15, m_lb < 180 + cuts
-//string inputDateLL = "171214_1944/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.85, chi2 < 15, m_lb < 180 + cuts
-//string inputDateLL = "171214_1420/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, m_lb < 220 + cuts
-//string inputDateLL = "171212_1737/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171212_1418/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, mt_alt > 240, m_lb_alt > 145, m_lb < 220 + cuts
-//string inputDateLL = "171212_1249/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171211_2220/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 220 + cuts
-//string inputDateLL = "171211_1739/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 220 + cuts
-//string inputDateLL = "171211_1012/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb_alt > 145, m_lb < 220 + cuts
-//string inputDateLL = "171210_2014/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb_alt > 150, m_lb < 220 + cuts
-//string inputDateLL = "171210_1626/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb_alt > 140, m_lb < 220 + cuts
-//string inputDateLL = "171210_1342/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.9, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
-//string inputDateLL = "171210_1031/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.4 -> 1.9, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
-//string inputDateLL = "171209_2302/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
-//string inputDateLL = "171209_1705/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb_alt > 140, m_lb < 220 + cuts
-//string inputDateLL = "171209_1213/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171207_1412/";  // 1D likelihood MASS; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171206_1226/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171206_1121/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 12, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171206_1011/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171205_1615/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
-//string inputDateLL = "171205_1346/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, 30 < m_lb < 220 + cuts
-//string inputDateLL = "171205_1148/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171204_1505/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220, min dR(b,j) > 0.8 + cuts
-//string inputDateLL = "171201_1725/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 220 + cuts
-//string inputDateLL = "171203_1158/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 210 + cuts
-//string inputDateLL = "171201_1702/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171201_1/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
-//string inputDateLL = "171203_1024/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, m_lb < 200 + cuts
-//string inputDateLL = "171129_2002/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.3 -> 2.0, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
-//string inputDateLL = "171128_2250/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.2 -> 2.1, chi2 < 15, mt_alt > 240, m_lb < 240 + cuts
-//string inputDateLL = "171128_1923/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171128_1721/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171128_1351/";  // 1D likelihood; no WM; new redTopMass, 30 < jet pT < 250, 0.6 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171127_1814/";  // 1D likelihood; no WM; new redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171127_1552/";  // 1D likelihood; no WM; old redTopMass, 35 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171127_1446/";  // 1D likelihood; no WM; old redTopMass, 40 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171126_1216/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171125_1529/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171125_1325/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171124_2050/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 200, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171124_1839/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, Ht > 220 + cuts
-//string inputDateLL = "171124_1449/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, jet pT_aKF > 25 + cuts
-//string inputDateLL = "171124_1154/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171123_1611/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171123_1432/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171122_2020/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171121_2216/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171121_1556/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171117_2002/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, Ht > 220 + cuts
-//string inputDateLL = "171114_1828/";  // 2D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171117_1235/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, jets pT_aKF > 30 + cuts
-//string inputDateLL = "171117_1623/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, Ht > 220 + cuts
-//string inputDateLL = "171116_1551/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240, Ht > 200 + cuts
-//string inputDateLL = "171116_1033/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 250 + cuts
-//string inputDateLL = "171112_1220/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171112_1125/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171111_2042/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171111_2012/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts aKF
-//string inputDateLL = "171111_1937/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts aKF
-//string inputDateLL = "171111_1844/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts aKF
-//string inputDateLL = "171111_1751/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts bKF
-//string inputDateLL = "171111_1705/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240 + cuts
-//string inputDateLL = "171111_1542/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, mt_alt > 240
-//string inputDateLL = "171111_1235/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 10, mt_alt > 240
-//string inputDateLL = "171111_1141/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 5, mt_alt > 240
-//string inputDateLL = "171109_1257/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 2, mt_alt > 240
-//string inputDateLL = "171108_2124/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 2
-//string inputDateLL = "171106_1136/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, ACDE, 0.65 -> 1.4, no btag SFs
-//string inputDateLL = "171105_1314/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, ACDE, 0.65 -> 1.4, 4-5 jets
-//string inputDateLL = "171105_2016/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, no min dR, ACDE, 0.65 -> 1.4
-//string inputDateLL = "171104_2048/";  // 1D likelihood; no WM; old redTopMass, 30 < jet pT < 250, ACDE, 0.65 -> 1.4
-//string inputDateLL = "171104_1749/";  // 1D likelihood; no WM; new redTopMass, 30 < jet pT < 250, ACDE
-//string inputDateLL = "171104_1537/";  // 1D likelihood; no WM; new redTopMass, 30 < jet pT < 250, 1.65 < m_3/2 < 2.45
-//string inputDateLL = "171104_1113/";  // 1D likelihood; no WM; 30 < jet pT < 250; 1.5 < NEW VAR < 2.6
-//string inputDateLL = "171102_1053/";  // 2D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, ACDE
-//string inputDateLL = "171031_1739/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, ACDE
-//string inputDateLL = "171031_1519/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, C4
-//string inputDateLL = "171031_1440/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, C3
-//string inputDateLL = "171031_1100/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, C2
-//string inputDateLL = "171031_0932/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, C1
-//string inputDateLL = "171030_1850/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, dR cuts bKF
-//string inputDateLL = "171030_1049/";  // 1D likelihood; no WM; old definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF
-//string inputDateLL = "171030_1141/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF, no chi2 cut
-//string inputDateLL = "171028_1015/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, aKF, no dR cuts, no mass cuts before KF
-//string inputDateLL = "171026_1943/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, aKF, no chi2 cut
-//string inputDateLL = "171027_1033/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, aKF, no mass cuts before KF
-//string inputDateLL = "171026_2244/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, aKF, no mass cuts
-//string inputDateLL = "171026_1704/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250, bKF
-//string inputDateLL = "171026_1404/";  // 1D likelihood; no WM; new definition redTopMass, 30 < jet pT < 250
-//string inputDateLL = "171009_0931/";  // 1D likelihood, new variable: m_3/2
-//string inputDateLL = "171011_1932/";  // 2D likelihood, new definition redTopMass
-//string inputDateLL = "171018_1034/";  // 1D likelihood, mt/<mt>_CM + (<mt>_CM - <mt>_all)/<mt>_CM
-//string inputDateLL = "171016_1639/";  // 1D likelihood, new definition redTopMass, 30 < jet pT < 200
-//string inputDateLL = "171013_1418/";  // 1D likelihood, new definition redTopMass, 30 < jet pT < 250
-//string inputDateLL = "171012_1630/";  // 1D likelihood, new definition redTopMass
-//string inputDateLL = "171002_1139/";  // reweight mass, range [171.5, 173.5] GeV
-//string inputDateLL = "170929_1018/";  // reweight mass
-//string inputDateLL = "170922_1045/";  // dR > 0.8
-//string inputDateLL = "170918_1300/";  // diff masses
-//string inputDateLL = "170829_1010/";  // use relativeSF instead of lumiWeight
-//string inputDateLL = "170814_1625/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]; other widths
-//string inputDateLL = "170802_1317/";  // all SFs, ttbar-only; widthSF had&lep; redtopmass [0.6, 1.4]
-//string inputDateLL = "170802_1222/";  // all SFs, all samples; widthSF had&lep; redtopmass [0.6, 1.4]
-//string inputDateLL = "170801_1451/";  // all SFs, ttbar-only; mlb cut 160; widthSF had-only; redtopmass [0.7, 1.3]
-//string inputDateLL = "170801_1252/";  // all SFs, ttbar-only; mlb cut 160; widthSF had & lep; redtopmass [0.7, 1.3]
-//string inputDateLL = "170731_1824/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had-only
-//string inputDateLL = "170731_1823/";  // all SFs, ttbar-only; no smoothing; mlb cut 160; widthSF had & lep
-//string inputDateLL = "170728_1418/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had & lep
-//string inputDateLL = "170728_1324/";  // w/o W+1/2jets, all SFs, ttbar-only; no smoothing; widthSF had-only
 string whichTemplates()
 {
   //if (rewHadTopOnly) return "170728_1324/";
   //else return "170802_1317/";
-  if (useNewVar) return "171009_1346/";
-  else return "171006_1130/";
+  if (useNewVar) return "180109_1001/";
+  else return "180107_2017/";
 }
 
 bool isData = false;
@@ -375,9 +216,8 @@ bool isOther = false;
 bool isHerwig = false;
 
 int nofHardSelected = 0;
-int nofMETCleaned = 0;
-int nofAfterDRmincut = 0;
-int nofAfterDRmaxcut = 0;
+int nofTopMassCut_bKF = 0;
+int nofTopMassCut_aKF = 0;
 int nofAfterLastCut = 0;
 int nofTTsemilep = 0;
 int nofTTdilep = 0;
@@ -404,15 +244,20 @@ int nofUnmatchedTTsemilepAKFNoCut = 0;
 int nofUnmatchedTTotherAKFNoCut = 0;
 int nofCM = 0, nofWM = 0, nofUM = 0;
 int nofCM_TT = 0, nofWM_TT = 0, nofUM_TT = 0;
-double nofCMl = 0., nofWMl = 0., nofUMl = 0.;
 double nofCM_weighted = 0., nofWM_weighted = 0., nofUM_weighted = 0., nofUM_TTsemilep_weighted = 0., nofUM_TTother_weighted = 0., nofUM_other_weighted = 0.;
 double nofCMout_weighted = 0., nofWMout_weighted = 0., nofUMout_weighted = 0., nofUMout_TTsemilep_weighted = 0., nofUMout_TTother_weighted = 0., nofUMout_other_weighted = 0.;
-double nofCM_gate1 = 0., nofWM_gate1 = 0., nofUM_gate1 = 0.;
-double nofCM_gate2 = 0., nofWM_gate2 = 0., nofUM_gate2 = 0.;
-double nofCM_gate3 = 0., nofWM_gate3 = 0., nofUM_gate3 = 0.;
-double nofCM_gate4 = 0., nofWM_gate4 = 0., nofUM_gate4 = 0.;
-double nofCM_gate5 = 0., nofWM_gate5 = 0., nofUM_gate5 = 0.;
-double nofCM_gate6 = 0., nofWM_gate6 = 0., nofUM_gate6 = 0.;
+double nofCMhad_gate1 = 0., nofWMhad_gate1 = 0., nofUMhad_gate1 = 0.;
+double nofCMhad_gate2 = 0., nofWMhad_gate2 = 0., nofUMhad_gate2 = 0.;
+double nofCMhad_gate3 = 0., nofWMhad_gate3 = 0., nofUMhad_gate3 = 0.;
+double nofCMhad_gate4 = 0., nofWMhad_gate4 = 0., nofUMhad_gate4 = 0.;
+double nofCMhad_gate5 = 0., nofWMhad_gate5 = 0., nofUMhad_gate5 = 0.;
+double nofCMhad_gate6 = 0., nofWMhad_gate6 = 0., nofUMhad_gate6 = 0.;
+double nofCMlep_gate1 = 0., nofWMlep_gate1 = 0., nofUMlep_gate1 = 0.;
+double nofCMlep_gate2 = 0., nofWMlep_gate2 = 0., nofUMlep_gate2 = 0.;
+double nofCMlep_gate3 = 0., nofWMlep_gate3 = 0., nofUMlep_gate3 = 0.;
+double nofCMlep_gate4 = 0., nofWMlep_gate4 = 0., nofUMlep_gate4 = 0.;
+double nofCMlep_gate5 = 0., nofWMlep_gate5 = 0., nofUMlep_gate5 = 0.;
+double nofCMlep_gate6 = 0., nofWMlep_gate6 = 0., nofUMlep_gate6 = 0.;
 double nofBKF_weighted[15], nofAKF_weighted[15];
 
 /// Lumi per data era
@@ -429,88 +274,13 @@ double CSVv2Tight  = 0.9535;
 // TT_genp_match, TT_genj_match, TT_reco_match, TT_reco_wrongMatch_WM/UM, TT_reco_noMatch, TT_reco_wrongPerm, TT_reco, ST_t_top, ST_t_antitop, ST_tW_top, ST_tW_antitop, DYJets, WJets, data, Reco, All, MC, Reco, All, Samples
 // also background in CM/WM/UM cats (unlike name suggests)
 const int nofAveMasses = 16;
-//  KF chi2 < 20
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.396, 167.900, 167.885, 168.141, 168.753, 166.170, 167.510, 170.361, 171.150, 168.524, 168.777, 168.653};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_1210
-//  KF chi2 < 12
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.407, 169.026, 168.985, 171.667, 169.219, 167.939, 168.641, 170.869, 171.684, 169.010, 169.251, 169.133};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_1108
 //  KF chi2 < 15
 //std::array<double, 14> aveTopMass = {171.828, 170.636, 169.228, 168.727, 168.568, 171.717, 168.927, 167.683, 169.015, 173.043, 172.682, 168.818, 168.993, 168.907};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 190, mlb < 200 + cuts 0108_1043
 ////////////////////
 std::array<double, 14> aveTopMass = {171.828, 170.636, 169.297, 168.845, 168.698, 173.165, 169.012, 167.864, 169.394, 173.388, 173.075, 168.922, 169.084, 169.004};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0107_2001
 ////////////////////
 //std::array<double, 14> aveTopMass = {171.828, 170.636, 169.401, 169.096, 168.957, 175.058, 169.169, 168.311, 169.790, 173.817, 173.659, 169.122, 169.248, 169.186};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 210, mlb < 200 + cuts 0107_1741
-//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.524, 169.389, 169.246, 177.632, 169.358, 168.673, 170.210, 174.238, 174.195, 169.277, 169.442, 169.361};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 220, mlb < 200 + cuts 0107_1521
-//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.293, 168.816, 168.673, 173.035, 168.999, 167.830, 169.362, 173.368, 173.057, 168.910, 169.070, 168.992};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0103_2030
-//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.226, 168.709, 168.552, 171.662, 168.919, 167.646, 168.986, 173.024, 172.665, 168.807, 168.985, 168.897};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1945
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.226, 169.689, 169.566, 171.899, 169.332, 168.774, 170.260, 173.644, 173.167, 169.208, 169.404, 169.307};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1654
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.155, 169.410, 169.338, 169.970, 169.188, 168.666, 170.008, 173.011, 172.540, 169.081, 169.252, 169.168};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1414
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.887, 167.764, 167.655, 168.593, 168.350, 165.888, 166.861, 170.420, 170.144, 168.191, 168.376, 168.285};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1329
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.937, 168.204, 168.074, 169.224, 168.568, 166.380, 168.023, 171.350, 170.850, 168.388, 168.604, 168.497};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0103_1245
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.474, 166.662, 166.667, 166.617, 167.566, 164.861, 165.840, 168.850, 168.239, 167.294, 167.570, 167.432};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 0102_1454
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 167.912, 167.168, 166.886, 167.362, 167.692, 165.810, 166.631, 169.364, 168.952, 167.455, 167.711, 167.583};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 1214_1322
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 166.976, 165.377, 164.282, 165.975, 166.448, 162.556, 163.318, 167.154, 167.727, 165.969, 166.446, 166.208};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mlb < 220 + cuts 1213_1509
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.462, 168.430, 170.200, 169.001, 167.231, 168.564, 170.665, 171.576, 168.807, 169.033, 168.922};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1206_0949
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.413, 168.436, 168.404, 170.200, 168.994, 167.174, 168.604, 170.585, 171.607, 168.803, 169.025, 168.917};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 30 < mlb < 220 + cuts 1205_1554
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.629, 170.477, 170.424, 174.348, 169.865, 169.800, 171.510, 171.877, 173.030, 169.695, 169.915, 169.808};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 30 < mlb < 220 + cuts 1205_1332
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.629, 170.506, 170.453, 174.348, 169.872, 169.874, 171.458, 171.956, 172.990, 169.700, 169.923, 169.814};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1205_1126
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.900, 171.624, 171.606, 171.766, 170.459, 170.900, 172.107, 173.580, 174.579, 170.418, 170.534, 170.477};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220, min dR(b,j) > 0.8 + cuts 1203_1453
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.462, 168.430, 170.200, 169.001, 167.231, 168.564, 170.665, 171.576, 168.807, 169.033, 168.922};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 220 + cuts 1201_1118
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.473, 168.441, 170.340, 169.005, 167.297, 168.570, 170.701, 171.771, 168.803, 169.039, 168.924};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 210 + cuts 1203_1141
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 1201_1423
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.411, 168.482, 168.446, 170.567, 168.999, 167.204, 168.792, 170.768, 171.787, 168.800, 169.035, 168.92};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 240 + cuts 1201_1333
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.413, 168.485, 168.458, 169.843, 169.012, 167.176, 168.534, 170.687, 171.802, 168.801, 169.044, 168.925};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 200 + cuts 30_1623
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.411, 168.482, 168.446, 170.567, 168.999, 167.204, 168.792, 170.768, 171.787, 168.800, 169.035, 168.920};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, mlb < 240 + cuts 29_1948
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240, 0.6->1.4 + cuts 28_1707
-//std::array<double, 14> aveTopMass = {172.028, 173.264, 170.350, 170.994, 170.944, 174.429, 170.502, 168.937, 170.578, 173.522, 173.469, 170.274, 170.556, 170.419};   // Res 171025, 35 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 27_1543
-//std::array<double, 14> aveTopMass = {172.139, 175.837, 171.244, 173.307, 173.252, 177.886, 171.866, 168.288, 172.296, 175.581, 176.613, 171.728, 171.937, 171.836};   // Res 171025, 40 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 27_1433
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.412, 168.525, 168.482, 170.976, 169.012, 166.927, 168.547, 170.504, 171.287, 168.810, 169.042, 168.928};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 25_1515
-//std::array<double, 14> aveTopMass = {171.909, 170.808, 169.251, 169.240, 169.215, 170.358, 169.162, 167.877, 169.679, 171.486, 171.689, 168.899, 169.208, 169.057};   // Res 171025, 30 < jet pT, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 25_1103
-//std::array<double, 14> aveTopMass = {171.897, 170.451, 168.912, 168.779, 168.725, 172.158, 168.784, 167.303, 169.138, 170.777, 171.562, 168.571, 168.828, 168.702};   // Res 171025, 30 < jet pT < 200, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 24_2038
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.497, 170.062, 170.026, 171.955, 169.628, 168.757, 171.222, 172.540, 173.200, 169.496, 169.693, 169.598};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 24_1825
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.110, 169.035, 168.993, 171.557, 169.004, 167.699, 169.615, 171.119, 171.758, 168.753, 169.051, 168.905};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 22_2217
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.433, 171.782, 171.718, 176.760, 170.159, 171.264, 174.114, 173.200, 173.957, 170.032, 170.239, 170.138};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 22_2009
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.110, 169.035, 168.993, 171.574, 169.004, 167.690, 169.612, 171.141, 171.754, 168.753, 169.051, 168.905};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 21_1545
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.497, 170.062, 170.026, 171.974, 169.628, 168.746, 171.226, 172.564, 173.196, 169.496, 169.694, 169.598};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 17_1612
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.591, 172.721, 172.658, 177.768, 170.545, 172.230, 175.428, 173.910, 174.732, 170.482, 170.634, 170.560};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 17_1209
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.302, 169.554, 169.516, 171.756, 169.318, 168.513, 170.241, 171.810, 172.579, 169.117, 169.376, 169.249};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 16_1541
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.191, 169.293, 169.253, 172.063, 169.155, 167.466, 170.560, 171.449, 172.168, 168.952, 169.207, 169.082};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 250 + cuts 16_1021
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.110, 169.035, 168.993, 171.574, 169.004, 167.690, 169.612, 171.141, 171.754, 168.753, 169.051, 168.905};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 12_1201
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.456, 169.446, 169.410, 171.704, 169.377, 167.763, 170.071, 171.770, 173.175, 169.193, 169.435, 169.318};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 12_1115
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.600, 171.573, 171.502, 177.151, 170.148, 171.977, 173.367, 173.608, 174.462, 170.056, 170.236, 170.148};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_2034
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.603, 171.724, 171.644, 177.944, 170.186, 172.027, 173.617, 173.874, 174.423, 170.093, 170.278, 170.188};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_2004
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.316, 172.304, 172.199, 180.262, 170.298, 173.642, 175.893, 173.529, 174.191, 170.200, 170.396, 170.300};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_1925
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.469, 171.696, 171.613, 178.093, 170.113, 172.493, 174.230, 173.833, 173.942, 170.032, 170.206, 170.121};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_1828
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.170, 172.252, 172.198, 176.559, 170.325, 174.415, 175.673, 173.721, 174.571, 170.237, 170.426, 170.334};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_1735
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.471, 171.522, 171.458, 176.973, 170.062, 172.493, 173.836, 173.869, 174.530, 169.935, 170.151, 170.046};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240 + cuts 11_1653
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.170, 172.466, 172.379, 178.599, 170.419, 174.362, 175.983, 173.429, 174.293, 170.389, 170.523, 170.457};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240
-//  KF chi2 < 10
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.267, 172.409, 172.328, 178.314, 170.327, 173.790, 174.784, 173.574, 174.104, 170.237, 170.424, 170.333};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240
-//  KF chi2 < 5
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.439, 172.192, 172.114, 177.828, 170.204, 173.751, 174.407, 174.451, 173.826, 170.153, 170.305, 170.231};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240
-//  KF chi2 < 2
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.607, 171.837, 171.761, 176.490, 170.117, 171.209, 172.600, 173.741, 174.812, 170.194, 170.210, 170.202};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245, mt_alt > 240
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.512, 169.145, 168.780, 169.851, 168.782, 169.103, 169.446, 170.999, 171.637, 168.373, 168.843, 168.609};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 100 < mt < 245
-//  KF chi2 < 5
-//std::array<double, 14> aveTopMass = {171.900, 170.981, 169.553, 173.018, 172.479, 178.290, 170.653, 173.835, 175.415, 175.097, 174.673, 170.580, 170.760, 170.672};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, ACDE, 4-5 jets
-//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.365, 170.133, 170.047, 177.062, 169.491, 171.657, 172.082, 173.465, 173.326, 169.442, 169.584, 169.515};   // Res 171025, 30 < jet pT < 250, ACDE
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.439, 172.192, 172.114, 177.828, 170.204, 173.751, 174.407, 174.451, 173.826, 170.153, 170.305, 170.231};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, ACDE
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.100, 167.805, 168.344, 166.350, 167.960, 169.410, 168.439, 168.042, 167.928, 167.667, 167.965, 167.817};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 1.5 < m_3/2 < 2.6
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 168.058, 166.747, 167.211, 165.554, 167.427, 167.523, 167.474, 167.345, 167.913, 167.113, 167.431, 167.273};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, 1.5 < NEW VAR < 2.6
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.439, 172.192, 172.114, 177.828, 170.204, 173.751, 174.407, 174.451, 173.826, 170.153, 170.305, 170.231};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, ACDE
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.437, 172.243, 172.171, 177.223, 170.210, 173.759, 175.264, 174.091, 173.749, 170.232, 170.309, 170.271};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, C4
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.493, 172.102, 172.067, 174.055, 170.209, 174.537, 173.635, 174.719, 174.755, 170.185, 170.306, 170.247};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, C3
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.217, 169.463, 169.441, 168.786, 169.268, 165.849, 164.705, 170.667, 169.883, 169.001, 169.273, 169.142};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, C2
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.435, 171.977, 171.942, 173.420, 170.122, 174.510, 174.045, 173.970, 174.572, 170.224, 170.213, 170.218};   // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, C1
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.058, 168.896, 168.902, 157.660, 168.996, 164.330, 164.642, 169.500, 169.494, 168.958, 168.989, 168.974};  // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF, dR cuts bKF
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.485, 172.310, 172.235, 177.941, 170.265, 173.727, 174.783, 174.617, 173.917, 170.186, 170.369, 170.279};  // Res 171025, 30 < jet pT < 250, dR jets > 0.6, mass cuts aKF
-//std::array<double, 14> aveTopMass = {171.908, 170.684, 169.073, 168.860, 168.867, 156.244, 168.995, 164.122, 164.603, 169.416, 169.499, 169.031, 168.987, 169.008};  // Res 171025, 30 < jet pT < 250, dR jets > 0.6
-//std::array<double, 14> aveTopMass = {172.009, 170.380, 167.449, 171.916, 171.340, 173.257, 169.846, 172.896, 173.663, 172.385, 173.262, 169.387, 169.933, 169.658};  // 30 < jet pT < 200
-//std::array<double, 14> aveTopMass = {172.019, 170.603, 167.778, 202.264, 201.573, 203.810, 185.976, 256.266, 255.607, 220.936, 221.428, 188.305, 188.393, 188.378};  // Res 170915, dR(jets) > 0.8
-//std::array<double, 14> aveTopMass = {171.828, 170.662, 167.968, 198.481, 198.418, 198.640, 183.102, 252.884, 250.668, 230.103, 227.942, 185.725, 185.985, 185.942};  // Res 170915
-//std::array<double, 14> aveTopMass = {171.828, 170.662, 167.841, 197.327, 196.972, 198.197, 182.357, 248.361, 247.185, 227.921, 226.553, 184.765, 185.085, 185.033};  // Res 170912
-//std::array<double, 14> aveTopMass = {171.833, 169.809, 167.636, 197.975, 197.718, 198.582, 182.317, 252.174, 249.964, 229.383, 227.814, 184.794, 185.096, 185.046};  // with SFs
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.511, 197.053, 196.687, 197.911, 181.895, 249.468, 247.437, 227.530, 226.099, 184.794, 184.594, 184.624};  // Res 170608 Single Gaus
-//std::array<double, 14> aveTopMass = {171.826, 169.746, 167.556, 197.087, 196.662, 198.143, 182.150, 249.229, 246.893, 226.933, 225.681, 185.024, 184.880, 184.902};  // no DYJets, no WJets // Res 170608
+
 
 /// # events after kin fitter
 //  KF chi2 < 5
@@ -536,7 +306,7 @@ vector<string> dataSetNames;
 vector<int> includeDataSets;
 
 ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMUM, txtMassRecoUM, txtMassRecoWM, txtMassReco;
-double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMEvents;
+double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMhadEvents, sumCMlepEvents;
 //Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.6331;
 //Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.7437; // mt_alt_aKF > 240.
 //Double_t aveMlbMass = 102.817, aveMlbMassCM = 102.738;  // mlb_alt > 140., mt_alt_aKF > 240.
@@ -624,7 +394,6 @@ Bool_t          isTrigged;
 Bool_t          hasExactly4Jets;
 Bool_t          hasJetLeptonCleaning;
 Bool_t          hasErasedBadOrCloneMuon;
-Bool_t          passedMETFilter = true;
 Bool_t          isDataRunB;
 Bool_t          isDataRunC;
 Bool_t          isDataRunD;
@@ -790,7 +559,6 @@ TBranch        *b_isTrigged;   //!
 TBranch        *b_hasExactly4Jets;   //!
 TBranch        *b_hasJetLeptonCleaning;   //!
 TBranch        *b_hasErasedBadOrCloneMuon;   //!
-//TBranch        *b_passedMETFilter;   //!
 TBranch        *b_isDataRunB;   //!
 TBranch        *b_isDataRunC;   //!
 TBranch        *b_isDataRunD;   //!
@@ -966,6 +734,8 @@ double massHadTopQ, massLepTopQ;
 string catSuffix = "";
 string catSuffixList[] = {"_CM", "_WM", "_UM"};
 bool isCM, isWM, isUM, isUM_TTsemilep, isUM_TTother;
+bool isCMhad, isWMhad, isUMhad, isUMhad_TTsemilep, isUMhad_TTother;
+bool isCMlep, isWMlep, isUMlep, isUMlep_TTsemilep, isUMlep_TTother;
 unsigned int dMSPmax;
 
 
@@ -1057,13 +827,6 @@ double matched_mlb_corr, matched_ttbarMass_corr, matched_dR_lep_b_corr;
 double matched_mlb_wrong, matched_ttbarMass_wrong, matched_dR_lep_b_wrong;
 
 
-// JEC
-string pathCalJEC = "../TopTreeAnalysisBase/Calibrations/JECFiles/";
-vector<JetCorrectorParameters> vCorrParam;
-JetCorrectionUncertainty *jecUnc;
-void InitJEC(bool isData, string dataSetName);
-
-
 /// Meta
 string strSyst = "";
 double eqLumi;
@@ -1100,7 +863,7 @@ int main(int argc, char* argv[])
   else if ( systStr.find("JERup") != std::string::npos ) cout << "scale up       *" << endl;
   else                                                   cout << "nominal        *" << endl;
   cout << "*   - Jet/lepton Cleaning                   *" << endl;
-  if (doMETCleaning) cout << "*   - MET Cleaning                          *" << endl;
+  cout << "*   - MET Cleaning                          *" << endl;
   cout << "*********************************************" << endl;
   cout << "* The following scale factors are applied:  *" << endl;
   if (applyLeptonSF) cout << "*   - Lepton scale factors: nominal         *" << endl;
@@ -1889,18 +1652,26 @@ int main(int argc, char* argv[])
     /// Clear counters and likelihood
     nofCM = 0; nofWM = 0; nofUM = 0;
     nofCM_TT = 0; nofWM_TT = 0; nofUM_TT = 0;
-    nofCMl = 0; nofWMl = 0; nofUMl = 0;
     nofCM_weighted = 0.; nofWM_weighted = 0.; nofUM_weighted = 0.; nofUM_TTsemilep_weighted = 0.; nofUM_TTother_weighted = 0.; nofUM_other_weighted = 0.;
     nofCMout_weighted = 0.; nofWMout_weighted = 0.; nofUMout_weighted = 0.; nofUMout_TTsemilep_weighted = 0.; nofUMout_TTother_weighted = 0.; nofUMout_other_weighted = 0.;
-    nofCM_gate1 = 0.; nofWM_gate1 = 0.; nofUM_gate1 = 0.; nofCM_gate2 = 0.; nofWM_gate2 = 0.; nofUM_gate2 = 0.;
-    nofCM_gate3 = 0.; nofWM_gate3 = 0.; nofUM_gate3 = 0.; nofCM_gate4 = 0.; nofWM_gate4 = 0.; nofUM_gate4 = 0.;
-    nofCM_gate5 = 0.; nofWM_gate5 = 0.; nofUM_gate5 = 0.; nofCM_gate6 = 0.; nofWM_gate6 = 0.; nofUM_gate6 = 0.;
+    nofCMhad_gate1 = 0.; nofWMhad_gate1 = 0.; nofUMhad_gate1 = 0.;
+    nofCMhad_gate2 = 0.; nofWMhad_gate2 = 0.; nofUMhad_gate2 = 0.;
+    nofCMhad_gate3 = 0.; nofWMhad_gate3 = 0.; nofUMhad_gate3 = 0.;
+    nofCMhad_gate4 = 0.; nofWMhad_gate4 = 0.; nofUMhad_gate4 = 0.;
+    nofCMhad_gate5 = 0.; nofWMhad_gate5 = 0.; nofUMhad_gate5 = 0.;
+    nofCMhad_gate6 = 0.; nofWMhad_gate6 = 0.; nofUMhad_gate6 = 0.;
+    nofCMlep_gate1 = 0.; nofWMlep_gate1 = 0.; nofUMlep_gate1 = 0.;
+    nofCMlep_gate2 = 0.; nofWMlep_gate2 = 0.; nofUMlep_gate2 = 0.;
+    nofCMlep_gate3 = 0.; nofWMlep_gate3 = 0.; nofUMlep_gate3 = 0.;
+    nofCMlep_gate4 = 0.; nofWMlep_gate4 = 0.; nofUMlep_gate4 = 0.;
+    nofCMlep_gate5 = 0.; nofWMlep_gate5 = 0.; nofUMlep_gate5 = 0.;
+    nofCMlep_gate6 = 0.; nofWMlep_gate6 = 0.; nofUMlep_gate6 = 0.;
     for (unsigned int i = 0; i < dMSPmax; i++)
     {
       nofBKF_weighted[i] = 0.;
       nofAKF_weighted[i] = 0.;
     }
-    sumEvents = 0.; sumCMEvents = 0.;
+    sumEvents = 0.; sumCMhadEvents = 0.; sumCMlepEvents = 0.;
     sumTopMass = 0.; sumCMTopMass = 0.;
     sumMlb = 0.; sumCMMlb = 0.;
     
@@ -2059,17 +1830,6 @@ int main(int argc, char* argv[])
 //         cout << "Skipping DY+jets & W+jets datasets when doing pseudo experiments." << endl;
 //         continue;
 //       }
-      
-      
-      ///////////////////////////////////////////
-      ///  Initialise Jet Energy Corrections  ///
-      ///////////////////////////////////////////
-
-      vCorrParam.clear();
-      InitJEC(isData, dataSetName);
-      JetTools *jetTools = new JetTools(vCorrParam, jecUnc, true); //true means redo also L1
-      
-      
       
       
       string ntupleFileName = pathNtuples+"Ntuples_"+dataSetName+".root";
@@ -2315,7 +2075,7 @@ int main(int argc, char* argv[])
           }
           else
           {
-            if (makePlots && passedMETFilter)
+            if (makePlots)
             {
               MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF);
               MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF);
@@ -2335,7 +2095,7 @@ int main(int argc, char* argv[])
             }
           }
         }
-        else if (makePlots && passedMETFilter)
+        else if (makePlots)
         {
           MSPlot["nPVs_beforePU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
           MSPlot["nPVs_afterPU_"]->Fill(nvtx, datasets[d], false, lumiWeight);
@@ -2376,7 +2136,7 @@ int main(int argc, char* argv[])
         
         if ( selectedBJets.size() < 2 ) continue;
         
-        if (makePlots && passedMETFilter)
+        if (makePlots)
         {
           MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
           MSPlot["rho_"]->Fill(rho, datasets[d], true, lumiWeight*scaleFactor);
@@ -2385,30 +2145,6 @@ int main(int argc, char* argv[])
         if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
         nofHardSelected++;
         
-        if (! passedMETFilter) continue;
-        nofMETCleaned++;
-        
-        skipEvent = false;
-        for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-        {
-          for (int jJet = iJet+1; jJet < selectedJets.size(); jJet++)
-          {
-            tempDR = ROOT::Math::VectorUtil::DeltaR(selectedJets[iJet], selectedJets[jJet]);
-            if ( tempDR < 0.6 ) skipEvent = true;
-          }
-        }
-        //if (skipEvent) continue;
-        nofAfterDRmincut++;
-        
-//         for (int iJet = 0; iJet < selectedJets.size(); iJet++)
-//         {
-//           if ( jet_bdiscr[iJet] > CSVv2Medium )
-//           {
-//             selectedBJets.push_back(selectedJets[iJet]);
-//             bJetId.push_back(iJet);  /// selectedBJets[j] = selectedJets[bJetId[j]]
-//           }
-//         }
-        //std::sort(selectedBJets.begin(),selectedBJets.end(),HighestPt());  // already the case
         
         /// label jets with highest b discr
         for (int iJet = 0; iJet < selectedBJets.size(); iJet++)
@@ -2445,7 +2181,6 @@ int main(int argc, char* argv[])
             MSPlot["nPVs_beforePU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF);
             MSPlot["nPVs_afterPU_aSel_"]->Fill(nvtx, datasets[d], true, lumiWeight*thisLeptonSF*btagSF*puSF);
           }
-          MSPlot["leadingJet_pT_bKF_noTopCut_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor);
         }
         
         
@@ -2769,40 +2504,6 @@ int main(int argc, char* argv[])
         
         
         
-        ////////////////////////////////
-        ///  Jet Energy Corrections  ///
-        ////////////////////////////////
-        
-        //cout << "Original jet  p_x: " << selectedJets[0].Px() << "  p_y: " << selectedJets[0].Py() << "  p_z: " << selectedJets[0].Pz() << "  E: " << selectedJets[0].E() << "  Eta: " << selectedJets[0].Eta() << "  Phi: " << selectedJets[0].Phi() << endl;
-//         selJets.clear();
-//         for (int ijet = 0; ijet < selectedJets.size(); ijet++)
-//         {
-//           selJets.push_back(&selectedJets[ijet]);
-//         }
-//         if (! isData)
-//         {
-//           //jetTools->correctJetJESUnc(selJets, "minus", 1); if (nofAfterDRmincut == 1) cout << "Applying ad-hoc JESdown corrections" << endl;
-//           jetTools->correctJetJESUnc(selJets, "plus", 1); if (nofAfterDRmincut == 1) cout << "Applying ad-hoc JESup corrections" << endl;
-//         }
-//         for (int ijet = 0; ijet < selectedJets.size(); ijet++)
-//         {
-//           selectedJets[ijet] = *selJets[ijet];
-//         }
-        //cout << "Corrected jet p_x: " << selectedJets[0].Px() << "  p_y: " << selectedJets[0].Py() << "  p_z: " << selectedJets[0].Pz() << "  E: " << selectedJets[0].E() << "  Eta: " << selectedJets[0].Eta() << "  Phi: " << selectedJets[0].Phi() << endl;
-        
-//         skipEvent = false;
-//         for (int ijet = 0; ijet < selectedJets.size(); ijet++)
-//         {
-//           if ( selectedJets[ijet].Pt() < 30. || selectedJets[ijet].Pt() > 250. )
-//           {
-//             skipEvent = true;
-//             break;
-//           }
-//         }
-//         if (skipEvent) continue;
-        
-        
-        
         /////////////////////////////////////
         ///  Reconstruction of Top quark  ///
         /////////////////////////////////////
@@ -2851,27 +2552,61 @@ int main(int argc, char* argv[])
         // 3 possibilities:
         // - correct top match: 3 jets selected with reco method correspond to the 3 matched jets (n.b. this is also true when the jets originating from the W boson and the b jet do not exactly correspond to the matched jets, because we are only interested in the reconstructed top quark.)
         // - wrong permutation: the correct jet combination exists in the selected jets, but is not chosen by the reco method.
-        // - wrong (no) match:  the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
+        // - no match:          the correct jet combination does not exist in the selected jets (e.g. when one jet is not selected.)
         
         
         if (! isData)
         {
-          if (useNewVar)
+          if ( leptonicTopMatched )
           {
-            if ( leptonicTopMatched )
+            if ( labelsReco[3] == MCPermutation[3].first )  // correct b jet for leptonic top quark
             {
-              if ( labelsReco[3] == MCPermutation[3].first )  // correct b jet for leptonic top quark
-              {
-                isCM = true;
-                nofCorrectlyMatched++;
-              }
-              else  // wrong b jet
-              {
-                isWM = true;
-                nofNotCorrectlyMatched++;
-              }
+              isCMlep = true;
             }
-            else  // no match
+            else  // wrong b jet
+            {
+              isWMlep = true;
+            }
+          }
+          else  // no match
+          {
+            isUMlep = true;
+            if (isTTsemilep)    isUMlep_TTsemilep = true;
+            else if (isTTother) isUMlep_TTother = true;
+          }
+          
+          if (hadronicTopJetsMatched)
+          {
+            /// Correct match
+            if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
+            {
+              isCMhad = true;
+            }
+            else  // wrong permutation
+            {
+              isWMhad = true;
+            }
+          }  // end hadrTopMatch
+          else  // no match
+          {
+            isUMhad = true;
+            if (isTTsemilep)    isUMhad_TTsemilep = true;
+            else if (isTTother) isUMhad_TTother = true;
+          }
+          
+          if (doLikeComb)
+          {
+            if (isCMlep && isCMhad)
+            {
+              isCM = true;
+              nofCorrectlyMatched++;
+            }
+            else if (isWMlep && isWMhad)
+            {
+              isWM = true;
+              nofNotCorrectlyMatched++;
+            }
+            else if (isUMlep && isUMhad)
             {
               isUM = true;
               nofUnmatched++;
@@ -2886,24 +2621,48 @@ int main(int argc, char* argv[])
                 nofUnmatchedTTother++;
               }
             }
-          }
+          }  // both
+          else if (useNewVar)
+          {
+            if (isCMlep)
+            {
+              isCM = true;
+              nofCorrectlyMatched++;
+            }
+            else if (isWMlep)
+            {
+              isWM = true;
+              nofNotCorrectlyMatched++;
+            }
+            else if (isUMlep)
+            {
+              isUM = true;
+              nofUnmatched++;
+              if (isTTsemilep)
+              {
+                isUM_TTsemilep = true;
+                nofUnmatchedTTsemilep++;
+              }
+              else if (isTTother)
+              {
+                isUM_TTother = true;
+                nofUnmatchedTTother++;
+              }
+            }
+          }  // lep
           else
           {
-            if (hadronicTopJetsMatched)
+            if (isCMhad)
             {
-              /// Correct match
-              if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
-              {
-                isCM = true;
-                nofCorrectlyMatched++;
-              }
-              else  // wrong permutation
-              {
-                isWM = true;
-                nofNotCorrectlyMatched++;
-              }
-            }  // end hadrTopMatch
-            else  // no match
+              isCM = true;
+              nofCorrectlyMatched++;
+            }
+            else if (isWMhad)
+            {
+              isWM = true;
+              nofNotCorrectlyMatched++;
+            }
+            else if (isUMhad)
             {
               isUM = true;
               nofUnmatched++;
@@ -2918,7 +2677,7 @@ int main(int argc, char* argv[])
                 nofUnmatchedTTother++;
               }
             }
-          }
+          }  // had
           
           
           if ( (! isCM && ! isWM && ! isUM) || (isCM && isWM) || (isCM && isUM) || (isWM && isUM) )
@@ -2977,41 +2736,22 @@ int main(int argc, char* argv[])
         
         reco_mbjj_div_mjj_bKF = reco_top_mass_bKF/reco_W_mass_bKF;
         
-        if (isCM)      nofCM_gate1 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate1 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate1 += lumiWeight*scaleFactor*widthSF;
-        
-        /// Max dR cut
-//        if ( reco_dRlight_bKF > 4. ) continue;
-//        if ( reco_dRblight_min_bKF > 3.5 ) continue;
-        
-        //if ( reco_dRblight_min_bKF < 0.8 ) continue;
-        
-//         if ( reco_dRlight_bKF > 2.4 ) continue;
-//         if ( reco_dRblight_min_bKF > 2.2 ) continue;
-//         if ( reco_dRblight_max_bKF > 3.2 ) continue;
-//         if ( reco_dRbW_bKF > 2.5 || reco_dRbW_bKF < 0.4 ) continue;
-//         if ( reco_dRbb_bKF < 1.6 || reco_dRbb_bKF > 4.) continue;
-//         if ( reco_dRLepB_lep_bKF > 2.2 ) continue;
-//         if ( reco_dRLepB_had_bKF > 3.6 || reco_dRLepB_had_bKF < 1.5 ) continue;
-        nofAfterDRmaxcut++;
-        
+        if (isCMhad)      nofCMhad_gate1 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMhad) nofWMhad_gate1 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMhad) nofUMhad_gate1 += lumiWeight*scaleFactor*widthSF;
+        if (isCMlep)      nofCMlep_gate1 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMlep) nofWMlep_gate1 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMlep) nofUMlep_gate1 += lumiWeight*scaleFactor*widthSF;
         
         if ( reco_top_mass_bKF < minTopMass || reco_top_mass_bKF > maxTopMass ) continue;
-        //if ( fabs( reco_top_mass_bKF - reco_top_mass_alt_bKF ) < 75. ) continue;
+        nofTopMassCut_bKF++;
         
-        //if ( reco_mbjj_div_mjj_bKF < 1.65 || reco_mbjj_div_mjj_bKF > 2.45 ) continue;
-        
-//         if ( selectedJets[3].Pt() > 140. ) continue;
-//        if ( reco_ttbar_mass_bKF > 500. ) continue;
-//         if ( reco_mlb_bKF < 40. || reco_mlb_bKF > 200. ) continue;
-//        if ( reco_top_mass_bKF - reco_top_mass_alt_bKF > 75. ) continue;
-        //Ht = selectedJets[0].Pt() + selectedJets[1].Pt() + selectedJets[2].Pt() + selectedJets[3].Pt();
-        //if ( Ht < 220. ) continue;
-        
-        if (isCM)      nofCM_gate2 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate2 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate2 += lumiWeight*scaleFactor*widthSF;
+        if (isCMhad)      nofCMhad_gate2 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMhad) nofWMhad_gate2 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMhad) nofUMhad_gate2 += lumiWeight*scaleFactor*widthSF;
+        if (isCMlep)      nofCMlep_gate2 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMlep) nofWMlep_gate2 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMlep) nofUMlep_gate2 += lumiWeight*scaleFactor*widthSF;
         
         
         
@@ -3105,6 +2845,12 @@ int main(int argc, char* argv[])
             else if (isTTother) nofUnmatchedTTotherAKFNoCut++;
           }
           
+          if (isCMhad)      nofCMhad_gate3 += lumiWeight*scaleFactor*widthSF;
+          else if (isWMhad) nofWMhad_gate3 += lumiWeight*scaleFactor*widthSF;
+          else if (isUMhad) nofUMhad_gate3 += lumiWeight*scaleFactor*widthSF;
+          if (isCMlep)      nofCMlep_gate3 += lumiWeight*scaleFactor*widthSF;
+          else if (isWMlep) nofWMlep_gate3 += lumiWeight*scaleFactor*widthSF;
+          else if (isUMlep) nofUMlep_gate3 += lumiWeight*scaleFactor*widthSF;
           
           if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
           if ( applyKinFitCut && kFitChi2 < kinFitMinCutValue ) continue;
@@ -3121,9 +2867,16 @@ int main(int argc, char* argv[])
             else if (isTTother) nofUnmatchedTTotherAKF++;
           }
           
+          if (isCMhad)      nofCMhad_gate4 += lumiWeight*scaleFactor*widthSF;
+          else if (isWMhad) nofWMhad_gate4 += lumiWeight*scaleFactor*widthSF;
+          else if (isUMhad) nofUMhad_gate4 += lumiWeight*scaleFactor*widthSF;
+          if (isCMlep)      nofCMlep_gate4 += lumiWeight*scaleFactor*widthSF;
+          else if (isWMlep) nofWMlep_gate4 += lumiWeight*scaleFactor*widthSF;
+          else if (isUMlep) nofUMlep_gate4 += lumiWeight*scaleFactor*widthSF;
+          
+          
           selectedJetsKFcorrected.clear();
           selectedJetsKFcorrected = kf->getCorrectedJets();
-          
         }
         
         nofAKF_weighted[dMSP] += lumiWeight*scaleFactor*widthSF;
@@ -3143,27 +2896,6 @@ int main(int argc, char* argv[])
         selectedJetsAKF.push_back(selectedJets[labelsReco[2]]);
         selectedJetsAKF.push_back(selectedJets[labelsReco[3]]);
         std::sort(selectedJetsAKF.begin(),selectedJetsAKF.end(),HighestPt());
-        
-        
-        ////////////////////////////////
-        ///  Jet Energy Corrections  ///
-        ////////////////////////////////
-        
-//         //cout << "Original jet  p_x: " << selectedJets[0].Px() << "  p_y: " << selectedJets[0].Py() << "  p_z: " << selectedJets[0].Pz() << "  E: " << selectedJets[0].E() << endl;
-//         selJets.clear();
-//         for (int ijet = 0; ijet < selectedJetsKFcorrected.size(); ijet++)
-//         {
-//           selJets.push_back(&selectedJetsKFcorrected[ijet]);
-//         }
-//         if (! isData)
-//         {
-//           //jetTools->correctJetJESUnc(selJets, "minus", 1); if (nofAfterDRmincut == 1) cout << "Applying ad-hoc JESdown corrections" << endl;
-//           jetTools->correctJetJESUnc(selJets, "plus", 1); if (nofAfterDRmincut == 1) cout << "Applying ad-hoc JESup corrections" << endl;
-//         }
-//         for (int ijet = 0; ijet < selectedJetsKFcorrected.size(); ijet++)
-//         {
-//           selectedJetsKFcorrected[ijet] = *selJets[ijet];
-//         }
         
         
         
@@ -3200,31 +2932,9 @@ int main(int argc, char* argv[])
         
         reco_mbjj_div_mjj = reco_top_mass_bKF/reco_W_mass_bKF;
         
-        /// Temporarily !
-        //reco_top_mass_aKF += 1.5; // Manually shift top mass distribution by X GeV
         
         
-        if (isCM)      nofCM_gate3 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate3 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate3 += lumiWeight*scaleFactor*widthSF;
-        
-        //if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
-        //if ( reco_top_mass_aKF - reco_top_mass_bKF > 25 || reco_top_mass_aKF - reco_top_mass_bKF < -25 ) continue;
-        //if ( reco_top_pt_aKF < 100. ) continue;
-        //if ( selectedJetsKFcorrected[0].Pt() < 25. || selectedJetsKFcorrected[1].Pt() < 25. ) continue;
-        
-//        if ( fabs(reco_top_mass_aKF - reco_top_mass_alt_aKF) < 20. ) continue;
-        
-        //if ( reco_top_mass_alt_aKF < maxTopMass-5 ) continue;
-//        if ( reco_mlb_alt_aKF < 145. ) continue;
-        //if ( reco_mlb_aKF > 220. ) continue;
-        //if ( fabs(reco_top_mass_aKF - reco_top_mass_bKF) > 40. ) continue;
-        
-        if (isCM)      nofCM_gate4 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate4 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate4 += lumiWeight*scaleFactor*widthSF;
-        
-        
+        /// Check if switching b jets is more logical
         double tmpDiff = fabs(reco_top_mass_aKF-aveTopMassCM) - fabs(reco_top_mass_alt_aKF-aveTopMassCM);
         if ( tmpDiff > 8. )
         {
@@ -3259,30 +2969,45 @@ int main(int argc, char* argv[])
           
           
           /// Re-evaluate categories
-          if (useNewVar && leptonicTopMatched)
+          isCM = false; isWM = false; isCMhad = false; isWMhad = false; isCMlep = false; isWMlep = false;
+          if (leptonicTopMatched)
           {
-            isCM = false; isWM = false;
             if ( labelsReco[3] == MCPermutation[3].first )  // correct b jet for leptonic top quark
             {
-              isCM = true;
+              isCMlep = true;
             }
             else  // wrong b jet
             {
-              isWM = true;
+              isWMlep = true;
             }
           }
-          else if (! useNewVar && hadronicTopJetsMatched)
+          if (hadronicTopJetsMatched)
           {
-            isCM = false; isWM = false;
             /// Correct match
             if ( ( labelsReco[0] == MCPermutation[0].first || labelsReco[0] == MCPermutation[1].first || labelsReco[0] == MCPermutation[2].first ) && ( labelsReco[1] == MCPermutation[0].first || labelsReco[1] == MCPermutation[1].first || labelsReco[1] == MCPermutation[2].first ) && ( labelsReco[2] == MCPermutation[0].first || labelsReco[2] == MCPermutation[1].first || labelsReco[2] == MCPermutation[2].first ) )  // correct jets for top quark
             {
-              isCM = true;
+              isCMhad = true;
             }
             else  // wrong permutation
             {
-              isWM = true;
+              isWMhad = true;
             }
+          }
+          
+          if (doLikeComb)
+          {
+            if (isCMlep && isCMhad)      isCM = true;
+            else if (isWMlep && isWMhad) isWM = true;
+          }
+          if (useNewVar)
+          {
+            if (isCMlep)      isCM = true;
+            else if (isWMlep) isWM = true;
+          }
+          else
+          {
+            if (isCMhad)      isCM = true;
+            else if (isWMhad) isWM = true;
           }
           
           if (isCM) catSuffix = catSuffixList[0];
@@ -3304,31 +3029,33 @@ int main(int argc, char* argv[])
         //redTopMass = reco_top_mass_aKF/aveTopMassLL;
         //redTopMass = reco_top_mass_bKF/aveTopMassLL;
         //redTopMass = reco_top_mass_aKF/aveTopMassCM + (aveTopMassCM - aveTopMassLL)/aveTopMassCM;
-        //reco_new_var = reco_mbjj_div_mjj;
         reco_new_var = redMlbMass;
-        //reco_new_var = reco_dRLepB_lep_aKF;
         
         if ( reco_top_mass_aKF < 0. )
           PrintKFDebug(ievt);
         
         
-        if (isCM)      nofCM_gate5 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate5 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate5 += lumiWeight*scaleFactor*widthSF;
+        if (isCMhad)      nofCMhad_gate5 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMhad) nofWMhad_gate5 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMhad) nofUMhad_gate5 += lumiWeight*scaleFactor*widthSF;
+        if (isCMlep)      nofCMlep_gate5 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMlep) nofWMlep_gate5 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMlep) nofUMlep_gate5 += lumiWeight*scaleFactor*widthSF;
         
         if ( reco_top_mass_aKF > maxTopMass || reco_top_mass_aKF < minTopMass ) continue;
+        nofTopMassCut_aKF++;
+        
         if ( reco_mlb_aKF > 200. ) continue;
         if ( (reco_top_mass_aKF - reco_mlb_aKF) < 0. ) continue;
-        //if ( (reco_top_mass_aKF - reco_mlb_aKF) > 150. ) continue;
-        //if ( reco_mbjj_div_mjj_bKF < 1.5 || reco_mbjj_div_mjj_bKF > 2.6 ) continue;
-        //if ( reco_dRLepB_lep_bKF > reco_dRLepB_had_bKF - 0.4 ) continue;
-        //if ( reco_top_mass_alt_aKF < aveTopMassCM ) continue;
         if ( reco_top_mass_alt_aKF < 200. ) continue;
         
         
-        if (isCM)      nofCM_gate6 += lumiWeight*scaleFactor*widthSF;
-        else if (isWM) nofWM_gate6 += lumiWeight*scaleFactor*widthSF;
-        else if (isUM) nofUM_gate6 += lumiWeight*scaleFactor*widthSF;
+        if (isCMhad)      nofCMhad_gate6 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMhad) nofWMhad_gate6 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMhad) nofUMhad_gate6 += lumiWeight*scaleFactor*widthSF;
+        if (isCMlep)      nofCMlep_gate6 += lumiWeight*scaleFactor*widthSF;
+        else if (isWMlep) nofWMlep_gate6 += lumiWeight*scaleFactor*widthSF;
+        else if (isUMlep) nofUMlep_gate6 += lumiWeight*scaleFactor*widthSF;
         
         nofAfterLastCut++;
         
@@ -3337,12 +3064,15 @@ int main(int argc, char* argv[])
         {
           sumEvents  += lumiWeight*scaleFactor*widthSF;
           sumTopMass += reco_top_mass_aKF*lumiWeight*scaleFactor*widthSF;
-          //sumTopMass += reco_top_mass_bKF*lumiWeight*scaleFactor*widthSF;
           sumMlb += reco_mlb_aKF*lumiWeight*scaleFactor*widthSF;
-          if (isCM)
+          if (isCMhad)
           {
-            sumCMEvents += lumiWeight*scaleFactor*widthSF;
+            sumCMhadEvents += lumiWeight*scaleFactor*widthSF;
             sumCMTopMass += reco_top_mass_aKF*lumiWeight*scaleFactor*widthSF;
+          }
+          if (isCMlep)
+          {
+            sumCMlepEvents += lumiWeight*scaleFactor*widthSF;
             sumCMMlb += reco_mlb_aKF*lumiWeight*scaleFactor*widthSF;
           }
         }
@@ -3428,11 +3158,6 @@ int main(int argc, char* argv[])
               else if (doLike2D) like2D->CalculateCMLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             }
           }
-//            if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ( isCM || isWM ) )
-//            {
-//              if (useNewVar) like->CalculateCMLikelihood(reco_new_var, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
-//              else like->CalculateTempLikelihood(redTopMass, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
-//            }
         }
         
         /// Calculate fraction of events in category outside interval
@@ -3459,21 +3184,18 @@ int main(int argc, char* argv[])
             if (isCM)
             {
               nofCM++;
-              nofCMl += lumiWeight*scaleFactor;
               nofCM_weighted += lumiWeight*scaleFactor*widthSF;
               if (isTTbar) nofCM_TT++;
             }
             else if (isWM)
             {
               nofWM++;
-              nofWMl += lumiWeight*scaleFactor;
               nofWM_weighted += lumiWeight*scaleFactor*widthSF;
               if (isTTbar) nofWM_TT++;
             }
             else if (isUM)
             {
               nofUM++;
-              nofUMl += lumiWeight*scaleFactor;
               nofUM_weighted += lumiWeight*scaleFactor*widthSF;
               if (isTTbar) nofUM_TT++;
               if (isTTsemilep) nofUM_TTsemilep_weighted += lumiWeight*scaleFactor*widthSF;
@@ -3554,13 +3276,6 @@ int main(int argc, char* argv[])
               }
               
               FillCatsPlots(catSuffix);
-              
-//               int dMSP = d;
-//               if (hasFoundTTbar && ! isTTbar) dMSP = d+3;
-//               else if (isTTbar && isWM) dMSP = d+1;
-//               else if (isTTbar && isUM_TTsemilep) dMSP = d+2;
-//               else if (isTTbar && isUM_TTother) dMSP = d+3;
-              
               FillMSPlots(dMSP, doneKinFit);
             }
           }
@@ -3614,13 +3329,10 @@ int main(int argc, char* argv[])
         {
           aveTopMassLL = sumTopMass/sumEvents;
           cout << endl << "Average top mass for all MC is    " << aveTopMassLL << endl;
-          //aveTopMassCM = sumCMTopMass/sumCMEvents;
-          if (useNewVar) cout << "Note: CM != hadronic top!" << endl;
-          cout << "Average top mass for CM events is " << sumCMTopMass/sumCMEvents << " (" << aveTopMassCM << ")" << endl;
+          cout << "Average top mass for CM events is " << sumCMTopMass/sumCMhadEvents << " (" << aveTopMassCM << ")" << endl;
           
           aveMlbMass = sumMlb/sumEvents;
-          aveMlbMassCM = sumCMMlb/sumCMEvents;
-          if (! useNewVar) cout << "Note: CM != leptonic top!" << endl;
+          aveMlbMassCM = sumCMMlb/sumCMlepEvents;
           cout << "Average M_{lb} mass is " << aveMlbMass << " and for CM events " << aveMlbMassCM << endl << endl;
           
           /// Rerun with new average top mass
@@ -3642,12 +3354,20 @@ int main(int argc, char* argv[])
             
             nofCM = 0; nofWM = 0; nofUM = 0;
             nofCM_TT = 0; nofWM_TT = 0; nofUM_TT = 0;
-            nofCMl = 0; nofWMl = 0; nofUMl = 0;
             nofCM_weighted = 0.; nofWM_weighted = 0.; nofUM_weighted = 0.; nofUM_TTsemilep_weighted = 0.; nofUM_TTother_weighted = 0.; nofUM_other_weighted = 0.;
             nofCMout_weighted = 0.; nofWMout_weighted = 0.; nofUMout_weighted = 0.; nofUMout_TTsemilep_weighted = 0.; nofUMout_TTother_weighted = 0.; nofUMout_other_weighted = 0.;
-            nofCM_gate1 = 0.; nofWM_gate1 = 0.; nofUM_gate1 = 0.; nofCM_gate2 = 0.; nofWM_gate2 = 0.; nofUM_gate2 = 0.;
-            nofCM_gate3 = 0.; nofWM_gate3 = 0.; nofUM_gate3 = 0.; nofCM_gate4 = 0.; nofWM_gate4 = 0.; nofUM_gate4 = 0.;
-            nofCM_gate5 = 0.; nofWM_gate5 = 0.; nofUM_gate5 = 0.; nofCM_gate6 = 0.; nofWM_gate6 = 0.; nofUM_gate6 = 0.;
+            nofCMhad_gate1 = 0.; nofWMhad_gate1 = 0.; nofUMhad_gate1 = 0.;
+            nofCMhad_gate2 = 0.; nofWMhad_gate2 = 0.; nofUMhad_gate2 = 0.;
+            nofCMhad_gate3 = 0.; nofWMhad_gate3 = 0.; nofUMhad_gate3 = 0.;
+            nofCMhad_gate4 = 0.; nofWMhad_gate4 = 0.; nofUMhad_gate4 = 0.;
+            nofCMhad_gate5 = 0.; nofWMhad_gate5 = 0.; nofUMhad_gate5 = 0.;
+            nofCMhad_gate6 = 0.; nofWMhad_gate6 = 0.; nofUMhad_gate6 = 0.;
+            nofCMlep_gate1 = 0.; nofWMlep_gate1 = 0.; nofUMlep_gate1 = 0.;
+            nofCMlep_gate2 = 0.; nofWMlep_gate2 = 0.; nofUMlep_gate2 = 0.;
+            nofCMlep_gate3 = 0.; nofWMlep_gate3 = 0.; nofUMlep_gate3 = 0.;
+            nofCMlep_gate4 = 0.; nofWMlep_gate4 = 0.; nofUMlep_gate4 = 0.;
+            nofCMlep_gate5 = 0.; nofWMlep_gate5 = 0.; nofUMlep_gate5 = 0.;
+            nofCMlep_gate6 = 0.; nofWMlep_gate6 = 0.; nofUMlep_gate6 = 0.;
             
             hasFoundTTbar = false;
             doReweighting = false;
@@ -3660,12 +3380,11 @@ int main(int argc, char* argv[])
       
       cout << endl;  /// Stronger selection in this analyser compared to Ntuples ==> endEvent --> nofHardSelected
       cout << "Number of events with exactly 4 jets with pT > 30 GeV: " << nofHardSelected << " (" << 100*((float)nofHardSelected/(float)endEvent) << "%)" << endl;
-      cout << "Number of events with clean MET: " << nofMETCleaned << " (" << 100*((float)nofMETCleaned/(float)nofHardSelected) << "%)" << endl;
-      cout << "Number of events after min dR cut: " << nofAfterDRmincut << " (" << 100*((float)nofAfterDRmincut/(float)nofMETCleaned) << "%)" << endl;
-      cout << "Number of events after max dR cut: " << nofAfterDRmaxcut << " (" << 100*((float)nofAfterDRmaxcut/(float)nofAfterDRmincut) << "%)" << endl;
-      if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofAfterDRmaxcut) << "%)" << endl;
-      if (doKinFit) cout << "Number of events selected after last cut: " << nofAfterLastCut << " (" << 100*((float)nofAfterLastCut/(float)nofAcceptedKFit) << "%)" << endl;
-      else cout << "Number of events selected after last cut: " << nofAfterLastCut << " (" << 100*((float)nofAfterLastCut/(float)nofAfterDRmaxcut) << "%)" << endl;
+      cout << "Number of events after top mass cut (bKF): " << nofTopMassCut_bKF << " (" << 100*((float)nofTopMassCut_bKF/(float)nofHardSelected) << "%)" << endl;
+      if (doKinFit) cout << "Number of events accepted by kinFitter: " << nofAcceptedKFit << " (" << 100*((float)nofAcceptedKFit/(float)nofTopMassCut_bKF) << "%)" << endl;
+      if (doKinFit) cout << "Number of events after top mass cut (aKF): " << nofTopMassCut_aKF << " (" << 100*((float)nofTopMassCut_aKF/(float)nofAcceptedKFit) << "%)" << endl;
+      else cout << "Number of events after top mass cut (aKF): " << nofTopMassCut_aKF << " (" << 100*((float)nofTopMassCut_aKF/(float)nofTopMassCut_bKF) << "%)" << endl;
+      cout << "Number of events selected after last cut: " << nofAfterLastCut << " (" << 100*((float)nofAfterLastCut/(float)nofTopMassCut_aKF) << "%)" << endl;
       
       if (isTTbar)
       {
@@ -3678,9 +3397,9 @@ int main(int argc, char* argv[])
       if (! isData && nofHadrMatchedEvents > 0 )
       {
         cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
-        cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofAfterDRmaxcut) << "%)" << endl;
+        cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofTopMassCut_bKF) << "%)" << endl;
         if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
-        cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofAfterDRmaxcut) << "%)" << endl;
+        cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofTopMassCut_bKF) << "%)" << endl;
         if (doKinFit) cout << "Number of events with leptonic top matched (after KF):  " << setw(8) << right << nofLeptMatchedEventsAKF << " (" << 100*((float)nofLeptMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
         if (! doGenOnly)
         {
@@ -3696,7 +3415,7 @@ int main(int argc, char* argv[])
           
           if (doKinFit)
           {
-            cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofAfterDRmaxcut << "% of all events is correctly matched before kinfitter." << endl;
+            cout << "                        " << 100*(float)nofCorrectlyMatched / (float)nofTopMassCut_bKF << "% of all events is correctly matched before kinfitter." << endl;
             cout << " --- Kinematic fit --- Before chi2 cut --- " << endl;
             cout << "Correctly matched reconstructed events    : " << setw(8) << right << nofCorrectlyMatchedAKFNoCut << endl;
             cout << "Not correctly matched reconstructed events: " << setw(8) << right << nofNotCorrectlyMatchedAKFNoCut << endl;
@@ -3762,7 +3481,6 @@ int main(int argc, char* argv[])
     if (! doGenOnly && ! testTTbarOnly)
     {
       cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCM << " (" << 100*(double)nofCM/((double)(nofCM+nofWM+nofUM)) << "%)   WM: " << nofWM << " (" << 100*(double)nofWM/((double)(nofCM+nofWM+nofUM)) << "%)   UM: " << nofUM << " (" << 100*(double)nofUM/((double)(nofCM+nofWM+nofUM)) << "%)   Total: " << nofCM+nofWM+nofUM << endl;
-      cout << "Number of events with " << minCutRedTopMass << " < mt/<mt> < " << maxCutRedTopMass << " : CM: " << nofCMl << " (" << 100*nofCMl/(nofCMl+nofWMl+nofUMl) << "%)   WM: " << nofWMl << " (" << 100*nofWMl/(nofCMl+nofWMl+nofUMl) << "%)   UM: " << nofUMl << " (" << 100*nofUMl/(nofCMl+nofWMl+nofUMl) << "%)   Total: " << nofCMl+nofWMl+nofUMl << endl;
       cout << "                                  weighted: CM: " << nofCM_weighted << " (" << 100*nofCM_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%)   WM: " << nofWM_weighted << " (" << 100*nofWM_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%)   UM: " << nofUM_weighted << " (" << 100*nofUM_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%),  whereof TT semilep UM: " << nofUM_TTsemilep_weighted << " (" << 100*nofUM_TTsemilep_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%),  and TT other UM: " << nofUM_TTother_weighted << " (" << 100*nofUM_TTother_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%),  and other UM: " << nofUM_other_weighted << " (" << 100*nofUM_other_weighted/(nofCM_weighted+nofWM_weighted+nofUM_weighted) << "%)   Total: " << (int)(nofCM_weighted+nofWM_weighted+nofUM_weighted) << endl;
       cout << "                               (TTbar only) CM: " << nofCM_TT << "               WM: " << nofWM_TT << "               UM: " << nofUM_TT << endl;
       cout << endl << "Number of events outside interval:          CM: " << nofCMout_weighted << " (" << 100*nofCMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofUMout_weighted) << "%)   WM: " << nofWMout_weighted << " (" << 100*nofWMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofUMout_weighted) << "%)   UM: " << nofUMout_weighted << " (" << 100*nofUMout_weighted/(nofCMout_weighted+nofWMout_weighted+nofUMout_weighted) << "%),  whereof TT semilep UM: " << nofUMout_TTsemilep_weighted << " (" << 100*nofUMout_TTsemilep_weighted/(nofCMout_weighted+nofWMout_weighted+nofUMout_weighted) << "%),  and TT other UM: " << nofUMout_TTother_weighted << " (" << 100*nofUMout_TTother_weighted/(nofCMout_weighted+nofWMout_weighted+nofUMout_weighted) 
@@ -3772,12 +3490,28 @@ int main(int argc, char* argv[])
     if (! doGenOnly)
     {
       cout << endl;
-      cout << "Number of events before cuts     :  CM: " << nofCM_gate1 << " (" << 100*nofCM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   WM: " << nofWM_gate1 << " (" << 100*nofWM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   UM: " << nofUM_gate1 << " (" << 100*nofUM_gate1/(nofCM_gate1+nofWM_gate1+nofUM_gate1) << "%)   Total: " << nofCM_gate1+nofWM_gate1+nofUM_gate1 << endl;
-      cout << "Number of events after cuts      :  CM: " << nofCM_gate2 << " (" << 100*nofCM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   WM: " << nofWM_gate2 << " (" << 100*nofWM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   UM: " << nofUM_gate2 << " (" << 100*nofUM_gate2/(nofCM_gate2+nofWM_gate2+nofUM_gate2) << "%)   Total: " << nofCM_gate2+nofWM_gate2+nofUM_gate2 << endl;
-      cout << "Number of events aKF before cuts :  CM: " << nofCM_gate3 << " (" << 100*nofCM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   WM: " << nofWM_gate3 << " (" << 100*nofWM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   UM: " << nofUM_gate3 << " (" << 100*nofUM_gate3/(nofCM_gate3+nofWM_gate3+nofUM_gate3) << "%)   Total: " << nofCM_gate3+nofWM_gate3+nofUM_gate3 << endl;
-      cout << "Number of events aKF after cuts  :  CM: " << nofCM_gate4 << " (" << 100*nofCM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   WM: " << nofWM_gate4 << " (" << 100*nofWM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   UM: " << nofUM_gate4 << " (" << 100*nofUM_gate4/(nofCM_gate4+nofWM_gate4+nofUM_gate4) << "%)   Total: " << nofCM_gate4+nofWM_gate4+nofUM_gate4 << endl;
-      cout << "Number of events swap before cuts:  CM: " << nofCM_gate5 << " (" << 100*nofCM_gate5/(nofCM_gate5+nofWM_gate5+nofUM_gate5) << "%)   WM: " << nofWM_gate5 << " (" << 100*nofWM_gate5/(nofCM_gate5+nofWM_gate5+nofUM_gate5) << "%)   UM: " << nofUM_gate5 << " (" << 100*nofUM_gate5/(nofCM_gate5+nofWM_gate5+nofUM_gate5) << "%)   Total: " << nofCM_gate5+nofWM_gate5+nofUM_gate5 << endl;
-      cout << "Number of events swap after cuts :  CM: " << nofCM_gate6 << " (" << 100*nofCM_gate6/(nofCM_gate6+nofWM_gate6+nofUM_gate6) << "%)   WM: " << nofWM_gate6 << " (" << 100*nofWM_gate6/(nofCM_gate6+nofWM_gate6+nofUM_gate6) << "%)   UM: " << nofUM_gate6 << " (" << 100*nofUM_gate6/(nofCM_gate6+nofWM_gate6+nofUM_gate6) << "%)   Total: " << nofCM_gate6+nofWM_gate6+nofUM_gate6 << endl;
+      cout << "Hadronic top quark" << endl;
+      cout << "Number of events before cuts        :  CM: " << nofCMhad_gate1 << " (" << 100*nofCMhad_gate1/(nofCMhad_gate1+nofWMhad_gate1+nofUMhad_gate1) << "%)   WM: " << nofWMhad_gate1 << " (" << 100*nofWMhad_gate1/(nofCMhad_gate1+nofWMhad_gate1+nofUMhad_gate1) << "%)   UM: " << nofUMhad_gate1 << " (" << 100*nofUMhad_gate1/(nofCMhad_gate1+nofWMhad_gate1+nofUMhad_gate1) << "%)   Total: " << nofCMhad_gate1+nofWMhad_gate1+nofUMhad_gate1 << endl;
+      cout << "Number of events after cuts         :  CM: " << nofCMhad_gate2 << " (" << 100*nofCMhad_gate2/(nofCMhad_gate2+nofWMhad_gate2+nofUMhad_gate2) << "%)   WM: " << nofWMhad_gate2 << " (" << 100*nofWMhad_gate2/(nofCMhad_gate2+nofWMhad_gate2+nofUMhad_gate2) << "%)   UM: " << nofUMhad_gate2 << " (" << 100*nofUMhad_gate2/(nofCMhad_gate2+nofWMhad_gate2+nofUMhad_gate2) << "%)   Total: " << nofCMhad_gate2+nofWMhad_gate2+nofUMhad_gate2 << endl;
+      if (doKinFit)
+      {
+        cout << "Number of events aKF before chi2 cut:  CM: " << nofCMhad_gate3 << " (" << 100*nofCMhad_gate3/(nofCMhad_gate3+nofWMhad_gate3+nofUMhad_gate3) << "%)   WM: " << nofWMhad_gate3 << " (" << 100*nofWMhad_gate3/(nofCMhad_gate3+nofWMhad_gate3+nofUMhad_gate3) << "%)   UM: " << nofUMhad_gate3 << " (" << 100*nofUMhad_gate3/(nofCMhad_gate3+nofWMhad_gate3+nofUMhad_gate3) << "%)   Total: " << nofCMhad_gate3+nofWMhad_gate3+nofUMhad_gate3 << endl;
+        cout << "Number of events aKF after chi2 cut :  CM: " << nofCMhad_gate4 << " (" << 100*nofCMhad_gate4/(nofCMhad_gate4+nofWMhad_gate4+nofUMhad_gate4) << "%)   WM: " << nofWMhad_gate4 << " (" << 100*nofWMhad_gate4/(nofCMhad_gate4+nofWMhad_gate4+nofUMhad_gate4) << "%)   UM: " << nofUMhad_gate4 << " (" << 100*nofUMhad_gate4/(nofCMhad_gate4+nofWMhad_gate4+nofUMhad_gate4) << "%)   Total: " << nofCMhad_gate4+nofWMhad_gate4+nofUMhad_gate4 << endl;
+      }
+      cout << "Number of events swap before cuts   :  CM: " << nofCMhad_gate5 << " (" << 100*nofCMhad_gate5/(nofCMhad_gate5+nofWMhad_gate5+nofUMhad_gate5) << "%)   WM: " << nofWMhad_gate5 << " (" << 100*nofWMhad_gate5/(nofCMhad_gate5+nofWMhad_gate5+nofUMhad_gate5) << "%)   UM: " << nofUMhad_gate5 << " (" << 100*nofUMhad_gate5/(nofCMhad_gate5+nofWMhad_gate5+nofUMhad_gate5) << "%)   Total: " << nofCMhad_gate5+nofWMhad_gate5+nofUMhad_gate5 << endl;
+      cout << "Number of events swap after cuts    :  CM: " << nofCMhad_gate6 << " (" << 100*nofCMhad_gate6/(nofCMhad_gate6+nofWMhad_gate6+nofUMhad_gate6) << "%)   WM: " << nofWMhad_gate6 << " (" << 100*nofWMhad_gate6/(nofCMhad_gate6+nofWMhad_gate6+nofUMhad_gate6) << "%)   UM: " << nofUMhad_gate6 << " (" << 100*nofUMhad_gate6/(nofCMhad_gate6+nofWMhad_gate6+nofUMhad_gate6) << "%)   Total: " << nofCMhad_gate6+nofWMhad_gate6+nofUMhad_gate6 << endl;
+      
+      cout << endl;
+      cout << "Leptonic top quark" << endl;
+      cout << "Number of events before cuts        :  CM: " << nofCMlep_gate1 << " (" << 100*nofCMlep_gate1/(nofCMlep_gate1+nofWMlep_gate1+nofUMlep_gate1) << "%)   WM: " << nofWMlep_gate1 << " (" << 100*nofWMlep_gate1/(nofCMlep_gate1+nofWMlep_gate1+nofUMlep_gate1) << "%)   UM: " << nofUMlep_gate1 << " (" << 100*nofUMlep_gate1/(nofCMlep_gate1+nofWMlep_gate1+nofUMlep_gate1) << "%)   Total: " << nofCMlep_gate1+nofWMlep_gate1+nofUMlep_gate1 << endl;
+      cout << "Number of events after cuts         :  CM: " << nofCMlep_gate2 << " (" << 100*nofCMlep_gate2/(nofCMlep_gate2+nofWMlep_gate2+nofUMlep_gate2) << "%)   WM: " << nofWMlep_gate2 << " (" << 100*nofWMlep_gate2/(nofCMlep_gate2+nofWMlep_gate2+nofUMlep_gate2) << "%)   UM: " << nofUMlep_gate2 << " (" << 100*nofUMlep_gate2/(nofCMlep_gate2+nofWMlep_gate2+nofUMlep_gate2) << "%)   Total: " << nofCMlep_gate2+nofWMlep_gate2+nofUMlep_gate2 << endl;
+      if (doKinFit)
+      {
+        cout << "Number of events aKF before chi2 cut:  CM: " << nofCMlep_gate3 << " (" << 100*nofCMlep_gate3/(nofCMlep_gate3+nofWMlep_gate3+nofUMlep_gate3) << "%)   WM: " << nofWMlep_gate3 << " (" << 100*nofWMlep_gate3/(nofCMlep_gate3+nofWMlep_gate3+nofUMlep_gate3) << "%)   UM: " << nofUMlep_gate3 << " (" << 100*nofUMlep_gate3/(nofCMlep_gate3+nofWMlep_gate3+nofUMlep_gate3) << "%)   Total: " << nofCMlep_gate3+nofWMlep_gate3+nofUMlep_gate3 << endl;
+        cout << "Number of events aKF after chi2 cut :  CM: " << nofCMlep_gate4 << " (" << 100*nofCMlep_gate4/(nofCMlep_gate4+nofWMlep_gate4+nofUMlep_gate4) << "%)   WM: " << nofWMlep_gate4 << " (" << 100*nofWMlep_gate4/(nofCMlep_gate4+nofWMlep_gate4+nofUMlep_gate4) << "%)   UM: " << nofUMlep_gate4 << " (" << 100*nofUMlep_gate4/(nofCMlep_gate4+nofWMlep_gate4+nofUMlep_gate4) << "%)   Total: " << nofCMlep_gate4+nofWMlep_gate4+nofUMlep_gate4 << endl;
+      }
+      cout << "Number of events swap before cuts   :  CM: " << nofCMlep_gate5 << " (" << 100*nofCMlep_gate5/(nofCMlep_gate5+nofWMlep_gate5+nofUMlep_gate5) << "%)   WM: " << nofWMlep_gate5 << " (" << 100*nofWMlep_gate5/(nofCMlep_gate5+nofWMlep_gate5+nofUMlep_gate5) << "%)   UM: " << nofUMlep_gate5 << " (" << 100*nofUMlep_gate5/(nofCMlep_gate5+nofWMlep_gate5+nofUMlep_gate5) << "%)   Total: " << nofCMlep_gate5+nofWMlep_gate5+nofUMlep_gate5 << endl;
+      cout << "Number of events swap after cuts    :  CM: " << nofCMlep_gate6 << " (" << 100*nofCMlep_gate6/(nofCMlep_gate6+nofWMlep_gate6+nofUMlep_gate6) << "%)   WM: " << nofWMlep_gate6 << " (" << 100*nofWMlep_gate6/(nofCMlep_gate6+nofWMlep_gate6+nofUMlep_gate6) << "%)   UM: " << nofUMlep_gate6 << " (" << 100*nofUMlep_gate6/(nofCMlep_gate6+nofWMlep_gate6+nofUMlep_gate6) << "%)   Total: " << nofCMlep_gate6+nofWMlep_gate6+nofUMlep_gate6 << endl;
     }
     
     
@@ -3889,10 +3623,6 @@ int main(int argc, char* argv[])
           if (doLikeW)       likeW->GetOutputWidth(thisWidth, thisMass, "CM", true, true);
           else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, "CM", true, true);
           else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, "CM", true, true);
-//          cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-//          like->GetOutputWidth(thisWidth, "matched", true, true);
-//           //cout << "Output width for generated events (using likelihood with only CM template): " << endl;
-//           //like->GetOutputWidth(scaleWidth, "gen", true);
         }
 //         //cout << "Output width from file (standard calculation): " << endl;
 //         //like->GetOutputWidth(llFileName+".txt", scaleWidth, true);
@@ -4288,7 +4018,6 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
   tree->SetBranchAddress("hasErasedBadOrCloneMuon", &hasErasedBadOrCloneMuon, &b_hasErasedBadOrCloneMuon);
-//  tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -4436,7 +4165,6 @@ void InitMSPlots()
   MSPlot["rho_"] = new MultiSamplePlot(datasets, "#rho", 41, -0.5, 40.5, "#rho");
   MSPlot["nJets_"] = new MultiSamplePlot(datasets, "nJets_", 13, -0.5, 12.5, "# jets");
   MSPlot["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["leadingJet_pT_bKF_noTopCut_"] = new MultiSamplePlot(datasets, "leadingJet_pT_bKF_noTopCut_", 40, 0, 400, "p_{T}", "GeV");
   MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
   MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
   MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
@@ -4663,12 +4391,10 @@ void InitHisto1D()
   
   /// SFs
   histo1D["width_SF"] = new TH1F("width_SF", "Scale factor to change the ttbar distribution width; width SF", 500, 0, 5);
-  //histo1D["btag_SF"] = new TH1F("btag_SF", "b tag scale factor; btag SF", 80, 0, 2);
   
   if (makeControlPlots)
   {
     histo1D["dR_jets_min"]  = new TH1F("dR_jets_min","Minimal delta R between two jets; #Delta R(j_{1},j_{2})", 35, 0, 3.5);
-//    histo1D["dR_jets_sum"]  = new TH1F("dR_jets_sum","Sum of delta R between all jets; #Delta R(j_{1},j_{2})", 60, 0, 12);
   }
   
   
@@ -4849,26 +4575,6 @@ void InitHisto2D()
   histo2D["qqb2_vs_lb2_aKF_WM"] = new TH2F("qqb2_vs_lb2_aKF_WM","Reconstructed alt. hadronic vs. leptonic top quark mass (reco, wrong match); m_{qqb_{2}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
   histo2D["qqb2_vs_lb2_aKF_UM"] = new TH2F("qqb2_vs_lb2_aKF_UM","Reconstructed alt. hadronic vs. leptonic top quark mass (reco, unmatched); m_{qqb_{2}} [GeV]; m_{lb_{2}} [GeV]", 500, 0, 500, 500, 0, 500);
   
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCut_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCut_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCut_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCut_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRlepCutHard_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRlepCutHard_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRhadCutHard_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRhadCutHard_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCuts_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCuts_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_CM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_CM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, correct match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_WM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_WM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, wrong permutations); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
-  //  histo2D["ttbar_mass_vs_minMlb_dRBothCutsHard_UM"] = new TH2F("ttbar_mass_vs_minMlb_dRBothCutsHard_UM","Reconstructed mass of the top quark pair vs. minimal delta R between the lepton and the (supposed to be) leptonic b jet (reco, no match); min(M_{lb}) [GeV]; M_{t#bar{t}} [GeV]", 400, 0, 800, 500, 0, 1000);
   
   /// KinFitter
   if (doKinFit)
@@ -4976,9 +4682,6 @@ void InitLikelihoodPlots()
   for (int iMass = 0; iMass < nLikeMasses; iMass++)
   {
     histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
-//     histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
-//     histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
-//     histo1DLike["loglike_vs_width_UM_m"+DotReplace(redTopMassArray[iMass])] = new TH1D(("loglike_vs_width_UM_m"+DotReplace(redTopMassArray[iMass])).c_str(), ("loglike_vs_width_UM_m"+DotReplace(redTopMassArray[iMass])+"; width (a.u.); -log(likelihood)").c_str(), nWidthsLike, -0.5, nWidthsLike-0.5);
   }
 }
 
@@ -5191,9 +4894,8 @@ void ClearMetaData()
   relativeSF = 1.;
   
   nofHardSelected = 0;
-  nofMETCleaned = 0;
-  nofAfterDRmincut = 0;
-  nofAfterDRmaxcut = 0;
+  nofTopMassCut_bKF = 0;
+  nofTopMassCut_aKF = 0;
   nofAfterLastCut = 0;
   nofTTsemilep = 0;
   nofTTdilep = 0;
@@ -5450,6 +5152,16 @@ void ClearVars()
   isUM = false;
   isUM_TTsemilep = false;
   isUM_TTother = false;
+  isCMhad = false;
+  isWMhad = false;
+  isUMhad = false;
+  isUMhad_TTsemilep = false;
+  isUMhad_TTother = false;
+  isCMlep = false;
+  isWMlep = false;
+  isUMlep = false;
+  isUMlep_TTsemilep = false;
+  isUMlep_TTother = false;
   isTTsemilep = false;
   isTTother = false;
   doneKinFit = false;
@@ -5763,25 +5475,7 @@ void FillCatsPlots(string catSuffix)
     histo2D["qqb1_vs_lb1_aKF"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_alt_aKF, widthSF);
     histo2D["qqb2_vs_lb2_aKF"+catSuffix]->Fill(reco_top_mass_alt_aKF, reco_mlb_aKF, widthSF);
     histo2D["qqb1lb2_vs_qqb2lb1_aKF"+catSuffix]->Fill((selectedJetsKFcorrected[0]+selectedJetsKFcorrected[1]+selectedJets[labelsReco[2]]).M()-(selectedJets[labelsReco[3]]+selectedLepton[0]).M(), (selectedJetsKFcorrected[0]+selectedJetsKFcorrected[1]+selectedJets[labelsReco[3]]).M()-(selectedJets[labelsReco[2]]+selectedLepton[0]).M(), widthSF);
-//    if ( reco_dRLepB_lep < 3. )
-//    {
-//      histo2D[("ttbar_mass_vs_minMlb_dRlepCut"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//      if ( reco_dRLepB_had > 1.2 )
-//        histo2D[("ttbar_mass_vs_minMlb_dRBothCuts"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//      
-//      if ( reco_dRLepB_lep < 2. )
-//      {
-//        histo2D[("ttbar_mass_vs_minMlb_dRlepCutHard"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//        if ( reco_dRLepB_had > 2. )
-//          histo2D[("ttbar_mass_vs_minMlb_dRBothCutsHard"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//      }
-//    }
-//    if ( reco_dRLepB_had > 1.2 )
-//    {
-//      histo2D[("ttbar_mass_vs_minMlb_dRhadCut"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//      if ( reco_dRLepB_had > 2. )
-//        histo2D[("ttbar_mass_vs_minMlb_dRhadCutHard"+catSuffix).c_str()]->Fill(reco_mlb_aKF, reco_ttbar_mass_aKF, widthSF);
-//    }
+    
     if (doKinFit)
     {
       histo1D["KF_Chi2"+catSuffix]->Fill(kFitChi2);
@@ -5957,9 +5651,6 @@ void FillLikelihoodPlots()
 //        if (redTopMass > redTopMassArray[iMass] && redTopMass < redTopMassArray[iMass+1])
 //        {
           histo1DLike["loglike_vs_width_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//          if (isCM) histo1DLike["loglike_vs_width_CM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//          if (isWM) histo1DLike["loglike_vs_width_WM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
-//          if (isUM) histo1DLike["loglike_vs_width_UM_m"+DotReplace(redTopMassArray[iMass])]->SetBinContent(iWidth, loglike_per_evt[iWidth]);
 //        }
       }  // end width
 
@@ -5989,10 +5680,6 @@ void WriteLikelihoodPlots()
     }
     temp->SetStats(0);
     temp->Write();
-//     TCanvas* tempCanvas = new TCanvas((it->first).c_str(), (it->first).c_str());
-//     tempCanvas->cd();
-//     temp->Draw();
-//     tempCanvas->SaveAs( (pathOutput+"Likelihood/"+it->first+".png").c_str() );
   }
   
   foutLike->Close();
@@ -6065,8 +5752,8 @@ void SetUpSelectionTable()
   selTab->AddCutStep("$\\geq 1$ \\bq~jet");
   selTab->AddCutStep("$\\geq 2$ \\bq~jets");
   
-  selTab->AddCutStep("$\\forall j,j': \\Delta R(j,j') > 0.6$");
-  selTab->AddCutStep("KF $\\chi^{2} < 5$");
+  selTab->AddCutStep("KF $\\chi^{2} < 15$");
+  selTab->AddCutStep("Last cut");
   selTab->SetUpTable();
   
   selTabKF = new SelectionTables(datasetsMSP);
@@ -6089,8 +5776,8 @@ void FillSelectionTable(int d, string dataSetName)
   }
   
   selTab->Fill(d, cutFlowValues);
-  selTab->Fill(d, 10, nofAfterDRmincut);
-  selTab->Fill(d, 11, nofAcceptedKFitWeighted);
+  selTab->Fill(d, 10, nofAcceptedKFitWeighted);
+  selTab->Fill(d, 11, nofAfterLastCut);
 }
 
 void WriteSelectionTable()
@@ -6175,22 +5862,6 @@ void PrintWeights()
 
 void SetSumWeights()
 {
-  /* // reco_top_mass_alt_aKF > 220
-  renFacSumNom     = 246056;
-  renFacSum1002    = 241472.329139;
-  renFacSum1003    = 252093.678572;
-  renFacSum1004    = 223209.526599;
-  renFacSum1005    = 217551.210028;
-  renFacSum1007    = 269921.908469;
-  renFacSum1009    = 274252.247374;
-  fragUpSum        = 251866.588826;
-  fragCentralSum   = 246782.675672;
-  fragDownSum      = 243346.422404;
-  fragPetersonSum  = 255256.500537;
-  semilepbrUpSum   = 245172.019865;
-  semilepbrDownSum = 247493.036167;
-  pdfAlphaSUpSum   = 243039.816163;
-  pdfAlphaSDownSum = 247893.618397;*/
   // reco_top_mass_alt_aKF > 200
   renFacSumNom     = 309367;
   renFacSum1002    = 303940.36355;
@@ -6207,21 +5878,6 @@ void SetSumWeights()
   semilepbrDownSum = 311104.40796;
   pdfAlphaSUpSum   = 305555.06586;
   pdfAlphaSDownSum = 311692.88088;
-/*  renFacSumNom     = 176288.;
-  renFacSum1002    = 172812.;
-  renFacSum1003    = 180833.;
-  renFacSum1004    = 159833.;
-  renFacSum1005    = 155582.;
-  renFacSum1007    = 193558.;
-  renFacSum1009    = 196855.;
-  fragUpSum        = 180777.;
-  fragCentralSum   = 176865.;
-  fragDownSum      = 174204.;
-  fragPetersonSum  = 183227.;
-  semilepbrUpSum   = 175632.;
-  semilepbrDownSum = 177359.;
-  pdfAlphaSUpSum   = 174138.;
-  pdfAlphaSDownSum = 177590.;*/
 }
 
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)
@@ -6284,71 +5940,5 @@ void PrintKFDebug(int ievt)
   cout << "Original:   Jet 2: x " << selectedJets[labelsReco[1]].X() << "; y " << selectedJets[labelsReco[1]].Y() << "; z " << selectedJets[labelsReco[1]].Z() << "; t " << selectedJets[labelsReco[1]].T() << endl;
   cout << "Corrected:  Jet 2: x " << selectedJetsKFcorrected[1].X() << "; y " << selectedJetsKFcorrected[1].Y() << "; z " << selectedJetsKFcorrected[1].Z() << "; t " << selectedJetsKFcorrected[1].T() << endl;
   //}
-}
-
-void InitJEC(bool isData, string dataSetName)
-{
-  if (! isData)
-  {
-    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt");
-    vCorrParam.push_back(*L1JetCorPar);
-    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L2Relative_AK4PFchs.txt");
-    vCorrParam.push_back(*L2JetCorPar);
-    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_L3Absolute_AK4PFchs.txt");
-    vCorrParam.push_back(*L3JetCorPar);
-    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_Uncertainty_AK4PFchs.txt");
-    //jecUnc = new JetCorrectionUncertainty("input/JEC_Uncertainty_temp.txt");
-    /// Do not use total jes uncertainties
-    //JetCorrectorParameters *MCUncCorPar = new JetCorrectorParameters(pathCalJEC+"/Summer16_23Sep2016V4_MC/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt","TotalNoFlavor");
-    //jecUnc = new JetCorrectionUncertainty(*MCUncCorPar);
-  }
-  else if ( dataSetName.find("Run2016B") != std::string::npos || dataSetName.find("Run2016C") != std::string::npos || dataSetName.find("Run2016D") != std::string::npos )
-  {
-    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L1FastJet_AK4PFchs.txt");
-    vCorrParam.push_back(*L1JetCorPar);
-    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2Relative_AK4PFchs.txt");
-    vCorrParam.push_back(*L2JetCorPar);
-    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L3Absolute_AK4PFchs.txt");
-    vCorrParam.push_back(*L3JetCorPar);
-    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_L2L3Residual_AK4PFchs.txt");
-    vCorrParam.push_back(*L2L3ResJetCorPar);
-    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016BCDV4_DATA/Summer16_23Sep2016BCDV4_DATA_Uncertainty_AK4PFchs.txt");
-  }
-  else if ( dataSetName.find("Run2016E") != std::string::npos || dataSetName.find("Run2016F") != std::string::npos )
-  {
-    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L1FastJet_AK4PFchs.txt");
-    vCorrParam.push_back(*L1JetCorPar);
-    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2Relative_AK4PFchs.txt");
-    vCorrParam.push_back(*L2JetCorPar);
-    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L3Absolute_AK4PFchs.txt");
-    vCorrParam.push_back(*L3JetCorPar);
-    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_L2L3Residual_AK4PFchs.txt");
-    vCorrParam.push_back(*L2L3ResJetCorPar);
-    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016EFV4_DATA/Summer16_23Sep2016EFV4_DATA_Uncertainty_AK4PFchs.txt");
-  }
-  else if ( dataSetName.find("Run2016G") != std::string::npos )
-  {
-    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L1FastJet_AK4PFchs.txt");
-    vCorrParam.push_back(*L1JetCorPar);
-    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2Relative_AK4PFchs.txt");
-    vCorrParam.push_back(*L2JetCorPar);
-    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L3Absolute_AK4PFchs.txt");
-    vCorrParam.push_back(*L3JetCorPar);
-    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_L2L3Residual_AK4PFchs.txt");
-    vCorrParam.push_back(*L2L3ResJetCorPar);
-    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016GV4_DATA/Summer16_23Sep2016GV4_DATA_Uncertainty_AK4PFchs.txt");
-  }
-  else if ( dataSetName.find("Run2016H") != std::string::npos )
-  {
-    JetCorrectorParameters *L1JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L1FastJet_AK4PFchs.txt");
-    vCorrParam.push_back(*L1JetCorPar);
-    JetCorrectorParameters *L2JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2Relative_AK4PFchs.txt");
-    vCorrParam.push_back(*L2JetCorPar);
-    JetCorrectorParameters *L3JetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L3Absolute_AK4PFchs.txt");
-    vCorrParam.push_back(*L3JetCorPar);
-    JetCorrectorParameters *L2L3ResJetCorPar = new JetCorrectorParameters(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_L2L3Residual_AK4PFchs.txt");
-    vCorrParam.push_back(*L2L3ResJetCorPar);
-    jecUnc = new JetCorrectionUncertainty(pathCalJEC+"Summer16_23Sep2016V4_DATA/Summer16_23Sep2016HV4_DATA/Summer16_23Sep2016HV4_DATA_Uncertainty_AK4PFchs.txt");
-  }
 }
 
