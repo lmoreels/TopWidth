@@ -26,8 +26,12 @@ double Likelihood::loglike_pull_single_[nWidths_] = {0.};
 
 //const double Likelihood::calCurvePar_[2] = {0., 1.};  // at the moment no output calibration
 //const double Likelihood::calCurveParUnc_[2] = {0., 0.};  // at the moment no output calibration
-const double Likelihood::calCurvePar_[2] = {0.0110942, 0.962622};
-const double Likelihood::calCurveParUnc_[2] = {0.03277, 0.0131771};
+//const double Likelihood::calCurvePar_[2] = {-0.152752, 1.09383};  // HAD
+//const double Likelihood::calCurveParUnc_[2] = {0.0436359, 0.0166395};  // HAD
+//const double Likelihood::calCurvePar_[2] = {-0.267184, 1.08957};  // LEP
+//const double Likelihood::calCurveParUnc_[2] = {0.0550971, 0.0248913};  // LEP
+const double Likelihood::calCurvePar_[2] = {-0.249918, 1.08351};  // COMB
+const double Likelihood::calCurveParUnc_[2] = {0.0351629, 0.0139145};  // COMB
 
 double Likelihood::nEventsCMFractions_[nWidths_][25] = {{0.}};
 double Likelihood::nEventsWMFractions_[nWidths_][25] = {{0.}};

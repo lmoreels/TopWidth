@@ -1,4 +1,3 @@
-
 #include <TStyle.h>
 #include <TPaveText.h>
 
@@ -66,7 +65,7 @@ bool makeTGraphs = false;
 bool useTTTemplates = false;
 bool calculateLikelihood = true;
 bool doPseudoExps = false;
-bool useNewVar = true;
+bool useNewVar = false;
 
 bool doLikeW = true;
 bool doLikeM = false;
@@ -87,7 +86,7 @@ Double_t maxCutRedTopMassNewVar = 1.95;
 Double_t minBoundary()
 {
   if (useNewVar) return minCutRedTopMassNewVar;
-  else return maxCutRedTopMassHad;
+  else return minCutRedTopMassHad;
 }
 Double_t maxBoundary()
 {
@@ -134,13 +133,15 @@ int nSystematics;
 string thisSystematic;
 string thisDataSetName = "";
 
-string listRateSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "lumiup", "lumidown", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009","fragUp", "fragCentral", "fragDown", "fragPeterson", "fragSemiLepBrUp", "fragSemiLepBrDown", "pdfAlphaSUp", "pdfAlphaSDown"};
+string listRateSyst[] = {"nominal", "leptonIdSFup", "leptonIdSFdown", "leptonIsoSFup", "leptonIsoSFdown", "leptonTrigSFup", "leptonTrigSFdown", "leptonTrkSFup", "leptonTrkSFdown", "puSFup", "puSFdown", "btagSFup", "btagSFdown", "topPtReweighting", "lumiup", "lumidown", "renFac1002", "renFac1003", "renFac1004", "renFac1005", "renFac1007", "renFac1009","fragUp", "fragCentral", "fragDown", "fragPeterson", "fragSemiLepBrUp", "fragSemiLepBrDown", "pdfAlphaSUp", "pdfAlphaSDown", "rateGoodUp", "rateGoodDown", "rateSTtUp", "rateSTtDown", "rateSTtWUp", "rateSTtWDown", "rateOtherUp", "rateOtherDown"};
 int nRateSystematics = sizeof(listRateSyst)/sizeof(listRateSyst[0]);
-string listSampleSyst[] = {"tuneup", "tunedown", "isrup", "isrdown", "fsrup", "fsrdown", "hdampup", "hdampdown", "mpiERD", "qcdERD", "gluonMove", "gluonMoveERD", "mass169p5", "mass171p5", "mass173p5", "mass175p5", "herwig"};
-string dataSetNameSyst[] = {"TT_tune_up", "TT_tune_down", "TT_isr_up", "TT_isr_down", "TT_fsr_up", "TT_fsr_down", "TT_hdamp_up", "TT_hdamp_down", "TT_erdOn", "TT_QCD_erdOn", "TT_gluon_move_erdOff", "TT_gluon_move_erdOn", "TT_mass169p5", "TT_mass171p5", "TT_mass173p5", "TT_mass175p5", "TT_herwigpp"};
+string listSampleSyst[] = {"tuneup", "tunedown", "isrup", "isrdown", "fsrup", "fsrdown", "hdampup", "hdampdown", "mpiERD", "qcdERD", "gluonMove", "gluonMoveERD"/*, "mass169p5", "mass171p5", "mass173p5", "mass175p5", "herwig"*/};
+string dataSetNameSyst[] = {"TT_tune_up", "TT_tune_down", "TT_isr_up", "TT_isr_down", "TT_fsr_up", "TT_fsr_down", "TT_hdamp_up", "TT_hdamp_down", "TT_erdOn", "TT_QCD_erdOn", "TT_gluon_move_erdOff", "TT_gluon_move_erdOn"/*, "TT_mass169p5", "TT_mass171p5", "TT_mass173p5", "TT_mass175p5", "TT_herwigpp"*/};
 int nSampleSystematics = sizeof(listSampleSyst)/sizeof(listSampleSyst[0]);
 const char *xmlSyst = "config/topWidth_extra.xml";
 
+int pdfIndex;
+double pdfVarSum;
 
 TFile *fileWidths;
 
@@ -186,9 +187,9 @@ string pathNtuplesSyst = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
-string inputDirLLhad = outputDirLL+"180107_2017/";
-string inputDirLLlep = outputDirLL+"180109_1001/";
-string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
+string inputDirLLhad = outputDirLL+"180110_1420/";  //outputDirLL+"180107_2017/";
+string inputDirLLlep = outputDirLL+"180110_1430/";  //outputDirLL+"180109_1001/";
+//string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1338/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1104/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 ////////////////////
@@ -199,11 +200,12 @@ string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < 
 //string inputDateLL = "180107_1300/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 string whichTemplates()
 {
-  //if (rewHadTopOnly) return "170728_1324/";
-  //else return "170802_1317/";
-  if (useNewVar) return "180109_1001/";
-  else return "180107_2017/";
+  //if (useNewVar) return "180109_1001/";
+  //else return "180107_2017/";
+  if (useNewVar) return "180110_1430/";
+  else return "180110_1420/";
 }
+string inputDateLL = whichTemplates();
 
 bool isData = false;
 bool isTTbar = false;
@@ -277,14 +279,17 @@ const int nofAveMasses = 16;
 //  KF chi2 < 15
 //std::array<double, 14> aveTopMass = {171.828, 170.636, 169.228, 168.727, 168.568, 171.717, 168.927, 167.683, 169.015, 173.043, 172.682, 168.818, 168.993, 168.907};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 190, mlb < 200 + cuts 0108_1043
 ////////////////////
-std::array<double, 14> aveTopMass = {171.828, 170.636, 169.297, 168.845, 168.698, 173.165, 169.012, 167.864, 169.394, 173.388, 173.075, 168.922, 169.084, 169.004};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0107_2001
+std::array<double, 14> aveTopMass = {171.828, 170.636, 169.295, 168.827, 168.683, 173.079, 169.003, 167.838, 169.394, 173.368, 173.075, 168.915, 169.075, 168.997};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0110_1146
+//std::array<double, 14> aveTopMass = {171.828, 170.636, 169.297, 168.845, 168.698, 173.165, 169.012, 167.864, 169.394, 173.388, 173.075, 168.922, 169.084, 169.004};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 200, mlb < 200 + cuts 0107_2001
 ////////////////////
 //std::array<double, 14> aveTopMass = {171.828, 170.636, 169.401, 169.096, 168.957, 175.058, 169.169, 168.311, 169.790, 173.817, 173.659, 169.122, 169.248, 169.186};   // Res 171025, 30 < jet pT < 250, 100 < mt < 245, mt_alt > 210, mlb < 200 + cuts 0107_1741
 
 
-/// # events after kin fitter
+/// # events after selection
+//  KF chi2 < 15
+int nEventsAKF[] = {53553, 309367, 2925, 2968, 2997, 1938, 0, 6, 18, 94, 29, 373};
 //  KF chi2 < 5
-int nEventsAKF[] = {100949, 547108, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
+//int nEventsAKF[] = {100949, 547108, 8927, 8847, 7051, 4283, 3, 16, 55, 276, 1, 18, 123, 1415};
 
 // Normal Plots (TH1F* and TH2F*)
 map<string,TH1F*> histo1D;
@@ -307,21 +312,8 @@ vector<int> includeDataSets;
 
 ofstream txtMassGenPMatched, txtMassGenJMatched, txtMassRecoCM, txtMassRecoWMUM, txtMassRecoUM, txtMassRecoWM, txtMassReco;
 double sumTopMass, sumMlb, sumEvents, sumCMTopMass, sumCMMlb, sumCMhadEvents, sumCMlepEvents;
-//Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.6331;
-//Double_t aveMlbMass = 98.0314, aveMlbMassCM = 97.7437; // mt_alt_aKF > 240.
-//Double_t aveMlbMass = 102.817, aveMlbMassCM = 102.738;  // mlb_alt > 140., mt_alt_aKF > 240.
-//Double_t aveMlbMass = 102.983, aveMlbMassCM = 102.949;  // mlb_alt > 145., mt_alt_aKF > 240.
-//Double_t aveMlbMass = 103.154, aveMlbMassCM = 102.401;  // mlb_alt > 140.
-//Double_t aveMlbMass = 103.606, aveMlbMassCM = 102.83;  // mlb_alt > 145.
-//Double_t aveMlbMass = 104.041, aveMlbMassCM = 103.249;  // mlb_alt > 150.
-//Double_t aveMlbMass = 93.1117, aveMlbMassCM = 95.0328;
-//Double_t aveMlbMass = 95.2375, aveMlbMassCM = 96.6154;  //171214_1151
-//Double_t aveMlbMass = 95.2778, aveMlbMassCM = 96.7818;  //171214_1702
-//Double_t aveMlbMass = 95.4439, aveMlbMassCM = 96.7972;  //171221_1152
-//Double_t aveMlbMass = 96.0903, aveMlbMassCM = 97.2532;  //171229_1402
-//Double_t aveMlbMass = 97.1223, aveMlbMassCM = 98.241;  //171224_1259, muon pT > 30
-//Double_t aveMlbMass = 97.1331, aveMlbMassCM = 97.3815;  //180104_1300, no min dR cut
-Double_t aveMlbMass = 97.133, aveMlbMassCM = 97.3437;  //180104_1525, no min dR cut, status 1
+Double_t aveMlbMass = 97.1331, aveMlbMassCM = 97.3438;  //180110_1159
+//Double_t aveMlbMass = 97.133, aveMlbMassCM = 97.3437;   //180104_1525, no min dR cut, status 1
 
 /// Function prototypes
 struct HighestPt
@@ -341,7 +333,7 @@ struct greater
 
 string ConvertDoubleToString(double Number);
 string DotReplace(double var);
-string ConvertIntToString(int nb, bool pad);
+string ConvertIntToString(int nb, int pad = 0);
 string MakeTimeStamp();
 bool fexists(const char *filename);
 void InitSetUp();
@@ -788,7 +780,7 @@ double nofAcceptedKFitWeighted = 0.;
 
 /// Likelihood
 //Double_t aveTopMassLL = aveTopMass[2];  // only CM events
-Double_t aveTopMassLL = 169.065; //169.073; //175.984; //168.058; //167.647; // 100 < mt < 245  // 168.879; // all MC events with 100 < mt < 250  //220.651;  // all MC events
+Double_t aveTopMassLL = 169.106;  // all MC events after selection
 Double_t aveTopMassCM = aveTopMass[2];
 Double_t maxRedTopMass = 0., minRedTopMass = 9999.;
 int nWidthsLike = 0, nMassesLike = 0;
@@ -975,6 +967,13 @@ int main(int argc, char* argv[])
           runSystematics = true;
           nSystematics = 1;
           thisSystematic = listRateSyst[argi];
+          
+          // Do not run pdf variations
+          if ( thisSystematic.find("pdfVar") != std::string::npos )
+          {
+            cerr << "Will not run over pdf variations. Exiting..." << endl;
+            exit(1);
+          }
         }
         else if ( strcmp(argv[i+1], "sample") == 0 || strcmp(argv[i+1], "Sample") == 0 || strcmp(argv[i+1], "shape") == 0 || strcmp(argv[i+1], "Shape") == 0 )
         {
@@ -1001,6 +1000,54 @@ int main(int argc, char* argv[])
 //         makeTGraphs = false;
 //         calculateLikelihood = true;
 //         makePlots = false;
+      }
+      
+      if ( strcmp(argv[i], "--pdf") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos || systStr.find("JER") != std::string::npos)
+        {
+          cerr << "Running systematic JES/JER... Will not apply other systematic..." << endl;
+          continue;
+        }
+        
+        if ( i+1 >= argc )
+        {
+          cerr << "Cannot find arguments. Exiting..." << endl;
+          exit(1);
+        }
+        pdfIndex = strtol(argv[i+1], NULL, 10);
+        if ( pdfIndex < 0 || pdfIndex > 99 )
+        {
+          cerr << "Index for variation is not valid. Should be between 0 and 99 (included). Exiting..." << endl;
+          exit(1);
+        }
+        runSystematics = true;
+        nSystematics = 1;
+        thisSystematic = "pdfVar"+ConvertIntToString(pdfIndex);
+        
+        /// Get sum of weights
+        string line;
+        int tmpIndex;
+        double tmpValue;
+        ifstream pdfFile("input/sumPdfWeights.txt");
+        while( getline(pdfFile, line) )
+        {
+          std::istringstream iss(line);
+          iss >> tmpIndex >> tmpValue;
+          if ( tmpIndex == pdfIndex )
+          {
+            pdfVarSum = tmpValue;
+            break;
+          }
+        }
+        pdfFile.close();
+        cout << "Running pdf variation " << pdfIndex << " which has sumOfWeights = " << pdfVarSum << endl;
       }
       
       if ( strcmp(argv[i], "--JESup") == 0 || strcmp(argv[i], "--JesUp") == 0 || strcmp(argv[i], "--jesUp") == 0 || strcmp(argv[i], "--jesUP") == 0 || strcmp(argv[i], "--jesup") == 0 )
@@ -1282,18 +1329,6 @@ int main(int argc, char* argv[])
     inputDirLL = outputDirLL+inputDateLL;
   }
   
-//   if (useNewVar)
-//   {
-//     /// m_bjj/m_jj
-// //    minCutRedTopMass = 1.5;
-// //    maxCutRedTopMass = 2.6;
-//     /// red mlb
-//     minCutRedTopMass = 0.35;
-//     maxCutRedTopMass = 2.1;
-//     /// dR(lep,b_l)
-// //    minCutRedTopMass = 0.5;
-// //    maxCutRedTopMass = 3.2;
-//   }
   
   ntupleDate = whichDate(systStr);
   if (runLocally)
@@ -1600,11 +1635,6 @@ int main(int argc, char* argv[])
     {
       thisSystematic = listRateSyst[iSys];
       cout << endl << "Running over systematics...  " << thisSystematic << endl;
-      if (! applyLeptonSF && thisSystematic.find("lepton") != std::string::npos ) continue;
-      else if (! applyBTagSF && thisSystematic.find("btag") != std::string::npos ) continue;
-      else if (! applyPU && thisSystematic.find("pu") != std::string::npos ) continue;
-      else if ( thisSystematic.find("lumiup") != std::string::npos ) Luminosity *= 1.025;
-      else if ( thisSystematic.find("lumidown") != std::string::npos ) Luminosity *= 0.975;
     }
     else if (runSampleSystematics)
     {
@@ -1613,39 +1643,44 @@ int main(int argc, char* argv[])
       
       useOtherXml = true;
       thisDataSetName = dataSetNameSyst[iSys];
-      
-      if ( thisSystematic.find("mass") != std::string::npos )
+    }
+    
+    if (! applyLeptonSF && thisSystematic.find("lepton") != std::string::npos ) continue;
+    else if (! applyBTagSF && thisSystematic.find("btag") != std::string::npos ) continue;
+    else if (! applyPU && thisSystematic.find("pu") != std::string::npos ) continue;
+    else if ( thisSystematic.find("lumiup") != std::string::npos ) Luminosity *= 1.025;
+    else if ( thisSystematic.find("lumidown") != std::string::npos ) Luminosity *= 0.975;
+    else if ( useOtherXml && thisSystematic.find("mass") != std::string::npos )
+    {
+      if ( thisSystematic.find("169") != std::string::npos )
       {
-        if ( thisSystematic.find("169") != std::string::npos )
-        {
-          origMass = 169.5;
-          thisMass = 169.5;
-          origWidth = 0.9424;  // width +-2%/GeV --> in sample = 1.23
-          thisWidth = 1.;
-        }
-        else if ( thisSystematic.find("171") != std::string::npos )
-        {
-          origMass = 171.5;
-          thisMass = 171.5;
-          origWidth = 0.9776;  // width +-2%/GeV --> in sample = 1.28
-          thisWidth = 1.;
-        }
-        else if ( thisSystematic.find("173") != std::string::npos )
-        {
-          origMass = 173.5;
-          thisMass = 173.5;
-          origWidth = 1.0234;  // width +-2%/GeV --> in sample = 1.34
-          thisWidth = 1.;
-        }
-        else if ( thisSystematic.find("175") != std::string::npos )
-        {
-          origMass = 175.5;
-          thisMass = 175.5;
-          origWidth = 1.065;  // width +-2%/GeV --> in sample = 1.39
-          thisWidth = 1.;
-        }
-        cout << "Rescaling mass sample from (" << origWidth << ", " << origMass << ") to (" << thisWidth << thisMass << ") ..." << endl;
+        origMass = 169.5;
+        thisMass = 169.5;
+        origWidth = 0.9424;  // width +-2%/GeV --> in sample = 1.23
+        thisWidth = 1.;
       }
+      else if ( thisSystematic.find("171") != std::string::npos )
+      {
+        origMass = 171.5;
+        thisMass = 171.5;
+        origWidth = 0.9776;  // width +-2%/GeV --> in sample = 1.28
+        thisWidth = 1.;
+      }
+      else if ( thisSystematic.find("173") != std::string::npos )
+      {
+        origMass = 173.5;
+        thisMass = 173.5;
+        origWidth = 1.0234;  // width +-2%/GeV --> in sample = 1.34
+        thisWidth = 1.;
+      }
+      else if ( thisSystematic.find("175") != std::string::npos )
+      {
+        origMass = 175.5;
+        thisMass = 175.5;
+        origWidth = 1.065;  // width +-2%/GeV --> in sample = 1.39
+        thisWidth = 1.;
+      }
+      cout << "Rescaling mass sample from (" << origWidth << ", " << origMass << ") to (" << thisWidth << thisMass << ") ..." << endl;
     }
     
     
@@ -1867,6 +1902,25 @@ int main(int argc, char* argv[])
           nEventsDataSet -= GetNEvents(tStatsTree[(dataSetName).c_str()], "nofTTEventsWithoutAGenTop", isData);
         }
         xSection = datasets[d]->Xsection();  // pb
+        if (runSystematics && ! isTTbar)
+        {
+          if ( thisSystematic.find("rateSTtW") != std::string::npos )
+          {
+            if      ( isSTtW && thisSystematic.find("Up")   != std::string::npos ) xSection *= 1.1;
+            else if ( isSTtW && thisSystematic.find("Down") != std::string::npos ) xSection *= 0.9;
+          }
+          else if ( thisSystematic.find("rateSTt") != std::string::npos )
+          {
+            if      ( isSTt && thisSystematic.find("Up")   != std::string::npos )  xSection *= 1.1;
+            else if ( isSTt && thisSystematic.find("Down") != std::string::npos )  xSection *= 0.9;
+          }
+          else if ( thisSystematic.find("rateOther") != std::string::npos )
+          {
+            if      ( isOther && thisSystematic.find("Up")   != std::string::npos ) xSection *= 1.3;
+            else if ( isOther && thisSystematic.find("Down") != std::string::npos ) xSection *= 0.7;
+          }
+        }
+        
         eqLumi = (double)nEventsDataSet/xSection;  // 1/pb
         if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos )
           selTab->SetEqLumi(d, eqLumi);
@@ -1889,7 +1943,7 @@ int main(int argc, char* argv[])
         if (! isData) toyMax = Luminosity/eqLumi;  // CHECK: better nDataEvts/nEvtsPassKinFit ??
                                                    //else nDataEvts = GetNEvents(tStatsTree[(dataSetName).c_str()], "nEventsSel", 1);
         else nDataEvts = nEventsAKF[d];
-        cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << "(53552)" << endl;
+        cout << "PseudoExperiments::Number of selected data events: " << nDataEvts << endl;
         
         if (test)
           cout << "      Lumi : " << Luminosity << "/pb; eqLumi: " << eqLumi << "/pb." << endl;
@@ -1976,10 +2030,6 @@ int main(int argc, char* argv[])
         if (ievt%10000 == 0)
           std::cout << "Processing the " << ievt << "th event (" << ((double)ievt/(double)nEntries)*100  << "%)" << flush << "\r";
         
-        //if (! isTTbar) continue;
-        //if (ievt > 588000) break;
-        //if (ievt != 2062 && ievt != 75831 && ievt != 113603 && ievt != 115687 && ievt != 155732 && ievt != 163161 && ievt != 186900 && ievt != 215759 && ievt != 233634 && ievt != 238021 && ievt != 243052 && ievt != 243674 && ievt != 266399 && ievt != 317190 && ievt != 317752 && ievt != 325854 && ievt != 330813 && ievt != 333620 && ievt != 347247 && ievt != 439571 && ievt != 450329 && ievt != 491328 && ievt != 510024 && ievt != 514196 && ievt != 538345 && ievt != 570225 && ievt != 576194 && ievt != 577278 && ievt != 587570) continue;
-        
         
         /// Load event
         tTree[(dataSetName).c_str()]->GetEntry(ievt);
@@ -2064,6 +2114,7 @@ int main(int argc, char* argv[])
                 
                 if      ( thisSystematic.find("AlphaSUp") != std::string::npos )   scaleFactor *= pdfAlphaSUp * renFacSumNom/pdfAlphaSUpSum;
                 else if ( thisSystematic.find("AlphaSDown") != std::string::npos ) scaleFactor *= pdfAlphaSDown * renFacSumNom/pdfAlphaSDownSum;
+                else if ( thisSystematic.find("pdfVar") != std::string::npos ) scaleFactor *= pdfWeights[pdfIndex] * renFacSumNom/pdfVarSum;
               }
               else
               {
@@ -2594,7 +2645,7 @@ int main(int argc, char* argv[])
             else if (isTTother) isUMhad_TTother = true;
           }
           
-          if (doLikeComb)
+          /*if (doLikeComb)
           {
             if (isCMlep && isCMhad)
             {
@@ -2622,7 +2673,7 @@ int main(int argc, char* argv[])
               }
             }
           }  // both
-          else if (useNewVar)
+          else*/ if (useNewVar)
           {
             if (isCMlep)
             {
@@ -2855,7 +2906,7 @@ int main(int argc, char* argv[])
           if ( applyKinFitCut && kFitChi2 > kinFitCutValue ) continue;
           if ( applyKinFitCut && kFitChi2 < kinFitMinCutValue ) continue;
           nofAcceptedKFit++;
-          nofAcceptedKFitWeighted += scaleFactor;
+          nofAcceptedKFitWeighted += lumiWeight*scaleFactor;
           if (hadronicTopJetsMatched) nofHadrMatchedEventsAKF++;
           if (leptonicTopMatched) nofLeptMatchedEventsAKF++;
           if (isCM) nofCorrectlyMatchedAKF++;
@@ -2994,12 +3045,12 @@ int main(int argc, char* argv[])
             }
           }
           
-          if (doLikeComb)
+          /*if (doLikeComb)
           {
             if (isCMlep && isCMhad)      isCM = true;
             else if (isWMlep && isWMhad) isWM = true;
           }
-          if (useNewVar)
+          else*/ if (useNewVar)
           {
             if (isCMlep)      isCM = true;
             else if (isWMlep) isWM = true;
@@ -3019,7 +3070,9 @@ int main(int argc, char* argv[])
           else if (isTTbar && isWM) dMSP = d+1;
           else if (isTTbar && isUM_TTsemilep) dMSP = d+2;
           else if (isTTbar && isUM_TTother) dMSP = d+3;
-        }
+          
+        }  // swap
+        
         
         redTopMass_old = reco_top_mass_aKF/aveTopMassCM;
         redTopMass_new = reco_top_mass_aKF/aveTopMassLL;
@@ -3112,6 +3165,36 @@ int main(int argc, char* argv[])
           catSuffix = catSuffixList[2];
         }
         
+        if (runSystematics && isTTbar)
+        {
+          if ( thisSystematic.find("rateGoodUp") != std::string::npos )
+          {
+            if (doLikeComb)
+            {
+              if      (isCMhad && isCMlep) scaleFactor *= 1.025;
+              else if (isUMhad || isUMlep) scaleFactor *= 0.975;
+            }
+            else
+            {
+              if      (isCM) scaleFactor *= 1.025;
+              else if (isUM) scaleFactor *= 0.975;
+            }
+          }
+          else if ( thisSystematic.find("rateGoodDown") != std::string::npos )
+          {
+            if (doLikeComb)
+            {
+              if      (isCMhad && isCMlep) scaleFactor *= 0.975;
+              else if (isUMhad || isUMlep) scaleFactor *= 1.025;
+            }
+            else
+            {
+              if      (isCM) scaleFactor *= 0.975;
+              else if (isUM) scaleFactor *= 1.025;
+            }
+          }
+        }
+        
         if (makeTGraphs && ! isData)
         {
           if (useNewVar)
@@ -3143,6 +3226,7 @@ int main(int argc, char* argv[])
             else if (doLike2D) loglike_per_evt = like2D->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
           }
           if (doLikeComb) likeComb->CalculateLikelihood(redTopMass, reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+          
           if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
           {
             if (useNewVar)
@@ -3210,10 +3294,6 @@ int main(int argc, char* argv[])
               else if (doLike2D) like2D->AddToFraction(d, lumiWeight*scaleFactor, massHadTopQ, massLepTopQ, isTTbar, isCM, isWM, isUM);
             }
             
-//             if (isTTbar && makeLikelihoodPlots)
-//             {
-//               FillLikelihoodPlots();
-//             }
           }
         }
         
@@ -3397,9 +3477,9 @@ int main(int argc, char* argv[])
       if (! isData && nofHadrMatchedEvents > 0 )
       {
         cout << "Number of matched events: " << setw(8) << right << nofMatchedEvents << endl;
-        cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofTopMassCut_bKF) << "%)" << endl;
+        cout << "Number of events with hadronic top matched (before KF): " << setw(8) << right << nofHadrMatchedEvents << " (" << 100*((float)nofHadrMatchedEvents/(float)nofHardSelected) << "%)" << endl;
         if (doKinFit) cout << "Number of events with hadronic top matched (after KF):  " << setw(8) << right << nofHadrMatchedEventsAKF << " (" << 100*((float)nofHadrMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
-        cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofTopMassCut_bKF) << "%)" << endl;
+        cout << "Number of events with leptonic top matched (before KF): " << setw(8) << right << nofLeptMatchedEvents << " (" << 100*((float)nofLeptMatchedEvents/(float)nofHardSelected) << "%)" << endl;
         if (doKinFit) cout << "Number of events with leptonic top matched (after KF):  " << setw(8) << right << nofLeptMatchedEventsAKF << " (" << 100*((float)nofLeptMatchedEventsAKF/(float)nofAcceptedKFit) << "%)" << endl;
         if (! doGenOnly)
         {
@@ -3476,7 +3556,8 @@ int main(int argc, char* argv[])
       
     }  // end loop datasets
     
-    if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos ) WriteSelectionTable();
+    if (! runListWidths && ! runListMasses && ! runSystematics && systStr.find("nominal") != std::string::npos )
+      WriteSelectionTable();
     
     if (! doGenOnly && ! testTTbarOnly)
     {
@@ -3557,7 +3638,7 @@ int main(int argc, char* argv[])
       /// Calculate output width
       if ( runSystematics || runListWidths || runListMasses)
       {
-        if (runSystematics) cout << "Output width for " << thisSystematic << ": " << endl;
+        if (runSystematics) cout << endl << "Output width for " << thisSystematic << ": " << endl;
         else cout << endl << "Standard output width: " << endl;
         if (runSystematics)
         {
@@ -3589,8 +3670,6 @@ int main(int argc, char* argv[])
 //         {
 //           cout << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
 //           like->GetOutputWidth(thisWidth, thisMass, "CM", true, false);
-//           cout << "Output width for correctly & wrongly matched events (using likelihood with only CM & WM templates): " << endl;
-//           like->GetOutputWidth(thisWidth, thisMass, "matched", true, false);
 //         }
       }
       else
@@ -3893,6 +3972,7 @@ void InitSetUp()
         calculateLikelihood = likeW->ConstructTGraphsFromFile();
         if (! runSystematics) calculateLikelihood = likeW->ConstructTGraphsFromFile("CorrectMatchLikelihood_");
 //        if (! runSystematics) calculateLikelihood = likeW->ConstructTGraphsFromFile("MatchLikelihood_");
+        if (! calculateLikelihood) cout << "No longer calculating likelihood!" << endl;
       }
       else if (doLikeM)
       {
@@ -5810,10 +5890,10 @@ void AddWeights()
   tmpSumFragPeterson += petersonFragWeight;
   tmpSumSemiLepUp    += semilepbrUp;
   tmpSumSemiLepDown  += semilepbrDown;
-//   for (int i = 0; i < 100; i++)
-//   {
-//     tmpSumPdf[i] += pdfWeights[i];
-//   }
+  for (int i = 0; i < 100; i++)
+  {
+    tmpSumPdf[i] += pdfWeights[i];
+  }
   tmpSumPdfAlphaSUp   += pdfAlphaSUp;
   tmpSumPdfAlphaSDown += pdfAlphaSDown;
 }
@@ -5858,26 +5938,32 @@ void PrintWeights()
   cout << "}" << endl;
   std::cout.precision (ss);
   cout << "------------------------------------------------" << endl;
+  ofstream pdfFile("input/sumPdfWeights.txt");
+  for (int i = 0; i < 100; i++)
+  {
+    pdfFile << setw(3) << right << i << "    " << std::setprecision(20) << tmpSumPdf[i] << endl;
+  }
+  pdfFile.close();
 }
 
 void SetSumWeights()
 {
   // reco_top_mass_alt_aKF > 200
   renFacSumNom     = 309367;
-  renFacSum1002    = 303940.36355;
-  renFacSum1003    = 316574.03647;
-  renFacSum1004    = 280430.81538;
-  renFacSum1005    = 273697.85973;
-  renFacSum1007    = 339663.27183;
-  renFacSum1009    = 344825.19502;
-  fragUpSum        = 315666.08948;
-  fragCentralSum   = 310109.34739;
-  fragDownSum      = 306460.99485;
-  fragPetersonSum  = 319807.98400;
-  semilepbrUpSum   = 308297.97927;
-  semilepbrDownSum = 311104.40796;
-  pdfAlphaSUpSum   = 305555.06586;
-  pdfAlphaSDownSum = 311692.88088;
+  renFacSum1002    = 303940.36355520039797;
+  renFacSum1003    = 316574.03647489054129;
+  renFacSum1004    = 280430.81538659334183;
+  renFacSum1005    = 273697.85973960161209;
+  renFacSum1007    = 339663.271836696018;
+  renFacSum1009    = 344825.19502774823923;
+  fragUpSum        = 315666.08948471926851;
+  fragCentralSum   = 310109.34739238256589;
+  fragDownSum      = 306460.99485248979181;
+  fragPetersonSum  = 319807.98400581412716;
+  semilepbrUpSum   = 308297.97927742346656;
+  semilepbrDownSum = 311104.40796198474709;
+  pdfAlphaSUpSum   = 305555.06586256064475;
+  pdfAlphaSDownSum = 311692.88088622689247;
 }
 
 void CheckSystematics(vector<int> vJER, vector<int> vJES, vector<int> vPU)

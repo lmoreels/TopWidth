@@ -23,16 +23,17 @@ string suffix = "";
 string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
+
 /// 1D width
 // parameter = comb
-const double calCurvePar_[2] = {-0.2526, 1.084};
-const double calCurveParUnc_[2] = {0.03321, 0.01345};
+//const double calCurvePar_[2] = {-0.249918, 1.08351};   //{-0.2526, 1.084};
+//const double calCurveParUnc_[2] = {0.0351629, 0.0139145};   //{0.03321, 0.01345};
 // parameter = redMlb
-//const double calCurvePar_[2] = {-0.245, 1.083};
-//const double calCurveParUnc_[2] = {0.05185, 0.02447};
+//const double calCurvePar_[2] = {-0.267184, 1.08957};   //{-0.245, 1.083};
+//const double calCurveParUnc_[2] = {0.0550971, 0.0248913};   //{0.05185, 0.02447};
 // parameter = redTopMass_old
-//const double calCurvePar_[2] = {-0.15551, 1.09669};        // 180107
-//const double calCurveParUnc_[2] = {0.0469114, 0.0175116};  // 180107
+const double calCurvePar_[2] = {-0.152752, 1.09383};   //{-0.15551, 1.09669};        // 180107
+const double calCurveParUnc_[2] = {0.0436359, 0.0166395};   //{0.0469114, 0.0175116};  // 180107
 /// 1D mass
 const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
 const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
@@ -49,7 +50,7 @@ double thisWidth, thisMass, thisWidthValue, thisWidthUnc, thisMassValue, thisMas
 pair<double,double> thisCorrWidthValue, thisCorrMassValue;
 pair<double,double> testData;
 
-bool isRate[70] = {0};
+bool isRate[80] = {0};
 
 int nSys = -1;
 vector<string> systName;
@@ -71,7 +72,7 @@ double shiftUp, shiftDown, tmp;
 
 
 int indexNom;
-int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN, indexPdfAlphaSUP, indexPdfAlphaSDOWN;
+int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN, indexPdfAlphaSUP, indexPdfAlphaSDOWN, indexPdfVar, indexRateCMUP, indexRateCMDOWN, indexRateSTtUP, indexRateSTtDOWN, indexRateSTtWUP, indexRateSTtWDOWN, indexRateOtherUP, indexRateOtherDOWN;
 
 void ClearIndices();
 void ClearVars();
@@ -315,6 +316,10 @@ int main()
     tmp = isPositive(GetMaximum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
     shiftUp += tmp*tmp;
   }
+  if ( indexPdfVar != -1 )
+  {
+    shiftUp += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+  }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexTuneUP, indexTuneDOWN));
@@ -333,6 +338,26 @@ int main()
   if ( indexJerUP != -1 && indexJerDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexJerUP, indexJerDOWN));
+    shiftUp += tmp*tmp;
+  }
+  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  {
+    tmp = isPositive(GetMaximum(indexRateCMUP, indexRateCMDOWN));
+    shiftUp += tmp*tmp;
+  }
+  if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
+  {
+    tmp = isPositive(GetMaximum(indexRateSTtUP, indexRateSTtDOWN));
+    shiftUp += tmp*tmp;
+  }
+  if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
+  {
+    tmp = isPositive(GetMaximum(indexRateSTtWUP, indexRateSTtWDOWN));
+    shiftUp += tmp*tmp;
+  }
+  if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
+  {
+    tmp = isPositive(GetMaximum(indexRateOtherUP, indexRateOtherDOWN));
     shiftUp += tmp*tmp;
   }
   shiftUp = sqrt(shiftUp);
@@ -414,6 +439,10 @@ int main()
     tmp = isNegative(GetMinimum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
     shiftDown += tmp*tmp;
   }
+  if ( indexPdfVar != -1 )
+  {
+    shiftDown += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+  }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexTuneUP, indexTuneDOWN));
@@ -432,6 +461,26 @@ int main()
   if ( indexJerUP != -1 && indexJerDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexJerUP, indexJerDOWN));
+    shiftDown += tmp*tmp;
+  }
+  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  {
+    tmp = isNegative(GetMinimum(indexRateCMUP, indexRateCMDOWN));
+    shiftDown += tmp*tmp;
+  }
+  if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
+  {
+    tmp = isNegative(GetMinimum(indexRateSTtUP, indexRateSTtDOWN));
+    shiftDown += tmp*tmp;
+  }
+  if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
+  {
+    tmp = isNegative(GetMinimum(indexRateSTtWUP, indexRateSTtWDOWN));
+    shiftDown += tmp*tmp;
+  }
+  if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
+  {
+    tmp = isNegative(GetMinimum(indexRateOtherUP, indexRateOtherDOWN));
     shiftDown += tmp*tmp;
   }
   shiftDown = sqrt(shiftDown);
@@ -501,6 +550,11 @@ void ClearIndices()
   indexJesUP = -1; indexJesDOWN = -1;
   indexJerUP = -1; indexJerDOWN = -1;
   indexPdfAlphaSUP = -1; indexPdfAlphaSDOWN = -1;
+  indexPdfVar = -1;
+  indexRateCMUP = -1; indexRateCMDOWN = -1;
+  indexRateSTtUP = -1; indexRateSTtDOWN = -1;
+  indexRateSTtWUP = -1; indexRateSTtWDOWN = -1;
+  indexRateOtherUP = -1; indexRateOtherDOWN = -1;
 }
 
 void ClearVars()
@@ -854,6 +908,7 @@ void IndexSystematics()
         if ( foundUP(systName[iSys]) ) indexPdfAlphaSUP = iSys;
         else if ( foundDOWN(systName[iSys]) ) indexPdfAlphaSDOWN = iSys;
       }
+      else if ( systName[iSys].find("pdfVar") != std::string::npos ) indexPdfVar = iSys;
     }
     else if ( systName[iSys].find("isr") != std::string::npos || systName[iSys].find("ISR") != std::string::npos || systName[iSys].find("Isr") != std::string::npos )
     {
@@ -908,6 +963,30 @@ void IndexSystematics()
     {
       isRate[iSys] = false;
       indexHerwig = iSys;
+    }
+    else if ( systName[iSys].find("rateGood") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexRateCMUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexRateCMDOWN = iSys;
+    }
+    else if ( systName[iSys].find("rateSTtW") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexRateSTtWUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexRateSTtWDOWN = iSys;
+    }
+    else if ( systName[iSys].find("rateSTt") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexRateSTtUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexRateSTtDOWN = iSys;
+    }
+    else if ( systName[iSys].find("rateOther") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexRateOtherUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexRateOtherDOWN = iSys;
     }
     //else if ( systName[iSys].find("") != std::string::npos )
     
@@ -1116,10 +1195,12 @@ void WriteShiftTable(double scale)
     fileOut << space << "\\bq\\ \\semilep\\ BR & " << scale*systDifference[indexFragSemiLepBrUP] << " &  & " << scale*systDifference[indexFragSemiLepBrDOWN] << " &  \\\\" << endl;
   }
   
-  if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+  if ( (indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1) || indexPdfVar != -1 )
   {
     fileOut << interline << endl;
     fileOut << space << "\\textit{PDF} &  &  &  &  \\\\" << endl;
+    if ( indexPdfVar != -1 )
+      fileOut << space << "\\tabsp Replicas & " << scale*systDifference[indexPdfVar] << " &  & -" << scale*systDifference[indexPdfVar] << " &  \\\\" << endl;
     if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
       fileOut << space << "\\tabsp $\\alpha_{s}$ & " << scale*systDifference[indexPdfAlphaSUP] << " &  & " << scale*systDifference[indexPdfAlphaSDOWN] << " &  \\\\" << endl;
   }
@@ -1160,6 +1241,20 @@ void WriteShiftTable(double scale)
     fileOut << interline << endl;
     fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " &  & " << scale*systDifference[indexJerDOWN] << " &  \\\\" << endl;
     //fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifferenceUnc[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " & " << scale*systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
+  }
+  
+  if ( ( indexRateCMUP != -1 && indexRateCMDOWN != -1 ) || ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Cross section var.} &  &  &  &  \\\\" << endl;
+    if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+      fileOut << space << "\\tabsp \\# \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & -" << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+    if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
+      fileOut << space << "\\tabsp ST \\tq channel & " << scale*systDifference[indexRateSTtUP] << " &  & -" << scale*systDifference[indexRateSTtDOWN] << " &  \\\\" << endl;
+    if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
+      fileOut << space << "\\tabsp ST \\tq\\W channel & " << scale*systDifference[indexRateSTtWUP] << " &  & -" << scale*systDifference[indexRateSTtWDOWN] << " &  \\\\" << endl;
+    if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
+      fileOut << space << "\\tabsp Other & " << scale*systDifference[indexRateOtherUP] << " &  & " << scale*systDifference[indexRateOtherDOWN] << " &  \\\\" << endl;
   }
   
   //....
