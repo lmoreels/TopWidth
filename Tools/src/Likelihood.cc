@@ -408,7 +408,6 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
       this->ClearArray(nEval, likelihoodValues);
       for (int i = 0; i < nEval; i++)
       {
-//        if ( iCat == 1 ) outputValues[i] += fracCats[iCat] * graph_[histoNameSm_]->Eval(evalPoints[i]); else  /// ONLY FOR NEW VAR !!!
         outputValues[i] += fracCats[iCat] * graph_[histoName_]->Eval(evalPoints[i]);
         if ( iCat == 0 ) likelihoodValues[i] = -TMath::Log(graph_[histoName_]->Eval(evalPoints[i]));
         else likelihoodValues[i] = -TMath::Log(outputValues[i]);
@@ -467,13 +466,13 @@ void Likelihood::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vect
     
   }  // end widths
   
-  CombineOutput();
+  this->CombineOutput();
   
-  DrawLikelihoods();
+  this->DrawLikelihoods();
   gLL2D_->SetName("2D_likelihood");
   gLL2D_->SetTitle("2D_likelihood");
   gLL2D_->Write();
-  DrawGraph(gLL2D_, "2D_likelihood");
+  this->DrawGraph(gLL2D_, "2D_likelihood");
   
   
   fileTGraphs_->Close();
@@ -506,7 +505,7 @@ bool Likelihood::ConstructTGraphsFromFile(std::string name, std::string dir, std
     {
       std::cerr << "Likelihood::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
       std::cerr << "                              Aborting the likelihood calculation..." << std::endl;
-      continue;
+      return false;
     }
     graph_[var+suffix_] = new TGraph(inputFileName_.c_str());
   }

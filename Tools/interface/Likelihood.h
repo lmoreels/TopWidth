@@ -147,7 +147,6 @@ class Likelihood{
     std::map<std::string,TH1D*> histoSm_;
     std::map<std::string,TH1D*> histoTotal_;
     std::map<std::string,TGraph*> graph_;
-    std::map<std::string,TGraph*> graph2_;
     std::map<std::string,std::vector<double>> vecBinCentres_;
     std::map<std::string,std::vector<double>> vecBinContents_;
     

@@ -128,11 +128,13 @@ Double_t Likelihood2D::Rosenbrock(Double_t *x, Double_t *par)
   return par[3]*term1*term1 + par[4]*term2*term2 + par[5]*x[0] + par[6];
 }
 
-Likelihood2D::Likelihood2D(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
-verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
+Likelihood2D::Likelihood2D(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
 {
   tls_ = new HelperTools();
   rew_ = new EventReweighting(false);  // no correction for number of events
+  
+  if (useNewVar) useHadVar_ = false;
   
   rangeRedMass_ = tls_->DotReplace(minRedMass_)+"To"+tls_->DotReplace(maxRedMass_);
   dirNameNEvents_ += rangeRedMass_+"/";
@@ -156,6 +158,42 @@ verbose_(verbose), rewHadOnly_(useHadTopOnly), outputDirName_(outputDirName), di
     this->BookHistograms();
   }
   else mkdir(dirNameLLTxt_.c_str(),0777);
+}
+
+Likelihood2D::Likelihood2D(double minhad, double maxhad, double minlep, double maxlep, std::string outputDirName, std::string outputDirName2, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose):
+verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(outputDirName), outputDirName2_(outputDirName2), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(minhad), maxRedMass_(maxhad), minRedMass2_(minlep), maxRedMass2_(maxlep), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
+{
+  if (makeHistograms)
+  {
+    std::cerr << "Likelihood2D::Likelihood2D: Cannot make histograms for both variables simulataneously... Exiting..." << std::endl;
+    exit(1);
+  }
+  
+  tls_ = new HelperTools();
+  rew_ = new EventReweighting(false);  // no correction for number of events
+  
+  
+  for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+  {
+    stringWidthArray_[iWidth] = tls_->DotReplace(widthArray_[iWidth]);
+  }
+  for (int iMass = 0; iMass < nMasses_; iMass++)
+  {
+    stringMassArray_[iMass] = tls_->DotReplace(massArray_[iMass]);
+  }
+  
+  this->ClearLikelihoods();
+  
+  bool tmpbool;
+  tmpbool = this->ConstructTGraphsFromFile(outputDirName_, "had_");
+  tmpbool = this->ConstructTGraphsFromFile(outputDirName2_, "lep_");
+  if (! tmpbool)
+  {
+    std::cerr << "Likelihood::Likelihood: Something went wrong when loading graphs... Exiting..." << std::endl;
+    exit(1);
+  }
+  
+  mkdir(dirNameLLTxt_.c_str(),0777);
 }
 
 Likelihood2D::~Likelihood2D()
@@ -222,9 +260,10 @@ void Likelihood2D::BookHistograms()
       
       for (int iCat = 0; iCat < nCats_; iCat++)
       {
-//        histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_75b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_75b").c_str(),("Reduced top mass for width "+thisWidth_+" and mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 75, 0.5, 2.0);
-        histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+" and mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);
-//        histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_100b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_100b").c_str(),("Reduced top mass for width "+thisWidth_+" and mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 100, 0.5, 2.0);
+        if (useHadVar_)
+          histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+" and mass "+thisMass_+", "+listCats_[iCat]+"; m_{r}").c_str(), 90, 0.5, 2.0);
+        else
+          histo_[("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()] = new TH1D(("Red_top_mass_"+listCats_[iCat]+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str(),("Reduced top mass for width "+thisWidth_+" and mass "+thisMass_+", "+listCats_[iCat]+"; m_{lb,r}").c_str(), 80, 0., 2.5);
       }
     }
   }
@@ -249,9 +288,7 @@ void Likelihood2D::FillHistograms(double redMass, double relativeSF, double hadT
         }
         else thisEventSF_ = 1.;
         
-//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_75b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
         histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_90b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
-//        histo_[("Red_top_mass"+catSuffix+"_widthx"+thisWidth_+"_mass"+thisMass_+"_100b").c_str()]->Fill(redMass, relativeSF*thisEventSF_);
       }
     }
   }
@@ -283,11 +320,27 @@ void Likelihood2D::GetHistogram(int iCat, int iMass)
   /// Get histo to smooth
   histoName_ = listCats_[iCat]+"_"+stringSuffix_[iCat][iMass];
   histoSm_[histoName_] = (TH1D*) histo_["Red_top_mass_"+histoName_+"_90b"]->Clone(histoName_.c_str());
+  
+  if (! useHadVar_)
+  {
+    int nBins = histoSm_[histoName_]->GetNbinsX();
+    // Remove high spikes in flanks
+    for (int i = 2; i < nBins-1; i++)
+    {
+      if ( histoSm_[histoName_]->GetBinCenter(i) < 0.9 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i+2) )
+        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+      //else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.2 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+      else if ( histoSm_[histoName_]->GetBinCenter(i) > 1.5 && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-1) && histoSm_[histoName_]->GetBinContent(i) > histoSm_[histoName_]->GetBinContent(i-2) )
+        histoSm_[histoName_]->SetBinContent(i, (histoSm_[histoName_]->GetBinContent(i-1)+histoSm_[histoName_]->GetBinContent(i+1))/2. );
+    }
+  }
+  
   if ( iCat != 0 )
   {
     histoSm_[histoName_]->Smooth(3);
     if ( fabs(massArray_[iMass] - 172.5) > 2 ) histoSm_[histoName_]->Smooth(2);
   }
+  else if (! useHadVar_) histoSm_[histoName_]->Smooth(1);
   histoSm_[histoName_]->Write();
 
   //nBins[iCat] = histoSm_[histoName_]->GetNbinsX();
@@ -333,7 +386,7 @@ void Likelihood2D::MakeGraphSmooth(int iCat, int iMass, int nPoints, double* cen
 
 void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::vector<std::string> datasetNames, std::vector<int> includeDataset)
 {
-  if ( gLL2D_ == NULL ) gLL2D_ = new TGraph2D();
+  TGraph2D *gLL2D_ = new TGraph2D();
   
   /// Define vars for likelihood calculation
   const int nEval = 50;
@@ -445,13 +498,6 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
           if (verbose_) std::cout << "Likelihood2D::ConstructTGraphs: The integral of the weighted probability histogram is " << histoTotal_[stringSuffix_[0][iMass]]->Integral(histoTotal_[stringSuffix_[0][iMass]]->FindBin(minRedMass_), histoTotal_[stringSuffix_[0][iMass]]->FindBin(maxRedMass_)+1) << std::endl;
           this->MakeGraph(0, iMass, nEval, evalPoints, outputValues, "TotalProbability_", false);
           this->DrawGraph(histoTotal_[stringSuffix_[0][iMass]], graph_["TotalProbability_"+stringSuffix_[0][iMass]], "Graph_totalProbability_"+stringSuffix_[0][iMass]);
-//           if (verbose_)
-//           {
-//             graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"] = graph_["TotalProbability_"+stringSuffix_[0][iMass]];
-//             graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"]->SetPoint(graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"]->GetN(), maxRedMass_, 0.);
-//             graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"]->SetPoint(graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"]->GetN(), minRedMass_, 0.);
-//             std::cout << "Likelihood2D::ConstructTGraphs: The integral of the weighted probability graph is " << graph_["TotalProbability_"+stringSuffix_[0][iMass]+"_test"]->Integral() << std::endl;
-//           }
           
           this->MakeGraph(0, iMass, nEval, evalPoints, likelihoodValues, "likelihood_", false);
           this->WriteOutput(nEval, widthArray_[iWidth], evalPoints, likelihoodValues, stringSuffix_[0][iMass], 1);  // for TGraph
@@ -474,23 +520,34 @@ void Likelihood2D::ConstructTGraphsFromHisto(std::string tGraphFileName, std::ve
   
   //CombineOutput();
   
-  DrawLikelihoods();
+  this->DrawLikelihoods();
   gLL2D_->SetName("2D_likelihood");
   gLL2D_->SetTitle("2D_likelihood");
   gLL2D_->Write();
-  DrawGraph(gLL2D_, "2D_likelihood");
+  this->DrawGraph(gLL2D_, "2D_likelihood");
   
   
   fileTGraphs_->Close();
   delete fileTGraphs_;
+  delete gLL2D_;
 }
 
 bool Likelihood2D::ConstructTGraphsFromFile()
 {
-  return this->ConstructTGraphsFromFile("");
+  return this->ConstructTGraphsFromFile("", outputDirName_, "");
 }
 
 bool Likelihood2D::ConstructTGraphsFromFile(std::string name)
+{
+  return this->ConstructTGraphsFromFile(name, outputDirName_, "");
+}
+
+bool Likelihood2D::ConstructTGraphsFromFile(std::string dir, std::string var)
+{
+  return this->ConstructTGraphsFromFile("", dir, var);
+}
+
+bool Likelihood2D::ConstructTGraphsFromFile(std::string name, std::string dir, std::string var)
 {
   unsigned int tmp = 0;
   for (int iWidth = 0; iWidth < nWidths_; iWidth++)
@@ -499,7 +556,7 @@ bool Likelihood2D::ConstructTGraphsFromFile(std::string name)
     {
       tmp = 0;
       suffix_ = name+"widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
-      inputFileName_ = outputDirName_+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
+      inputFileName_ = dir+dirNameTGraphTxt_+"output_tgraph1d_"+suffix_+".txt";
       if ( ! tls_->fexists(inputFileName_.c_str()) )
       {
         std::cerr << "Likelihood2D::ConstructTGraphs: File " << inputFileName_ << " not found!!" << std::endl;
@@ -508,7 +565,7 @@ bool Likelihood2D::ConstructTGraphsFromFile(std::string name)
         if ( tmp == nMasses_ ) return false;
         else continue;
       }
-      graph_[suffix_] = new TGraph(inputFileName_.c_str());
+      graph_[var+suffix_] = new TGraph(inputFileName_.c_str());
     }
   }
   std::cout << "Likelihood2D::ConstructTGraphs: Constructed TGraphs for likelihood measurements (using " << nWidths_ << " widths)" << std::endl;
@@ -672,6 +729,33 @@ std::vector<double> Likelihood2D::CalculateLikelihood(double redMass, double rel
   }
   
   return vecLogLike_;
+}
+
+void Likelihood2D::CalculateLikelihood(double redMass, double lepMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)
+{
+  if (! isData && ! calledLLCalculation_) calledLLCalculation_ = true;
+  
+  if ( redMass > minRedMass_ && redMass < maxRedMass_ && lepMass > minRedMass2_ && lepMass < maxRedMass2_ )
+  {
+    if (isTTbar)
+    {
+      if (rewHadOnly_) thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+      else thisEventSF_ = rew_->BEventWeightCalculatorNonRel(hadTopMassForWidthSF, 172.5, inputMass, 1., inputWidth) * rew_->BEventWeightCalculatorNonRel(lepTopMassForWidthSF, 172.5, inputMass, 1., inputWidth);
+    }
+    else thisEventSF_ = 1.;
+    
+    for (int iWidth = 0; iWidth < nWidths_; iWidth++)
+    {
+      for (int iMass = 0; iMass < nMasses_; iMass++)
+      {
+        histoName_ = "widthx"+stringWidthArray_[iWidth]+"_mass"+stringMassArray_[iMass];
+        
+        loglike_per_evt_[iWidth][iMass] = graph_["had_"+histoName_]->Eval(redMass) + graph_["lep_"+histoName_]->Eval(lepMass);
+        if (! isData) loglike_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass]*relativeSF*thisEventSF_;
+        else loglike_data_[iWidth][iMass] += loglike_per_evt_[iWidth][iMass];
+      }
+    }
+  }
 }
 
 void Likelihood2D::CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData)

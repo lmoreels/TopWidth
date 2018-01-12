@@ -43,7 +43,8 @@
 
 class Likelihood2D{
   public:
-    Likelihood2D(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose);
+    Likelihood2D(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose);
+    Likelihood2D(double minhad, double maxhad, double minlep, double maxlep, std::string outputDirName, std::string outputDirName2, std::string date, bool useHadTopOnly, bool makeHistograms, bool verbose);
     ~Likelihood2D();
     void SetMass(double mass);
     void ClearLikelihoods();
@@ -57,10 +58,13 @@ class Likelihood2D{
     /// Get TGraphs (in order to calculate likelihood)
     bool ConstructTGraphsFromFile();
     bool ConstructTGraphsFromFile(std::string name);
+    bool ConstructTGraphsFromFile(std::string dir, std::string var);
+    bool ConstructTGraphsFromFile(std::string name, std::string dir, std::string var);
     bool ConstructTGraphsFromFile(std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     /// Calculate likelihood
     void CalculateLikelihood(double redMass, double relativeSF, bool isData);
     std::vector<double> CalculateLikelihood(double redMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
+    void CalculateLikelihood(double redMass, double lepMass, double relativeSF, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateCMLikelihood(double redMass, double scaleFactor, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     void CalculateGenLikelihood(double redMass, double hadTopMassForWidthSF, double lepTopMassForWidthSF, double inputWidth, double inputMass, bool isTTbar, bool isData);
     /// Get output width
@@ -90,7 +94,9 @@ class Likelihood2D{
   private:
     bool verbose_;
     bool rewHadOnly_;
+    bool useHadVar_;
     std::string outputDirName_;
+    std::string outputDirName2_;
     std::string dirNameTGraphTxt_;
     std::string dirNameNEvents_;
     std::string dirNameLLTxt_;
@@ -102,6 +108,8 @@ class Likelihood2D{
     std::string rangeRedMass_;
     double minRedMass_;
     double maxRedMass_;
+    double minRedMass2_;
+    double maxRedMass2_;
     
     HelperTools *tls_;
     EventReweighting *rew_;
@@ -141,7 +149,7 @@ class Likelihood2D{
     TFile *file_;
     TFile *fileTGraphs_;
     TFile *filePlots_;
-    TGraph2D *gLL2D_;
+    //TGraph2D *gLL2D_;
     std::ofstream txtOutput_;
     std::ofstream txtOutputLL_;
     std::ofstream txtOutputPsExp_;

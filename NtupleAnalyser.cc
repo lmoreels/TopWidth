@@ -70,7 +70,7 @@ bool useNewVar = false;
 bool doLikeW = true;
 bool doLikeM = false;
 bool doLike2D = false;
-bool doLikeComb = false;
+bool doLikeComb = true;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -143,6 +143,10 @@ const char *xmlSyst = "config/topWidth_extra.xml";
 int pdfIndex;
 double pdfVarSum;
 
+bool runGenWidth = false;
+double listGenWidths[] = {0.2, 0.5, /*0.8, 2.,*/ 4./*, 8.*/};
+int nGenWidths = sizeof(listGenWidths)/sizeof(listGenWidths[0]);
+
 TFile *fileWidths;
 
 
@@ -189,6 +193,8 @@ string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
 string inputDirLLhad = outputDirLL+"180110_1420/";  //outputDirLL+"180107_2017/";
 string inputDirLLlep = outputDirLL+"180110_1430/";  //outputDirLL+"180109_1001/";
+string inputDirLLhad2D = outputDirLL+"180111_1619/";
+string inputDirLLlep2D = outputDirLL+"180111_1733/";
 //string inputDateLL = "180109_1001/";  // 1D likelihood; no WM; redMlbMass, 30 < jet pT < 250, 0.35 -> 1.95, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1338/";  // Mass likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
 //string inputDateLL = "180108_1104/";  // likelihood; no WM; redTopMass, 30 < jet pT < 250, 0.65 -> 1.4, chi2 < 15, m_lb < 200 + cuts
@@ -792,6 +798,7 @@ Likelihood *likeW;  // like1D
 LikelihoodMass *likeM;  // likeMass
 Likelihood2D *like2D;  // like2D
 Likelihood *likeComb;  // like1D
+Likelihood2D *likeComb2D;  // like2D
 
 
 ofstream txtDebugTopMass;
@@ -879,7 +886,12 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--runWidth") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if (runSystematics)
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply width scale factor..." << endl;
+          continue;
+        }
+        else if (runSystematics)
         {
           cerr << "Running systematic " << thisSystematic << "... Will not apply width scale factor..." << endl;
           continue;
@@ -909,7 +921,12 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--runMass") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if (runSystematics)
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply mass scale factor..." << endl;
+          continue;
+        }
+        else if (runSystematics)
         {
           cerr << "Running systematic " << thisSystematic << "... Will not apply mass scale factor..." << endl;
           continue;
@@ -935,11 +952,56 @@ int main(int argc, char* argv[])
         makePlots = false;
       }
       
+      /// Run alternative top quark width samples
+      if ( strcmp(argv[i], "--runGenWidth") == 0 || strcmp(argv[i], "--genWidth") == 0 )
+      {
+        /// No width or mass scaling when running systematics
+        if (runSystematics)
+        {
+          cerr << "Running systematic " << thisSystematic << "... Will not run gen width sample..." << endl;
+          continue;
+        }
+        else if ( systStr.find("JES") != std::string::npos || systStr.find("JER") != std::string::npos)
+        {
+          cerr << "Running systematic JES/JER... Will not run gen width sample..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not run gen width sample..." << endl;
+          continue;
+        }
+        
+        if ( i+1 >= argc )
+        {
+          cerr << "Cannot find argument. Exiting..." << endl;
+          exit(1);
+        }
+        int argi = strtol(argv[i+1], NULL, 10);
+        if ( argi > nGenWidths )
+        {
+          cerr << "Argument " << argi << " does not correspond to a valid gen width sample. Exiting" << endl;
+          exit(1);
+        }
+        runGenWidth = true;
+        thisDataSetName = "TT_widthx"+ConvertDoubleToString(listGenWidths[argi]);
+        
+        calculateFractions = false;
+        makeTGraphs = false;
+        calculateLikelihood = true;
+//        makePlots = false;
+      }
+      
       /// Apply systematics
       if ( strcmp(argv[i], "--runSyst") == 0 || strcmp(argv[i], "--runSystematics") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
           continue;
@@ -1005,7 +1067,12 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--pdf") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
           continue;
@@ -1053,7 +1120,12 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--JESup") == 0 || strcmp(argv[i], "--JesUp") == 0 || strcmp(argv[i], "--jesUp") == 0 || strcmp(argv[i], "--jesUP") == 0 || strcmp(argv[i], "--jesup") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1074,7 +1146,12 @@ int main(int argc, char* argv[])
       else if ( strcmp(argv[i], "--JESdown") == 0 || strcmp(argv[i], "--JesDown") == 0 || strcmp(argv[i], "--jesDown") == 0 || strcmp(argv[i], "--jesDOWN") == 0 || strcmp(argv[i], "--jesdown") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1095,7 +1172,12 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--JES") == 0 || strcmp(argv[i], "--Jes") == 0 || strcmp(argv[i], "--jes") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
+        {
+          cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1120,14 +1202,19 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--JERup") == 0 || strcmp(argv[i], "--JerUp") == 0 || strcmp(argv[i], "--jerUp") == 0 || strcmp(argv[i], "--jerUP") == 0 || strcmp(argv[i], "--jerup") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
         {
-          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
         }
         else if (runSystematics)
         {
-          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JER systematic as well..." << endl;
           continue;
         }
         else if ( systStr.find("JES") != std::string::npos )
@@ -1141,14 +1228,19 @@ int main(int argc, char* argv[])
       else if ( strcmp(argv[i], "--JERdown") == 0 || strcmp(argv[i], "--JerDown") == 0 || strcmp(argv[i], "--jerDown") == 0 || strcmp(argv[i], "--jerDOWN") == 0 || strcmp(argv[i], "--jerdown") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
         {
-          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
         }
         else if (runSystematics)
         {
-          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JER systematic as well..." << endl;
           continue;
         }
         else if ( systStr.find("JES") != std::string::npos )
@@ -1162,14 +1254,19 @@ int main(int argc, char* argv[])
       if ( strcmp(argv[i], "--JER") == 0 || strcmp(argv[i], "--Jer") == 0 || strcmp(argv[i], "--jer") == 0 )
       {
         /// No width or mass scaling when running systematics
-        if ( applyWidthSF || applyMassSF )
+        if (runGenWidth)
         {
-          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
+          cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
+          continue;
+        }
+        else if ( applyWidthSF || applyMassSF )
+        {
+          cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
         }
         else if (runSystematics)
         {
-          cerr << "Running systematic " << thisSystematic << "... Will not apply JES systematic as well..." << endl;
+          cerr << "Running systematic " << thisSystematic << "... Will not apply JER systematic as well..." << endl;
           continue;
         }
         else if ( systStr.find("JES") != std::string::npos )
@@ -1236,6 +1333,13 @@ int main(int argc, char* argv[])
   {
     doPseudoExps = false;
     runSystematics = false;
+  }
+  if (doLikeComb)
+  {
+    calculateFractions = false;
+    makeTGraphs = false;
+    useTTTemplates = false;
+    calculateLikelihood = true;
   }
   if (calculateFractions)
   {
@@ -1713,10 +1817,14 @@ int main(int argc, char* argv[])
     
     if (calculateLikelihood)
     {
-      if (doLikeW)         likeW->ClearLikelihoods();
-      else if (doLikeM)    likeM->ClearLikelihoods();
-      else if (doLike2D)   like2D->ClearLikelihoods();
-      else if (doLikeComb) likeComb->ClearLikelihoods();
+      if (doLikeComb)
+      {
+        if (doLike2D) likeComb2D->ClearLikelihoods();
+        else          likeComb->ClearLikelihoods();
+      }
+      else if (doLikeW)  likeW->ClearLikelihoods();
+      else if (doLikeM)  likeM->ClearLikelihoods();
+      else if (doLike2D) like2D->ClearLikelihoods();
     }
     
     hasFoundTTbar = false;
@@ -1749,6 +1857,7 @@ int main(int argc, char* argv[])
       {
         isTTbar = true;
         hasFoundTTbar = true;
+        if (runGenWidth) dataSetName = thisDataSetName;
         if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
         {
           if ( dataSetName.find("x0p2") != std::string::npos ) thisWidth = 0.2;
@@ -3172,12 +3281,12 @@ int main(int argc, char* argv[])
             if (doLikeComb)
             {
               if      (isCMhad && isCMlep) scaleFactor *= 1.025;
-              else if (isUMhad || isUMlep) scaleFactor *= 0.975;
+              else if (isUMhad || isUMlep) scaleFactor *= 0.96434;
             }
             else
             {
               if      (isCM) scaleFactor *= 1.025;
-              else if (isUM) scaleFactor *= 0.975;
+              else if (isUM) scaleFactor *= 0.96434;
             }
           }
           else if ( thisSystematic.find("rateGoodDown") != std::string::npos )
@@ -3185,12 +3294,12 @@ int main(int argc, char* argv[])
             if (doLikeComb)
             {
               if      (isCMhad && isCMlep) scaleFactor *= 0.975;
-              else if (isUMhad || isUMlep) scaleFactor *= 1.025;
+              else if (isUMhad || isUMlep) scaleFactor *= 1.03566;
             }
             else
             {
               if      (isCM) scaleFactor *= 0.975;
-              else if (isUM) scaleFactor *= 1.025;
+              else if (isUM) scaleFactor *= 1.03566;
             }
           }
         }
@@ -3213,7 +3322,12 @@ int main(int argc, char* argv[])
         
         if (calculateLikelihood)
         {
-          if (useNewVar)
+          if (doLikeComb)
+          {
+            if (doLike2D) likeComb2D->CalculateLikelihood(redTopMass, reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+            else          likeComb->CalculateLikelihood(redTopMass, reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+          }
+          else if (useNewVar)
           {
             if (doLikeW)       loglike_per_evt = likeW->CalculateLikelihood(reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             else if (doLikeM)  loglike_per_evt = likeM->CalculateLikelihood(reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
@@ -3225,9 +3339,8 @@ int main(int argc, char* argv[])
             else if (doLikeM)  loglike_per_evt = likeM->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
             else if (doLike2D) loglike_per_evt = like2D->CalculateLikelihood(redTopMass, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
           }
-          if (doLikeComb) likeComb->CalculateLikelihood(redTopMass, reco_new_var, relativeSF*scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
           
-          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && isCM )  // isCM ensures ! isData
+          if ( ! doPseudoExps && ! useTTTemplates && ! runSystematics && ! doLikeComb && isCM )  // isCM ensures ! isData
           {
             if (useNewVar)
             {
@@ -3325,7 +3438,10 @@ int main(int argc, char* argv[])
             if (doLikeComb)
             {
               if ( redTopMass > minCutRedTopMassHad && redTopMass < maxCutRedTopMassHad && reco_new_var > minCutRedTopMassNewVar && reco_new_var < maxCutRedTopMassNewVar )
-                likeComb->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+              {
+                if (doLike2D) likeComb2D->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+                else          likeComb->AddPsExp(iPsExp, scaleFactor, massHadTopQ, massLepTopQ, thisWidth, thisMass, doReweighting, isData);
+              }
             }
             else if ( (useNewVar && reco_new_var > minCutRedTopMass && reco_new_var < maxCutRedTopMass)
                || (! useNewVar && redTopMass > minCutRedTopMass && redTopMass < maxCutRedTopMass) )
@@ -3645,26 +3761,38 @@ int main(int argc, char* argv[])
           if (runRateSystematics || runSampleSystematics)
           {
             fileWidths->cd();
-            if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
-            else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, false);
-            else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
-            else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            if (doLikeComb)
+            {
+              if (doLike2D) likeComb2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+              else          likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            }
+            else if (doLikeW)  likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
+            else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, false);
+            else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, false);
           }
           else
           {
-            if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
-            else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, true);
-            else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
-            else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            if (doLikeComb)
+            {
+              if (doLike2D) likeComb2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+              else          likeComb->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            }
+            else if (doLikeW)  likeW->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
+            else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, thisSystematic, true, true);
+            else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, thisSystematic, true, true);
           }
         }
         else
         {
           fileWidths->cd();
-          if (doLikeW)         likeW->GetOutputWidth(thisWidth, thisMass, true, false);
-          else if (doLikeM)    likeM->GetOutputMass(thisWidth, thisMass, true, false);
-          else if (doLike2D)   like2D->GetOutputWidth(thisWidth, thisMass, true, false);
-          else if (doLikeComb) likeComb->GetOutputWidth(thisWidth, thisMass, true, false);
+          if (doLikeComb)
+          {
+            if (doLike2D) likeComb2D->GetOutputWidth(thisWidth, thisMass, true, false);
+            else          likeComb->GetOutputWidth(thisWidth, thisMass, true, false);
+          }
+          else if (doLikeW)  likeW->GetOutputWidth(thisWidth, thisMass, true, false);
+          else if (doLikeM)  likeM->GetOutputMass(thisWidth, thisMass, true, false);
+          else if (doLike2D) like2D->GetOutputWidth(thisWidth, thisMass, true, false);
         }
 //         if (! useTTTemplates && ! runSystematics)
 //         {
@@ -3675,7 +3803,20 @@ int main(int argc, char* argv[])
       else
       {
         cout << endl << "Standard output width: " << endl;
-        if (doLikeW)
+        if (doLikeComb)
+        {
+          if (doLike2D)
+          {
+            likeComb2D->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
+            if (unblind) likeComb2D->GetOutputWidth(thisWidth, thisMass, "data", true, true);
+          }
+          else
+          {
+            likeComb->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
+            if (unblind) likeComb->GetOutputWidth(thisWidth, thisMass, "data", true, true);
+          }
+        }
+        else if (doLikeW)
         {
           likeW->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
           if (unblind) likeW->GetOutputWidth(thisWidth, thisMass, "data", true, true);
@@ -3691,11 +3832,6 @@ int main(int argc, char* argv[])
           like2D->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
           if (unblind) like2D->GetOutputWidth(thisWidth, thisMass, "data", true, true);
         }
-        else if (doLikeComb)
-        {
-          likeComb->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
-          if (unblind) likeComb->GetOutputWidth(thisWidth, thisMass, "data", true, true);
-        }
         if (! doPseudoExps && ! useTTTemplates && ! doLikeComb)
         {
           cout << endl << "Output width for correctly matched events (using likelihood with only CM template): " << endl;
@@ -3710,10 +3846,14 @@ int main(int argc, char* argv[])
     
     if (doPseudoExps)
     {
-      if (doLikeW)         likeW->CalculatePull(thisWidth, thisMass);
-      else if (doLikeM)    likeM->CalculatePull(thisWidth, thisMass);
-      else if (doLike2D)   like2D->CalculatePull(thisWidth, thisMass);
-      else if (doLikeComb) likeComb->CalculatePull(thisWidth, thisMass);
+      if (doLikeComb)
+      {
+        if (doLike2D) likeComb->CalculatePull(thisWidth, thisMass);
+        else          likeComb->CalculatePull(thisWidth, thisMass);
+      }
+      else if (doLikeW)  likeW->CalculatePull(thisWidth, thisMass);
+      else if (doLikeM)  likeM->CalculatePull(thisWidth, thisMass);
+      else if (doLike2D) like2D->CalculatePull(thisWidth, thisMass);
     }
     
     
@@ -3950,14 +4090,18 @@ void InitSetUp()
   {
     if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     else if (doLikeM)  likeM = new LikelihoodMass(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
-    else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, outputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
   }
   if (calculateLikelihood)
   {
-    if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
+    if (doLikeComb)
+    {
+      if (doLike2D) likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad2D, inputDirLLlep2D, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+      else          likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad, inputDirLLlep, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    }
+    else if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     else if (doLikeM)  likeM = new LikelihoodMass(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
-    else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
-    else if (doLikeComb) likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad, inputDirLLlep, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+    else if (doLike2D) like2D = new Likelihood2D(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
     
     if (useTTTemplates)
     {
@@ -3965,7 +4109,7 @@ void InitSetUp()
       else if (doLikeM)  calculateLikelihood = likeM->ConstructTGraphsFromFile(dataSetNames, includeDataSets);
       else if (doLike2D) calculateLikelihood = like2D->ConstructTGraphsFromFile(dataSetNames, includeDataSets);
     }
-    else
+    else if (! doLikeComb)
     {
       if (doLikeW)
       {
@@ -3988,6 +4132,15 @@ void InitSetUp()
     }
     widthsLike.clear();
     massesLike.clear();
+    if (doLikeComb)
+    {
+      if (doLike2D)
+      {
+        widthsLike = likeComb2D->GetWidths();
+        massesLike = likeComb2D->GetMasses();
+      }
+      else widthsLike = likeComb->GetWidths();
+    }
     if (doLikeW) widthsLike = likeW->GetWidths();
     else if (doLikeM) massesLike = likeM->GetMasses();
     else if (doLike2D)
@@ -3995,7 +4148,6 @@ void InitSetUp()
       widthsLike = like2D->GetWidths();
       massesLike = like2D->GetMasses();
     }
-    else if (doLikeComb) widthsLike = likeComb->GetWidths();
     nWidthsLike = widthsLike.size();
     nMassesLike = massesLike.size();
     
@@ -4006,10 +4158,14 @@ void InitSetUp()
   
   if (doPseudoExps)
   {
-    if (doLikeW)         nPsExps = likeW->InitPull(nPseudoExps);
-    else if (doLikeM)    nPsExps = likeM->InitPull(nPseudoExps);
-    else if (doLike2D)   nPsExps = like2D->InitPull(nPseudoExps);
-    else if (doLikeComb) nPsExps = likeComb->InitPull(nPseudoExps);
+    if (doLikeComb)
+    {
+      if (doLike2D) nPsExps = likeComb2D->InitPull(nPseudoExps);
+      else          nPsExps = likeComb->InitPull(nPseudoExps);
+    }
+    else if (doLikeW)  nPsExps = likeW->InitPull(nPseudoExps);
+    else if (doLikeM)  nPsExps = likeM->InitPull(nPseudoExps);
+    else if (doLike2D) nPsExps = like2D->InitPull(nPseudoExps);
   }
   
   if (makePlots)
