@@ -23,7 +23,11 @@ OutputPlots/
 Output*/
 Plots*/
 Systematics/CalculateSystematics
+Systematics/ProcessPDFReplicas
+Systematics/VaryCalibrationCurveParams
 Systematics/temp/
+Systematics/temp2D/
+Systematics/tempMass/
 Systematics/*.tex
 Systematics/*.txt
 TGraphFits/

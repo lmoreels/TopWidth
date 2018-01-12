@@ -19,6 +19,13 @@ then
 fi
 
 path=$1
+if [[ $path == "/user"* ]]
+then
+  lookupPath=$path
+else
+  lookupPath=$mainDir$path
+fi
+
 
 if [ $# -eq 2 ]
 then outputFile=$2
@@ -27,7 +34,7 @@ fi
 # Init output file
 echo -n "" > $outputFile
 
-for entry in "$mainDir$path/result_"*; do 
+for entry in "$lookupPath/result_"*; do
   ((nFiles++));
   echo "$entry" >> $outputFile;
 done

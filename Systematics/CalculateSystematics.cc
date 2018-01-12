@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <vector>
 #include <math.h>
 #include <TMath.h>
 #include <algorithm>
@@ -20,20 +21,20 @@ bool verbose_ = true;
 bool doMass = false;
 bool is2D = false;
 string suffix = "";
-string inputFileDir = "Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_0947/";
+string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/180110_comb/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
 
 /// 1D width
 // parameter = comb
-//const double calCurvePar_[2] = {-0.249918, 1.08351};   //{-0.2526, 1.084};
-//const double calCurveParUnc_[2] = {0.0351629, 0.0139145};   //{0.03321, 0.01345};
+const double calCurvePar_[2] = {-0.249918, 1.08351};   //{-0.2526, 1.084};
+const double calCurveParUnc_[2] = {0.0351629, 0.0139145};   //{0.03321, 0.01345};
 // parameter = redMlb
 //const double calCurvePar_[2] = {-0.267184, 1.08957};   //{-0.245, 1.083};
 //const double calCurveParUnc_[2] = {0.0550971, 0.0248913};   //{0.05185, 0.02447};
 // parameter = redTopMass_old
-const double calCurvePar_[2] = {-0.152752, 1.09383};   //{-0.15551, 1.09669};        // 180107
-const double calCurveParUnc_[2] = {0.0436359, 0.0166395};   //{0.0469114, 0.0175116};  // 180107
+//const double calCurvePar_[2] = {-0.152752, 1.09383};   //{-0.15551, 1.09669};        // 180107
+//const double calCurveParUnc_[2] = {0.0436359, 0.0166395};   //{0.0469114, 0.0175116};  // 180107
 /// 1D mass
 const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
 const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
@@ -48,7 +49,7 @@ string line, lineList;
 string thisSyst;
 double thisWidth, thisMass, thisWidthValue, thisWidthUnc, thisMassValue, thisMassUnc;
 pair<double,double> thisCorrWidthValue, thisCorrMassValue;
-pair<double,double> testData;
+//pair<double,double> testData;
 
 bool isRate[80] = {0};
 
@@ -72,7 +73,7 @@ double shiftUp, shiftDown, tmp;
 
 
 int indexNom;
-int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN, indexPdfAlphaSUP, indexPdfAlphaSDOWN, indexPdfVar, indexRateCMUP, indexRateCMDOWN, indexRateSTtUP, indexRateSTtDOWN, indexRateSTtWUP, indexRateSTtWDOWN, indexRateOtherUP, indexRateOtherDOWN;
+int indexLepTrkUP, indexLepTrkDOWN, indexLepIdUP, indexLepIdDOWN, indexLepIsoUP, indexLepIsoDOWN, indexLepTrigUP, indexLepTrigDOWN, indexBTagUP, indexBTagDOWN, indexPuUP, indexPuDOWN, indexTopPt, indexLumiUP, indexLumiDOWN, indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexFragCentral, indexFragUP, indexFragDOWN, indexFragPeterson, indexFragSemiLepBrUP, indexFragSemiLepBrDOWN, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN, indexHdampUP, indexHdampDOWN, indexTuneUP, indexTuneDOWN, indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd, indexMassUP, indexMassDOWN, indexHerwig, indexJesUP, indexJesDOWN, indexJerUP, indexJerDOWN, indexPdfAlphaSUP, indexPdfAlphaSDOWN, indexPdfVar, indexRateCMUP, indexRateCMDOWN, indexRateSTtUP, indexRateSTtDOWN, indexRateSTtWUP, indexRateSTtWDOWN, indexRateOtherUP, indexRateOtherDOWN, indexCCConstUP, indexCCConstDOWN, indexCCSlopeUP, indexCCSlopeDOWN;
 
 void ClearIndices();
 void ClearVars();
@@ -90,6 +91,18 @@ std::pair<double,double> ApplyCalibrationCurveW(double thisOutputWidth, double t
 std::pair<double,double> ApplyCalibrationCurveM(double thisOutputMass, double thisOutputMassSigma);
 void WriteShiftTable(double scale = 1.);
 void WriteRelTable();
+
+pair<double,double> testData = ApplyCalibrationCurve(0.674565, 0.138775);  // comb
+//pair<double,double> testData = ApplyCalibrationCurve(1.21952, 0.241407);  // lep
+//pair<double,double> testData = ApplyCalibrationCurve(0.649174, 0.145405);  // had
+
+//testData = ApplyCalibrationCurve(0.680374, 0.137884);  // comb
+//testData = ApplyCalibrationCurve(1.21739, 0.240619);   // mlb
+//testData = ApplyCalibrationCurve(0.638646, 0.131186);  // 180103
+//testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
+
+//testData = ApplyCalibrationCurveMass(172.152, 0.107253);   // MASS
+
 
 bool fexists(const char *filename)
 {
@@ -144,10 +157,17 @@ int main()
   if (verbose_) cout << "Beginning of the program" << endl;
   ClearVars();
   
-  if (is2D) suffix = "2D";
-  else if (doMass) suffix = "Mass";
-  else suffix = "";
-  inputFileDir = "Systematics/temp"+suffix+"/";
+  if (is2D)
+  {
+    suffix = "2D";
+    inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
+  }
+  else if (doMass)
+  {
+    suffix = "Mass";
+    inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
+  }
+  
   
   /// List all files in directory and write to file
   ReadBashScript();
@@ -169,7 +189,15 @@ int main()
         if (is2D) iss >> thisMassValue >> thisMassUnc;
         //cout << thisSyst << "  " << thisWidthValue << "  " << thisWidthUnc << endl;
         
-        if (is2D)
+        if ( thisSyst.find("ccConst") != std::string::npos || thisSyst.find("ccSlope") != std::string::npos )
+        {
+          thisCorrWidthValue = std::pair<double,double>(thisWidthValue,thisWidthUnc);
+        }
+        else if ( thisSyst.find("pdfVar") != std::string::npos )
+        {
+          thisCorrWidthValue = std::pair<double,double>(thisWidthValue,thisWidthUnc);
+        }
+        else if (is2D)
         {
           thisCorrWidthValue = ApplyCalibrationCurveW(thisWidthValue, thisWidthUnc);
           thisCorrMassValue = ApplyCalibrationCurveM(thisMassValue, thisMassUnc);
@@ -218,6 +246,7 @@ int main()
     else if ( iSys == indexFsrDOWN )  diff *= 1./sqrt(2.);
 //    else if ( iSys == indexMassUP )   diff *= 1./3.;
 //    else if ( iSys == indexMassDOWN ) diff *= 1./3.;
+    else if ( iSys == indexPdfVar ) diff = systWidthValue[iSys];
     
     systDifference.push_back(diff);
     uncDiff = TMath::Sqrt(systWidthUnc[iSys]*systWidthUnc[iSys] + nomValUnc*nomValUnc);
@@ -360,6 +389,11 @@ int main()
     tmp = isPositive(GetMaximum(indexRateOtherUP, indexRateOtherDOWN));
     shiftUp += tmp*tmp;
   }
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    tmp = isPositive(GetMaximum(indexCCConstUP, indexCCConstDOWN, indexCCSlopeUP, indexCCSlopeDOWN));
+    shiftUp += tmp*tmp;
+  }
   shiftUp = sqrt(shiftUp);
   
   
@@ -483,17 +517,17 @@ int main()
     tmp = isNegative(GetMinimum(indexRateOtherUP, indexRateOtherDOWN));
     shiftDown += tmp*tmp;
   }
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    tmp = isNegative(GetMinimum(indexCCConstUP, indexCCConstDOWN, indexCCSlopeUP, indexCCSlopeDOWN));
+    shiftDown += tmp*tmp;
+  }
   shiftDown = sqrt(shiftDown);
   
   cout << "Total systematic uncertainty: " << endl;
   cout << "Up: " << shiftUp << "; down: " << shiftDown << endl;
   
-  // Test on fake data
-  testData = ApplyCalibrationCurve(0.680374, 0.137884);  // comb
-  //testData = ApplyCalibrationCurve(1.21739, 0.240619);   // mlb
-  //testData = ApplyCalibrationCurve(0.638646, 0.131186);  // 180103
-  //testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
-  if (doMass) testData = ApplyCalibrationCurveMass(172.152, 0.107253);
+  // Write output
   cout << "Values before calibration curve: " << endl;
   cout << "   MC:   width = " << nomVal << " +- " << nomValUnc << endl;
   cout << "   data: width = " << testData.first << " +- " << testData.second << " (stat.) +" << shiftUp << " -" << shiftDown << " (syst.)";
@@ -555,6 +589,8 @@ void ClearIndices()
   indexRateSTtUP = -1; indexRateSTtDOWN = -1;
   indexRateSTtWUP = -1; indexRateSTtWDOWN = -1;
   indexRateOtherUP = -1; indexRateOtherDOWN = -1;
+  indexCCConstUP = -1; indexCCConstDOWN = -1;
+  indexCCSlopeUP = -1; indexCCSlopeDOWN = -1;
 }
 
 void ClearVars()
@@ -988,6 +1024,24 @@ void IndexSystematics()
       if ( foundUP(systName[iSys]) ) indexRateOtherUP = iSys;
       else if ( foundDOWN(systName[iSys]) ) indexRateOtherDOWN = iSys;
     }
+    else if ( systName[iSys].find("ccConst") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexCCConstUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexCCConstDOWN = iSys;
+    }
+    else if ( systName[iSys].find("ccConst") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexCCConstUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexCCConstDOWN = iSys;
+    }
+    else if ( systName[iSys].find("ccSlope") != std::string::npos )
+    {
+      isRate[iSys] = true;
+      if ( foundUP(systName[iSys]) ) indexCCSlopeUP = iSys;
+      else if ( foundDOWN(systName[iSys]) ) indexCCSlopeDOWN = iSys;
+    }
     //else if ( systName[iSys].find("") != std::string::npos )
     
     else
@@ -1246,15 +1300,25 @@ void WriteShiftTable(double scale)
   if ( ( indexRateCMUP != -1 && indexRateCMDOWN != -1 ) || ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
   {
     fileOut << interline << endl;
-    fileOut << space << "\\textit{Cross section var.} &  &  &  &  \\\\" << endl;
+    fileOut << space << "\\textit{Cross section variations} &  &  &  &  \\\\" << endl;
     if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
-      fileOut << space << "\\tabsp \\# \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & -" << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+      fileOut << space << "\\tabsp \\# \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
     if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
-      fileOut << space << "\\tabsp ST \\tq channel & " << scale*systDifference[indexRateSTtUP] << " &  & -" << scale*systDifference[indexRateSTtDOWN] << " &  \\\\" << endl;
+      fileOut << space << "\\tabsp ST \\tq channel & " << scale*systDifference[indexRateSTtUP] << " &  & " << scale*systDifference[indexRateSTtDOWN] << " &  \\\\" << endl;
     if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
-      fileOut << space << "\\tabsp ST \\tq\\W channel & " << scale*systDifference[indexRateSTtWUP] << " &  & -" << scale*systDifference[indexRateSTtWDOWN] << " &  \\\\" << endl;
+      fileOut << space << "\\tabsp ST \\tq\\W channel & " << scale*systDifference[indexRateSTtWUP] << " &  & " << scale*systDifference[indexRateSTtWDOWN] << " &  \\\\" << endl;
     if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
       fileOut << space << "\\tabsp Other & " << scale*systDifference[indexRateOtherUP] << " &  & " << scale*systDifference[indexRateOtherDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Calibration curve} &  &  &  &  \\\\" << endl;
+    if ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 )
+      fileOut << space << "\\tabsp Slope & " << scale*systDifference[indexCCSlopeUP] << " &  & " << scale*systDifference[indexCCSlopeDOWN] << " &  \\\\" << endl;
+    if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
+      fileOut << space << "\\tabsp Constant & " << scale*systDifference[indexCCConstUP] << " &  & " << scale*systDifference[indexCCConstDOWN] << " &  \\\\" << endl;
   }
   
   //....
