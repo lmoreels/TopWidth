@@ -24,6 +24,7 @@ class SelectionTables{
     void SetPrecision(int i);
     void SetLumi(double lumi);
     void SetEqLumi(int d, double eqLumi);
+    void SetExtremeMerge(bool merge);
     void AddCutStep(std::string cutStepName);
     void SetUpTable();
     void Fill(int d, int cutStep, double value);
@@ -43,6 +44,7 @@ class SelectionTables{
     
     double lumi_;
     double* eqLumi_;
+    bool extremeMerge_;
     
     double** nofEventsRaw_;
     double** nofEventsRawError_;
