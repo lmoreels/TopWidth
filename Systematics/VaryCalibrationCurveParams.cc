@@ -16,18 +16,26 @@ using namespace std;
 
 
 bool is2D = false;
-string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp/180110_comb/";
+
+bool useComb = false;
+bool useLep = false;
+bool useHad = true;
+
+string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp/";
 
 /// 1D width
 // parameter = comb
-const double calCurvePar_[2] = {-0.249918, 1.08351};   //{-0.2526, 1.084};
-const double calCurveParUnc_[2] = {0.0351629, 0.0139145};   //{0.03321, 0.01345};
+const double calCurveParComb[2] = {-0.249918, 1.08351};
+const double calCurveParUncComb[2] = {0.0351629, 0.0139145};
 // parameter = redMlb
-//const double calCurvePar_[2] = {-0.267184, 1.08957};   //{-0.245, 1.083};
-//const double calCurveParUnc_[2] = {0.0550971, 0.0248913};   //{0.05185, 0.02447};
+const double calCurveParLep[2] = {-0.267184, 1.08957};
+const double calCurveParUncLep[2] = {0.0550971, 0.0248913};
 // parameter = redTopMass_old
-//const double calCurvePar_[2] = {-0.152752, 1.09383};   //{-0.15551, 1.09669};        // 180107
-//const double calCurveParUnc_[2] = {0.0436359, 0.0166395};   //{0.0469114, 0.0175116};  // 180107
+const double calCurveParHad[2] = {-0.152752, 1.09383};
+const double calCurveParUncHad[2] = {0.0436359, 0.0166395};
+
+double calCurvePar_[2] = {0., 1.};
+double calCurveParUnc_[2] = {0., 0.};
 
 ifstream fileIn;
 ofstream fileOut;
@@ -74,6 +82,33 @@ std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double th
 int main()
 {
   cout << "**** Beginning of the program ****" << endl;
+  
+  /// Set up
+  if (useComb)
+  {
+    inputFileDir += "180110_comb/";
+    calCurvePar_[0] = calCurveParComb[0];
+    calCurvePar_[1] = calCurveParComb[1];
+    calCurveParUnc_[0] = calCurveParUncComb[0];
+    calCurveParUnc_[1] = calCurveParUncComb[1];
+  }
+  else if (useLep)
+  {
+    inputFileDir += "180110_lep/";
+    calCurvePar_[0] = calCurveParLep[0];
+    calCurvePar_[1] = calCurveParLep[1];
+    calCurveParUnc_[0] = calCurveParUncLep[0];
+    calCurveParUnc_[1] = calCurveParUncLep[1];
+  }
+  else if (useHad)
+  {
+    inputFileDir += "180110_had/";
+    calCurvePar_[0] = calCurveParHad[0];
+    calCurvePar_[1] = calCurveParHad[1];
+    calCurveParUnc_[0] = calCurveParUncHad[0];
+    calCurveParUnc_[1] = calCurveParUncHad[1];
+  }
+  
   
   /// Get nominal value
   fileName = inputFileDir+"result_minimum_nominal_widthx1_mass172p5.txt";

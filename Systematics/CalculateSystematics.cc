@@ -20,21 +20,26 @@ using namespace std;
 bool verbose_ = true;
 bool doMass = false;
 bool is2D = false;
+
+bool useComb = true;
+bool useLep = false;
+bool useHad = false;
+
 string suffix = "";
-string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/180110_comb/"; //"OutputLikelihood/170816_0947/";
+string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/"; //"OutputLikelihood/170816_0947/";
 string listFileName = "list_syst.txt";
 
 
 /// 1D width
 // parameter = comb
-const double calCurvePar_[2] = {-0.249918, 1.08351};   //{-0.2526, 1.084};
-const double calCurveParUnc_[2] = {0.0351629, 0.0139145};   //{0.03321, 0.01345};
+const double calCurveParComb[2] = {-0.249918, 1.08351};
+const double calCurveParUncComb[2] = {0.0351629, 0.0139145};
 // parameter = redMlb
-//const double calCurvePar_[2] = {-0.267184, 1.08957};   //{-0.245, 1.083};
-//const double calCurveParUnc_[2] = {0.0550971, 0.0248913};   //{0.05185, 0.02447};
+const double calCurveParLep[2] = {-0.267184, 1.08957};
+const double calCurveParUncLep[2] = {0.0550971, 0.0248913};
 // parameter = redTopMass_old
-//const double calCurvePar_[2] = {-0.152752, 1.09383};   //{-0.15551, 1.09669};        // 180107
-//const double calCurveParUnc_[2] = {0.0436359, 0.0166395};   //{0.0469114, 0.0175116};  // 180107
+const double calCurveParHad[2] = {-0.152752, 1.09383};
+const double calCurveParUncHad[2] = {0.0436359, 0.0166395};
 /// 1D mass
 const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
 const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
@@ -44,12 +49,19 @@ const double calCurveParUncW_[2] = {0.0451828, 0.0180112};
 const double calCurveParM_[2] = {0., 1.};
 const double calCurveParUncM_[2] = {0., 0.};
 
+double calCurvePar_[2] = {0., 1.};
+double calCurveParUnc_[2] = {0., 0.};
+
+
+const double dataComb[2] = {0.674565, 0.138775};  // comb
+const double dataLep[2] = {1.21952, 0.241407};    // lep
+const double dataHad[2] = {0.649174, 0.145405};   // had
 
 string line, lineList;
 string thisSyst;
 double thisWidth, thisMass, thisWidthValue, thisWidthUnc, thisMassValue, thisMassUnc;
 pair<double,double> thisCorrWidthValue, thisCorrMassValue;
-//pair<double,double> testData;
+pair<double,double> testData;
 
 bool isRate[80] = {0};
 
@@ -90,18 +102,10 @@ std::pair<double,double> ApplyCalibrationCurveMass(double thisOutputMass, double
 std::pair<double,double> ApplyCalibrationCurveW(double thisOutputWidth, double thisOutputWidthSigma);
 std::pair<double,double> ApplyCalibrationCurveM(double thisOutputMass, double thisOutputMassSigma);
 void WriteShiftTable(double scale = 1.);
+void WriteShiftTableShort(double scale = 1.);
+void WriteShiftTableTheo(double scale = 1.);
+void WriteShiftTableExp(double scale = 1.);
 void WriteRelTable();
-
-pair<double,double> testData = ApplyCalibrationCurve(0.674565, 0.138775);  // comb
-//pair<double,double> testData = ApplyCalibrationCurve(1.21952, 0.241407);  // lep
-//pair<double,double> testData = ApplyCalibrationCurve(0.649174, 0.145405);  // had
-
-//testData = ApplyCalibrationCurve(0.680374, 0.137884);  // comb
-//testData = ApplyCalibrationCurve(1.21739, 0.240619);   // mlb
-//testData = ApplyCalibrationCurve(0.638646, 0.131186);  // 180103
-//testData = ApplyCalibrationCurve(0.643469, 0.13191);   // 180107
-
-//testData = ApplyCalibrationCurveMass(172.152, 0.107253);   // MASS
 
 
 bool fexists(const char *filename)
@@ -166,6 +170,36 @@ int main()
   {
     suffix = "Mass";
     inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
+  }
+  
+  
+  /// Set up
+  if (useComb)
+  {
+    inputFileDir += "180110_comb/";
+    calCurvePar_[0] = calCurveParComb[0];
+    calCurvePar_[1] = calCurveParComb[1];
+    calCurveParUnc_[0] = calCurveParUncComb[0];
+    calCurveParUnc_[1] = calCurveParUncComb[1];
+    testData = ApplyCalibrationCurve(dataComb[0], dataComb[1]);
+  }
+  else if (useLep)
+  {
+    inputFileDir += "180110_lep/";
+    calCurvePar_[0] = calCurveParLep[0];
+    calCurvePar_[1] = calCurveParLep[1];
+    calCurveParUnc_[0] = calCurveParUncLep[0];
+    calCurveParUnc_[1] = calCurveParUncLep[1];
+    testData = ApplyCalibrationCurve(dataLep[0], dataLep[1]);
+  }
+  else if (useHad)
+  {
+    inputFileDir += "180110_had/";
+    calCurvePar_[0] = calCurveParHad[0];
+    calCurvePar_[1] = calCurveParHad[1];
+    calCurveParUnc_[0] = calCurveParUncHad[0];
+    calCurveParUnc_[1] = calCurveParUncHad[1];
+    testData = ApplyCalibrationCurve(dataHad[0], dataHad[1]);
   }
   
   
@@ -540,7 +574,10 @@ int main()
   
   WriteShiftTable();
   if (! doMass) WriteShiftTable(1.31);
-  WriteRelTable();
+  //WriteRelTable();
+  WriteShiftTableTheo();
+  WriteShiftTableExp();
+  WriteShiftTableShort(1.31);
   
   
   if (verbose_) cout << "End of the test program" << endl;
@@ -1228,7 +1265,7 @@ void WriteShiftTable(double scale)
   if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "\\hdamp & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
+    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
   }
   
   if ( indexFragCentral != -1 || indexFragUP != -1 || indexFragDOWN != -1 || indexFragPeterson != -1 )
@@ -1262,7 +1299,7 @@ void WriteShiftTable(double scale)
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Tune & " << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " & " << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " \\\\" << endl;
+    fileOut << space << "Underlying events & " << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " & " << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " \\\\" << endl;
   }
   if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
   {
@@ -1297,12 +1334,16 @@ void WriteShiftTable(double scale)
     //fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifferenceUnc[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " & " << scale*systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
   }
   
-  if ( ( indexRateCMUP != -1 && indexRateCMDOWN != -1 ) || ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
+  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
   {
     fileOut << interline << endl;
     fileOut << space << "\\textit{Cross section variations} &  &  &  &  \\\\" << endl;
-    if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
-      fileOut << space << "\\tabsp \\# \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
     if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
       fileOut << space << "\\tabsp ST \\tq channel & " << scale*systDifference[indexRateSTtUP] << " &  & " << scale*systDifference[indexRateSTtDOWN] << " &  \\\\" << endl;
     if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
@@ -1342,6 +1383,568 @@ void WriteShiftTable(double scale)
   fileOut << "\\end{table}%" << endl;
   
   cout << "Written table with absolute shifts + stat. uncertainties" << endl;
+  
+}
+
+void WriteShiftTableShort(double scale)
+{
+  string space = "     ";
+  string hline = space+"\\hline";
+  string interline = space+"&&&&\\\\[-6pt]";
+  string headerextra = "[+3pt]";
+  string multicolBegin = "\\multicolumn{2}{r}{";
+  string multicolEnd = "$\\qquad$}";
+  
+  string fileName = "systematicsShiftShort";
+  if ( scale != 1. ) fileName += "x"+DotReplace(scale);
+  ofstream fileOut((fileName+suffix+".tex").c_str());
+  fileOut << "\\begin{table}[htp]" << endl;
+  fileOut << " \\caption{Summary of the systematic uncertainties for the \\fixme{combined} measurement.";
+  if ( scale != 1. ) fileOut << " All values have been multiplied by $\\topwidth = " << scale << " \\GeV$.";
+  fileOut << "}" << endl;
+  fileOut << " \\begin{center}" << endl;
+  fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
+  fileOut << "   \\begin{center}" << endl;
+  fileOut << "    %\\hspace{-2.6cm}" << endl;
+  fileOut << "    {\\small" << endl;
+  fileOut << "    \\begin{tabular}{l S[table-format=1.3] S[table-format=1.3] S[table-format=2.3] S[table-format=1.3]}" << endl;  /// adapt!!
+  
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "\\multicolumn{3}{l}{Nominal value} & \\multicolumn{2}{l}{$" << fixed << setprecision(3) << scale*nomVal << " \\pm " << scale*nomValUnc << "$} \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Systematic & \\multicolumn{2}{c}{$+1\\sigma$} & \\multicolumn{2}{c}{$-1\\sigma$} \\\\" << endl;
+  fileOut << space << " & {Shift} & {   Unc   } & {Shift} & {   Unc   } \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  
+  fileOut << interline << endl;
+  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) && (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) )
+  {
+    fileOut << space << "Lepton SFs & " << scale*sqrt(systDifference[indexLepIdUP]*systDifference[indexLepIdUP] + systDifference[indexLepTrigDOWN]*systDifference[indexLepTrigDOWN]) << " &  & " << -scale*sqrt(systDifference[indexLepIdDOWN]*systDifference[indexLepIdDOWN] + systDifference[indexLepTrigUP]*systDifference[indexLepTrigUP]) << " &  \\\\" << endl;
+  }
+  
+  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " &  & " << scale*systDifference[indexBTagDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexPuUP != -1 && indexPuDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " &  & " << scale*systDifference[indexPuDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexJesUP != -1 && indexJesDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JES & " << scale*systDifference[indexJesDOWN] << " &  & " << scale*systDifference[indexJesUP] << " &  \\\\" << endl;
+  }
+  if ( indexJerUP != -1 && indexJerDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " &  & " << scale*systDifference[indexJerDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Rate \\CM\\ events & " << scale*systDifference[indexRateCMDOWN] << " &  & " << scale*systDifference[indexRateCMUP] << " &  \\\\" << endl;
+  }
+  
+  if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
+  {
+    double tmpUp = 0., tmpDown = 0.;
+    if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
+    {
+      tmpUp += systDifference[indexRateSTtUP]*systDifference[indexRateSTtUP];
+      tmpDown += systDifference[indexRateSTtDOWN]*systDifference[indexRateSTtDOWN];
+    }
+    if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
+    {
+      tmpUp += systDifference[indexRateSTtWUP]*systDifference[indexRateSTtWUP];
+      tmpDown += systDifference[indexRateSTtWDOWN]*systDifference[indexRateSTtWDOWN];
+    }
+    if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
+    {
+      tmpUp += systDifference[indexRateOtherUP]*systDifference[indexRateOtherUP];
+      tmpDown += systDifference[indexRateOtherDOWN]*systDifference[indexRateOtherDOWN];
+    }
+    tmpUp = sqrt(tmpUp);
+    tmpDown = -sqrt(tmpDown);
+    fileOut << interline << endl;
+    fileOut << space << "Cross section variations & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
+  }
+  
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    double tmpUp = 0., tmpDown = 0.;
+    if ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 )
+    {
+      tmpUp += systDifference[indexCCSlopeDOWN]*systDifference[indexCCSlopeDOWN];
+      tmpDown += systDifference[indexCCSlopeUP]*systDifference[indexCCSlopeUP];
+    }
+    if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
+    {
+      tmpUp += systDifference[indexCCConstDOWN]*systDifference[indexCCConstDOWN];
+      tmpDown += systDifference[indexCCConstUP]*systDifference[indexCCConstUP];
+    }
+    tmpUp = sqrt(tmpUp);
+    tmpDown = -sqrt(tmpDown);
+    fileOut << interline << endl;
+    fileOut << space << "Calibration curve & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
+  }
+  
+  if ( indexIsrUP != -1 && indexIsrDOWN != -1 && indexFsrUP != -1 && indexFsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Parton shower & " << scale*systDifference[indexFsrUP] << " & " << scale*systDifferenceUnc[indexFsrUP] << " & " << scale*systDifference[indexIsrDOWN] << " & " << scale*systDifferenceUnc[indexIsrDOWN] << " \\\\" << endl;
+  }
+  
+  if ( (indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1) || indexPdfVar != -1 )
+  {
+    double tmpUp = 0., tmpDown = 0.;
+    if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+    {
+      tmpUp += systDifference[indexPdfAlphaSDOWN]*systDifference[indexPdfAlphaSDOWN];
+      tmpDown += systDifference[indexPdfAlphaSUP]*systDifference[indexPdfAlphaSUP];
+    }
+    if ( indexPdfVar != -1 )
+    {
+      tmpUp += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+      tmpDown += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+    }
+    tmpUp = sqrt(tmpUp);
+    tmpDown = -sqrt(tmpDown);
+    fileOut << interline << endl;
+    fileOut << space << "PDFs & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
+  }
+  
+  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
+  }
+  
+  if ( ( indexFragUP != -1 && indexFragDOWN != -1 ) || indexFragPeterson != -1 || ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 ) )
+  {
+    double tmpUp = 0., tmpDown = 0.;
+    if ( indexFragUP != -1 && indexFragDOWN != -1 )
+    {
+      if ( systDifference[indexFragUP] >= 0. && systDifference[indexFragDOWN] >= 0. )
+      {
+        if ( systDifference[indexFragUP] > systDifference[indexFragDOWN] )
+          tmpUp += systDifference[indexFragUP]*systDifference[indexFragUP];
+        else tmpUp += systDifference[indexFragDOWN]*systDifference[indexFragDOWN];
+      }
+      else if ( systDifference[indexFragUP] < 0. && systDifference[indexFragDOWN] < 0. )
+      {
+        if ( systDifference[indexFragUP] < systDifference[indexFragDOWN] )
+          tmpDown += systDifference[indexFragUP]*systDifference[indexFragUP];
+        else tmpDown += systDifference[indexFragDOWN]*systDifference[indexFragDOWN];
+      }
+      else if ( systDifference[indexFragUP] >= 0. && systDifference[indexFragDOWN] < 0. )
+      {
+        tmpUp += systDifference[indexFragUP]*systDifference[indexFragUP];
+        tmpDown += systDifference[indexFragDOWN]*systDifference[indexFragDOWN];
+      }
+      else if ( systDifference[indexFragUP] < 0. && systDifference[indexFragDOWN] >= 0. )
+      {
+        tmpUp += systDifference[indexFragDOWN]*systDifference[indexFragDOWN];
+        tmpDown += systDifference[indexFragUP]*systDifference[indexFragUP];
+      }
+    }
+    if ( indexFragPeterson != -1 )
+    {
+      if ( systDifference[indexFragPeterson] >= 0. )
+        tmpUp += systDifference[indexFragPeterson]*systDifference[indexFragPeterson];
+      else
+        tmpDown += systDifference[indexFragPeterson]*systDifference[indexFragPeterson];
+    }
+    if ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 )
+    {
+      if ( systDifference[indexFragSemiLepBrUP] >= 0. && systDifference[indexFragSemiLepBrDOWN] >= 0. )
+      {
+        if ( systDifference[indexFragSemiLepBrUP] > systDifference[indexFragSemiLepBrDOWN] )
+          tmpUp += systDifference[indexFragSemiLepBrUP]*systDifference[indexFragSemiLepBrUP];
+        else tmpUp += systDifference[indexFragSemiLepBrDOWN]*systDifference[indexFragSemiLepBrDOWN];
+      }
+      else if ( systDifference[indexFragSemiLepBrUP] < 0. && systDifference[indexFragSemiLepBrDOWN] < 0. )
+      {
+        if ( systDifference[indexFragSemiLepBrUP] < systDifference[indexFragSemiLepBrDOWN] )
+          tmpDown += systDifference[indexFragSemiLepBrUP]*systDifference[indexFragSemiLepBrUP];
+        else tmpDown += systDifference[indexFragSemiLepBrDOWN]*systDifference[indexFragSemiLepBrDOWN];
+      }
+      else if ( systDifference[indexFragSemiLepBrUP] >= 0. && systDifference[indexFragSemiLepBrDOWN] < 0. )
+      {
+        tmpUp += systDifference[indexFragSemiLepBrUP]*systDifference[indexFragSemiLepBrUP];
+        tmpDown += systDifference[indexFragSemiLepBrDOWN]*systDifference[indexFragSemiLepBrDOWN];
+      }
+      else if ( systDifference[indexFragSemiLepBrUP] < 0. && systDifference[indexFragSemiLepBrDOWN] >= 0. )
+      {
+        tmpUp += systDifference[indexFragSemiLepBrDOWN]*systDifference[indexFragSemiLepBrDOWN];
+        tmpDown += systDifference[indexFragSemiLepBrUP]*systDifference[indexFragSemiLepBrUP];
+      }
+    }
+    tmpUp = sqrt(tmpUp);
+    tmpDown = -sqrt(tmpDown);
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~jet modelling & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
+  }
+  
+  if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Underlying event & ";
+    if ( systDifference[indexTuneUP] >= 0. && systDifference[indexTuneDOWN] >= 0. )
+    {
+      if ( systDifference[indexTuneUP] > systDifference[indexTuneDOWN] )
+        fileOut << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " &  &  \\\\" << endl;
+      else fileOut << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " &  &  \\\\" << endl;
+    }
+    else if ( systDifference[indexTuneUP] < 0. && systDifference[indexTuneDOWN] < 0. )
+    {
+      if ( systDifference[indexTuneUP] < systDifference[indexTuneDOWN] )
+        fileOut << " &  & " << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " \\\\" << endl;
+      else
+        fileOut << " &  & " << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " \\\\" << endl;
+    }
+    else if ( systDifference[indexTuneUP] >= 0. && systDifference[indexTuneDOWN] < 0. )
+    {
+      fileOut << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " & " << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " \\\\" << endl;
+    }
+    else if ( systDifference[indexTuneUP] < 0. && systDifference[indexTuneDOWN] >= 0. )
+    {
+      fileOut << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " & " << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " \\\\" << endl;
+    }
+  }
+  
+  if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Colour reconnection & " << scale*systDifference[indexCrQcdErd] << " & " << scale*systDifferenceUnc[indexCrErd] << " & ";
+    if ( systDifference[indexCrGluonMoveErd] < 0. )
+      fileOut << scale*systDifference[indexCrGluonMoveErd] << " & " << scale*systDifferenceUnc[indexCrGluonMoveErd] << " \\\\" << endl;
+    else  fileOut << " &  \\\\" << endl;
+  }
+  
+  if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top mass & ";
+    if ( systDifference[indexMassUP] >= 0. && systDifference[indexMassDOWN] >= 0. )
+    {
+      if ( systDifference[indexMassUP] > systDifference[indexMassDOWN] )
+        fileOut << scale*systDifference[indexMassUP] << " &  &  &  \\\\" << endl;
+      else fileOut << scale*systDifference[indexMassDOWN] << " &  &  &  \\\\" << endl;
+    }
+    else if ( systDifference[indexMassUP] < 0. && systDifference[indexMassDOWN] < 0. )
+    {
+      if ( systDifference[indexMassUP] < systDifference[indexMassDOWN] )
+        fileOut << " &  & " << scale*systDifference[indexMassUP] << " &  \\\\" << endl;
+      else fileOut << " &  & " << scale*systDifference[indexMassDOWN] << " &  \\\\" << endl;
+    }
+    else if ( systDifference[indexMassUP] >= 0. && systDifference[indexMassDOWN] < 0. )
+      fileOut << scale*systDifference[indexMassUP] << " &  & " << scale*systDifference[indexMassDOWN] << " &  \\\\" << endl;
+    else if ( systDifference[indexMassUP] < 0. && systDifference[indexMassDOWN] >= 0. )
+      fileOut << scale*systDifference[indexMassDOWN] << " &  & " << scale*systDifference[indexMassUP] << " &  \\\\" << endl;
+  }
+  
+  if ( indexTopPt != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top $\\pT$ reweighting & ";
+    if ( systDifference[indexTopPt] > 0. ) fileOut << scale*systDifference[indexTopPt] << " &  &  &  \\\\" << endl;
+    else fileOut << " &  & " << scale*systDifference[indexTopPt] << " &  \\\\" << endl;
+  }
+  
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Total & \\multicolumn{2}{c}{" << scale*shiftUp << "} & \\multicolumn{2}{c}{-" << scale*shiftDown << "} \\\\" << endl;
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  
+  fileOut << "    \\end{tabular}}" << endl;
+  fileOut << "   \\end{center}" << endl;
+  fileOut << "  \\end{minipage}" << endl;
+  fileOut << " \\end{center}" << endl;
+  fileOut << " \\label{tab:systShiftShort";
+  if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
+  fileOut << "}" << endl;
+  fileOut << "\\end{table}%" << endl;
+  
+  cout << "Written short table with absolute shifts + stat. uncertainties" << endl;
+  
+}
+
+void WriteShiftTableTheo(double scale)
+{
+  string space = "     ";
+  string hline = space+"\\hline";
+  string interline = space+"&&&&\\\\[-6pt]";
+  string headerextra = "[+3pt]";
+  string multicolBegin = "\\multicolumn{2}{r}{";
+  string multicolEnd = "$\\qquad$}";
+  
+  string fileName = "systematicsShiftTheo";
+  if ( scale != 1. ) fileName += "x"+DotReplace(scale);
+  ofstream fileOut((fileName+suffix+".tex").c_str());
+  fileOut << "\\begin{table}[htp]" << endl;
+  fileOut << " \\caption{Effect of theoretical systematic uncertainties for the \\fixme{combined} measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table due to a $\\pm 1\\sigma$ variation.}" << endl;
+  fileOut << " \\begin{center}" << endl;
+  fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
+  fileOut << "   \\begin{center}" << endl;
+  fileOut << "    %\\hspace{-2.6cm}" << endl;
+  fileOut << "    {\\small" << endl;
+  fileOut << "    \\begin{tabular}{l S[table-format=1.3] S[table-format=1.3] S[table-format=2.3] S[table-format=1.3]}" << endl;  /// adapt!!
+  
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "\\multicolumn{3}{l}{Nominal value} & \\multicolumn{2}{l}{$" << fixed << setprecision(3) << scale*nomVal << " \\pm " << scale*nomValUnc << "$} \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Systematic & \\multicolumn{2}{c}{$+1\\sigma$} & \\multicolumn{2}{c}{$-1\\sigma$} \\\\" << endl;
+  fileOut << space << " & {Shift} & {   Unc   } & {Shift} & {   Unc   } \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  
+  
+  if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Renormalisation/factorisation scale} &  &  &  &  \\\\" << endl;
+    if ( indexRenFac1002 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 1\\,,\\quad \\muF = 2$   &  &  & " << scale*systDifference[indexRenFac1002] << " &  \\\\" << endl;
+    if ( indexRenFac1003 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 1\\,,\\quad \\muF = 0.5$ &  &  & " << scale*systDifference[indexRenFac1003] << " &  \\\\" << endl;
+    if ( indexRenFac1004 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 2\\,,\\quad \\muF = 1$   &  &  & " << scale*systDifference[indexRenFac1004] << " &  \\\\" << endl;
+    if ( indexRenFac1005 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 2\\,,\\quad \\muF = 2$   &  &  & " << scale*systDifference[indexRenFac1005] << " &  \\\\" << endl;
+    if ( indexRenFac1007 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 0.5\\,,\\, \\muF = 1$    &  &  & " << scale*systDifference[indexRenFac1007] << " &  \\\\" << endl;
+    if ( indexRenFac1009 != -1 )
+      fileOut << space << "\\tabsp $\\muR = 0.5\\,,\\, \\muF = 0.5$  &  &  & " << scale*systDifference[indexRenFac1009] << " &  \\\\" << endl;
+  }
+  
+  if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ISR & " << scale*systDifference[indexIsrUP] << " & " << scale*systDifferenceUnc[indexIsrUP] << " & " << scale*systDifference[indexIsrDOWN] << " & " << scale*systDifferenceUnc[indexIsrDOWN] << " \\\\" << endl;
+  }
+  if ( indexFsrUP != -1 && indexFsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "FSR & " << scale*systDifference[indexFsrUP] << " & " << scale*systDifferenceUnc[indexFsrUP] << " & " << scale*systDifference[indexFsrDOWN] << " & " << scale*systDifferenceUnc[indexFsrDOWN] << " \\\\" << endl;
+  }
+  
+  if ( (indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1) || indexPdfVar != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{PDF} &  &  &  &  \\\\" << endl;
+    if ( indexPdfVar != -1 )
+      fileOut << space << "\\tabsp Replicas & " << scale*systDifference[indexPdfVar] << " &  & -" << scale*systDifference[indexPdfVar] << " &  \\\\" << endl;
+    if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
+      fileOut << space << "\\tabsp $\\alpha_{s}$ & " << scale*systDifference[indexPdfAlphaSUP] << " &  & " << scale*systDifference[indexPdfAlphaSDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexFragCentral != -1 || indexFragUP != -1 || indexFragDOWN != -1 || indexFragPeterson != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{\\bq\\ fragmentation} &  &  &  &  \\\\" << endl;
+    if ( indexFragUP != -1 && indexFragDOWN != -1 )
+      fileOut << space << "\\tabsp Bowler--Lund & " << scale*systDifference[indexFragUP] << " &  & " << scale*systDifference[indexFragDOWN] << " &  \\\\" << endl;
+    if ( indexFragCentral != -1 )
+//      fileOut << space << "\\tabsp central &  &  & " << scale*systDifference[indexFragCentral] << " &  \\\\" << endl;
+    if ( indexFragPeterson != -1 )
+      fileOut << space << "\\tabsp Peterson &  &  & " << scale*systDifference[indexFragPeterson] << " &  \\\\" << endl;
+  }
+  
+  if ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq\\ \\semilep\\ BR & " << scale*systDifference[indexFragSemiLepBrUP] << " &  & " << scale*systDifference[indexFragSemiLepBrDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Underlying event & " << scale*systDifference[indexTuneUP] << " & " << scale*systDifferenceUnc[indexTuneUP] << " & " << scale*systDifference[indexTuneDOWN] << " & " << scale*systDifferenceUnc[indexTuneDOWN] << " \\\\" << endl;
+  }
+  if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Colour reconnection} &  &  &  &  \\\\" << endl;
+    if ( indexCrErd != -1 )
+      fileOut << space << "\\tabsp MPI (ERD)        &  &  & " << scale*systDifference[indexCrErd] << " & " << scale*systDifferenceUnc[indexCrErd] << " \\\\" << endl;
+    if ( indexCrQcdErd != -1 )
+      fileOut << space << "\\tabsp QCD-based (ERD)  &  &  & " << scale*systDifference[indexCrQcdErd] << " & " << scale*systDifferenceUnc[indexCrQcdErd] << " \\\\" << endl;
+    if ( indexCrGluonMove != -1 )
+      fileOut << space << "\\tabsp Gluon move       &  &  & " << scale*systDifference[indexCrGluonMove] << " & " << scale*systDifferenceUnc[indexCrGluonMove] << " \\\\" << endl;
+    if ( indexCrGluonMoveErd != -1 )
+      fileOut << space << "\\tabsp Gluon move (ERD) &  &  & " << scale*systDifference[indexCrGluonMoveErd] << " & " << scale*systDifferenceUnc[indexCrGluonMoveErd] << " \\\\" << endl;
+  }
+  
+  if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top mass & " << scale*systDifference[indexMassUP] << " &  & " << scale*systDifference[indexMassDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( indexTopPt != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Top $\\pT$ reweighting &  &  & " << scale*systDifference[indexTopPt] << " &  \\\\" << endl;
+  }
+  
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  
+  fileOut << "    \\end{tabular}}" << endl;
+  fileOut << "   \\end{center}" << endl;
+  fileOut << "  \\end{minipage}" << endl;
+  fileOut << " \\end{center}" << endl;
+  fileOut << " \\label{tab:systFullShiftTheo";
+  if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
+  fileOut << "}" << endl;
+  fileOut << "\\end{table}%" << endl;
+  
+  cout << "Written table with theoretical uncertainties" << endl;
+  
+}
+
+void WriteShiftTableExp(double scale)
+{
+  string space = "     ";
+  string hline = space+"\\hline";
+  string interline = space+"&&\\\\[-6pt]";
+  string headerextra = "[+3pt]";
+  string multicolBegin = "\\multicolumn{2}{r}{";
+  string multicolEnd = "$\\qquad$}";
+  
+  string fileName = "systematicsShiftExp";
+  if ( scale != 1. ) fileName += "x"+DotReplace(scale);
+  ofstream fileOut((fileName+suffix+".tex").c_str());
+  fileOut << "\\begin{table}[htp]" << endl;
+  fileOut << " \\caption{Effect of the experimental systematic uncertainties for the \\fixme{combined} measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table due to a $\\pm 1\\sigma$ variation.}" << endl;
+  fileOut << " \\begin{center}" << endl;
+  fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
+  fileOut << "   \\begin{center}" << endl;
+  fileOut << "    %\\hspace{-2.6cm}" << endl;
+  fileOut << "    {\\small" << endl;
+  fileOut << "    \\begin{tabular}{l S[table-format=1.3] S[table-format=2.3]}" << endl;
+  
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "{Nominal value} & \\multicolumn{2}{l}{$" << fixed << setprecision(3) << scale*nomVal << " \\pm " << scale*nomValUnc << "$} \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Systematic & {$+1\\sigma$} & {$-1\\sigma$} \\\\" << headerextra << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  
+  
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Calibration curve} &  &  \\\\" << endl;
+    if ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 )
+      fileOut << space << "\\tabsp Slope & " << scale*systDifference[indexCCSlopeUP] << " & " << scale*systDifference[indexCCSlopeDOWN] << " \\\\" << endl;
+    if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
+      fileOut << space << "\\tabsp Constant & " << scale*systDifference[indexCCConstUP] << " & " << scale*systDifference[indexCCConstDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexLumiUP != -1 && indexLumiDOWN != -1 && systDifference[indexLumiUP] > 1e-5 && systDifference[indexLumiDOWN] > 1e-5)
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Luminosity & " << scale*systDifference[indexLumiUP] << " & " << scale*systDifference[indexLumiDOWN] << " \\\\" << endl;
+  }
+  
+  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) || (indexLepIsoUP != -1 && indexLepIsoDOWN != -1) || (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) || (indexLepTrkUP != -1 && indexLepTrkDOWN != -1) )
+    fileOut << space << "\\textit{Lepton SFs} &  &  \\\\" << endl;
+  if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
+    fileOut << space << "\\tabsp Id        & " << scale*systDifference[indexLepIdUP] << " & " << scale*systDifference[indexLepIdDOWN] << " \\\\" << endl;
+  if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
+    fileOut << space << "\\tabsp Isolation & " << scale*systDifference[indexLepIsoUP] << " & " << scale*systDifference[indexLepIsoDOWN] << " \\\\" << endl;
+  if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
+    fileOut << space << "\\tabsp Trigger   & " << scale*systDifference[indexLepTrigUP] << " & " << scale*systDifference[indexLepTrigDOWN] << " \\\\" << endl;
+  if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
+    fileOut << space << "\\tabsp Tracking  & " << scale*systDifference[indexLepTrkUP] << " & " << scale*systDifference[indexLepTrkDOWN] << " \\\\" << endl;
+  
+  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " & " << scale*systDifference[indexBTagDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexPuUP != -1 && indexPuDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " & " << scale*systDifference[indexPuDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexJesUP != -1 && indexJesDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JES & " << scale*systDifference[indexJesUP] << " & " << scale*systDifference[indexJesDOWN] << " \\\\" << endl;
+  }
+  if ( indexJerUP != -1 && indexJerDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Cross section variations} &  &  \\\\" << endl;
+    if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
+      fileOut << space << "\\tabsp ST \\tq\\ channel & " << scale*systDifference[indexRateSTtUP] << " & " << scale*systDifference[indexRateSTtDOWN] << " \\\\" << endl;
+    if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
+      fileOut << space << "\\tabsp ST \\tq\\W\\ channel & " << scale*systDifference[indexRateSTtWUP] << " & " << scale*systDifference[indexRateSTtWDOWN] << " \\\\" << endl;
+    if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
+      fileOut << space << "\\tabsp Other & " << scale*systDifference[indexRateOtherUP] << " & " << scale*systDifference[indexRateOtherDOWN] << " \\\\" << endl;
+  }
+  
+  //....
+  
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << hline << endl;
+  
+  fileOut << "    \\end{tabular}}" << endl;
+  fileOut << "   \\end{center}" << endl;
+  fileOut << "  \\end{minipage}" << endl;
+  fileOut << " \\end{center}" << endl;
+  fileOut << " \\label{tab:systFullShiftExp";
+  if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
+  fileOut << "}" << endl;
+  fileOut << "\\end{table}%" << endl;
+  
+  cout << "Written table with experimental uncertainties" << endl;
   
 }
 
