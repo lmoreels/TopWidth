@@ -63,11 +63,11 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool useNewVar = false;
 
-bool doLikeW = true;
+bool doLikeW = false;
 bool doLikeM = false;
 bool doLike2D = false;
 bool doLikeComb = false;
@@ -916,7 +916,7 @@ int main(int argc, char* argv[])
         calculateFractions = false;
         makeTGraphs = false;
         calculateLikelihood = true;
-        makePlots = false;
+//        makePlots = false;
       }
       
       /// Reweight top quark mass
@@ -948,10 +948,10 @@ int main(int argc, char* argv[])
         applyMassSF = true;
         scaleMass = argi;
         
-        calculateFractions = false;
-        makeTGraphs = false;
-        calculateLikelihood = true;
-        makePlots = false;
+//         calculateFractions = false;
+//         makeTGraphs = false;
+//         calculateLikelihood = true;
+//         makePlots = false;
       }
       
       /// Run alternative top quark width samples
@@ -1531,8 +1531,11 @@ int main(int argc, char* argv[])
     
     
     if ( dataSetName.find("Data") != std::string::npos || dataSetName.find("data") != std::string::npos || dataSetName.find("DATA") != std::string::npos )
+    {
+      datasets[d]->SetTitle("Data");
       includeDataSets.push_back(0);
 //      Luminosity = datasets[d]->EquivalentLumi();
+    }
     else if ( dataSetName.find("TT") != std::string::npos )
       includeDataSets.push_back(1);
     else if ( dataSetName.find("ST") != std::string::npos )
@@ -2761,19 +2764,19 @@ int main(int argc, char* argv[])
             else if (isTTother) isUMhad_TTother = true;
           }
           
-          /*if (doLikeComb)
+          if (doLikeComb)
           {
             if (isCMlep && isCMhad)
             {
               isCM = true;
               nofCorrectlyMatched++;
             }
-            else if (isWMlep && isWMhad)
+            else if ( (isWMlep && ! isUMhad) || (isWMhad && ! isUMlep) )
             {
               isWM = true;
               nofNotCorrectlyMatched++;
             }
-            else if (isUMlep && isUMhad)
+            else
             {
               isUM = true;
               nofUnmatched++;
@@ -2789,7 +2792,7 @@ int main(int argc, char* argv[])
               }
             }
           }  // both
-          else*/ if (useNewVar)
+          else if (useNewVar)
           {
             if (isCMlep)
             {
@@ -3249,12 +3252,13 @@ int main(int argc, char* argv[])
             }
           }
           
-          /*if (doLikeComb)
+          if (doLikeComb)
           {
-            if (isCMlep && isCMhad)      isCM = true;
-            else if (isWMlep && isWMhad) isWM = true;
+            if (isCMlep && isCMhad) isCM = true;
+            else if ( (isWMlep && ! isUMhad) || (isWMhad && ! isUMlep) ) isWM = true;
+            else isUM = true;
           }
-          else*/ if (useNewVar)
+          else if (useNewVar)
           {
             if (isCMlep)      isCM = true;
             else if (isWMlep) isWM = true;
@@ -3453,11 +3457,22 @@ int main(int argc, char* argv[])
           if (isTTbar) FillKinFitPlots(doneKinFit);
           if (! isData)
           {
+            histo1D["allSim_top_mass_zoom"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
             histo1D["allSim_top_mass"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
             histo1D["allSim_red_top_mass_old"]->Fill(redTopMass_old, lumiWeight*scaleFactor*widthSF);
             histo1D["allSim_red_top_mass_new"]->Fill(redTopMass_new, lumiWeight*scaleFactor*widthSF);
             histo1D["allSim_red_top_mass"]->Fill(redTopMass, lumiWeight*scaleFactor*widthSF);
             histo1D["allSim_mass_bjj_div_m_jj"]->Fill(reco_mbjj_div_mjj, lumiWeight*scaleFactor*widthSF);
+            histo1D["allSim_red_mlb_mass"]->Fill(redMlbMass, lumiWeight*scaleFactor*widthSF);
+          }
+          else
+          {
+            histo1D["allData_top_mass_zoom"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
+            histo1D["allData_top_mass"]->Fill(reco_top_mass_aKF, lumiWeight*scaleFactor*widthSF);
+            histo1D["allData_red_top_mass_old"]->Fill(redTopMass_old, lumiWeight*scaleFactor*widthSF);
+            histo1D["allData_red_top_mass_new"]->Fill(redTopMass_new, lumiWeight*scaleFactor*widthSF);
+            histo1D["allData_red_top_mass"]->Fill(redTopMass, lumiWeight*scaleFactor*widthSF);
+            histo1D["allData_red_mlb_mass"]->Fill(redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3480,8 +3495,8 @@ int main(int argc, char* argv[])
           {
             if (doLikeComb)
             {
-              if      (isCMhad && isCMlep) scaleFactor *= 1.025;
-              else if (isUMhad || isUMlep) scaleFactor *= 0.96422;
+              if (isCMhad && isCMlep) scaleFactor *= 1.025;
+              else                    scaleFactor *= 0.96308;
             }
             else
             {
@@ -3494,7 +3509,7 @@ int main(int argc, char* argv[])
             if (doLikeComb)
             {
               if      (isCMhad && isCMlep) scaleFactor *= 0.975;
-              else if (isUMhad || isUMlep) scaleFactor *= 1.03578;
+              else if (isUMhad || isUMlep) scaleFactor *= 1.03692;
             }
             else
             {
@@ -3502,6 +3517,22 @@ int main(int argc, char* argv[])
               else if (isUM) scaleFactor *= 1.03566;
             }
           }
+//           else if ( thisSystematic.find("fsrup") != std::string::npos )
+//           {
+//             if (doLikeComb)
+//             {
+//               if (isCMhad && isCMlep) scaleFactor *= 1.0251522706;
+//               else                    scaleFactor *= 0.9647256432;
+//             }
+//           }
+//           else if ( thisSystematic.find("fsrdown") != std::string::npos )
+//           {
+//             if (doLikeComb)
+//             {
+//               if (isCMhad && isCMlep) scaleFactor *= 0.9836708825;
+//               else                    scaleFactor *= 1.0250009294;
+//             }
+//           }
         }
         
         if (makeTGraphs && ! isData)
@@ -4045,6 +4076,7 @@ int main(int argc, char* argv[])
         {
           if (doLike2D)
           {
+            likeComb2D->Make2DGraph("2D_"+systStr, true);  // fileName, makeNewFile
             likeComb2D->GetOutputWidth(thisWidth, thisMass, systStr, true, true);
             if (unblind) likeComb2D->GetOutputWidth(thisWidth, thisMass, "data", true, true);
           }
@@ -4220,10 +4252,13 @@ int main(int argc, char* argv[])
     for (std::map<std::string,TH1F*>::const_iterator it = histo1D.begin(); it != histo1D.end(); it++)
     {
       TH1F *temp = it->second;
-      int N = temp->GetNbinsX();
-      temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
-      temp->SetBinContent(N+1,0);
-      temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
+      if ( (it->first).find("allData") == std::string::npos && (it->first).find("allSim") == std::string::npos )
+      {
+        int N = temp->GetNbinsX();
+        temp->SetBinContent(N,temp->GetBinContent(N)+temp->GetBinContent(N+1));
+        temp->SetBinContent(N+1,0);
+        temp->SetEntries(temp->GetEntries()-2); // necessary since each SetBinContent adds +1 to the number of entries...
+      }
       temp->Write();
       TCanvas* tempCanvas = TCanvasCreator(temp, it->first);
       tempCanvas->SaveAs( (pathOutput+it->first+".png").c_str() );
@@ -4353,7 +4388,7 @@ void InitSetUp()
   {
     if (doLikeComb)
     {
-      if (doLike2D) likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad2D, inputDirLLlep2D, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
+      if (doLike2D) likeComb2D = new Likelihood2D(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad2D, inputDirLLlep2D, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
       else          likeComb = new Likelihood(minCutRedTopMassHad, maxCutRedTopMassHad, minCutRedTopMassNewVar, maxCutRedTopMassNewVar, inputDirLLhad, inputDirLLlep, dateString, rewHadTopOnly, makeTGraphs, true);  // verbose
     }
     else if (doLikeW)       likeW = new Likelihood(minCutRedTopMass, maxCutRedTopMass, inputDirLL, dateString, rewHadTopOnly, useNewVar, makeTGraphs, true);  // verbose
@@ -4668,41 +4703,51 @@ void InitMSPlots()
   /// Control plots
   if (makeControlPlots)
   {
-    MSPlotCP["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 22, 0, 440, "p_{T}", "GeV");
-    MSPlotCP["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "Eta");
-    MSPlotCP["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "Phi");
+    MSPlotCP["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "#eta");
+    MSPlotCP["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "#phi");
     MSPlotCP["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
     MSPlotCP["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
     MSPlotCP["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T}", "GeV");
     MSPlotCP["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T}", "GeV");
     MSPlotCP["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 40, 0, 200, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 32, 0, 160, "p_{T}", "GeV");
     MSPlotCP["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T}", "GeV");
     MSPlotCP["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T}", "GeV");
+    MSPlotCP["leadingJet_eta"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta", 30, -3, 3, "#eta");
+    MSPlotCP["jet2_eta"] = new MultiSamplePlot(datasetsMSP, "jet2_eta", 30, -3, 3, "#eta");
+    MSPlotCP["jet3_eta"] = new MultiSamplePlot(datasetsMSP, "jet3_eta", 30, -3, 3, "#eta");
+    MSPlotCP["jet4_eta"] = new MultiSamplePlot(datasetsMSP, "jet4_eta", 30, -3, 3, "#eta");
+    MSPlotCP["jet_eta_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets", 30, -3, 3, "#eta");
     MSPlotCP["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-    MSPlotCP["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} Eta");
-    MSPlotCP["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} #eta");
+    MSPlotCP["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
     MSPlotCP["met_corr_pT"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-    MSPlotCP["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} Eta");
-    MSPlotCP["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} #eta");
+    MSPlotCP["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
     
     MSPlotCP["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T}", "GeV");
-    MSPlotCP["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "Eta");
-    MSPlotCP["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "Phi");
+    MSPlotCP["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "#phi");
     MSPlotCP["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
     MSPlotCP["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
     MSPlotCP["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T}", "GeV");
     MSPlotCP["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
     MSPlotCP["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 40, 0, 200, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 32, 0, 160, "p_{T}", "GeV");
     MSPlotCP["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T}", "GeV");
     MSPlotCP["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T}", "GeV");
+    MSPlotCP["leadingJet_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["jet2_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["jet3_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["jet4_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["jet_eta_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets_aKF", 30, -3, 3, "#eta");
     MSPlotCP["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-    MSPlotCP["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
-    MSPlotCP["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} #eta");
+    MSPlotCP["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
     MSPlotCP["met_corr_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
-    MSPlotCP["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} Eta");
-    MSPlotCP["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} Phi");
+    MSPlotCP["met_corr_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta_aKF", 30, -3, 3, "E_{T}^{miss} #eta");
+    MSPlotCP["met_corr_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
     
     
     MSPlotCP["nJets"] = new MultiSamplePlot(datasetsMSP, "nJets", 13, -0.5, 12.5, "# jets");
@@ -5001,15 +5046,32 @@ void InitHisto1D()
   if (makeControlPlots)
   {
     histo1D["dR_jets_min"]  = new TH1F("dR_jets_min","Minimal delta R between two jets; #Delta R(j_{1},j_{2})", 35, 0, 3.5);
+    histo1D["CSVv2Discr_b"] = new TH1F("CSVv2Discr_b","CSVv2 discriminator value for b partons; CSVv2 discriminant value", 48, 0., 1.2);
+    histo1D["CSVv2Discr_c"] = new TH1F("CSVv2Discr_c","CSVv2 discriminator value for c partons; CSVv2 discriminant value", 48, 0., 1.2);
+    histo1D["CSVv2Discr_udsg"] = new TH1F("CSVv2Discr_udsg","CSVv2 discriminator value for udsg partons; CSVv2 discriminant value", 48, 0., 1.2);
+    
+    histo1D["CSVv2Discr_b_aKF"] = new TH1F("CSVv2Discr_b_aKF","CSVv2 discriminator value for b partons; CSVv2 discriminant value", 48, 0., 1.2);
+    histo1D["CSVv2Discr_c_aKF"] = new TH1F("CSVv2Discr_c_aKF","CSVv2 discriminator value for c partons; CSVv2 discriminant value", 48, 0., 1.2);
+    histo1D["CSVv2Discr_udsg_aKF"] = new TH1F("CSVv2Discr_udsg_aKF","CSVv2 discriminator value for udsg partons; CSVv2 discriminant value", 48, 0., 1.2);
   }
   
   
   /// Systematic comparison
-  histo1D["allSim_top_mass"] = new TH1F("allSim_top_mass","Reconstructed top mass for all simulated samples; m_{t}", 32, 130, 210);
-  histo1D["allSim_red_top_mass"] = new TH1F("allSim_red_top_mass","Reduced top mass for all simulated samples; m_{r}", 64, 0.4, 2.);
-  histo1D["allSim_red_top_mass_old"] = new TH1F("allSim_red_top_mass_old","Reduced top mass for all simulated samples (old definition); m_{r, old}", 64, 0.4, 2.);
-  histo1D["allSim_red_top_mass_new"] = new TH1F("allSim_red_top_mass_new","Reduced top mass for all simulated samples (new definition); m_{r, new}", 64, 0.4, 2.);
+  histo1D["allSim_top_mass_zoom"] = new TH1F("allSim_top_mass_zoom","Reconstructed top mass for all simulated samples; m_{t} (GeV)", 32, 130, 210);
+  histo1D["allSim_top_mass"] = new TH1F("allSim_top_mass","Reconstructed top mass for all simulated samples; m_{t} (GeV)", 25, 50, 300);
+  histo1D["allSim_red_top_mass"] = new TH1F("allSim_red_top_mass","Reduced top mass for all simulated samples; m_{r}", 22, 0.5, 1.6);
+  histo1D["allSim_red_top_mass_old"] = new TH1F("allSim_red_top_mass_old","Reduced top mass for all simulated samples (old definition); m_{r, old}", 22, 0.5, 1.6);
+  histo1D["allSim_red_top_mass_new"] = new TH1F("allSim_red_top_mass_new","Reduced top mass for all simulated samples (new definition); m_{r, new}", 22, 0.5, 1.6);
   histo1D["allSim_mass_bjj_div_m_jj"] = new TH1F("allSim_mass_bjj_div_m_jj","Reconstructed top quark mass divided by reconstructed W boson mass for all simulated samples; m_{bjj} /m_{jj}",  50, 1., 3.5);
+  histo1D["allSim_red_mlb_mass"] = new TH1F("allSim_red_mlb_mass","Reduced mlb mass for all simulated samples; m_{lb,r}", 44, 0., 2.2);
+  
+  histo1D["allData_top_mass_zoom"] = new TH1F("allData_top_mass_zoom","Reconstructed top mass for all data; m_{t} (GeV)", 32, 130, 210);
+  histo1D["allData_top_mass"] = new TH1F("allData_top_mass","Reconstructed top mass for all data; m_{t} (GeV)", 25, 50, 300);
+  histo1D["allData_red_top_mass"] = new TH1F("allData_red_top_mass","Reduced top mass for all data; m_{r}", 22, 0.5, 1.6);
+  histo1D["allData_red_top_mass_old"] = new TH1F("allData_red_top_mass_old","Reduced top mass for all data (old definition); m_{r, old}", 22, 0.5, 1.6);
+  histo1D["allData_red_top_mass_new"] = new TH1F("allData_red_top_mass_new","Reduced top mass for all data (new definition); m_{r, new}", 22, 0.5, 1.6);
+  histo1D["allData_red_mlb_mass"] = new TH1F("allData_red_mlb_mass","Reduced mlb mass for all data; m_{lb,r}", 44, 0., 2.2);
+  
   
   /// m_3/2
   histo1D["mass_bjj_div_m_jj_CM"] = new TH1F("mass_bjj_div_m_jj_CM","Reconstructed top quark mass divided by reconstructed W boson mass (CM); m_{bjj} /m_{jj}",  50, 1., 3.5);
@@ -5940,6 +6002,10 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
     MSPlotCP["jet4_pT"+suffix]->Fill(selectedJetsAKF[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     Ht_aKF = selectedJetsAKF[0].Pt() + selectedJetsAKF[1].Pt() + selectedJetsAKF[2].Pt() + selectedJetsAKF[3].Pt();
     MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht_aKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["leadingJet_eta"+suffix]->Fill(selectedJetsAKF[0].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet2_eta"+suffix]->Fill(selectedJetsAKF[1].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet3_eta"+suffix]->Fill(selectedJetsAKF[2].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet4_eta"+suffix]->Fill(selectedJetsAKF[3].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     M3_aKF = (selectedJetsAKF[0] + selectedJetsAKF[1] + selectedJetsAKF[2]).M();
     MSPlotCP["M3"+suffix]->Fill(M3_aKF, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   }
@@ -5950,6 +6016,10 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
     MSPlotCP["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["leadingJet_eta"+suffix]->Fill(selectedJets[0].Et(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet2_eta"+suffix]->Fill(selectedJets[1].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet3_eta"+suffix]->Fill(selectedJets[2].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["jet4_eta"+suffix]->Fill(selectedJets[3].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["M3"+suffix]->Fill(M3, datasets[d], true, lumiWeight*scaleFactor*widthSF);
   }
   MSPlotCP["met_pT"+suffix]->Fill(met_pt, datasets[d], true, lumiWeight*scaleFactor*widthSF);
@@ -5975,9 +6045,15 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
   for (int iJet = 0; iJet < selectedJets.size(); iJet++)
   {
     if ( suffix.find("aKF") != std::string::npos )
+    {
       MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJetsAKF[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+      MSPlotCP["jet_eta_allJets"+suffix]->Fill(selectedJetsAKF[iJet].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    }
     else
+    {
       MSPlotCP["jet_pT_allJets"+suffix]->Fill(selectedJets[iJet].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+      MSPlotCP["jet_eta_allJets"+suffix]->Fill(selectedJets[iJet].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    }
     
     MSPlotCP["CSVv2Discr_allJets"+suffix]->Fill(jet_bdiscr[iJet], datasets[d], true, lumiWeight*scaleFactor*widthSF);
     if ( jet_bdiscr[iJet] > highestBDiscr )
@@ -5996,6 +6072,13 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
     double tempDR;
     for (unsigned int iJet = 0; iJet < selectedJets.size(); iJet++)
     {
+      if (newTrees)   // TEMPORARILY !
+      {
+        if ( jet_hadronFlavour[iJet] == 5 ) histo1D["CSVv2Discr_b"+suffix]->Fill(jet_bdiscr[iJet]);
+        else if ( jet_hadronFlavour[iJet] == 4 ) histo1D["CSVv2Discr_c"+suffix]->Fill(jet_bdiscr[iJet]);
+        else histo1D["CSVv2Discr_udsg"+suffix]->Fill(jet_bdiscr[iJet]);
+      }
+      
       for (unsigned int jJet = iJet+1; jJet < selectedJets.size(); jJet++)
       {
         tempDR = ROOT::Math::VectorUtil::DeltaR( selectedJets[iJet], selectedJets[jJet]);
