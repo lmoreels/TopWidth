@@ -44,10 +44,10 @@ const double calCurveParUncHad[2] = {0.0436359, 0.0166395};
 const double calCurveParMass_[2] = {12.0431, 0.930349};      // 180108
 const double calCurveParUncMass_[2] = {2.81821, 0.0163266};  // 180108
 /// 2D
-const double calCurveParW_[2] = {-0.197866, 1.07643};
-const double calCurveParUncW_[2] = {0.0451828, 0.0180112};
-const double calCurveParM_[2] = {0., 1.};
-const double calCurveParUncM_[2] = {0., 0.};
+const double calCurveParW_[2] = {-0.2625, 1.089};
+const double calCurveParUncW_[2] = {0.03262, 0.0133};
+const double calCurveParM_[2] = {15., 0.9131};
+const double calCurveParUncM_[2] = {3.896, 0.02259};
 
 double calCurvePar_[2] = {0., 1.};
 double calCurveParUnc_[2] = {0., 0.};
@@ -57,11 +57,14 @@ const double dataComb[2] = {0.674565, 0.138775};  // comb
 const double dataLep[2] = {1.21952, 0.241407};    // lep
 const double dataHad[2] = {0.649174, 0.145405};   // had
 
+const double data2DComb[2] = {0.687343, 0.129176};  // comb
+const double dataMass2DComb[2] = {172.19, 0.0472778};  // comb
+
 string line, lineList;
 string thisSyst;
 double thisWidth, thisMass, thisWidthValue, thisWidthUnc, thisMassValue, thisMassUnc;
 pair<double,double> thisCorrWidthValue, thisCorrMassValue;
-pair<double,double> testData;
+pair<double,double> testData, testDataMass;
 
 bool isRate[80] = {0};
 
@@ -165,6 +168,8 @@ int main()
   {
     suffix = "2D";
     inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
+    testData = ApplyCalibrationCurveW(data2DComb[0], data2DComb[1]);
+    testDataMass = ApplyCalibrationCurveM(dataMass2DComb[0], dataMass2DComb[1]);
   }
   else if (doMass)
   {
@@ -176,6 +181,7 @@ int main()
   /// Set up
   if (useComb)
   {
+    suffix = "_comb";
     inputFileDir += "180110_comb/";
     calCurvePar_[0] = calCurveParComb[0];
     calCurvePar_[1] = calCurveParComb[1];
@@ -185,6 +191,7 @@ int main()
   }
   else if (useLep)
   {
+    suffix = "_lep";
     inputFileDir += "180110_lep/";
     calCurvePar_[0] = calCurveParLep[0];
     calCurvePar_[1] = calCurveParLep[1];
@@ -194,6 +201,7 @@ int main()
   }
   else if (useHad)
   {
+    suffix = "_had";
     inputFileDir += "180110_had/";
     calCurvePar_[0] = calCurveParHad[0];
     calCurvePar_[1] = calCurveParHad[1];
@@ -403,11 +411,11 @@ int main()
     tmp = isPositive(GetMaximum(indexJerUP, indexJerDOWN));
     shiftUp += tmp*tmp;
   }
-  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
-  {
-    tmp = isPositive(GetMaximum(indexRateCMUP, indexRateCMDOWN));
-    shiftUp += tmp*tmp;
-  }
+//   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+//   {
+//     tmp = isPositive(GetMaximum(indexRateCMUP, indexRateCMDOWN));
+//     shiftUp += tmp*tmp;
+//   }
   if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexRateSTtUP, indexRateSTtDOWN));
@@ -531,11 +539,11 @@ int main()
     tmp = isNegative(GetMinimum(indexJerUP, indexJerDOWN));
     shiftDown += tmp*tmp;
   }
-  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
-  {
-    tmp = isNegative(GetMinimum(indexRateCMUP, indexRateCMDOWN));
-    shiftDown += tmp*tmp;
-  }
+//   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+//   {
+//     tmp = isNegative(GetMinimum(indexRateCMUP, indexRateCMDOWN));
+//     shiftDown += tmp*tmp;
+//   }
   if ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexRateSTtUP, indexRateSTtDOWN));
@@ -577,7 +585,8 @@ int main()
   //WriteRelTable();
   WriteShiftTableTheo();
   WriteShiftTableExp();
-  WriteShiftTableShort(1.31);
+  if (doMass) WriteShiftTableShort();
+  else WriteShiftTableShort(1.31);
   
   
   if (verbose_) cout << "End of the test program" << endl;
@@ -1334,11 +1343,11 @@ void WriteShiftTable(double scale)
     //fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifferenceUnc[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " & " << scale*systDifferenceUnc[indexJerDOWN] << " \\\\" << endl;
   }
   
-  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
-  }
+//   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+//   {
+//     fileOut << interline << endl;
+//     fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+//   }
   
   if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
   {
@@ -1379,7 +1388,7 @@ void WriteShiftTable(double scale)
   fileOut << " \\end{center}" << endl;
   fileOut << " \\label{tab:systFullShift";
   if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
-  fileOut << "}" << endl;
+  fileOut << suffix << "}" << endl;
   fileOut << "\\end{table}%" << endl;
   
   cout << "Written table with absolute shifts + stat. uncertainties" << endl;
@@ -1399,7 +1408,12 @@ void WriteShiftTableShort(double scale)
   if ( scale != 1. ) fileName += "x"+DotReplace(scale);
   ofstream fileOut((fileName+suffix+".tex").c_str());
   fileOut << "\\begin{table}[htp]" << endl;
-  fileOut << " \\caption{Summary of the systematic uncertainties for the \\fixme{combined} measurement.";
+  fileOut << " \\caption{Summary of the systematic uncertainties for the ";
+  if ( suffix.find("comb") != std::string::npos ) fileOut << "combined";
+  else if ( suffix.find("had") != std::string::npos ) fileOut << "hadronic";
+  else if ( suffix.find("lep") != std::string::npos ) fileOut << "leptonic";
+  else fileOut << "\\fixme{which type?}";
+  fileOut << " measurement.";
   if ( scale != 1. ) fileOut << " All values have been multiplied by $\\topwidth = " << scale << " \\GeV$.";
   fileOut << "}" << endl;
   fileOut << " \\begin{center}" << endl;
@@ -1407,7 +1421,7 @@ void WriteShiftTableShort(double scale)
   fileOut << "   \\begin{center}" << endl;
   fileOut << "    %\\hspace{-2.6cm}" << endl;
   fileOut << "    {\\small" << endl;
-  fileOut << "    \\begin{tabular}{l S[table-format=1.3] S[table-format=1.3] S[table-format=2.3] S[table-format=1.3]}" << endl;  /// adapt!!
+  fileOut << "    \\begin{tabular}{l S[table-format=1.3] S[table-format=1.3] S[table-format=2.3] S[table-format=1.3]}" << endl;
   
   fileOut << hline << endl;
   fileOut << hline << endl;
@@ -1419,23 +1433,28 @@ void WriteShiftTableShort(double scale)
   fileOut << space << " & {Shift} & {   Unc   } & {Shift} & {   Unc   } \\\\" << headerextra << endl;
   fileOut << hline << endl;
   
+  
+  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
+  {
+    double tmpUp = 0., tmpDown = 0.;
+    if ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 )
+    {
+      tmpUp += systDifference[indexCCSlopeDOWN]*systDifference[indexCCSlopeDOWN];
+      tmpDown += systDifference[indexCCSlopeUP]*systDifference[indexCCSlopeUP];
+    }
+    if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
+    {
+      tmpUp += systDifference[indexCCConstDOWN]*systDifference[indexCCConstDOWN];
+      tmpDown += systDifference[indexCCConstUP]*systDifference[indexCCConstUP];
+    }
+    tmpUp = sqrt(tmpUp);
+    tmpDown = -sqrt(tmpDown);
+    fileOut << interline << endl;
+    fileOut << space << "Calibration curve & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
+  }
+  
   fileOut << interline << endl;
-  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) && (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) )
-  {
-    fileOut << space << "Lepton SFs & " << scale*sqrt(systDifference[indexLepIdUP]*systDifference[indexLepIdUP] + systDifference[indexLepTrigDOWN]*systDifference[indexLepTrigDOWN]) << " &  & " << -scale*sqrt(systDifference[indexLepIdDOWN]*systDifference[indexLepIdDOWN] + systDifference[indexLepTrigUP]*systDifference[indexLepTrigUP]) << " &  \\\\" << endl;
-  }
-  
-  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " &  & " << scale*systDifference[indexBTagDOWN] << " &  \\\\" << endl;
-  }
-  
-  if ( indexPuUP != -1 && indexPuDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " &  & " << scale*systDifference[indexPuDOWN] << " &  \\\\" << endl;
-  }
+  fileOut << hline << endl;
   
   if ( indexJesUP != -1 && indexJesDOWN != -1 )
   {
@@ -1448,11 +1467,29 @@ void WriteShiftTableShort(double scale)
     fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " &  & " << scale*systDifference[indexJerDOWN] << " &  \\\\" << endl;
   }
   
-  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  if ( indexPuUP != -1 && indexPuDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "Rate \\CM\\ events & " << scale*systDifference[indexRateCMDOWN] << " &  & " << scale*systDifference[indexRateCMUP] << " &  \\\\" << endl;
+    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " &  & " << scale*systDifference[indexPuDOWN] << " &  \\\\" << endl;
   }
+  
+  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " &  & " << scale*systDifference[indexBTagDOWN] << " &  \\\\" << endl;
+  }
+  
+  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) && (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Lepton SFs & " << scale*sqrt(systDifference[indexLepIdUP]*systDifference[indexLepIdUP] + systDifference[indexLepTrigDOWN]*systDifference[indexLepTrigDOWN]) << " &  & " << -scale*sqrt(systDifference[indexLepIdDOWN]*systDifference[indexLepIdDOWN] + systDifference[indexLepTrigUP]*systDifference[indexLepTrigUP]) << " &  \\\\" << endl;
+  }
+  
+//   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+//   {
+//     fileOut << interline << endl;
+//     fileOut << space << "Rate \\CM\\ events & " << scale*systDifference[indexRateCMDOWN] << " &  & " << scale*systDifference[indexRateCMUP] << " &  \\\\" << endl;
+//   }
   
   if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
   {
@@ -1478,29 +1515,19 @@ void WriteShiftTableShort(double scale)
     fileOut << space << "Cross section variations & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
   }
   
-  if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
-  {
-    double tmpUp = 0., tmpDown = 0.;
-    if ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 )
-    {
-      tmpUp += systDifference[indexCCSlopeDOWN]*systDifference[indexCCSlopeDOWN];
-      tmpDown += systDifference[indexCCSlopeUP]*systDifference[indexCCSlopeUP];
-    }
-    if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
-    {
-      tmpUp += systDifference[indexCCConstDOWN]*systDifference[indexCCConstDOWN];
-      tmpDown += systDifference[indexCCConstUP]*systDifference[indexCCConstUP];
-    }
-    tmpUp = sqrt(tmpUp);
-    tmpDown = -sqrt(tmpDown);
-    fileOut << interline << endl;
-    fileOut << space << "Calibration curve & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
-  }
+  fileOut << interline << endl;
+  fileOut << hline << endl;
   
   if ( indexIsrUP != -1 && indexIsrDOWN != -1 && indexFsrUP != -1 && indexFsrDOWN != -1 )
   {
     fileOut << interline << endl;
     fileOut << space << "Parton shower & " << scale*systDifference[indexFsrUP] << " & " << scale*systDifferenceUnc[indexFsrUP] << " & " << scale*systDifference[indexIsrDOWN] << " & " << scale*systDifferenceUnc[indexIsrDOWN] << " \\\\" << endl;
+  }
+  
+  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
   }
   
   if ( (indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1) || indexPdfVar != -1 )
@@ -1520,12 +1547,6 @@ void WriteShiftTableShort(double scale)
     tmpDown = -sqrt(tmpDown);
     fileOut << interline << endl;
     fileOut << space << "PDFs & " << scale*tmpUp << " &  & " << scale*tmpDown << " &  \\\\" << endl;
-  }
-  
-  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
   }
   
   if ( ( indexFragUP != -1 && indexFragDOWN != -1 ) || indexFragPeterson != -1 || ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 ) )
@@ -1676,7 +1697,7 @@ void WriteShiftTableShort(double scale)
   fileOut << " \\end{center}" << endl;
   fileOut << " \\label{tab:systShiftShort";
   if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
-  fileOut << "}" << endl;
+  fileOut << suffix << "}" << endl;
   fileOut << "\\end{table}%" << endl;
   
   cout << "Written short table with absolute shifts + stat. uncertainties" << endl;
@@ -1696,7 +1717,12 @@ void WriteShiftTableTheo(double scale)
   if ( scale != 1. ) fileName += "x"+DotReplace(scale);
   ofstream fileOut((fileName+suffix+".tex").c_str());
   fileOut << "\\begin{table}[htp]" << endl;
-  fileOut << " \\caption{Effect of theoretical systematic uncertainties for the \\fixme{combined} measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table due to a $\\pm 1\\sigma$ variation.}" << endl;
+  fileOut << " \\caption{Effect of theoretical systematic uncertainties for the ";
+  if ( suffix.find("comb") != std::string::npos ) fileOut << "combined";
+  else if ( suffix.find("had") != std::string::npos ) fileOut << "hadronic";
+  else if ( suffix.find("lep") != std::string::npos ) fileOut << "leptonic";
+  else fileOut << "\\fixme{which type?}";
+  fileOut << " measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table. When the systematic uncertainty has an on/off effect instead of a $\\pm 1\\sigma$ variation, the value is presented in the $-1\\sigma$ column.}" << endl;
   fileOut << " \\begin{center}" << endl;
   fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
   fileOut << "   \\begin{center}" << endl;
@@ -1713,8 +1739,18 @@ void WriteShiftTableTheo(double scale)
   fileOut << space << "Systematic & \\multicolumn{2}{c}{$+1\\sigma$} & \\multicolumn{2}{c}{$-1\\sigma$} \\\\" << endl;
   fileOut << space << " & {Shift} & {   Unc   } & {Shift} & {   Unc   } \\\\" << headerextra << endl;
   fileOut << hline << endl;
-  fileOut << interline << endl;
   
+  
+  if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "ISR & " << scale*systDifference[indexIsrUP] << " & " << scale*systDifferenceUnc[indexIsrUP] << " & " << scale*systDifference[indexIsrDOWN] << " & " << scale*systDifferenceUnc[indexIsrDOWN] << " \\\\" << endl;
+  }
+  if ( indexFsrUP != -1 && indexFsrDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "FSR & " << scale*systDifference[indexFsrUP] << " & " << scale*systDifferenceUnc[indexFsrUP] << " & " << scale*systDifference[indexFsrDOWN] << " & " << scale*systDifferenceUnc[indexFsrDOWN] << " \\\\" << endl;
+  }
   
   if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 )
   {
@@ -1734,15 +1770,10 @@ void WriteShiftTableTheo(double scale)
       fileOut << space << "\\tabsp $\\muR = 0.5\\,,\\, \\muF = 0.5$  &  &  & " << scale*systDifference[indexRenFac1009] << " &  \\\\" << endl;
   }
   
-  if ( indexIsrUP != -1 && indexIsrDOWN != -1 )
+  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "ISR & " << scale*systDifference[indexIsrUP] << " & " << scale*systDifferenceUnc[indexIsrUP] << " & " << scale*systDifference[indexIsrDOWN] << " & " << scale*systDifferenceUnc[indexIsrDOWN] << " \\\\" << endl;
-  }
-  if ( indexFsrUP != -1 && indexFsrDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "FSR & " << scale*systDifference[indexFsrUP] << " & " << scale*systDifferenceUnc[indexFsrUP] << " & " << scale*systDifference[indexFsrDOWN] << " & " << scale*systDifferenceUnc[indexFsrDOWN] << " \\\\" << endl;
+    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
   }
   
   if ( (indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1) || indexPdfVar != -1 )
@@ -1753,12 +1784,6 @@ void WriteShiftTableTheo(double scale)
       fileOut << space << "\\tabsp Replicas & " << scale*systDifference[indexPdfVar] << " &  & -" << scale*systDifference[indexPdfVar] << " &  \\\\" << endl;
     if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
       fileOut << space << "\\tabsp $\\alpha_{s}$ & " << scale*systDifference[indexPdfAlphaSUP] << " &  & " << scale*systDifference[indexPdfAlphaSDOWN] << " &  \\\\" << endl;
-  }
-  
-  if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "ME-PS matching & " << scale*systDifference[indexHdampUP] << " & " << scale*systDifferenceUnc[indexHdampUP] << " & " << scale*systDifference[indexHdampDOWN] << " & " << scale*systDifferenceUnc[indexHdampDOWN] << " \\\\" << endl;
   }
   
   if ( indexFragCentral != -1 || indexFragUP != -1 || indexFragDOWN != -1 || indexFragPeterson != -1 )
@@ -1819,9 +1844,9 @@ void WriteShiftTableTheo(double scale)
   fileOut << "   \\end{center}" << endl;
   fileOut << "  \\end{minipage}" << endl;
   fileOut << " \\end{center}" << endl;
-  fileOut << " \\label{tab:systFullShiftTheo";
+  fileOut << " \\label{tab:systShiftTheo";
   if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
-  fileOut << "}" << endl;
+  fileOut << suffix << "}" << endl;
   fileOut << "\\end{table}%" << endl;
   
   cout << "Written table with theoretical uncertainties" << endl;
@@ -1841,7 +1866,12 @@ void WriteShiftTableExp(double scale)
   if ( scale != 1. ) fileName += "x"+DotReplace(scale);
   ofstream fileOut((fileName+suffix+".tex").c_str());
   fileOut << "\\begin{table}[htp]" << endl;
-  fileOut << " \\caption{Effect of the experimental systematic uncertainties for the \\fixme{combined} measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table due to a $\\pm 1\\sigma$ variation.}" << endl;
+  fileOut << " \\caption{Effect of the experimental systematic uncertainties for the ";
+  if ( suffix.find("comb") != std::string::npos ) fileOut << "combined";
+  else if ( suffix.find("had") != std::string::npos ) fileOut << "hadronic";
+  else if ( suffix.find("lep") != std::string::npos ) fileOut << "leptonic";
+  else fileOut << "\\fixme{which type?}";
+  fileOut << " measurement. The values represent an absolute shift compared to the nominal value presented at the top of the table due to a $\\pm 1\\sigma$ variation.}" << endl;
   fileOut << " \\begin{center}" << endl;
   fileOut << "  \\begin{minipage}[p]{\\textwidth}" << endl;
   fileOut << "   \\begin{center}" << endl;
@@ -1857,7 +1887,6 @@ void WriteShiftTableExp(double scale)
   fileOut << interline << endl;
   fileOut << space << "Systematic & {$+1\\sigma$} & {$-1\\sigma$} \\\\" << headerextra << endl;
   fileOut << hline << endl;
-  fileOut << interline << endl;
   
   
   if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
@@ -1868,35 +1897,6 @@ void WriteShiftTableExp(double scale)
       fileOut << space << "\\tabsp Slope & " << scale*systDifference[indexCCSlopeUP] << " & " << scale*systDifference[indexCCSlopeDOWN] << " \\\\" << endl;
     if ( indexCCConstUP != -1 && indexCCConstDOWN != -1 )
       fileOut << space << "\\tabsp Constant & " << scale*systDifference[indexCCConstUP] << " & " << scale*systDifference[indexCCConstDOWN] << " \\\\" << endl;
-  }
-  
-  if ( indexLumiUP != -1 && indexLumiDOWN != -1 && systDifference[indexLumiUP] > 1e-5 && systDifference[indexLumiDOWN] > 1e-5)
-  {
-    fileOut << interline << endl;
-    fileOut << space << "Luminosity & " << scale*systDifference[indexLumiUP] << " & " << scale*systDifference[indexLumiDOWN] << " \\\\" << endl;
-  }
-  
-  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) || (indexLepIsoUP != -1 && indexLepIsoDOWN != -1) || (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) || (indexLepTrkUP != -1 && indexLepTrkDOWN != -1) )
-    fileOut << space << "\\textit{Lepton SFs} &  &  \\\\" << endl;
-  if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
-    fileOut << space << "\\tabsp Id        & " << scale*systDifference[indexLepIdUP] << " & " << scale*systDifference[indexLepIdDOWN] << " \\\\" << endl;
-  if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
-    fileOut << space << "\\tabsp Isolation & " << scale*systDifference[indexLepIsoUP] << " & " << scale*systDifference[indexLepIsoDOWN] << " \\\\" << endl;
-  if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
-    fileOut << space << "\\tabsp Trigger   & " << scale*systDifference[indexLepTrigUP] << " & " << scale*systDifference[indexLepTrigDOWN] << " \\\\" << endl;
-  if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
-    fileOut << space << "\\tabsp Tracking  & " << scale*systDifference[indexLepTrkUP] << " & " << scale*systDifference[indexLepTrkDOWN] << " \\\\" << endl;
-  
-  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " & " << scale*systDifference[indexBTagDOWN] << " \\\\" << endl;
-  }
-  
-  if ( indexPuUP != -1 && indexPuDOWN != -1 )
-  {
-    fileOut << interline << endl;
-    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " & " << scale*systDifference[indexPuDOWN] << " \\\\" << endl;
   }
   
   if ( indexJesUP != -1 && indexJesDOWN != -1 )
@@ -1910,11 +1910,35 @@ void WriteShiftTableExp(double scale)
     fileOut << space << "JER & " << scale*systDifference[indexJerUP] << " & " << scale*systDifference[indexJerDOWN] << " \\\\" << endl;
   }
   
-  if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+  if ( indexPuUP != -1 && indexPuDOWN != -1 )
   {
     fileOut << interline << endl;
-    fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+    fileOut << space << "\\Pileup\\ SFs & " << scale*systDifference[indexPuUP] << " & " << scale*systDifference[indexPuDOWN] << " \\\\" << endl;
   }
+  
+  if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
+  {
+    fileOut << interline << endl;
+    fileOut << space << "\\bq~tagging SFs & " << scale*systDifference[indexBTagUP] << " & " << scale*systDifference[indexBTagDOWN] << " \\\\" << endl;
+  }
+  
+  if ( (indexLepIdUP != -1 && indexLepIdDOWN != -1) || (indexLepIsoUP != -1 && indexLepIsoDOWN != -1) || (indexLepTrigUP != -1 && indexLepTrigDOWN != -1) || (indexLepTrkUP != -1 && indexLepTrkDOWN != -1) )
+    fileOut << interline << endl;
+    fileOut << space << "\\textit{Lepton SFs} &  &  \\\\" << endl;
+  if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
+    fileOut << space << "\\tabsp Id        & " << scale*systDifference[indexLepIdUP] << " & " << scale*systDifference[indexLepIdDOWN] << " \\\\" << endl;
+  if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
+    fileOut << space << "\\tabsp Isolation & " << scale*systDifference[indexLepIsoUP] << " & " << scale*systDifference[indexLepIsoDOWN] << " \\\\" << endl;
+  if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
+    fileOut << space << "\\tabsp Trigger   & " << scale*systDifference[indexLepTrigUP] << " & " << scale*systDifference[indexLepTrigDOWN] << " \\\\" << endl;
+  if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
+    fileOut << space << "\\tabsp Tracking  & " << scale*systDifference[indexLepTrkUP] << " & " << scale*systDifference[indexLepTrkDOWN] << " \\\\" << endl;
+  
+//   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
+//   {
+//     fileOut << interline << endl;
+//     fileOut << space << "\\tabsp Rate \\CM events & " << scale*systDifference[indexRateCMUP] << " &  & " << scale*systDifference[indexRateCMDOWN] << " &  \\\\" << endl;
+//   }
   
   if ( ( indexRateSTtUP != -1 && indexRateSTtDOWN != -1 ) || ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 ) || ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 ) )
   {
@@ -1928,6 +1952,12 @@ void WriteShiftTableExp(double scale)
       fileOut << space << "\\tabsp Other & " << scale*systDifference[indexRateOtherUP] << " & " << scale*systDifference[indexRateOtherDOWN] << " \\\\" << endl;
   }
   
+  if ( indexLumiUP != -1 && indexLumiDOWN != -1 && systDifference[indexLumiUP] > 1e-5 && systDifference[indexLumiDOWN] > 1e-5)
+  {
+    fileOut << interline << endl;
+    fileOut << space << "Luminosity & " << scale*systDifference[indexLumiUP] << " & " << scale*systDifference[indexLumiDOWN] << " \\\\" << endl;
+  }
+  
   //....
   
   
@@ -1939,9 +1969,9 @@ void WriteShiftTableExp(double scale)
   fileOut << "   \\end{center}" << endl;
   fileOut << "  \\end{minipage}" << endl;
   fileOut << " \\end{center}" << endl;
-  fileOut << " \\label{tab:systFullShiftExp";
+  fileOut << " \\label{tab:systShiftExp";
   if ( scale != 1. ) fileOut << "x"+DotReplace(scale);
-  fileOut << "}" << endl;
+  fileOut << suffix << "}" << endl;
   fileOut << "\\end{table}%" << endl;
   
   cout << "Written table with experimental uncertainties" << endl;
