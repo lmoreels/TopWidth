@@ -849,7 +849,7 @@ void Likelihood2D::GetOutputWidth(double inputWidth, double inputMass, std::stri
   txtOutputLL_.open(fileName.c_str());
   if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
   else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
-  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << inputMass << "   " << std::setw(20) << std::right << std::setprecision(20) << std::get<0>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<1>(output_) << std::setw(20) << std::right << std::setprecision(20) << std::get<2>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<3>(output_) << std::endl;
+  txtOutputLL_ << std::setw(5) << std::left << std::setprecision(5) << inputWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << inputMass << "   " << std::setw(20) << std::right << std::setprecision(20) << std::get<0>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<1>(output_) << "   " << std::setw(20) << std::right << std::setprecision(20) << std::get<2>(output_) << "  " << std::setw(20) << std::right << std::setprecision(20) << std::get<3>(output_) << std::endl;
   txtOutputLL_.close();
 }
 
@@ -942,7 +942,7 @@ std::tuple<double,double,double,double> Likelihood2D::CalculateOutputWidth(int n
     for (int iMass = 0; iMass < nMasses_; iMass++)
     {
       temp = LLvalues[iWidth][iMass] - LLvalues[locMin.first][locMin.second];
-      if ( temp < 50. )
+      if ( temp < 25. )
       {
         g->SetPoint(g->GetN(), evalWidths[iWidth], massArray_[iMass], temp);
         //if (verbose_) std::cout << evalWidths[iWidth] << "   " << massArray_[iMass] << "   " << std::setprecision(10) << temp << std::endl;
