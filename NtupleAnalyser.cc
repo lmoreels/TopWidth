@@ -63,7 +63,7 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = true;
+bool calculateLikelihood = false;
 bool doPseudoExps = false;
 bool useNewVar = false;
 
@@ -783,7 +783,7 @@ bool addEqMassKF = false;
 int kFitVerbosity = 0;
 double kFitChi2 = 99.;
 int nofAcceptedKFit = 0;
-double nofAcceptedKFitWeighted = 0., nofFinalCutWeighted = 0.;
+double nofAcceptedKFitWeighted = 0., nofFinalCutWeighted = 0., nofPt250Weighted = 0.;
 
 
 /// Likelihood
@@ -2141,7 +2141,8 @@ int main(int argc, char* argv[])
       ////////////////////////////////////
       
       int endEvent = nEntries;
-      if (test || testHistos) endEvent = 1000;
+      int testEvents = 2000;
+      if ( (test || testHistos) && testEvents < nEntries ) endEvent = testEvents;
       for (int ievt = 0; ievt < endEvent; ievt++)
       {
         ClearObjects();
@@ -2262,6 +2263,13 @@ int main(int argc, char* argv[])
             if (makePlots)
             {
               MSPlot["btag_SF_"]->Fill(btagSF, datasets[d], true, lumiWeight*scaleFactor);
+              MSPlot["btag_SF_diffUp_"]->Fill(fabs(btagSF_up - btagSF), datasets[d], true, lumiWeight*scaleFactor);
+              MSPlot["btag_SF_diffDown_"]->Fill(fabs(btagSF - btagSF_down), datasets[d], true, lumiWeight*scaleFactor);
+              MSPlot["lepton_SF_"]->Fill(thisLeptonSF, datasets[d], true, lumiWeight*scaleFactor);
+              double tmpSF = 1.01*muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_up_BCDEF[0] + fracDataEras[1]*muonIdSF_up_GH[0]) * (fracDataEras[0]*muonIsoSF_up_BCDEF[0] + fracDataEras[1]*muonIsoSF_up_GH[0]) * (fracDataEras[0]*muonTrigSF_up_BCDEF[0] + fracDataEras[1]*muonTrigSF_up_GH[0]);
+              MSPlot["lepton_SF_diffUp_"]->Fill(fabs(thisLeptonSF-tmpSF), datasets[d], true, lumiWeight*scaleFactor);
+              tmpSF = 0.99*muonTrackSF_eta[0] * (fracDataEras[0]*muonIdSF_down_BCDEF[0] + fracDataEras[1]*muonIdSF_down_GH[0]) * (fracDataEras[0]*muonIsoSF_down_BCDEF[0] + fracDataEras[1]*muonIsoSF_down_GH[0]) * (fracDataEras[0]*muonTrigSF_down_BCDEF[0] + fracDataEras[1]*muonTrigSF_down_GH[0]);
+              MSPlot["lepton_SF_diffDown_"]->Fill(fabs(thisLeptonSF-tmpSF), datasets[d], true, lumiWeight*scaleFactor);
             }
           }
         }
@@ -2310,10 +2318,20 @@ int main(int argc, char* argv[])
         {
           MSPlot["nJets_"]->Fill(selectedJets.size(), datasets[d], true, lumiWeight*scaleFactor);
           MSPlot["rho_"]->Fill(rho, datasets[d], true, lumiWeight*scaleFactor);
+          if (makeControlPlots)
+          {
+            MSPlotCP["muon_pT_"]->Fill(selectedLepton[0].Pt(), datasets[d], true, lumiWeight*scaleFactor);
+            MSPlotCP["muon_eta_"]->Fill(selectedLepton[0].Eta(), datasets[d], true, lumiWeight*scaleFactor);
+            MSPlotCP["leadingJet_pT_"]->Fill(selectedJets[0].Pt(), datasets[d], true, lumiWeight*scaleFactor);
+            MSPlotCP["leadingJet_eta_"]->Fill(selectedJets[0].Eta(), datasets[d], true, lumiWeight*scaleFactor);
+            MSPlotCP["jet4_pT_"]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor);
+            MSPlotCP["jet4_eta_"]->Fill(selectedJets[3].Eta(), datasets[d], true, lumiWeight*scaleFactor);
+          }
         }
         
         if ( ! calculateResolutionFunctions && selectedJets.size() > 4 ) continue;
         nofHardSelected++;
+        nofPt250Weighted += scaleFactor;  //lumiWeight applied in selection table
         
         
         /// label jets with highest b discr
@@ -2926,6 +2944,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_A"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF);
             histo2DT["qqb1_vs_qqb2_wA"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wA"+catSuffix]->Fill(reco_top_mass_bKF, reco_mlb_bKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wA"+catSuffix]->Fill(redTopMass_bKF, redMlbMass_bKF, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -2993,6 +3013,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_B"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF);
             histo2DT["qqb1_vs_qqb2_wB"+catSuffix]->Fill(reco_top_mass_bKF, reco_top_mass_alt_bKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wB"+catSuffix]->Fill(reco_top_mass_bKF, reco_mlb_bKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wB"+catSuffix]->Fill(redTopMass_bKF, redMlbMass_bKF, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3177,6 +3199,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_C"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wC"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wC"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wC"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3304,6 +3328,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_D"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wD"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wD"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wD"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3338,6 +3364,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_E"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wE"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wE"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wE"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3363,6 +3391,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_F"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wF"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wF"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wF"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3388,6 +3418,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_G"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wG"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wG"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wG"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -3414,6 +3446,8 @@ int main(int argc, char* argv[])
           {
             histo2DT["qqb1_vs_qqb2_H"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF);
             histo2DT["qqb1_vs_qqb2_wH"+catSuffix]->Fill(reco_top_mass_aKF, reco_top_mass_alt_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["qqb1_vs_lb2_wH"+catSuffix]->Fill(reco_top_mass_aKF, reco_mlb_aKF, lumiWeight*scaleFactor*widthSF);
+            histo2DT["mr_vs_mlbr_wH"+catSuffix]->Fill(redTopMass, redMlbMass, lumiWeight*scaleFactor*widthSF);
           }
         }
         
@@ -4696,29 +4730,42 @@ void InitMSPlots()
   MSPlot["jet_pT_allJets_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_", 40, 0, 400, "p_{T}", "GeV");
   MSPlot["leadingJet_pT_aKF_"] = new MultiSamplePlot(datasets, "leadingJet_pT_aKF_", 40, 0, 400, "p_{T}", "GeV");
   MSPlot["jet_pT_allJets_aKF_"] = new MultiSamplePlot(datasets, "jet_pT_allJets_aKF_", 40, 0, 400, "p_{T}", "GeV");
-  MSPlot["btag_SF_"] = new MultiSamplePlot(datasets, "btag_SF_", 80, 0., 2., "btag SF");
   MSPlot["W_mass_"] = new MultiSamplePlot(datasets, "W mass before kinFitter_", 60, 0, 300, "m_{W}", "GeV");
   MSPlot["top_mass_"] = new MultiSamplePlot(datasets, "Top mass before kinFitter_", 50, 0, 500, "m_{t}", "GeV");
+  
+  MSPlot["lepton_SF_"] = new MultiSamplePlot(datasets, "lepton_SF_", 80, 0., 2., "lepton SF");
+  MSPlot["lepton_SF_diffUp_"] = new MultiSamplePlot(datasets, "lepton_SF_diffUp_", 300, 0., 0.3, "lepton SF unc. (up)");
+  MSPlot["lepton_SF_diffDown_"] = new MultiSamplePlot(datasets, "lepton_SF_diffDown_", 300, 0., 0.3, "lepton SF unc. (down)");
+  MSPlot["btag_SF_"] = new MultiSamplePlot(datasets, "btag_SF_", 80, 0., 2., "btag SF");
+  MSPlot["btag_SF_diffUp_"] = new MultiSamplePlot(datasets, "btag_SF_diffUp_", 200, 0., 0.2, "btag SF unc. (up)");
+  MSPlot["btag_SF_diffDown_"] = new MultiSamplePlot(datasets, "btag_SF_diffDown_", 200, 0., 0.2, "btag SF unc. (down)");
   
   /// Control plots
   if (makeControlPlots)
   {
+    MSPlotCP["muon_pT_"] = new MultiSamplePlot(datasets, "muon_pT_", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["muon_eta_"] = new MultiSamplePlot(datasets, "muon_eta_", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["leadingJet_pT_"] = new MultiSamplePlot(datasets, "leadingJet_pT_", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["leadingJet_eta_"] = new MultiSamplePlot(datasets, "leadingJet_eta_", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet4_pT_"] = new MultiSamplePlot(datasets, "jet4_pT_", 24, 0, 120, "p_{T}", "GeV");
+    MSPlotCP["jet4_eta_"] = new MultiSamplePlot(datasets, "jet4_eta_", 24, -2.4, 2.4, "#eta");
+    
     MSPlotCP["muon_pT"] = new MultiSamplePlot(datasetsMSP, "muon_pT", 25, 0, 250, "p_{T}", "GeV");
-    MSPlotCP["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 30, -3, 3, "#eta");
+    MSPlotCP["muon_eta"] = new MultiSamplePlot(datasetsMSP, "muon_eta", 24, -2.4, 2.4, "#eta");
     MSPlotCP["muon_phi"] = new MultiSamplePlot(datasetsMSP, "muon_phi", 32, -3.2, 3.2, "#phi");
     MSPlotCP["muon_relIso"] = new MultiSamplePlot(datasetsMSP, "muon_relIso", 20, 0, 0.2, "relIso");
     MSPlotCP["muon_d0"] = new MultiSamplePlot(datasetsMSP, "muon_d0", 60, 0, 0.003, "d_{0}");
-    MSPlotCP["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 60, 0, 600, "p_{T}", "GeV");
-    MSPlotCP["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 32, 0, 160, "p_{T}", "GeV");
-    MSPlotCP["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 60, 0, 1200, "H_{T}", "GeV");
-    MSPlotCP["leadingJet_eta"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta", 30, -3, 3, "#eta");
-    MSPlotCP["jet2_eta"] = new MultiSamplePlot(datasetsMSP, "jet2_eta", 30, -3, 3, "#eta");
-    MSPlotCP["jet3_eta"] = new MultiSamplePlot(datasetsMSP, "jet3_eta", 30, -3, 3, "#eta");
-    MSPlotCP["jet4_eta"] = new MultiSamplePlot(datasetsMSP, "jet4_eta", 30, -3, 3, "#eta");
-    MSPlotCP["jet_eta_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets", 30, -3, 3, "#eta");
+    MSPlotCP["leadingJet_pT"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["jet2_pT"] = new MultiSamplePlot(datasetsMSP, "jet2_pT", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["jet3_pT"] = new MultiSamplePlot(datasetsMSP, "jet3_pT", 36, 0, 180, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT"] = new MultiSamplePlot(datasetsMSP, "jet4_pT", 24, 0, 120, "p_{T}", "GeV");
+    MSPlotCP["jet_pT_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["Ht_4leadingJets"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets", 40, 0, 800, "H_{T}", "GeV");
+    MSPlotCP["leadingJet_eta"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet2_eta"] = new MultiSamplePlot(datasetsMSP, "jet2_eta", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet3_eta"] = new MultiSamplePlot(datasetsMSP, "jet3_eta", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet4_eta"] = new MultiSamplePlot(datasetsMSP, "jet4_eta", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet_eta_allJets"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets", 24, -2.4, 2.4, "#eta");
     MSPlotCP["met_pT"] = new MultiSamplePlot(datasetsMSP, "met_pT", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
     MSPlotCP["met_eta"] = new MultiSamplePlot(datasetsMSP, "met_eta", 30, -3, 3, "E_{T}^{miss} #eta");
     MSPlotCP["met_phi"] = new MultiSamplePlot(datasetsMSP, "met_phi", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
@@ -4726,22 +4773,22 @@ void InitMSPlots()
     MSPlotCP["met_corr_eta"] = new MultiSamplePlot(datasetsMSP, "met_corr_eta", 30, -3, 3, "E_{T}^{miss} #eta");
     MSPlotCP["met_corr_phi"] = new MultiSamplePlot(datasetsMSP, "met_corr_phi", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
     
-    MSPlotCP["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 22, 0, 440, "p_{T}", "GeV");
-    MSPlotCP["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["muon_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_pT_aKF", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["muon_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_eta_aKF", 24, -2.4, 2.4, "#eta");
     MSPlotCP["muon_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_phi_aKF", 32, -3.2, 3.2, "#phi");
     MSPlotCP["muon_relIso_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_relIso_aKF", 20, 0, 0.2, "relIso");
     MSPlotCP["muon_d0_aKF"] = new MultiSamplePlot(datasetsMSP, "muon_d0_aKF", 60, 0, 0.003, "d_{0}");
-    MSPlotCP["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 60, 0, 600, "p_{T}", "GeV");
-    MSPlotCP["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 32, 0, 160, "p_{T}", "GeV");
-    MSPlotCP["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 40, 0, 400, "p_{T}", "GeV");
-    MSPlotCP["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 60, 0, 1200, "H_{T}", "GeV");
-    MSPlotCP["leadingJet_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta_aKF", 30, -3, 3, "#eta");
-    MSPlotCP["jet2_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_eta_aKF", 30, -3, 3, "#eta");
-    MSPlotCP["jet3_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_eta_aKF", 30, -3, 3, "#eta");
-    MSPlotCP["jet4_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_eta_aKF", 30, -3, 3, "#eta");
-    MSPlotCP["jet_eta_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets_aKF", 30, -3, 3, "#eta");
+    MSPlotCP["leadingJet_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_pT_aKF", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["jet2_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_pT_aKF", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["jet3_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_pT_aKF", 36, 0, 180, "p_{T}", "GeV");
+    MSPlotCP["jet4_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_pT_aKF", 24, 0, 120, "p_{T}", "GeV");
+    MSPlotCP["jet_pT_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_pT_allJets_aKF", 25, 0, 250, "p_{T}", "GeV");
+    MSPlotCP["Ht_4leadingJets_aKF"] = new MultiSamplePlot(datasetsMSP,"Ht_4leadingJets_aKF", 40, 0, 800, "H_{T}", "GeV");
+    MSPlotCP["leadingJet_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "leadingJet_eta_aKF", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet2_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet2_eta_aKF", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet3_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet3_eta_aKF", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet4_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "jet4_eta_aKF", 24, -2.4, 2.4, "#eta");
+    MSPlotCP["jet_eta_allJets_aKF"] = new MultiSamplePlot(datasetsMSP, "jet_eta_allJets_aKF", 24, -2.4, 2.4, "#eta");
     MSPlotCP["met_pT_aKF"] = new MultiSamplePlot(datasetsMSP, "met_pT_aKF", 40, 0, 400, "E_{T}^{miss} p_{T}", "GeV");
     MSPlotCP["met_eta_aKF"] = new MultiSamplePlot(datasetsMSP, "met_eta_aKF", 30, -3, 3, "E_{T}^{miss} #eta");
     MSPlotCP["met_phi_aKF"] = new MultiSamplePlot(datasetsMSP, "met_phi_aKF", 32, -3.2, 3.2, "E_{T}^{miss} #phi");
@@ -4783,6 +4830,8 @@ void InitMSPlots()
   MSPlot["scaleFactor"] = new MultiSamplePlot(datasetsMSP, "scaleFactor", 80, 0., 2., "SF");
   MSPlot["btag_SF"] = new MultiSamplePlot(datasetsMSP, "btag_SF", 80, 0., 2., "btag SF");
   MSPlot["pu_SF"] = new MultiSamplePlot(datasetsMSP, "pu_SF", 80, 0., 2., "pu SF");
+  MSPlot["lepton_SF"] = new MultiSamplePlot(datasetsMSP, "lepton_SF", 80, 0., 2., "lepton SF");
+  
   
   /// Reco
   MSPlot["W_mass"] = new MultiSamplePlot(datasetsMSP, "W mass before kinFitter", 60, 0, 300, "m_{W}", "GeV");
@@ -4901,9 +4950,9 @@ void InitMSPlots()
   }
   
   /// Plots after each cut step
-  MSPlotT["W_mass_A"] = new MultiSamplePlot(datasetsMSP, "W mass A", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_A"] = new MultiSamplePlot(datasetsMSP, "Top mass A", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_A_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass A (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_A"] = new MultiSamplePlot(datasetsMSP, "W mass A", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_A"] = new MultiSamplePlot(datasetsMSP, "Top mass A", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_A_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass A (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_A"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass A", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_A_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass A (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_A"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass A", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4911,13 +4960,13 @@ void InitMSPlots()
   MSPlotT["mlb_A"] = new MultiSamplePlot(datasetsMSP, "mlb A", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_A"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb A", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_A"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass A", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_A"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark A", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_A_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark A (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_A"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark A", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_A"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark A", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_A_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark A (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_A"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark A", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_B"] = new MultiSamplePlot(datasetsMSP, "W mass B", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_B"] = new MultiSamplePlot(datasetsMSP, "Top mass B", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_B_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass B (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_B"] = new MultiSamplePlot(datasetsMSP, "W mass B", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_B"] = new MultiSamplePlot(datasetsMSP, "Top mass B", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_B_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass B (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_B"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass B", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_B_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass B (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_B"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass B", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4925,13 +4974,13 @@ void InitMSPlots()
   MSPlotT["mlb_B"] = new MultiSamplePlot(datasetsMSP, "mlb B", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_B"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb B", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_B"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass B", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_B"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark B", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_B_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark B (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_B"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark B", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_B"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark B", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_B_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark B (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_B"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark B", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_C"] = new MultiSamplePlot(datasetsMSP, "W mass C", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_C"] = new MultiSamplePlot(datasetsMSP, "Top mass C", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_C_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass C (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_C"] = new MultiSamplePlot(datasetsMSP, "W mass C", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_C"] = new MultiSamplePlot(datasetsMSP, "Top mass C", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_C_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass C (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_C"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass C", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_C_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass C (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_C"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass C", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4939,13 +4988,13 @@ void InitMSPlots()
   MSPlotT["mlb_C"] = new MultiSamplePlot(datasetsMSP, "mlb C", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_C"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb C", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_C"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass C", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_C"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark C", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_C_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark C (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_C"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark C", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_C"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark C", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_C_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark C (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_C"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark C", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_D"] = new MultiSamplePlot(datasetsMSP, "W mass D", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_D"] = new MultiSamplePlot(datasetsMSP, "Top mass D", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_D_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass D (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_D"] = new MultiSamplePlot(datasetsMSP, "W mass D", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_D"] = new MultiSamplePlot(datasetsMSP, "Top mass D", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_D_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass D (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_D"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass D", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_D_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass D (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_D"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass D", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4953,13 +5002,13 @@ void InitMSPlots()
   MSPlotT["mlb_D"] = new MultiSamplePlot(datasetsMSP, "mlb D", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_D"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb D", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_D"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass D", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_D"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark D", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_D_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark D (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_D"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark D", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_D"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark D", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_D_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark D (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_D"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark D", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_E"] = new MultiSamplePlot(datasetsMSP, "W mass E", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_E"] = new MultiSamplePlot(datasetsMSP, "Top mass E", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_E_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass E (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_E"] = new MultiSamplePlot(datasetsMSP, "W mass E", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_E"] = new MultiSamplePlot(datasetsMSP, "Top mass E", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_E_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass E (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_E"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass E", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_E_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass E (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_E"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass E", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4967,13 +5016,13 @@ void InitMSPlots()
   MSPlotT["mlb_E"] = new MultiSamplePlot(datasetsMSP, "mlb E", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_E"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb E", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_E"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass E", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_E"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark E", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_E_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark E (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_E"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark E", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_E"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark E", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_E_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark E (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_E"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark E", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_F"] = new MultiSamplePlot(datasetsMSP, "W mass F", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_F"] = new MultiSamplePlot(datasetsMSP, "Top mass F", 30, 0, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_F_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass F (ext)", 25, 50, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_F"] = new MultiSamplePlot(datasetsMSP, "W mass F", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_F"] = new MultiSamplePlot(datasetsMSP, "Top mass F", 30, 0, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_F_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass F (ext)", 25, 50, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_F"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass F", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_F_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass F (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_F"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass F", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4981,13 +5030,13 @@ void InitMSPlots()
   MSPlotT["mlb_F"] = new MultiSamplePlot(datasetsMSP, "mlb F", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_F"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb F", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_F"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass F", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_F"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark F", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_F_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark F (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_F"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark F", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_F"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark F", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_F_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark F (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_F"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark F", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_G"] = new MultiSamplePlot(datasetsMSP, "W mass G", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_G"] = new MultiSamplePlot(datasetsMSP, "Top mass G", 30, 0, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_G_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass G (ext)", 25, 50, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_G"] = new MultiSamplePlot(datasetsMSP, "W mass G", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_G"] = new MultiSamplePlot(datasetsMSP, "Top mass G", 30, 0, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_G_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass G (ext)", 25, 50, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_G"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass G", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_G_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass G (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_G"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass G", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -4995,13 +5044,13 @@ void InitMSPlots()
   MSPlotT["mlb_G"] = new MultiSamplePlot(datasetsMSP, "mlb G", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_G"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb G", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_G"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass G", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_G"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark G", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_G_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark G (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_G"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark G", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_G"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark G", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_G_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark G (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_G"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark G", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
   
-  MSPlotT["W_mass_H"] = new MultiSamplePlot(datasetsMSP, "W mass H", 60, 0, 300, "m_{W}", "GeV");
-  MSPlotT["top_mass_H"] = new MultiSamplePlot(datasetsMSP, "Top mass H", 25, 50, 300, "m_{t}", "GeV");
-  MSPlotT["top_mass_H_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass H (ext)", 50, 0, 500, "m_{t}", "GeV");
+  MSPlotT["W_mass_H"] = new MultiSamplePlot(datasetsMSP, "W mass H", 60, 0, 300, "m_{jj}", "GeV");
+  MSPlotT["top_mass_H"] = new MultiSamplePlot(datasetsMSP, "Top mass H", 25, 50, 300, "m_{bjj}", "GeV");
+  MSPlotT["top_mass_H_ext"] = new MultiSamplePlot(datasetsMSP, "Top mass H (ext)", 50, 0, 500, "m_{bjj}", "GeV");
   MSPlotT["red_top_mass_H"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass H", 22, 0.5, 1.6, "m_{r}");
   MSPlotT["red_top_mass_H_ext"] = new MultiSamplePlot(datasetsMSP, "Reduced top quark mass H (ext)", 52, 0., 2.6, "m_{r}");
   MSPlotT["top_mass_alt_H"] = new MultiSamplePlot(datasetsMSP, "Alternative top mass H", 50, 150, 650, "m_{t,alt}", "GeV");
@@ -5009,9 +5058,9 @@ void InitMSPlots()
   MSPlotT["mlb_H"] = new MultiSamplePlot(datasetsMSP, "mlb H", 25, 0, 250, "m_{lb}", "GeV");
   MSPlotT["mlb_alt_H"] = new MultiSamplePlot(datasetsMSP, "Alternative mlb H", 50, 0, 500, "m_{lb,alt}", "GeV");
   MSPlotT["red_mlb_mass_H"] = new MultiSamplePlot(datasetsMSP, "Reduced m_{lb} mass H", 44, 0., 2.2, "m_{lb,r}");
-  MSPlotT["diff_mass_tops_H"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark H", 35, -100, 250, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_tops_H_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark H (ext)", 50, -100, 400, "m_{t} - m_{lb}", "GeV");
-  MSPlotT["diff_mass_alt_tops_H"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark H", 60, -200, 400, "m'_{t} - m'_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_H"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark H", 35, -100, 250, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_tops_H_ext"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the hadronic and leptonic top quark H (ext)", 50, -100, 400, "m_{bjj} - m_{lb}", "GeV");
+  MSPlotT["diff_mass_alt_tops_H"] = new MultiSamplePlot(datasetsMSP, "Difference of the mass of the alternative hadronic and leptonic top quark H", 60, -200, 400, "m_{b'jj} - m_{lb'}", "GeV");
 }
 
 void InitHisto1D()
@@ -5313,61 +5362,109 @@ void InitHisto2D()
   }
   
   /// Plots after each cut step
-  histo2DT["qqb1_vs_qqb2_A_CM"] = new TH2F("qqb1_vs_qqb2_A_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_A_WM"] = new TH2F("qqb1_vs_qqb2_A_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_A_UM"] = new TH2F("qqb1_vs_qqb2_A_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wA_CM"] = new TH2F("qqb1_vs_qqb2_wA_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wA_WM"] = new TH2F("qqb1_vs_qqb2_wA_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wA_UM"] = new TH2F("qqb1_vs_qqb2_wA_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_A_CM"] = new TH2F("qqb1_vs_qqb2_A_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_A_WM"] = new TH2F("qqb1_vs_qqb2_A_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_A_UM"] = new TH2F("qqb1_vs_qqb2_A_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wA_CM"] = new TH2F("qqb1_vs_qqb2_wA_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wA_WM"] = new TH2F("qqb1_vs_qqb2_wA_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wA_UM"] = new TH2F("qqb1_vs_qqb2_wA_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wA_CM"] = new TH2F("qqb1_vs_lb2_wA_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wA_WM"] = new TH2F("qqb1_vs_lb2_wA_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wA_UM"] = new TH2F("qqb1_vs_lb2_wA_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wA_CM"] = new TH2F("mr_vs_mlbr_wA_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wA_WM"] = new TH2F("mr_vs_mlbr_wA_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wA_UM"] = new TH2F("mr_vs_mlbr_wA_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_B_CM"] = new TH2F("qqb1_vs_qqb2_B_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_B_WM"] = new TH2F("qqb1_vs_qqb2_B_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_B_UM"] = new TH2F("qqb1_vs_qqb2_B_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wB_CM"] = new TH2F("qqb1_vs_qqb2_wB_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wB_WM"] = new TH2F("qqb1_vs_qqb2_wB_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wB_UM"] = new TH2F("qqb1_vs_qqb2_wB_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_B_CM"] = new TH2F("qqb1_vs_qqb2_B_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_B_WM"] = new TH2F("qqb1_vs_qqb2_B_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_B_UM"] = new TH2F("qqb1_vs_qqb2_B_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wB_CM"] = new TH2F("qqb1_vs_qqb2_wB_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wB_WM"] = new TH2F("qqb1_vs_qqb2_wB_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wB_UM"] = new TH2F("qqb1_vs_qqb2_wB_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wB_CM"] = new TH2F("qqb1_vs_lb2_wB_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wB_WM"] = new TH2F("qqb1_vs_lb2_wB_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wB_UM"] = new TH2F("qqb1_vs_lb2_wB_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wB_CM"] = new TH2F("mr_vs_mlbr_wB_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wB_WM"] = new TH2F("mr_vs_mlbr_wB_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wB_UM"] = new TH2F("mr_vs_mlbr_wB_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_C_CM"] = new TH2F("qqb1_vs_qqb2_C_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_C_WM"] = new TH2F("qqb1_vs_qqb2_C_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_C_UM"] = new TH2F("qqb1_vs_qqb2_C_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wC_CM"] = new TH2F("qqb1_vs_qqb2_wC_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wC_WM"] = new TH2F("qqb1_vs_qqb2_wC_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wC_UM"] = new TH2F("qqb1_vs_qqb2_wC_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_C_CM"] = new TH2F("qqb1_vs_qqb2_C_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_C_WM"] = new TH2F("qqb1_vs_qqb2_C_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_C_UM"] = new TH2F("qqb1_vs_qqb2_C_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wC_CM"] = new TH2F("qqb1_vs_qqb2_wC_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wC_WM"] = new TH2F("qqb1_vs_qqb2_wC_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wC_UM"] = new TH2F("qqb1_vs_qqb2_wC_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wC_CM"] = new TH2F("qqb1_vs_lb2_wC_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wC_WM"] = new TH2F("qqb1_vs_lb2_wC_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wC_UM"] = new TH2F("qqb1_vs_lb2_wC_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wC_CM"] = new TH2F("mr_vs_mlbr_wC_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wC_WM"] = new TH2F("mr_vs_mlbr_wC_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wC_UM"] = new TH2F("mr_vs_mlbr_wC_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_D_CM"] = new TH2F("qqb1_vs_qqb2_D_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_D_WM"] = new TH2F("qqb1_vs_qqb2_D_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_D_UM"] = new TH2F("qqb1_vs_qqb2_D_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wD_CM"] = new TH2F("qqb1_vs_qqb2_wD_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wD_WM"] = new TH2F("qqb1_vs_qqb2_wD_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wD_UM"] = new TH2F("qqb1_vs_qqb2_wD_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_D_CM"] = new TH2F("qqb1_vs_qqb2_D_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_D_WM"] = new TH2F("qqb1_vs_qqb2_D_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_D_UM"] = new TH2F("qqb1_vs_qqb2_D_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wD_CM"] = new TH2F("qqb1_vs_qqb2_wD_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wD_WM"] = new TH2F("qqb1_vs_qqb2_wD_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wD_UM"] = new TH2F("qqb1_vs_qqb2_wD_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wD_CM"] = new TH2F("qqb1_vs_lb2_wD_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wD_WM"] = new TH2F("qqb1_vs_lb2_wD_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wD_UM"] = new TH2F("qqb1_vs_lb2_wD_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wD_CM"] = new TH2F("mr_vs_mlbr_wD_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wD_WM"] = new TH2F("mr_vs_mlbr_wD_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wD_UM"] = new TH2F("mr_vs_mlbr_wD_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_E_CM"] = new TH2F("qqb1_vs_qqb2_E_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_E_WM"] = new TH2F("qqb1_vs_qqb2_E_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_E_UM"] = new TH2F("qqb1_vs_qqb2_E_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wE_CM"] = new TH2F("qqb1_vs_qqb2_wE_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wE_WM"] = new TH2F("qqb1_vs_qqb2_wE_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wE_UM"] = new TH2F("qqb1_vs_qqb2_wE_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_E_CM"] = new TH2F("qqb1_vs_qqb2_E_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_E_WM"] = new TH2F("qqb1_vs_qqb2_E_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_E_UM"] = new TH2F("qqb1_vs_qqb2_E_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wE_CM"] = new TH2F("qqb1_vs_qqb2_wE_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wE_WM"] = new TH2F("qqb1_vs_qqb2_wE_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wE_UM"] = new TH2F("qqb1_vs_qqb2_wE_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wE_CM"] = new TH2F("qqb1_vs_lb2_wE_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wE_WM"] = new TH2F("qqb1_vs_lb2_wE_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wE_UM"] = new TH2F("qqb1_vs_lb2_wE_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wE_CM"] = new TH2F("mr_vs_mlbr_wE_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wE_WM"] = new TH2F("mr_vs_mlbr_wE_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wE_UM"] = new TH2F("mr_vs_mlbr_wE_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_F_CM"] = new TH2F("qqb1_vs_qqb2_F_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_F_WM"] = new TH2F("qqb1_vs_qqb2_F_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_F_UM"] = new TH2F("qqb1_vs_qqb2_F_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wF_CM"] = new TH2F("qqb1_vs_qqb2_wF_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wF_WM"] = new TH2F("qqb1_vs_qqb2_wF_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wF_UM"] = new TH2F("qqb1_vs_qqb2_wF_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_F_CM"] = new TH2F("qqb1_vs_qqb2_F_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_F_WM"] = new TH2F("qqb1_vs_qqb2_F_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_F_UM"] = new TH2F("qqb1_vs_qqb2_F_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wF_CM"] = new TH2F("qqb1_vs_qqb2_wF_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wF_WM"] = new TH2F("qqb1_vs_qqb2_wF_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wF_UM"] = new TH2F("qqb1_vs_qqb2_wF_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wF_CM"] = new TH2F("qqb1_vs_lb2_wF_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wF_WM"] = new TH2F("qqb1_vs_lb2_wF_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wF_UM"] = new TH2F("qqb1_vs_lb2_wF_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wF_CM"] = new TH2F("mr_vs_mlbr_wF_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wF_WM"] = new TH2F("mr_vs_mlbr_wF_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wF_UM"] = new TH2F("mr_vs_mlbr_wF_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_G_CM"] = new TH2F("qqb1_vs_qqb2_G_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_G_WM"] = new TH2F("qqb1_vs_qqb2_G_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_G_UM"] = new TH2F("qqb1_vs_qqb2_G_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wG_CM"] = new TH2F("qqb1_vs_qqb2_wG_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wG_WM"] = new TH2F("qqb1_vs_qqb2_wG_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wG_UM"] = new TH2F("qqb1_vs_qqb2_wG_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_G_CM"] = new TH2F("qqb1_vs_qqb2_G_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_G_WM"] = new TH2F("qqb1_vs_qqb2_G_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_G_UM"] = new TH2F("qqb1_vs_qqb2_G_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wG_CM"] = new TH2F("qqb1_vs_qqb2_wG_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wG_WM"] = new TH2F("qqb1_vs_qqb2_wG_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wG_UM"] = new TH2F("qqb1_vs_qqb2_wG_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wG_CM"] = new TH2F("qqb1_vs_lb2_wG_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wG_WM"] = new TH2F("qqb1_vs_lb2_wG_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wG_UM"] = new TH2F("qqb1_vs_lb2_wG_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wG_CM"] = new TH2F("mr_vs_mlbr_wG_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wG_WM"] = new TH2F("mr_vs_mlbr_wG_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wG_UM"] = new TH2F("mr_vs_mlbr_wG_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
   
-  histo2DT["qqb1_vs_qqb2_H_CM"] = new TH2F("qqb1_vs_qqb2_H_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_H_WM"] = new TH2F("qqb1_vs_qqb2_H_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_H_UM"] = new TH2F("qqb1_vs_qqb2_H_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wH_CM"] = new TH2F("qqb1_vs_qqb2_wH_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wH_WM"] = new TH2F("qqb1_vs_qqb2_wH_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
-  histo2DT["qqb1_vs_qqb2_wH_UM"] = new TH2F("qqb1_vs_qqb2_wH_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco bKF, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_H_CM"] = new TH2F("qqb1_vs_qqb2_H_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_H_WM"] = new TH2F("qqb1_vs_qqb2_H_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_H_UM"] = new TH2F("qqb1_vs_qqb2_H_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 500, 0, 500, 500, 0, 500);
+  histo2DT["qqb1_vs_qqb2_wH_CM"] = new TH2F("qqb1_vs_qqb2_wH_CM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, correct match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wH_WM"] = new TH2F("qqb1_vs_qqb2_wH_WM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, wrong match); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_qqb2_wH_UM"] = new TH2F("qqb1_vs_qqb2_wH_UM","Reconstructed top quark mass using the hadronic vs. leptonic b jet (reco, unmatched); m_{bjj} (GeV); m_{b'jj} (GeV)", 250, 50, 300, 400, 50, 450);
+  histo2DT["qqb1_vs_lb2_wH_CM"] = new TH2F("qqb1_vs_lb2_wH_CM","Reconstructed hadronic vs. leptonic top quark mass (reco, correct match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wH_WM"] = new TH2F("qqb1_vs_lb2_wH_WM","Reconstructed hadronic vs. leptonic top quark mass (reco, wrong match); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["qqb1_vs_lb2_wH_UM"] = new TH2F("qqb1_vs_lb2_wH_UM","Reconstructed hadronic vs. leptonic top quark mass (reco, unmatched); m_{bjj} (GeV); m_{lb} (GeV)", 300, 50, 350, 250, 0, 250);
+  histo2DT["mr_vs_mlbr_wH_CM"] = new TH2F("mr_vs_mlbr_wH_CM","Reduced top mass vs. reduced mlb mass (reco, correct match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wH_WM"] = new TH2F("mr_vs_mlbr_wH_WM","Reduced top mass vs. reduced mlb mass (reco, wrong match); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
+  histo2DT["mr_vs_mlbr_wH_UM"] = new TH2F("mr_vs_mlbr_wH_UM","Reduced top mass vs. reduced mlb mass (reco, unmatched); m_{r}; m_{lb,r}", 100, 0.5, 1.5, 100, 0.1, 2.1);
 }
 
 void InitHisto1DMatch()
@@ -5642,6 +5739,7 @@ void ClearMetaData()
   nofAcceptedKFit = 0;
   nofAcceptedKFitWeighted = 0.;
   nofFinalCutWeighted = 0.;
+  nofPt250Weighted = 0.;
   
   toyMax = 1.;
 }
@@ -6016,7 +6114,7 @@ void FillControlPlots(vector<Dataset *> datasets, int d, string suffix)
     MSPlotCP["jet3_pT"+suffix]->Fill(selectedJets[2].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["jet4_pT"+suffix]->Fill(selectedJets[3].Pt(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["Ht_4leadingJets"+suffix]->Fill(Ht, datasets[d], true, lumiWeight*scaleFactor*widthSF);
-    MSPlotCP["leadingJet_eta"+suffix]->Fill(selectedJets[0].Et(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
+    MSPlotCP["leadingJet_eta"+suffix]->Fill(selectedJets[0].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["jet2_eta"+suffix]->Fill(selectedJets[1].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["jet3_eta"+suffix]->Fill(selectedJets[2].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
     MSPlotCP["jet4_eta"+suffix]->Fill(selectedJets[3].Eta(), datasets[d], true, lumiWeight*scaleFactor*widthSF);
@@ -6252,6 +6350,7 @@ void FillMSPlots(int d, bool doneKinFit)
   if (! isData)
   {
     MSPlot["scaleFactor"+suffix]->Fill(scaleFactor, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
+    MSPlot["lepton_SF"]->Fill(thisLeptonSF, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
     MSPlot["btag_SF"+suffix]->Fill(btagSF, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
     MSPlot["pu_SF"+suffix]->Fill(puSF, datasetsMSP[d], false, lumiWeight*scaleFactor*widthSF);
   }
@@ -6499,6 +6598,7 @@ void SetUpSelectionTable()
   selTab->AddCutStep("$\\geq 1$ \\bq~jet");
   selTab->AddCutStep("$\\geq 2$ \\bq~jets");
   
+  selTab->AddCutStep("Jet $\\pT < 250 \\GeV$");
 //  selTab->AddCutStep("KF $\\chi^{2} < 15$");
   selTab->AddCutStep("Other");
   selTab->SetUpTable();
@@ -6530,8 +6630,9 @@ void FillSelectionTable(int d, string dataSetName)
   }
   
   selTab->Fill(d, cutFlowValues);
+  selTab->Fill(d, 10, nofPt250Weighted);
 //  selTab->Fill(d, 10, nofAcceptedKFitWeighted);
-  selTab->Fill(d, 10, nofFinalCutWeighted);
+  selTab->Fill(d, 11, nofFinalCutWeighted);
 }
 
 void WriteSelectionTable()
@@ -6552,8 +6653,9 @@ void WriteSelectionTable()
     selTabKF->Fill(d, 7, nofAltTopMassCut_weighted[d]);
   }
   selTabKF->CalculateTable(false);
-  selTabKF->Write("SelectionTableKF_semiMu.tex", false, true, false, true);
-  selTabKF->Write("SelectionTableKF_semiMu_vert.tex", false, true, true);
+  selTabKF->Write("SelectionTableKF_semiMu_vert.tex", false, true, false, true);
+  selTabKF->Write("SelectionTableKF_semiMu_noErrs.tex", false, true, true);
+  selTabKF->Write("SelectionTableKF_semiMu.tex", true, true, true);
 }
 
 void AddWeights()
