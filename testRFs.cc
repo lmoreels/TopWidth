@@ -141,10 +141,10 @@ int DrawFunction(TF2* f, string objectName, string varName, string region, strin
   f->Draw("surf1");
   
   f->SetTitle("");
-  axisTitle = varLabel+" ("+objectName+")";
+  axisTitle = varLabel+" ("+objectLabel+")";
   if (! unitLabel.empty() ) axisTitle += " ("+unitLabel+")";
   f->GetHistogram()->GetXaxis()->SetTitle(axisTitle.c_str());
-  axisTitle = varLabel+" (parton) - "+varLabel+" ("+objectName+")";
+  axisTitle = varLabel+" (parton) - "+varLabel+" ("+objectLabel+")";
   if (! unitLabel.empty() ) axisTitle += " ("+unitLabel+")";
   f->GetHistogram()->GetYaxis()->SetTitle(axisTitle.c_str());
   f->GetHistogram()->GetXaxis()->SetTitleOffset(1.8);

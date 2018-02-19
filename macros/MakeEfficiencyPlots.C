@@ -198,8 +198,13 @@ void MakeEfficiencyPlots()
   histo1D["eff_eta_Light"]->Write();
   //histo1D["eff_pT_B_test"]->Write();
   
+  double labelsize = 0.05;
   TCanvas *cp = new TCanvas("Efficiency p_{T}","Efficiency p_{T}");
   cp->cd();
+  cp->SetTopMargin(0.05);
+  cp->SetBottomMargin(0.15);
+  cp->SetRightMargin(0.05);
+  cp->SetLeftMargin(0.12);
   histo1D["eff_pT_B"]->SetTitle("");
   histo1D["eff_pT_B"]->SetMarkerStyle(24);
   histo1D["eff_pT_B"]->SetMarkerColor(4);
@@ -207,6 +212,12 @@ void MakeEfficiencyPlots()
   histo1D["eff_pT_B"]->SetLineWidth(2);
   histo1D["eff_pT_B"]->GetYaxis()->SetRangeUser(0.,1.);
   histo1D["eff_pT_B"]->Draw("P");
+  histo1D["eff_pT_B"]->GetXaxis()->SetLabelSize(labelsize);
+  histo1D["eff_pT_B"]->GetXaxis()->SetTitleSize(labelsize);
+  histo1D["eff_pT_B"]->GetXaxis()->SetTitleOffset(1.1);
+  histo1D["eff_pT_B"]->GetYaxis()->SetLabelSize(labelsize);
+  histo1D["eff_pT_B"]->GetYaxis()->SetTitleSize(labelsize);
+  histo1D["eff_pT_B"]->GetYaxis()->SetTitleOffset(1.05);
   histo1D["eff_pT_C"]->SetMarkerStyle(26);
   histo1D["eff_pT_C"]->SetMarkerColor(418);
   histo1D["eff_pT_C"]->SetLineColor(418);
@@ -218,7 +229,7 @@ void MakeEfficiencyPlots()
   histo1D["eff_pT_Light"]->SetLineWidth(2);
   histo1D["eff_pT_Light"]->Draw("P same");
   cp->Update();
-  TLegend *lp = new TLegend(0.65,0.68,0.9,0.88);
+  TLegend *lp = new TLegend(0.70,0.73,0.94,0.93);
   lp->SetBorderSize(0);
   lp->SetFillStyle(0);
   lp->AddEntry(histo1D["eff_pT_B"],"b jets","lp");
@@ -231,6 +242,10 @@ void MakeEfficiencyPlots()
   
   TCanvas *ce = new TCanvas("Efficiency #eta","Efficiency #eta");
   ce->cd();
+  ce->SetTopMargin(0.05);
+  ce->SetBottomMargin(0.15);
+  ce->SetRightMargin(0.05);
+  ce->SetLeftMargin(0.12);
   histo1D["eff_eta_B"]->SetTitle("");
   histo1D["eff_eta_B"]->SetMarkerStyle(24);
   histo1D["eff_eta_B"]->SetMarkerColor(4);
@@ -238,6 +253,12 @@ void MakeEfficiencyPlots()
   histo1D["eff_eta_B"]->SetLineWidth(2);
   histo1D["eff_eta_B"]->GetYaxis()->SetRangeUser(0.,1.);
   histo1D["eff_eta_B"]->Draw("P");
+  histo1D["eff_eta_B"]->GetXaxis()->SetLabelSize(labelsize);
+  histo1D["eff_eta_B"]->GetXaxis()->SetTitleSize(labelsize);
+  histo1D["eff_eta_B"]->GetXaxis()->SetTitleOffset(1.05);
+  histo1D["eff_eta_B"]->GetYaxis()->SetLabelSize(labelsize);
+  histo1D["eff_eta_B"]->GetYaxis()->SetTitleSize(labelsize);
+  histo1D["eff_eta_B"]->GetYaxis()->SetTitleOffset(1.05);
   histo1D["eff_eta_C"]->SetMarkerStyle(26);
   histo1D["eff_eta_C"]->SetMarkerColor(418);
   histo1D["eff_eta_C"]->SetLineColor(418);
@@ -249,7 +270,8 @@ void MakeEfficiencyPlots()
   histo1D["eff_eta_Light"]->SetLineWidth(2);
   histo1D["eff_eta_Light"]->Draw("P same");
   ce->Update();
-  TLegend *le = new TLegend(0.65,0.68,0.9,0.88);
+  //TLegend *le = new TLegend(0.65,0.68,0.9,0.88);
+  TLegend *le = new TLegend(0.70,0.73,0.94,0.93);
   le->SetBorderSize(0);
   le->SetFillStyle(0);
   le->AddEntry(histo1D["eff_pT_B"],"b jets","lp");
