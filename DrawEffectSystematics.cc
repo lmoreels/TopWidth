@@ -196,6 +196,26 @@ int main()
     
     for (int iVar = 0; iVar < nVars; iVar++)
     {
+      // Fix scale of FSR systematic
+      if ( sysName.find("FSR") != std::string::npos )
+      {
+        double factor = 1./sqrt(2.);
+        double nBins = histo[varNames[iVar]+suffixes[0]]->GetNbinsX();
+        double binNom, binSys, binNew;
+        for (int iSys = 1; iSys < 3; iSys++)
+        {
+          for (int iBin = 1; iBin < nBins+1; iBin++)
+          {
+            binNom = histo[varNames[iVar]+suffixes[0]]->GetBinContent(iBin);
+            binSys = histo[varNames[iVar]+suffixes[iSys]]->GetBinContent(iBin);
+            binNew = binNom - (binNom - binSys)*factor;
+            histo[varNames[iVar]+suffixes[iSys]]->SetBinContent(iBin, binNew);
+          }
+        }
+        
+      }
+      
+      // Draw plots
       for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
       {
         TCanvas *c1;
@@ -230,6 +250,8 @@ int main()
             if ( iType == 0 ) histo[histoName]->GetYaxis()->SetTitle(("Events / "+binWidthStr+" units").c_str());
             else histo[histoName]->GetYaxis()->SetTitle(("Normalised events / "+binWidthStr+" units").c_str());
             histo[histoName]->GetYaxis()->SetTitleOffset(1.4);
+            if ( sysName.find("FSR") != std::string::npos )
+              histo[histoName]->SetMaximum(1.05*histo[varNames[iVar]+suffixes[2]]->GetMaximum());
             histo[histoName]->SetStats(0);
             if ( iType == 0 ) histo[histoName]->Draw("e hist");
             else histo[histoName]->DrawNormalized("e hist");

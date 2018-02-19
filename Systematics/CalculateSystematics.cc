@@ -20,6 +20,7 @@ using namespace std;
 bool verbose_ = true;
 bool doMass = false;
 bool is2D = false;
+bool do95 = false;
 
 bool useComb = true;
 bool useLep = false;
@@ -57,6 +58,8 @@ const double dataComb[2] = {0.674565, 0.138775};  // comb
 const double dataLep[2] = {1.21952, 0.241407};    // lep
 const double dataHad[2] = {0.649174, 0.145405};   // had
 
+const double dataComb95[2] = {0.674565, 0.27753978};  // comb (2 sigma)
+
 const double data2DComb[2] = {0.687343, 0.129176};  // comb
 const double dataMass2DComb[2] = {172.19, 0.0472778};  // comb
 
@@ -84,7 +87,7 @@ vector<double> systMassDifferenceUnc, systRelMassDifferenceUnc;
 
 double nomVal, nomValUnc;
 double totalShiftUp, totalShiftDown, maxScale, minScale, maxCR, minCR;
-double shiftUp, shiftDown, tmp;
+double shiftUp, shiftDown, shiftUpExp, shiftDownExp, shiftUpTheo, shiftDownTheo, tmp;
 
 
 int indexNom;
@@ -131,7 +134,8 @@ void ReadBashScript()
   int pid = fork();
   if ( pid == 0 )
   {
-    execl("/bin/sh", "sh", (char*) "./ListFiles.sh", inputFileDir.c_str(), listFileName.c_str(), (char*) NULL);
+    if (do95) execl("/bin/sh", "sh", (char*) "./ListFiles.sh", inputFileDir.c_str(), listFileName.c_str(), "95", (char*) NULL);
+    else execl("/bin/sh", "sh", (char*) "./ListFiles.sh", inputFileDir.c_str(), listFileName.c_str(), (char*) NULL);
   }
   int status;
   //waitpid(pid, &status, 0);
@@ -176,23 +180,41 @@ int main()
     suffix = "Mass";
     inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
   }
+  else if (do95)
+  {
+    suffix = "95";
+    inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp"+suffix+"/";
+  }
+  
   
   
   /// Set up
   if (useComb)
   {
-    suffix = "_comb";
-    inputFileDir += "180110_comb/";
     calCurvePar_[0] = calCurveParComb[0];
     calCurvePar_[1] = calCurveParComb[1];
     calCurveParUnc_[0] = calCurveParUncComb[0];
     calCurveParUnc_[1] = calCurveParUncComb[1];
-    testData = ApplyCalibrationCurve(dataComb[0], dataComb[1]);
+    if (do95)
+    {
+      suffix = "_comb_95";
+      testData = ApplyCalibrationCurve(dataComb95[0], dataComb95[1]);
+    }
+    else
+    {
+      suffix = "_comb";
+      inputFileDir += "180110_comb/";
+      testData = ApplyCalibrationCurve(dataComb[0], dataComb[1]);
+    }
   }
   else if (useLep)
   {
-    suffix = "_lep";
-    inputFileDir += "180110_lep/";
+    if (do95) suffix = "_lep_95";
+    else
+    {
+      suffix = "_lep";
+      inputFileDir += "180110_lep/";
+    }
     calCurvePar_[0] = calCurveParLep[0];
     calCurvePar_[1] = calCurveParLep[1];
     calCurveParUnc_[0] = calCurveParUncLep[0];
@@ -201,8 +223,12 @@ int main()
   }
   else if (useHad)
   {
-    suffix = "_had";
-    inputFileDir += "180110_had/";
+    if (do95) suffix = "_had_95";
+    else
+    {
+      suffix = "_had";
+      inputFileDir += "180110_had/";
+    }
     calCurvePar_[0] = calCurveParHad[0];
     calCurvePar_[1] = calCurveParHad[1];
     calCurveParUnc_[0] = calCurveParUncHad[0];
@@ -311,105 +337,125 @@ int main()
   
   
   // Only add positive shift to positive unc & neg. shifts to neg. unc.
-  shiftUp = 0.;
+  shiftUp = 0.; shiftUpExp = 0.; shiftUpTheo = 0.;
   if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexLepIdUP, indexLepIdDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexLepIsoUP, indexLepIsoDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexLepTrigUP, indexLepTrigDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexLepTrkUP, indexLepTrkDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexBTagUP, indexBTagDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexPuUP != -1 && indexPuDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexPuUP, indexPuDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexLumiUP != -1 && indexLumiDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexLumiUP, indexLumiDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexMassUP != -1 && indexMassDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexMassUP, indexMassDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexTopPt != -1 )
   {
     tmp = isPositive(systDifference[indexTopPt]);
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 || (indexIsrUP != -1 && indexIsrDOWN != -1) || (indexFsrUP != -1 && indexFsrDOWN != -1) )
   {
     tmp = isPositive(GetMaximum(indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexHdampUP, indexHdampDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexFragCentral != -1 || indexFragUP != -1 || indexFragDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexFragCentral, indexFragUP, indexFragDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexFragPeterson != -1 )
   {
     tmp = isPositive(systDifference[indexFragPeterson]);
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexFragSemiLepBrUP, indexFragSemiLepBrDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexPdfVar != -1 )
   {
     shiftUp += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+    shiftUpTheo += systDifference[indexPdfVar]*systDifference[indexPdfVar];
   }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexTuneUP, indexTuneDOWN));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
   {
     tmp = isPositive(GetMaximum(indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd));
     shiftUp += tmp*tmp;
+    shiftUpTheo += tmp*tmp;
   }
   if ( indexJesUP != -1 && indexJesDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexJesUP, indexJesDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexJerUP != -1 && indexJerDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexJerUP, indexJerDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
 //   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
 //   {
@@ -420,124 +466,150 @@ int main()
   {
     tmp = isPositive(GetMaximum(indexRateSTtUP, indexRateSTtDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexRateSTtWUP, indexRateSTtWDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
   {
     tmp = isPositive(GetMaximum(indexRateOtherUP, indexRateOtherDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
   {
     tmp = isPositive(GetMaximum(indexCCConstUP, indexCCConstDOWN, indexCCSlopeUP, indexCCSlopeDOWN));
     shiftUp += tmp*tmp;
+    shiftUpExp += tmp*tmp;
   }
   shiftUp = sqrt(shiftUp);
+  shiftUpExp = sqrt(shiftUpExp);
+  shiftUpTheo = sqrt(shiftUpTheo);
   
   
-  shiftDown = 0.;
+  shiftDown = 0.; shiftDownExp = 0.; shiftDownTheo = 0.;
   if ( indexLepIdUP != -1 && indexLepIdDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexLepIdUP, indexLepIdDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexLepIsoUP != -1 && indexLepIsoDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexLepIsoUP, indexLepIsoDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexLepTrigUP != -1 && indexLepTrigDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexLepTrigUP, indexLepTrigDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexLepTrkUP != -1 && indexLepTrkDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexLepTrkUP, indexLepTrkDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexBTagUP != -1 && indexBTagDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexBTagUP, indexBTagDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexPuUP != -1 && indexPuDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexPuUP, indexPuDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexLumiUP != -1 && indexLumiDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexLumiUP, indexLumiDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( ! doMass && indexMassUP != -1 && indexMassDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexMassUP, indexMassDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexTopPt != -1 )
   {
     tmp = isNegative(systDifference[indexTopPt]);
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexRenFac1002 != -1 || indexRenFac1003 != -1 || indexRenFac1004 != -1 || indexRenFac1005 != -1 || indexRenFac1007 != -1 || indexRenFac1009 != -1 || (indexIsrUP != -1 && indexIsrDOWN != -1) || (indexFsrUP != -1 && indexFsrDOWN != -1) )
   {
     tmp = isNegative(GetMinimum(indexRenFac1002, indexRenFac1003, indexRenFac1004, indexRenFac1005, indexRenFac1007, indexRenFac1009, indexIsrUP, indexIsrDOWN, indexFsrUP, indexFsrDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexHdampUP != -1 && indexHdampDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexHdampUP, indexHdampDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexFragCentral != -1 || indexFragUP != -1 || indexFragDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexFragCentral, indexFragUP, indexFragDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexFragPeterson != -1 )
   {
     tmp = isNegative(systDifference[indexFragPeterson]);
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexFragSemiLepBrUP != -1 && indexFragSemiLepBrDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexFragSemiLepBrUP, indexFragSemiLepBrDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexPdfAlphaSUP != -1 && indexPdfAlphaSDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexPdfAlphaSUP, indexPdfAlphaSDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexPdfVar != -1 )
   {
     shiftDown += systDifference[indexPdfVar]*systDifference[indexPdfVar];
+    shiftDownTheo += systDifference[indexPdfVar]*systDifference[indexPdfVar];
   }
   if ( indexTuneUP != -1 && indexTuneDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexTuneUP, indexTuneDOWN));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexCrErd != -1 || indexCrQcdErd != -1 || indexCrGluonMove != -1 || indexCrGluonMoveErd != -1 )
   {
     tmp = isNegative(GetMinimum(indexCrErd, indexCrQcdErd, indexCrGluonMove, indexCrGluonMoveErd));
     shiftDown += tmp*tmp;
+    shiftDownTheo += tmp*tmp;
   }
   if ( indexJesUP != -1 && indexJesDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexJesUP, indexJesDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexJerUP != -1 && indexJerDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexJerUP, indexJerDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
 //   if ( indexRateCMUP != -1 && indexRateCMDOWN != -1 )
 //   {
@@ -548,23 +620,29 @@ int main()
   {
     tmp = isNegative(GetMinimum(indexRateSTtUP, indexRateSTtDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexRateSTtWUP != -1 && indexRateSTtWDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexRateSTtWUP, indexRateSTtWDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( indexRateOtherUP != -1 && indexRateOtherDOWN != -1 )
   {
     tmp = isNegative(GetMinimum(indexRateOtherUP, indexRateOtherDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   if ( ( indexCCConstUP != -1 && indexCCConstDOWN != -1 ) || ( indexCCSlopeUP != -1 && indexCCSlopeDOWN != -1 ) )
   {
     tmp = isNegative(GetMinimum(indexCCConstUP, indexCCConstDOWN, indexCCSlopeUP, indexCCSlopeDOWN));
     shiftDown += tmp*tmp;
+    shiftDownExp += tmp*tmp;
   }
   shiftDown = sqrt(shiftDown);
+  shiftDownExp = sqrt(shiftDownExp);
+  shiftDownTheo = sqrt(shiftDownTheo);
   
   cout << "Total systematic uncertainty: " << endl;
   cout << "Up: " << shiftUp << "; down: " << shiftDown << endl;
@@ -1838,6 +1916,11 @@ void WriteShiftTableTheo(double scale)
   
   fileOut << interline << endl;
   fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Total & \\multicolumn{2}{c}{" << scale*shiftUpTheo << "} & \\multicolumn{2}{c}{-" << scale*shiftDownTheo << "} \\\\" << endl;
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
   fileOut << hline << endl;
   
   fileOut << "    \\end{tabular}}" << endl;
@@ -1960,6 +2043,11 @@ void WriteShiftTableExp(double scale)
   
   //....
   
+  
+  fileOut << interline << endl;
+  fileOut << hline << endl;
+  fileOut << interline << endl;
+  fileOut << space << "Total & " << scale*shiftUpExp << " & -" << scale*shiftDownExp << " \\\\" << endl;
   
   fileOut << interline << endl;
   fileOut << hline << endl;

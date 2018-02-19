@@ -17,12 +17,14 @@ using namespace std;
 
 
 bool is2D = false;
+bool do95 = false;
 
-bool useComb = false;
+bool useComb = true;
 bool useLep = false;
-bool useHad = true;
+bool useHad = false;
 
 string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp/";
+string prefix = "";
 
 /// 1D width
 // parameter = comb
@@ -81,10 +83,16 @@ int main()
 {
   cout << "**** Beginning of the program ****" << endl;
   
+  if (do95)
+  {
+    prefix = "sigma95_";
+    inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp95/";
+  }
+  
   /// Set up
   if (useComb)
   {
-    inputFileDir += "180110_comb/";
+    if (! do95) inputFileDir += "180110_comb/";
     calCurvePar_[0] = calCurveParComb[0];
     calCurvePar_[1] = calCurveParComb[1];
     calCurveParUnc_[0] = calCurveParUncComb[0];
@@ -92,7 +100,7 @@ int main()
   }
   else if (useLep)
   {
-    inputFileDir += "180110_lep/";
+    if (! do95) inputFileDir += "180110_lep/";
     calCurvePar_[0] = calCurveParLep[0];
     calCurvePar_[1] = calCurveParLep[1];
     calCurveParUnc_[0] = calCurveParUncLep[0];
@@ -100,7 +108,7 @@ int main()
   }
   else if (useHad)
   {
-    inputFileDir += "180110_had/";
+    if (! do95) inputFileDir += "180110_had/";
     calCurvePar_[0] = calCurveParHad[0];
     calCurvePar_[1] = calCurveParHad[1];
     calCurveParUnc_[0] = calCurveParUncHad[0];
@@ -114,7 +122,7 @@ int main()
   /// Get results pdf replicas
   for (int ipdf = 0; ipdf < 100; ipdf++)
   {
-    fileName = inputFileDir+"pdf/result_minimum_pdfVar"+ConvertIntToString(ipdf)+"_widthx1_mass172p5.txt";
+    fileName = inputFileDir+"pdf/"+prefix+"result_minimum_pdfVar"+ConvertIntToString(ipdf)+"_widthx1_mass172p5.txt";
     if (! fexists(fileName.c_str()))
     {
       cerr << "File " << fileName << " does not exist..." << endl;
@@ -146,7 +154,7 @@ int main()
   
   
   /// Get nominal value
-  fileName = inputFileDir+"result_minimum_nominal_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_nominal_widthx1_mass172p5.txt";
   if (! fexists(fileName.c_str()))
   {
     cerr << "File " << fileName << " does not exist..." << endl;
@@ -190,7 +198,7 @@ int main()
   
   /// Write output
   thisSyst = "pdfVar";
-  fileName = inputFileDir+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
   fileOut.open(fileName.c_str());
   fileOut << std::setw(18) << std::left << thisSyst << "  " << std::setw(5) << std::left << std::setprecision(5) << thisWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << thisMass << "   " << std::setw(20) << std::right << std::setprecision(20) << thisRMS << "  " << std::setw(20) << std::left << std::setprecision(20) << thisRMSUnc << std::endl;
   fileOut.close();

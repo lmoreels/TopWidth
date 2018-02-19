@@ -31,12 +31,24 @@ if [ $# -eq 2 ]
 then outputFile=$2
 fi
 
+if [ $# -eq 3 ]
+then do95=1
+fi
+
 # Init output file
 echo -n "" > $outputFile
 
-for entry in "$lookupPath/result_"*; do
-  ((nFiles++));
-  echo "$entry" >> $outputFile;
-done
+if [ $do95 -eq 1 ]
+then
+  for entry in "$lookupPath/sigma95_"*; do
+    ((nFiles++));
+    echo "$entry" >> $outputFile;
+  done
+else
+  for entry in "$lookupPath/result_"*; do
+    ((nFiles++));
+    echo "$entry" >> $outputFile;
+  done
+fi
 
 echo "Found $nFiles files"

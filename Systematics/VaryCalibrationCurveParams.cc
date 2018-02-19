@@ -16,12 +16,14 @@ using namespace std;
 
 
 bool is2D = false;
+bool do95 = false;
 
-bool useComb = false;
+bool useComb = true;
 bool useLep = false;
-bool useHad = true;
+bool useHad = false;
 
 string inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp/";
+string prefix = "";
 
 /// 1D width
 // parameter = comb
@@ -59,17 +61,19 @@ std::pair<double,double> ApplyCalibrationCurve(double thisOutputWidth, double th
   //  thisOutputWidth = Par_[0] + Par_[1] * thisInputWidth
   double par0 = calCurvePar_[0], par1 = calCurvePar_[1];
   double uncPar0 = calCurveParUnc_[0], uncPar1 = calCurveParUnc_[1];
+  double nSigma = 1.;
+  if (do95) nSigma = 2.;
   if ( ! variation.empty() && direction != 0 )
   {
     if ( variation.find("const") != std::string::npos )
     {
-      if ( direction == 1 )      par0 += uncPar0;
-      else if (direction == -1 ) par0 -= uncPar0;
+      if ( direction == 1 )      par0 += nSigma * uncPar0;
+      else if (direction == -1 ) par0 -= nSigma * uncPar0;
     }
     else if ( variation.find("slope") != std::string::npos )
     {
-      if ( direction == 1 )      par1 += uncPar1;
-      else if (direction == -1 ) par1 -= uncPar1;
+      if ( direction == 1 )      par1 += nSigma * uncPar1;
+      else if (direction == -1 ) par1 -= nSigma * uncPar1;
     }
   }
   
@@ -83,10 +87,16 @@ int main()
 {
   cout << "**** Beginning of the program ****" << endl;
   
+  if (do95)
+  {
+    prefix = "sigma95_";
+    inputFileDir = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/temp95/";
+  }
+  
   /// Set up
   if (useComb)
   {
-    inputFileDir += "180110_comb/";
+    if (! do95) inputFileDir += "180110_comb/";
     calCurvePar_[0] = calCurveParComb[0];
     calCurvePar_[1] = calCurveParComb[1];
     calCurveParUnc_[0] = calCurveParUncComb[0];
@@ -94,7 +104,7 @@ int main()
   }
   else if (useLep)
   {
-    inputFileDir += "180110_lep/";
+    if (! do95) inputFileDir += "180110_lep/";
     calCurvePar_[0] = calCurveParLep[0];
     calCurvePar_[1] = calCurveParLep[1];
     calCurveParUnc_[0] = calCurveParUncLep[0];
@@ -102,7 +112,7 @@ int main()
   }
   else if (useHad)
   {
-    inputFileDir += "180110_had/";
+    if (! do95) inputFileDir += "180110_had/";
     calCurvePar_[0] = calCurveParHad[0];
     calCurvePar_[1] = calCurveParHad[1];
     calCurveParUnc_[0] = calCurveParUncHad[0];
@@ -111,7 +121,7 @@ int main()
   
   
   /// Get nominal value
-  fileName = inputFileDir+"result_minimum_nominal_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_nominal_widthx1_mass172p5.txt";
   if (! fexists(fileName.c_str()))
   {
     cerr << "File " << fileName << " does not exist..." << endl;
@@ -144,7 +154,7 @@ int main()
   uncDiff = TMath::Sqrt(thisCorrWidthValue.second*thisCorrWidthValue.second + nomWidthValue.second*nomWidthValue.second);
   cout << "  ===>  Difference = " << diff << " +- " << uncDiff << endl;
   
-  fileName = inputFileDir+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
   fileOut.open(fileName.c_str());
   fileOut << std::setw(18) << std::left << thisSyst << "  " << std::setw(5) << std::left << std::setprecision(5) << thisWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << thisMass << "   " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.first << "  " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.second << std::endl;
   fileOut.close();
@@ -156,7 +166,7 @@ int main()
   uncDiff = TMath::Sqrt(thisCorrWidthValue.second*thisCorrWidthValue.second + nomWidthValue.second*nomWidthValue.second);
   cout << "  ===>  Difference = " << diff << " +- " << uncDiff << endl;
   
-  fileName = inputFileDir+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
   fileOut.open(fileName.c_str());
   fileOut << std::setw(18) << std::left << thisSyst << "  " << std::setw(5) << std::left << std::setprecision(5) << thisWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << thisMass << "   " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.first << "  " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.second << std::endl;
   fileOut.close();
@@ -169,7 +179,7 @@ int main()
   uncDiff = TMath::Sqrt(thisCorrWidthValue.second*thisCorrWidthValue.second + nomWidthValue.second*nomWidthValue.second);
   cout << "  ===>  Difference = " << diff << " +- " << uncDiff << endl;
   
-  fileName = inputFileDir+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
   fileOut.open(fileName.c_str());
   fileOut << std::setw(18) << std::left << thisSyst << "  " << std::setw(5) << std::left << std::setprecision(5) << thisWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << thisMass << "   " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.first << "  " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.second << std::endl;
   fileOut.close();
@@ -181,7 +191,7 @@ int main()
   uncDiff = TMath::Sqrt(thisCorrWidthValue.second*thisCorrWidthValue.second + nomWidthValue.second*nomWidthValue.second);
   cout << "  ===>  Difference = " << diff << " +- " << uncDiff << endl;
   
-  fileName = inputFileDir+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
+  fileName = inputFileDir+prefix+"result_minimum_"+thisSyst+"_widthx1_mass172p5.txt";
   fileOut.open(fileName.c_str());
   fileOut << std::setw(18) << std::left << thisSyst << "  " << std::setw(5) << std::left << std::setprecision(5) << thisWidth << "   " << std::setw(5) << std::left << std::setprecision(5) << thisMass << "   " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.first << "  " << std::setw(20) << std::right << std::setprecision(20) << thisCorrWidthValue.second << std::endl;
   fileOut.close();
