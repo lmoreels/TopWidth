@@ -91,6 +91,11 @@ void Likelihood::MakeTable(double* array, int n, double min, double max)
   }
 }
 
+Double_t Likelihood::fitFunc(Double_t *x, Double_t *par)
+{
+  return par[0]+par[1]*x[0]+par[2]*x[0]*x[0];
+}
+
 Likelihood::Likelihood(double min, double max, std::string outputDirName, std::string date, bool useHadTopOnly, bool useNewVar, bool makeHistograms, bool verbose):
 verbose_(verbose), rewHadOnly_(useHadTopOnly), useHadVar_(true), outputDirName_(outputDirName), dirNameTGraphTxt_("OutputTxt/"), dirNameNEvents_("OutputNEvents/"), dirNameLLTxt_("OutputLikelihood/"+date+"/"), dirNamePull_("PseudoExp/"), inputFileName_(""), suffix_(""), histoName_(""), minRedMass_(min), maxRedMass_(max), histo_(), histoSm_(), histoTotal_(), graph_(), vecBinCentres_(), vecBinContents_(), calledLLCalculation_(false), calledCMLLCalculation_(false), calledGenLLCalculation_(false), vecWidthFromFile_(), vecLLValsFromFile_()
 {
@@ -791,15 +796,15 @@ void Likelihood::GetOutputWidth(double inputWidth, double inputMass, std::string
   loglikePlotName += "widthx"+tls_->DotReplace(inputWidth)+"_mass"+tls_->DotReplace(inputMass);
   
   if ( type.find("CM") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_CM_, loglikePlotName, writeToFile, makeNewFile, type);
   else if ( type.find("match") != std::string::npos || type.find("Match") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_temp_, loglikePlotName, writeToFile, makeNewFile, type);
   else if ( type.find("gen") != std::string::npos || type.find("Gen") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_gen_, loglikePlotName, writeToFile, makeNewFile, type);
   else if ( type.find("data") != std::string::npos || type.find("Data") != std::string::npos )
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_data_, loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_data_, loglikePlotName, writeToFile, makeNewFile, type);
   else
-    output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile);
+    output_ = this->CalculateOutputWidth(nWidths_, loglike_, loglikePlotName, writeToFile, makeNewFile, type);
   
   std::cout << "For an input width of " << inputWidth << " the minimum can be found at " << output_.first << " and the uncertainty is " << output_.second << std::endl;
   
@@ -857,12 +862,12 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(std::string inputFileN
   return this->CalculateOutputWidth(nn, arrWidth, arrLLVals, plotName, writeToFile, makeNewFile);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile)
+std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile, std::string type)
 {
-  return this->CalculateOutputWidth(nn, (double*)widthArray_, LLvalues, plotName, writeToFile, makeNewFile);
+  return this->CalculateOutputWidth(nn, (double*)widthArray_, LLvalues, plotName, writeToFile, makeNewFile, type);
 }
 
-std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile)
+std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile, bool makeNewFile, std::string type)
 {
   TGraph *g = new TGraph(nn, evalWidths, LLvalues);
   
@@ -908,11 +913,25 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   
   if (verbose_) std::cout << "Likelihood::CalculateOutputWidth: Look for minimum in interval [" << fitmin << "," << fitmax << "] around " << centreVal << std::endl;
   
-  TF1 *parabola = new TF1("parabola", "pol2", fitmin, fitmax);
+  TF1 *func = new TF1("func", "[0]+[1]*x+[2]*x*x", fitmin, fitmax);
   
-  g->Fit(parabola,"RWME");
+  g->Fit(func,"RWME");
   
-  double outputWidth = parabola->GetMinimumX(fitmin, fitmax);
+  double outputWidth = func->GetMinimumX(fitmin, fitmax);
+  
+  double LLreduced[nn];
+  for (int i = 0; i < nn; i++)
+    LLreduced[i] = LLvalues[i] - func->Eval(outputWidth);
+  TGraph *g2 = new TGraph(nn, evalWidths, LLreduced);
+  g2->Fit(func,"RWME");
+  
+  double funcMin = fitmin - 3*interval;
+  if ( funcMin < 0. ) funcMin = 0.;
+  double funcMax = fitmax + 3*interval;
+  TF1 *parabola = new TF1("parabola", fitFunc, funcMin, funcMax, 3);
+  parabola->SetParameters(func->GetParameter(0), func->GetParameter(1), func->GetParameter(2));
+  
+  outputWidth = parabola->GetMinimumX(fitmin, fitmax);
   double lowerSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, fitmin-interval, outputWidth);
   double upperSigma = parabola->GetX(parabola->Eval(outputWidth) + 0.5, outputWidth, fitmax+interval);
   double sigma = (upperSigma - lowerSigma)/2.;
@@ -924,11 +943,29 @@ std::pair<double,double> Likelihood::CalculateOutputWidth(int nn, double* evalWi
   std::cout << "Minimum -log(like) value is " << parabola->Eval(outputWidth) << std::endl;
   std::cout << "===> Minimum at " << outputWidth << " +- " << sigma << std::endl;
   
-  double LLreduced[nn];
-  for (int i = 0; i < nn; i++)
-    LLreduced[i] = LLvalues[i] - parabola->Eval(outputWidth);
-  TGraph *g2 = new TGraph(nn, evalWidths, LLreduced);
-  g2->Fit(parabola,"RWME");
+  double lower95 = parabola->GetX(parabola->Eval(outputWidth) + 2., funcMin, outputWidth);
+  double upper95 = parabola->GetX(parabola->Eval(outputWidth) + 2., outputWidth, funcMax);
+  double sigma95 = (upper95 - lower95)/2.;
+  if ( lower95 <= funcMin && upper95 >= funcMax )
+    std::cerr << "Likelihood::CalculateOutputWidth: ERROR: 95% uncertainty calculation limited by function boundaries. Do not trust..." << std::endl;
+  else if ( lower95 <= funcMin ) sigma95 = upper95 - outputWidth;
+  else if ( upper95 >= funcMax ) sigma95 = outputWidth - lower95;
+  
+  std::cout << "===> 95% CL :   " << sigma95 << std::endl;
+  
+  // Write 95% output
+  if ( plotName.find("widthx1_mass172p5") != std::string::npos )
+  {
+    std::string fileName = dirNameLLTxt_+"sigma95_result_minimum_";
+    if (! type.empty() ) fileName += type+"_";
+    fileName += "widthx1_mass172p5.txt";
+    txtOutputLL_.open(fileName.c_str());
+    if (! type.empty() ) txtOutputLL_ << std::setw(18) << std::left << type << "  ";
+    else txtOutputLL_ << std::setw(18) << std::left << "nominal  ";
+    txtOutputLL_ << "1   172.5   " << std::setw(20) << std::right << std::setprecision(20) << outputWidth << "  " << std::setw(20) << std::right << std::setprecision(20) << sigma95 << std::endl;
+    txtOutputLL_.close();
+  }
+  
   
   if (makeNewFile)
   {

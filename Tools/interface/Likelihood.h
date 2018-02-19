@@ -173,7 +173,7 @@ class Likelihood{
     void ClearArray(int size, double* array);
     void ClearArray2D(int size, double (*array)[3]);
     void MakeTable(double* array, int n, double min, double max);
-    Double_t DDparabola(Double_t *x, Double_t *par);
+    static Double_t fitFunc(Double_t *x, Double_t *par);
     void GetHistogram(int iCat);
     void MakeGraph(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
     void MakeGraphSmooth(int iCat, int nPoints, double* centres, double* contents, std::string name, bool drawGraph = false);
@@ -182,8 +182,8 @@ class Likelihood{
     std::pair<double,double> GetOutputWidth(double inputWidth, double inputMass, int thisPsExp);
     /// Calculate output width (used in getters)
     std::pair<double,double> CalculateOutputWidth(std::string inputFileName, std::string inputDir, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
-    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false);
+    std::pair<double,double> CalculateOutputWidth(int nn, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false, std::string type = "");
+    std::pair<double,double> CalculateOutputWidth(int nn, double* evalWidths, double* LLvalues, std::string plotName, bool writeToFile = false, bool makeNewFile = false, std::string type = "");
     /// Calculate & get fractions for TGraphs
     void GetFractions(double *fractions, int nCats, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
     void GetFractions(double *fractions, int nCats, std::string width, std::vector<std::string> datasetNames, std::vector<int> includeDataset);
