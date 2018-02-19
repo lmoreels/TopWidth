@@ -26,6 +26,7 @@ void SelectionTables::SetPrecision(int i)
 void SelectionTables::SetLumi(double lumi)
 {
   lumi_ = lumi;
+  slumi_.precision(3); slumi_ << lumi_/1000.;
 }
 
 void SelectionTables::SetEqLumi(int d, double eqLumi)
@@ -269,7 +270,7 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
     fout << "\\begin{landscape}" << std::endl;
   }
   fout << "\\begin{table}" << std::endl;
-  fout << "\\caption{Effect of each selection requirement on the number of selected events. ($" << lumi_/1000. << "\\fbinv$ of int. lumi.)}" << std::endl;
+  fout << "\\caption{Effect of each selection requirement on the number of selected events. ($" << slumi_.str() << "\\fbinv$ of int. lumi.)}" << std::endl;
   fout << "\\label{tab:selectionTable}" << std::endl;
   fout << "\\begin{center}" << std::endl;
   fout << "\\begin{tabular}{r|";
@@ -313,15 +314,15 @@ void SelectionTables::WriteTable(ofstream& fout, double** listTable_,double** li
     for (int d = 1; d < nDatasets; d++)
     {
       fout << listTable_[iCut][d];
-      if (writeError) fout << " $\\pm$ " << listTableError_[iCut][d];
+      if ( writeError && listTableError_[iCut][d] > 0. ) fout << " $\\pm$ " << listTableError_[iCut][d];
       
       if ( d < nDatasets-1 ) fout << " & ";
       else
       {
         fout << " & " << totalEvents_[iCut];
-        if (writeError) fout << " $\\pm$ " << totalEventsError_[iCut];
+        if ( writeError && totalEventsError_[iCut] > 0. ) fout << " $\\pm$ " << totalEventsError_[iCut];
         fout << " & " << listTable_[iCut][0];
-        if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];
+        //if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];  // no errors on observed no. of events
         fout << " \\\\" << std::endl;
         if ( iCut < numberOfCuts_-1 ) fout << "[+1pt]" << std::endl;
       }
@@ -350,7 +351,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
   std::string headerextra = "[+3pt]";
   
   fout << "\\begin{table}" << std::endl;
-  fout << "\\caption{Number of events before and after applying a kinematic fit and requiring $\\chi^2 < 5$ ($" << lumi_/1000. << "\\fbinv$ of int. lumi.)}" << std::endl;
+  fout << "\\caption{Number of events before and after applying a kinematic fit and requiring $\\chi^2 < 15$ ($" << slumi_.str() << "\\fbinv$ of int. lumi.)}" << std::endl;
   fout << "\\label{tab:KFtable}" << std::endl;
   fout << "\\begin{center}" << std::endl;
   fout << "\\begin{tabular}{l";
@@ -389,7 +390,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
     for (int iCut = 0; iCut < numberOfCuts_; iCut++)
     {
       fout << " & " << listTable_[iCut][d];
-      if (writeError) fout << " $\\pm$ " << listTableError_[iCut][d];
+      if ( writeError && listTableError_[iCut][d] > 0. ) fout << " $\\pm$ " << listTableError_[iCut][d];
       else fout << " \\qquad";
       if ( iCut == numberOfCuts_-1 ) fout << " \\\\" << std::endl;
     }
@@ -402,7 +403,7 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
   for (int iCut = 0; iCut < numberOfCuts_; iCut++)
   {
     fout << " & " << totalEvents_[iCut];
-    if (writeError) fout << " $\\pm$ " << totalEventsError_[iCut];
+    if ( writeError && totalEventsError_[iCut] > 0. ) fout << " $\\pm$ " << totalEventsError_[iCut];
     else fout << " \\qquad";
   }
   fout << " \\\\" << headerextra << std::endl;
@@ -412,8 +413,9 @@ void SelectionTables::WriteTableVertical(ofstream& fout, double** listTable_,dou
   for (int iCut = 0; iCut < numberOfCuts_; iCut++)
   {
     fout << " & " << listTable_[iCut][0];
-    if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];
-    else fout << " \\qquad";
+    //if (writeError) fout << " $\\pm$ " << listTableError_[iCut][0];  // no errors on observed no. of events
+    //else
+    fout << " \\qquad";
   }
   fout << " \\\\" << headerextra << std::endl;
   fout << "\\hline" << std::endl;

@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include "TopTreeAnalysisBase/Content/interface/Dataset.h"
+#include "../interface/HelperTools.h"
 
 
 class SelectionTables{
@@ -44,6 +45,7 @@ class SelectionTables{
     
     double lumi_;
     double* eqLumi_;
+    stringstream slumi_;
     bool extremeMerge_;
     
     double** nofEventsRaw_;
@@ -64,7 +66,8 @@ class SelectionTables{
     /* Calculate the binomial error on the efficiency p */
     double BinomialError(double p, double n) const { return (sqrt( (p*(1-p)/n)*p )); };
     /* Calculate the error on the number of selected events, rescaled by factor*/
-    double ErrorCalculator( double number, double p, double factor) const { return (sqrt(number*(1-p))*factor); };
+    //double ErrorCalculator( double number, double p, double factor) const { return (sqrt(number*(1-p))*factor); };
+    double ErrorCalculator( double number, double p, double factor) const { return sqrt(number); };
     
     void MergeDatasets();
     void WriteTable(ofstream& fout, double** listTable_,double** listTableError_, bool writeError, bool writeMerged, bool writeLandscape);
