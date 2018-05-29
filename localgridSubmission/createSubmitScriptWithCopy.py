@@ -30,7 +30,7 @@ fillBhisto = 0;
 JES = 0;
 JER = 0;
 isData = False
-runSyst = False
+runSyst = True
 
 # loop over channels
 for chan in channels:
@@ -86,7 +86,7 @@ for chan in channels:
     for d in datasets:
         if d.attrib['add'] == '1':
             print "found dataset to be added..." + str(d.attrib['name'])
-            commandString = "./Ntupler "+str(d.attrib['name'])+" "+str(d.attrib['title'])+" "+str(d.attrib['add'])+" "+str(d.attrib['color'])+" "+str(d.attrib['ls'])+" "+str(d.attrib['lw'])+" "+str(d.attrib['normf'])+" "+str(d.attrib['EqLumi'])+" "+str(d.attrib['xsection'])+" "+str(d.attrib['PreselEff'])
+            commandString = "./Ntupler__MCuseB "+str(d.attrib['name'])+" "+str(d.attrib['title'])+" "+str(d.attrib['add'])+" "+str(d.attrib['color'])+" "+str(d.attrib['ls'])+" "+str(d.attrib['lw'])+" "+str(d.attrib['normf'])+" "+str(d.attrib['EqLumi'])+" "+str(d.attrib['xsection'])+" "+str(d.attrib['PreselEff'])
             topTrees = glob.glob(d.attrib['filenames'])
 
             # setting the number of file per job depending whether it is data sample or not

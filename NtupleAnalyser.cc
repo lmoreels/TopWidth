@@ -53,8 +53,8 @@ bool testTTbarOnly = false;
 bool skipData = false;
 bool unblind = false;
 bool doGenOnly = false;
-bool makePlots = true;
-bool makeControlPlots = true;
+bool makePlots = false;
+bool makeControlPlots = false;
 bool makeLikelihoodPlots = false;
 bool calculateSumWeights = false;
 bool calculateAverageMassAllMC = false;
@@ -63,14 +63,14 @@ bool calculateAverageMass = false;
 bool calculateFractions = false;
 bool makeTGraphs = false;
 bool useTTTemplates = false;
-bool calculateLikelihood = false;
+bool calculateLikelihood = true;
 bool doPseudoExps = false;
 bool useNewVar = false;
 
-bool doLikeW = false;
+bool doLikeW = true;
 bool doLikeM = false;
 bool doLike2D = false;
-bool doLikeComb = false;
+bool doLikeComb = true;
 
 bool doKinFit = true;
 bool applyKinFitCut = true;
@@ -109,7 +109,7 @@ bool runOther = true;
 
 bool rewHadTopOnly = false;
 bool applyWidthSF = false;
-double scaleWidth = 0.6;
+double scaleWidth = 2.;
 bool applyMassSF = false;
 double scaleMass = 172.5;
 
@@ -144,7 +144,7 @@ int pdfIndex;
 double pdfVarSum;
 
 bool runGenWidth = false;
-double listGenWidths[] = {0.2, 0.5, /*0.8, 2.,*/ 4./*, 8.*/};
+double listGenWidths[] = {0.2, 0.5, 0.8, 2., 4., 8.};
 int nGenWidths = sizeof(listGenWidths)/sizeof(listGenWidths[0]);
 
 TFile *fileWidths;
@@ -182,12 +182,14 @@ pair<string,string> whichDate(string syst)
 pair<string,string> ntupleDate = whichDate(systStr);
 string ntupleSystDate = "171123";
 string ntupleSystDateExtraJES = "171124";
+string ntupleGenWidthDate = "180302";
 int verbose = 2;
 
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
 string pathNtuplesSyst = "";
+string pathNtuplesGenWidth = "";
 string pathOutput = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
@@ -1003,7 +1005,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
           continue;
@@ -1074,7 +1076,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply systematic..." << endl;
           continue;
@@ -1127,7 +1129,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1153,7 +1155,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1179,7 +1181,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JES systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JES systematic..." << endl;
           continue;
@@ -1209,7 +1211,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
@@ -1235,7 +1237,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
@@ -1261,7 +1263,7 @@ int main(int argc, char* argv[])
           cerr << "Running sample with alternative gen width... Will not apply JER systematic..." << endl;
           continue;
         }
-        else if ( applyWidthSF || applyMassSF )
+        else if ( /*applyWidthSF ||*/ applyMassSF )   // TEMP
         {
           cerr << "Rescaling width and/or mass of sample (" << scaleWidth << "," << scaleMass << ")... Will not apply JER systematic..." << endl;
           continue;
@@ -1442,18 +1444,21 @@ int main(int argc, char* argv[])
     pathNtuplesMC   = "/Volumes/LaCie/Ntuples/"+ntupleDate.first+"/";
     pathNtuplesData = "/Volumes/LaCie/Ntuples/"+ntupleDate.second+"/";
     pathNtuplesSyst = "/Volumes/LaCie/Ntuples/"+ntupleSystDate+"/";
+    pathNtuplesGenWidth = "/Volumes/LaCie/Ntuples/"+ntupleGenWidthDate+"/";  // DOES NOT EXIST YET !
   }
   else if (runFromPnfs)
   {
     pathNtuplesMC   = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleDate.first+"/";
     pathNtuplesData = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleDate.second+"/";
     pathNtuplesSyst = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleSystDate+"/";
+    pathNtuplesGenWidth = "/pnfs/iihe/cms/store/user/lmoreels/Ntuples/CMSSW_80X/"+ntupleGenWidthDate+"/";
   }
   else
   {
     pathNtuplesMC   = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
     pathNtuplesData = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.second+"/";
     pathNtuplesSyst = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleSystDate+"/";
+    pathNtuplesGenWidth = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleGenWidthDate+"/";
   }
   cout << "Using Ntuples from " << ntupleDate.first << " for MC and " << ntupleDate.second << " for data. This corresponds to systematics: " << systStr << endl;
   
@@ -1872,6 +1877,8 @@ int main(int argc, char* argv[])
         {
           if ( dataSetName.find("x0p2") != std::string::npos ) thisWidth = 0.2;
           else if ( dataSetName.find("x0p5") != std::string::npos ) thisWidth = 0.5;
+          else if ( dataSetName.find("x0p8") != std::string::npos ) thisWidth = 0.8;
+          else if ( dataSetName.find("x2") != std::string::npos ) thisWidth = 2.;
           else if ( dataSetName.find("x4") != std::string::npos ) thisWidth = 4.;
           else if ( dataSetName.find("x8") != std::string::npos ) thisWidth = 8.;
           applyWidthSF = false;
@@ -1896,7 +1903,7 @@ int main(int argc, char* argv[])
         if ( dataSetName.find("herwig") != std::string::npos || dataSetName.find("HERWIG") != std::string::npos || dataSetName.find("Herwig") != std::string::npos ) isHerwig = true;
         if ( dataSetName.find("isr") != std::string::npos || dataSetName.find("fsr") != std::string::npos || dataSetName.find("hdamp") != std::string::npos || dataSetName.find("erdOn") != std::string::npos || dataSetName.find("ERD") != std::string::npos || dataSetName.find("gluon") != std::string::npos || dataSetName.find("tune") != std::string::npos || dataSetName.find("mass") != std::string::npos || dataSetName.find("mtop") != std::string::npos || isHerwig )
         {
-          applyWidthSF = false;
+//          applyWidthSF = false;
           runListWidths = false;
           applyMassSF = false;
           runListMasses = false;
@@ -1988,6 +1995,7 @@ int main(int argc, char* argv[])
       
       string ntupleFileName = pathNtuples+"Ntuples_"+dataSetName+".root";
       if (useOtherXml && isTTbar) ntupleFileName = pathNtuplesSyst+"Ntuples_"+dataSetName+".root";
+      else if (runGenWidth && isTTbar) ntupleFileName = pathNtuplesGenWidth+"Ntuples_"+dataSetName+".root";
       
       /// Change name of ttbar dataset to TT (whether it is nominal or widthxX)
       if (isTTbar) dataSetName = "TT";

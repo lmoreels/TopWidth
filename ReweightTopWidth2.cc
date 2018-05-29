@@ -50,7 +50,7 @@ bool calculateResolutionFunctions = false;
 bool calculateAverageMass = false;
 bool doKinFit = true;
 bool applyKinFitCut = true;
-double kinFitCutValue = 5.;
+double kinFitCutValue = 15.;
 
 bool doMETCleaning = true;
 bool applyLeptonSF = true;
@@ -67,22 +67,24 @@ pair<string,string> whichDate(string syst)
 {
   if ( syst.find("nominal") != std::string::npos )
   {
-    return pair<string,string>("170712","170907");
+    return pair<string,string>("171121","171021");
   }
-  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("170904","170904");
-  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("170905","170905");
+  else if ( syst.find("JECup") != std::string::npos ) return pair<string,string>("171022","171021");
+  else if ( syst.find("JECdown") != std::string::npos ) return pair<string,string>("171023","171021");
   else
   {
     cout << "WARNING: No valid systematic given! Will use nominal sample..." << endl;
-    return pair<string,string>("170712","170907");
+    return pair<string,string>("171121","171021");
   }
 }
 pair<string,string> ntupleDate = whichDate(systStr);
+string ntupleGenWidthDate = "180302";
 int verbose = 2;
 
 string pathNtuples = "";
 string pathNtuplesMC = "";
 string pathNtuplesData = "";
+string pathNtuplesGenWidth = "";
 string dateString = "";
 string outputDirLL = "LikelihoodTemplates/";
 string inputDirLL = "";
@@ -216,7 +218,7 @@ Bool_t          filterEcalDeadCell;
 Bool_t          filterEEBadSc;
 Bool_t          filterBadChCand;
 Bool_t          filterBadMuon;
-Bool_t          passedMETFilter;
+Bool_t          passedMETFilter = true;
 Int_t           nMuons;
 Int_t           muon_charge[1];   //[nMuons]
 Double_t        muon_pt[1];   //[nMuons]
@@ -465,14 +467,14 @@ double matched_mlb_wrong, matched_ttbarMass_wrong, matched_dR_lep_b_wrong;
 
 /// Input samples & reweighting
 int thisGenWidthId;
-double genWidthArray[] = {0.2, 0.5, 1., 4., 8.};
-string genWidthString[] = {"g0p2", "g0p5", "g1", "g4", "g8"};
+double genWidthArray[] = {0.2, 0.5, 0.8, 1., 2., 4., 8.};
+string genWidthString[] = {"g0p2", "g0p5", "g0p8", "g1", "g2", "g4", "g8"};
 const int nGenWidths = sizeof(genWidthArray)/sizeof(genWidthArray[0]);
 
-int nEventsTT[] = {19285604,19579453,153843293,18940139,19524579};
+int nEventsTT[] = {19937607,19909415,18546839,154652276,13505281,19593910,19524579};
 
-double reweightArray[] = {0.2, 0.5, 0.75, 1., 1.5, 2., 3., 4., 8.};
-string reweightString[] = {"s0p2","s0p5", "s0p75", "s1", "s1p5", "s2", "s3", "s4", "s8"};
+double reweightArray[] = {0.2, 0.5, 0.8, 1., 1.5, 2., 3., 4., 8.};
+string reweightString[] = {"s0p2","s0p5", "s0p8", "s1", "s1p5", "s2", "s3", "s4", "s8"};
 const int nReweightings = sizeof(reweightArray)/sizeof(reweightArray[0]);
 
 double m_top = -1.;
@@ -579,6 +581,7 @@ int main(int argc, char* argv[])
   
   pathNtuples = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleDate.first+"/";
   cout << "Using Ntuples from " << ntupleDate.first << ". This corresponds to systematics: " << systStr << endl;
+  pathNtuplesGenWidth = "NtupleOutput/MergedTuples/"+channel+"/"+ntupleGenWidthDate+"/";
   if (calculateAverageMass) cout << "Calculating average mass values..." << endl;
   if (testHistos) cout << "Testing histogram consistency..." << endl;
   if (doGenOnly) cout << "Running only matching..." << endl;
@@ -616,8 +619,8 @@ int main(int argc, char* argv[])
   
   if (! calculateResolutionFunctions)
   {
-    kf = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
-    kfMatched = new KinFitter("input/PlotsForResolutionFunctions_testFit_170915.root", addWMassKF, addEqMassKF);
+    kf = new KinFitter("input/PlotsForResolutionFunctions_testFit_171025.root", addWMassKF, addEqMassKF);
+    kfMatched = new KinFitter("input/PlotsForResolutionFunctions_testFit_171025.root", addWMassKF, addEqMassKF);
   }
   
   if (makePlots)
@@ -681,7 +684,7 @@ int main(int argc, char* argv[])
     {
       isTTbar = true;
       doReweighting = true;
-      thisGenWidthId = 2;
+      thisGenWidthId = 3;
       if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
       {
         if ( dataSetName.find("x0p2") != std::string::npos )
@@ -694,14 +697,24 @@ int main(int argc, char* argv[])
           thisGenWidthId = 1;
           scaleWidth = 0.5;
         }
+        else if ( dataSetName.find("x0p8") != std::string::npos )
+        {
+          thisGenWidthId = 2;
+          scaleWidth = 0.8;
+        }
+        else if ( dataSetName.find("x2") != std::string::npos )
+        {
+          thisGenWidthId = 4;
+          scaleWidth = 2.;
+        }
         else if ( dataSetName.find("x4") != std::string::npos )
         {
-          thisGenWidthId = 3;
+          thisGenWidthId = 5;
           scaleWidth = 4.;
         }
         else if ( dataSetName.find("x8") != std::string::npos )
         {
-          thisGenWidthId = 4;
+          thisGenWidthId = 6;
           scaleWidth = 8.;
         }
         applyWidthSF = false;
@@ -711,8 +724,10 @@ int main(int argc, char* argv[])
     
     
     
-    string ntupleFileName = "Ntuples_"+dataSetName+".root";
-    tFileMap[dataSetName.c_str()] = new TFile((pathNtuples+ntupleFileName).c_str(),"READ"); //create TFile for each dataset
+    string ntupleFileName = pathNtuples+"Ntuples_"+dataSetName+".root";
+    if ( dataSetName.find("width") != std::string::npos || dataSetName.find("Width") != std::string::npos )
+      ntupleFileName = pathNtuplesGenWidth+"Ntuples_"+dataSetName+".root";
+    tFileMap[dataSetName.c_str()] = new TFile(ntupleFileName.c_str(),"READ"); //create TFile for each dataset
     
     string tTreeName = "tree";
     string tStatsTreeName = "stats";
@@ -733,7 +748,7 @@ int main(int argc, char* argv[])
     
     // Scale number of events
     //numWeight = TMath::MinElement(nEventsTT)/nEventsTT[d];  // Don't scale up events
-    numWeight = (double)nEventsTT[2]/(double)nEventsTT[thisGenWidthId];  // Don't put extra SFs on reweighted samples
+    numWeight = (double)nEventsTT[3]/(double)nEventsTT[thisGenWidthId];  // Don't put extra SFs on reweighted samples
     
     /// Get data
     tTree[dataSetName.c_str()] = (TTree*)tFileMap[dataSetName.c_str()]->Get(tTreeName.c_str()); //get ttree for each dataset
@@ -966,7 +981,7 @@ int main(int argc, char* argv[])
       
       if ( applyWidthSF && isTTbar )
       {
-        widthSF = rew->EventWeightCalculatorNonRel(massHadTopQ, scaleWidth);
+        widthSF = rew->BEventWeightCalculatorNonRel(massHadTopQ, 172.5, 172.5, 1., scaleWidth);
         
         if ( widthSF != widthSF )  // widthSF = NaN
         {
@@ -1075,8 +1090,8 @@ int main(int argc, char* argv[])
           {
             for (int s = 0; s < nReweightings; s++)
             {
-              evWeight_hadr = rew->EventWeightCalculatorNonRel(m_hadr, reweightArray[s]);
-              evWeight_lept = rew->EventWeightCalculatorNonRel(m_lept, reweightArray[s]);
+              evWeight_hadr = rew->BEventWeightCalculatorNonRel(m_hadr, 172.5, 172.5, 1., reweightArray[s]);
+              evWeight_lept = rew->BEventWeightCalculatorNonRel(m_lept, 172.5, 172.5, 1., reweightArray[s]);
               evWeight_prod = evWeight_hadr*evWeight_lept;
               evWeight_prodsqrt = TMath::Sqrt(evWeight_prod);
               
@@ -1423,8 +1438,8 @@ int main(int argc, char* argv[])
       {
         for (int s = 0; s < nReweightings; s++)
         {
-          evWeight_hadr = rew->EventWeightCalculatorNonRel(m_hadr, reweightArray[s]);
-          evWeight_lept = rew->EventWeightCalculatorNonRel(m_lept, reweightArray[s]);
+          evWeight_hadr = rew->BEventWeightCalculatorNonRel(m_hadr, 172.5, 172.5, 1., reweightArray[s]);
+          evWeight_lept = rew->BEventWeightCalculatorNonRel(m_lept, 172.5, 172.5, 1., reweightArray[s]);
           evWeight_prod = evWeight_hadr*evWeight_lept;
           
           if (isCM)
@@ -1840,19 +1855,19 @@ void GetMetaData(TTree* tree, bool isData)
   tree->SetBranchAddress("nEvents", &nEvents, &b_nEvents);
   tree->SetBranchAddress("nEventsSel", &nEventsSel, &b_nEventsSel);
   tree->SetBranchAddress("nofEventsWithGenTop", &nofEventsWithGenTop, &b_nofEventsWithGenTop);
-  tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
+//   tree->SetBranchAddress("nofEventsWithGenTopWithStatus22or62", &nofEventsWithGenTopWithStatus22or62, &b_nofEventsWithGenTopWithStatus22or62);
   tree->SetBranchAddress("nofEventsWithGenAntiTop", &nofEventsWithGenAntiTop, &b_nofEventsWithGenAntiTop);
-  tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
+//   tree->SetBranchAddress("nofEventsWithGenAntiTopWithStatus22or62", &nofEventsWithGenAntiTopWithStatus22or62, &b_nofEventsWithGenAntiTopWithStatus22or62);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTops", &nofTTEventsWithoutBothGenTops, &b_nofTTEventsWithoutBothGenTops);
   tree->SetBranchAddress("nofTTEventsWithoutAGenTop", &nofTTEventsWithoutAGenTop, &b_nofTTEventsWithoutAGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
-  tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
-  tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTop", &nofTTEventsWithoutGenTop, &b_nofTTEventsWithoutGenTop);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTop", &nofTTEventsWithoutGenAntiTop, &b_nofTTEventsWithoutGenAntiTop);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus22", &nofTTEventsWithoutBothGenTopsWithStatus22, &b_nofTTEventsWithoutBothGenTopsWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus22", &nofTTEventsWithoutGenTopWithStatus22, &b_nofTTEventsWithoutGenTopWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus22", &nofTTEventsWithoutGenAntiTopWithStatus22, &b_nofTTEventsWithoutGenAntiTopWithStatus22);
+//   tree->SetBranchAddress("nofTTEventsWithoutBothGenTopsWithStatus62", &nofTTEventsWithoutBothGenTopsWithStatus62, &b_nofTTEventsWithoutBothGenTopsWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenTopWithStatus62", &nofTTEventsWithoutGenTopWithStatus62, &b_nofTTEventsWithoutGenTopWithStatus62);
+//   tree->SetBranchAddress("nofTTEventsWithoutGenAntiTopWithStatus62", &nofTTEventsWithoutGenAntiTopWithStatus62, &b_nofTTEventsWithoutGenAntiTopWithStatus62);
 }
 
 void InitTree(TTree* tree, bool isData)
@@ -1871,14 +1886,14 @@ void InitTree(TTree* tree, bool isData)
   tree->SetBranchAddress("hasExactly4Jets", &hasExactly4Jets, &b_hasExactly4Jets);
   tree->SetBranchAddress("hasJetLeptonCleaning", &hasJetLeptonCleaning, &b_hasJetLeptonCleaning);
   tree->SetBranchAddress("hasErasedBadOrCloneMuon", &hasErasedBadOrCloneMuon, &b_hasErasedBadOrCloneMuon);
-  tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
-  tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
-  tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
-  tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
-  tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
-  tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
-  tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
-  tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
+//   tree->SetBranchAddress("filterHBHENoise", &filterHBHENoise, &b_filterHBHENoise);
+//   tree->SetBranchAddress("filterHBHEIso", &filterHBHEIso, &b_filterHBHEIso);
+//   tree->SetBranchAddress("filterCSCTightHalo", &filterCSCTightHalo, &b_filterCSCTightHalo);
+//   tree->SetBranchAddress("filterEcalDeadCell", &filterEcalDeadCell, &b_filterEcalDeadCell);
+//   tree->SetBranchAddress("filterEEBadSc", &filterEEBadSc, &b_filterEEBadSc);
+//   tree->SetBranchAddress("filterBadChCand", &filterBadChCand, &b_filterBadChCand);
+//   tree->SetBranchAddress("filterBadMuon", &filterBadMuon, &b_filterBadMuon);
+//   tree->SetBranchAddress("passedMETFilter", &passedMETFilter, &b_passedMETFilter);
   tree->SetBranchAddress("nMuons", &nMuons, &b_nMuons);
   tree->SetBranchAddress("muon_charge", muon_charge, &b_muon_charge);
   tree->SetBranchAddress("muon_pt", muon_pt, &b_muon_pt);
@@ -1934,11 +1949,11 @@ void InitTree(TTree* tree, bool isData)
     tree->SetBranchAddress("mc_isHardProcess", mc_isHardProcess, &b_mc_isHardProcess);
     tree->SetBranchAddress("mc_fromHardProcessFinalState", mc_fromHardProcessFinalState, &b_mc_fromHardProcessFinalState);
     tree->SetBranchAddress("hasGenTop", &hasGenTop, &b_hasGenTop);
-    tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
-    tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
+//     tree->SetBranchAddress("hasGenTopWithStatus22", &hasGenTopWithStatus22, &b_hasGenTopWithStatus22);
+//     tree->SetBranchAddress("hasGenTopWithStatus62", &hasGenTopWithStatus62, &b_hasGenTopWithStatus62);
     tree->SetBranchAddress("hasGenAntiTop", &hasGenAntiTop, &b_hasGenAntiTop);
-    tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
-    tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
+//     tree->SetBranchAddress("hasGenAntiTopWithStatus22", &hasGenAntiTopWithStatus22, &b_hasGenAntiTopWithStatus22);
+//     tree->SetBranchAddress("hasGenAntiTopWithStatus62", &hasGenAntiTopWithStatus62, &b_hasGenAntiTopWithStatus62);
   }
 }
 
@@ -1985,7 +2000,9 @@ void InitHisto1DGen()
   
   histo1D["top_mass_hadr_gen_g0p2_th"] = new TH1F("top_mass_hadr_gen_g0p2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
   histo1D["top_mass_hadr_gen_g0p5_th"] = new TH1F("top_mass_hadr_gen_g0p5_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_g0p8_th"] = new TH1F("top_mass_hadr_gen_g0p8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1250, 120, 220);
   histo1D["top_mass_hadr_gen_g1_th"] = new TH1F("top_mass_hadr_gen_g1_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1000, 120, 220);
+  histo1D["top_mass_hadr_gen_g2_th"] = new TH1F("top_mass_hadr_gen_g2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 500, 120, 220);
   histo1D["top_mass_hadr_gen_g4_th"] = new TH1F("top_mass_hadr_gen_g4_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 320, 120, 220);
   histo1D["top_mass_hadr_gen_g8_th"] = new TH1F("top_mass_hadr_gen_g8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 200, 120, 220);
 }
@@ -2027,7 +2044,9 @@ void InitHisto1DReweighted()
   
   histo1D["top_mass_hadr_gen_prodSF_s0p2_th"] = new TH1F("top_mass_hadr_gen_prodSF_s0p2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 4000, 120, 220);
   histo1D["top_mass_hadr_gen_prodSF_s0p5_th"] = new TH1F("top_mass_hadr_gen_prodSF_s0p5_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 2000, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s0p8_th"] = new TH1F("top_mass_hadr_gen_prodSF_s0p8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1250, 120, 220);
   histo1D["top_mass_hadr_gen_prodSF_s1_th"] = new TH1F("top_mass_hadr_gen_prodSF_s1_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 1000, 120, 220);
+  histo1D["top_mass_hadr_gen_prodSF_s2_th"] = new TH1F("top_mass_hadr_gen_prodSF_s2_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 500, 120, 220);
   histo1D["top_mass_hadr_gen_prodSF_s4_th"] = new TH1F("top_mass_hadr_gen_prodSF_s4_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 320, 120, 220);
   histo1D["top_mass_hadr_gen_prodSF_s8_th"] = new TH1F("top_mass_hadr_gen_prodSF_s8_th", "Mass of generated top quark with hadronic decay; M_{t_{hadr}} [GeV]", 200, 120, 220);
 }

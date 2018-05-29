@@ -202,8 +202,11 @@ int main()
     }
     else
     {
-      suffix = "_comb";
-      inputFileDir += "180110_comb/";
+      if (suffix.empty())
+      {
+        suffix = "_comb";
+        inputFileDir += "180110_comb/";
+      }
       testData = ApplyCalibrationCurve(dataComb[0], dataComb[1]);
     }
   }

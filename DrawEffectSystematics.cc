@@ -22,6 +22,10 @@
 using namespace std;
 
 
+bool makePlots = false;
+bool calculateEnvelope = true;
+
+
 string ConvertDoubleToString(double Number)
 {
   ostringstream convert;
@@ -64,6 +68,8 @@ double GetBinWidth(TH1F* histo, int precision = 2)
 
 int main()
 {
+  if (calculateEnvelope) makePlots = false;
+  
   map<string,TH1F*> histo;
   Color_t listRainbow[] = {kRed, kOrange-3, kYellow-7, /*kGreen-7,*/ kGreen+1, kCyan+1,/* kBlue+2,*/ kMagenta/*, kViolet-5, kPink+10*/};
   Color_t listColour[] = {kBlue-2, kRed+1, kOrange-3, kGreen-7, kAzure+1, kViolet-9, kMagenta};
@@ -93,7 +99,7 @@ int main()
        std::make_tuple("lumi", "180121_2026", "180121_2028"), std::make_tuple("fragBL", "180121_2043", "180121_2047"),
        std::make_tuple("BRsemilep", "180121_2051", "180121_2053"),
        std::make_tuple("pdfAlphaS", "180121_2055", "180121_2222"),
-       std::make_tuple("rateCM", "180121_2224", "180121_2103"),
+       /*std::make_tuple("rateCM", "180121_2224", "180121_2103"),*/
        std::make_tuple("rateSTt", "180121_2105", "180121_2107"),
        std::make_tuple("rateSTtW", "180121_2109", "180121_2111"),
        std::make_tuple("rateOther", "180121_2113", "180121_2115"),
@@ -112,13 +118,15 @@ int main()
   string pathFiles = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/OutputPlots/mu/";
   string pathOutput = "/user/lmoreels/CMSSW_8_0_27/src/TopBrussels/TopWidth/Systematics/Plots/";
   
-  TFile *fileOut = new TFile((pathOutput+"Systematics_plots"+suffixName+".root").c_str(),"RECREATE");
+  TFile *fileOut;
+  if (makePlots)
+    fileOut = new TFile((pathOutput+"Systematics_plots"+suffixName+".root").c_str(),"RECREATE");
   
   string fileName = "NtuplePlots_nominal.root";
   
   string varNames[] = {"red_top_mass", "red_mlb_mass"};
   string axisLabels[] = {"m_{r}", "m_{lb,r}"};
-  int nVars = sizeof(varNames)/sizeof(varNames[0]);
+  const int nVars = sizeof(varNames)/sizeof(varNames[0]);
   
   string prefixes[] = {"allSim_", "allData_"};
   int nPrefixes = sizeof(prefixes)/sizeof(prefixes[0]);
@@ -127,6 +135,13 @@ int main()
   string histoName = "", legendName = "";
   string sysName = "";
   string binWidthStr = "";
+  
+  double nBinsVar[nVars];
+  double binContentTmp, binContentMax, binContentMin;
+  vector<double> binContentsNom[nVars];
+  vector<double> binContentsUp[nVars], binContentsDown[nVars];
+  vector<double> binContentsISR[nVars], binContentsFSR[nVars], binContentsTmp[nVars];
+  
   
   /// Get nominal histograms
   TFile *fileNom = new TFile((pathFiles+std::get<1>(nominal_)+"/"+fileName).c_str(),"read");
@@ -137,8 +152,19 @@ int main()
     histo[varNames[iVar]+"_data"]->SetDirectory(0);
     histo[varNames[iVar]+"_nominal_MC"] =  (TH1F*) fileNom->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone((varNames[iVar]+"_nominal_MC").c_str());
     histo[varNames[iVar]+"_nominal_MC"]->SetDirectory(0);
+    if (calculateEnvelope)
+    {
+      binContentsNom[iVar].clear();
+      nBinsVar[iVar] = histo[varNames[iVar]+"_nominal_MC"]->GetNbinsX()+2.;  // also overflow
+      for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+      {
+        (binContentsNom[iVar]).push_back(histo[varNames[iVar]+"_nominal_MC"]->GetBinContent(iBin));
+        (binContentsUp[iVar]).push_back(0.);
+        (binContentsDown[iVar]).push_back(0.);
+      }
+    }
     /// TEMPORARILY
-    histo[varNames[iVar]+"_nominal_MC"]->Scale(0.962);
+    if (makePlots) histo[varNames[iVar]+"_nominal_MC"]->Scale(0.962);
   }
   //fileNom->Close();
   
@@ -165,10 +191,19 @@ int main()
       histoName = varNames[iVar]+"_"+sysName+"_up";
       histo[histoName] = (TH1F*) fileInUp->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone(histoName.c_str());
       histo[histoName]->SetDirectory(0);  // keep histogram when file is closed
+      if (calculateEnvelope)
+      {
+        for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+        {
+          binContentTmp = histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1);
+          if      ( binContentTmp > 0. ) (binContentsUp[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+          else if ( binContentTmp < 0. ) (binContentsDown[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+        }
+      }
       /// TEMPORARILY
-      histo[histoName]->Scale(0.962);
+      if (makePlots) histo[histoName]->Scale(0.962);
     }
-    //fileInUp->Close();
+    fileInUp->Close();
     
     if ( sysName.find("JES") != std::string::npos ) fileName = "NtuplePlots_JESdown.root";
     else if ( sysName.find("JER") != std::string::npos ) fileName = "NtuplePlots_JERdown.root";
@@ -181,23 +216,41 @@ int main()
       histoName = varNames[iVar]+"_"+sysName+"_down";
       histo[histoName] = (TH1F*) fileInDown->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone(histoName.c_str());
       histo[histoName]->SetDirectory(0);  // keep histogram when file is closed
+      if (calculateEnvelope)
+      {
+        if ( sysName.find("ISR") != std::string::npos )
+        {
+          binContentsISR[iVar].clear();
+          for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+          {
+            (binContentsISR[iVar]).push_back(histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1));
+          }
+        }
+        else if ( sysName.find("FSR") == std::string::npos )
+        {
+          for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+          {
+            binContentTmp = histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1);
+            if      ( binContentTmp > 0. ) (binContentsUp[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+            else if ( binContentTmp < 0. ) (binContentsDown[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+          }
+        }
+      }
       /// TEMPORARILY
-      histo[histoName]->Scale(0.962);
+      if (makePlots) histo[histoName]->Scale(0.962);
     }
-    //fileInDown->Close();
+    fileInDown->Close();
     
     
     string suffixes[] = {"_nominal_MC", "_"+sysName+"_up", "_"+sysName+"_down", "_data"};
     string suffixNames[] = {"nominal", "up", "down", "data"};
     int nSuffixes = sizeof(suffixes)/sizeof(suffixes[0]);
     
-    /// Make plots
-    fileOut->cd();
     
-    for (int iVar = 0; iVar < nVars; iVar++)
+    // Fix scale of FSR systematic
+    if ( sysName.find("FSR") != std::string::npos )
     {
-      // Fix scale of FSR systematic
-      if ( sysName.find("FSR") != std::string::npos )
+      for (int iVar = 0; iVar < nVars; iVar++)
       {
         double factor = 1./sqrt(2.);
         double nBins = histo[varNames[iVar]+suffixes[0]]->GetNbinsX();
@@ -212,9 +265,28 @@ int main()
             histo[varNames[iVar]+suffixes[iSys]]->SetBinContent(iBin, binNew);
           }
         }
-        
+        if (calculateEnvelope)
+        {
+          binContentsFSR[iVar].clear();
+          for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+          {
+//            (binContentsFSR[iVar]).push_back(histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1));
+            binContentTmp = histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1);
+            if      ( binContentTmp > 0. ) (binContentsUp[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+            else if ( binContentTmp < 0. ) (binContentsDown[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+          }
+        }
       }
-      
+    }
+    
+    
+    /// Make plots
+    if (! makePlots) continue;
+    
+    fileOut->cd();
+    
+    for (int iVar = 0; iVar < nVars; iVar++)
+    {
       // Draw plots
       for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
       {
@@ -297,9 +369,6 @@ int main()
       
     }  // end vars
     
-    fileInUp->Close();
-    fileInDown->Close();
-    
   }  // end up/down sys
   
   
@@ -316,9 +385,19 @@ int main()
       histoName = varNames[iVar]+"_"+sysName;
       histo[histoName] = (TH1F*) fileIn->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone(histoName.c_str());
       histo[histoName]->SetDirectory(0);  // keep histogram when file is closed
+      if (calculateEnvelope)
+      {
+        for (int iBin = 1; iBin < nBinsVar[iVar]; iBin++)
+        {
+          binContentTmp = histo[histoName]->GetBinContent(iBin) - (binContentsNom[iVar]).at(iBin-1);
+          if      ( binContentTmp > 0. ) (binContentsUp[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+          else if ( binContentTmp < 0. ) (binContentsDown[iVar]).at(iBin-1) += binContentTmp*binContentTmp;
+        }
+      }
       /// TEMPORARILY
-      histo[histoName]->Scale(0.962);
+      if (makePlots) histo[histoName]->Scale(0.962);
     }
+    fileIn->Close();
     
     
     string suffixes[] = {"_nominal_MC", "_"+sysName, "_data"};
@@ -326,6 +405,8 @@ int main()
     int nSuffixes = sizeof(suffixes)/sizeof(suffixes[0]);
     
     /// Make plots
+    if (! makePlots) continue;
+    
     fileOut->cd();
     
     for (int iVar = 0; iVar < nVars; iVar++)
@@ -408,8 +489,6 @@ int main()
       
     }  // end vars
     
-    fileIn->Close();
-    
   }  // end single sys
   
   
@@ -427,7 +506,7 @@ int main()
       histo[histoName] = (TH1F*) fileIn->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone(histoName.c_str());
       histo[histoName]->SetDirectory(0);  // keep histogram when file is closed
       /// TEMPORARILY
-      histo[histoName]->Scale(0.962);
+      if (makePlots) histo[histoName]->Scale(0.962);
     }
     
     fileIn->Close();
@@ -439,86 +518,89 @@ int main()
   int nSuffixes = sizeof(suffixes)/sizeof(suffixes[0]);
   
   /// Make plots
-  fileOut->cd();
-  
-  for (int iVar = 0; iVar < nVars; iVar++)
+  if (makePlots)
   {
-    for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
+    fileOut->cd();
+    
+    for (int iVar = 0; iVar < nVars; iVar++)
     {
-      TCanvas *c1;
-      if ( iType == 0 ) c1 = new TCanvas((varNames[iVar]+"_cr_overlay").c_str(),(varNames[iVar]+"_cr_overlay").c_str());
-      else c1 = new TCanvas((varNames[iVar]+"_cr_norm_overlay").c_str(),(varNames[iVar]+"_cr_norm_overlay").c_str());
-      c1->cd();
-      
-      
-      /// Make legend
-      TLegend *leg = new TLegend(0.65,0.55,0.89,0.89);
-      leg->SetBorderSize(0);
-      leg->SetFillStyle(0);
-      leg->SetTextSize(0.04);
-      
-      // Draw nominal
-      histoName = varNames[iVar]+suffixes[0];
-      histo[histoName]->SetLineWidth(2);
-      histo[histoName]->SetLineColor(listColour[0]);
-      histo[histoName]->SetMarkerColor(listColour[0]);
-      
-      binWidthStr = ConvertDoubleToString(GetBinWidth(histo[histoName], 2));
-      histo[histoName]->SetTitle("");
-      histo[histoName]->GetXaxis()->SetTitle((axisLabels[iVar]).c_str());
-      if ( iType == 0 ) histo[histoName]->GetYaxis()->SetTitle(("Events / "+binWidthStr+" units").c_str());
-      else histo[histoName]->GetYaxis()->SetTitle(("Normalised events / "+binWidthStr+" units").c_str());
-      histo[histoName]->GetYaxis()->SetTitleOffset(1.4);
-      histo[histoName]->SetStats(0);
-      if ( iType == 0 ) histo[histoName]->Draw("e hist");
-      else histo[histoName]->DrawNormalized("e hist");
-      leg->AddEntry(histo[histoName],(suffixNames[0]).c_str(),"lp");
-      c1->Update();
-      
-      // Draw CRs
-      for (int iSys = 0; iSys < nCRSys; iSys++)
+      for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
       {
-        sysName = std::get<0>(input_cr_[iSys]);
-        histoName = varNames[iVar]+"_"+sysName;
+        TCanvas *c1;
+        if ( iType == 0 ) c1 = new TCanvas((varNames[iVar]+"_cr_overlay").c_str(),(varNames[iVar]+"_cr_overlay").c_str());
+        else c1 = new TCanvas((varNames[iVar]+"_cr_norm_overlay").c_str(),(varNames[iVar]+"_cr_norm_overlay").c_str());
+        c1->cd();
+        
+        
+        /// Make legend
+        TLegend *leg = new TLegend(0.65,0.55,0.89,0.89);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->SetTextSize(0.04);
+        
+        // Draw nominal
+        histoName = varNames[iVar]+suffixes[0];
         histo[histoName]->SetLineWidth(2);
-        histo[histoName]->SetLineColor(listColour[iSys+1]);
-        histo[histoName]->SetMarkerColor(listColour[iSys+1]);
-        //histo[histoName]->SetMarkerStyle(listMarkers[(iSys+1)%8]);
+        histo[histoName]->SetLineColor(listColour[0]);
+        histo[histoName]->SetMarkerColor(listColour[0]);
+        
+        binWidthStr = ConvertDoubleToString(GetBinWidth(histo[histoName], 2));
+        histo[histoName]->SetTitle("");
+        histo[histoName]->GetXaxis()->SetTitle((axisLabels[iVar]).c_str());
+        if ( iType == 0 ) histo[histoName]->GetYaxis()->SetTitle(("Events / "+binWidthStr+" units").c_str());
+        else histo[histoName]->GetYaxis()->SetTitle(("Normalised events / "+binWidthStr+" units").c_str());
+        histo[histoName]->GetYaxis()->SetTitleOffset(1.4);
+        histo[histoName]->SetStats(0);
+        if ( iType == 0 ) histo[histoName]->Draw("e hist");
+        else histo[histoName]->DrawNormalized("e hist");
+        leg->AddEntry(histo[histoName],(suffixNames[0]).c_str(),"lp");
+        c1->Update();
+        
+        // Draw CRs
+        for (int iSys = 0; iSys < nCRSys; iSys++)
+        {
+          sysName = std::get<0>(input_cr_[iSys]);
+          histoName = varNames[iVar]+"_"+sysName;
+          histo[histoName]->SetLineWidth(2);
+          histo[histoName]->SetLineColor(listColour[iSys+1]);
+          histo[histoName]->SetMarkerColor(listColour[iSys+1]);
+          //histo[histoName]->SetMarkerStyle(listMarkers[(iSys+1)%8]);
+          if ( iType == 0 ) histo[histoName]->Draw("e hist same");
+          else histo[histoName]->DrawNormalized("e hist same");
+          leg->AddEntry(histo[histoName],(sysName).c_str(),"lp");
+          c1->Update();
+        }  // end sys
+        
+        // Draw normalised on top, no legend entry
+        histoName = varNames[iVar]+suffixes[0];
+        histo[histoName]->SetLineWidth(2);
+        histo[histoName]->SetLineColor(listColour[0]);
+        histo[histoName]->SetMarkerColor(listColour[0]);
+        //histo[histoName]->SetMarkerStyle(listMarkers[0]);
         if ( iType == 0 ) histo[histoName]->Draw("e hist same");
         else histo[histoName]->DrawNormalized("e hist same");
-        leg->AddEntry(histo[histoName],(sysName).c_str(),"lp");
+        
+        // Draw data with legend entry
+        histoName = varNames[iVar]+suffixes[nSuffixes-1];
+        legendName = suffixNames[nSuffixes-1];
+        histo[histoName]->SetLineColor(kBlack);
+        histo[histoName]->SetMarkerColor(kBlack);
+        histo[histoName]->SetMarkerStyle(20);
+        if ( iType == 0 ) histo[histoName]->Draw("E same");
+        else histo[histoName]->DrawNormalized("E same");
+        leg->AddEntry(histo[histoName],(suffixNames[nSuffixes-1]).c_str(),"lp");
         c1->Update();
-      }  // end sys
+        
+        leg->Draw();
+        c1->Update();
+        c1->Write();
+        if ( iType == 0 ) c1->SaveAs((pathOutput+"Syst_overlay_"+varNames[iVar]+"_cr.png").c_str());
+        else c1->SaveAs((pathOutput+"Syst_normalised_overlay_"+varNames[iVar]+"_cr.png").c_str());
+        
+      }  // end full/normalised
       
-      // Draw normalised on top, no legend entry
-      histoName = varNames[iVar]+suffixes[0];
-      histo[histoName]->SetLineWidth(2);
-      histo[histoName]->SetLineColor(listColour[0]);
-      histo[histoName]->SetMarkerColor(listColour[0]);
-      //histo[histoName]->SetMarkerStyle(listMarkers[0]);
-      if ( iType == 0 ) histo[histoName]->Draw("e hist same");
-      else histo[histoName]->DrawNormalized("e hist same");
-      
-      // Draw data with legend entry
-      histoName = varNames[iVar]+suffixes[nSuffixes-1];
-      legendName = suffixNames[nSuffixes-1];
-      histo[histoName]->SetLineColor(kBlack);
-      histo[histoName]->SetMarkerColor(kBlack);
-      histo[histoName]->SetMarkerStyle(20);
-      if ( iType == 0 ) histo[histoName]->Draw("E same");
-      else histo[histoName]->DrawNormalized("E same");
-      leg->AddEntry(histo[histoName],(suffixNames[nSuffixes-1]).c_str(),"lp");
-      c1->Update();
-      
-      leg->Draw();
-      c1->Update();
-      c1->Write();
-      if ( iType == 0 ) c1->SaveAs((pathOutput+"Syst_overlay_"+varNames[iVar]+"_cr.png").c_str());
-      else c1->SaveAs((pathOutput+"Syst_normalised_overlay_"+varNames[iVar]+"_cr.png").c_str());
-      
-    }  // end full/normalised
-      
-  }  // end vars
+    }  // end vars
+  }
   
   // end cr
   
@@ -536,98 +618,124 @@ int main()
       histo[histoName] = (TH1F*) fileIn->Get(("1D_histograms/allSim_"+varNames[iVar]).c_str())->Clone(histoName.c_str());
       histo[histoName]->SetDirectory(0);  // keep histogram when file is closed
       /// TEMPORARILY
-      histo[histoName]->Scale(0.962);
+      if (makePlots) histo[histoName]->Scale(0.962);
     }
     
     fileIn->Close();
   }
   
   /// Make plots
-  fileOut->cd();
-  
-  for (int iVar = 0; iVar < nVars; iVar++)
+  if (makePlots)
   {
-    for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
+    fileOut->cd();
+    
+    for (int iVar = 0; iVar < nVars; iVar++)
     {
-      TCanvas *c1;
-      if ( iType == 0 ) c1 = new TCanvas((varNames[iVar]+"_renfac_overlay").c_str(),(varNames[iVar]+"_renfac_overlay").c_str());
-      else c1 = new TCanvas((varNames[iVar]+"_renfac_norm_overlay").c_str(),(varNames[iVar]+"_renfac_norm_overlay").c_str());
-      c1->cd();
-      
-      
-      /// Make legend
-      TLegend *leg = new TLegend(0.65,0.55,0.89,0.89);
-      leg->SetBorderSize(0);
-      leg->SetFillStyle(0);
-      leg->SetTextSize(0.04);
-      
-      // Draw nominal
-      histoName = varNames[iVar]+suffixes[0];
-      histo[histoName]->SetLineWidth(2);
-      histo[histoName]->SetLineColor(listColour[0]);
-      histo[histoName]->SetMarkerColor(listColour[0]);
-      
-      binWidthStr = ConvertDoubleToString(GetBinWidth(histo[histoName], 2));
-      histo[histoName]->SetTitle("");
-      histo[histoName]->GetXaxis()->SetTitle((axisLabels[iVar]).c_str());
-      if ( iType == 0 ) histo[histoName]->GetYaxis()->SetTitle(("Events / "+binWidthStr+" units").c_str());
-      else histo[histoName]->GetYaxis()->SetTitle(("Normalised events / "+binWidthStr+" units").c_str());
-      histo[histoName]->GetYaxis()->SetTitleOffset(1.4);
-      histo[histoName]->SetStats(0);
-      if ( iType == 0 ) histo[histoName]->Draw("e hist");
-      else histo[histoName]->DrawNormalized("e hist");
-      leg->AddEntry(histo[histoName],(suffixNames[0]).c_str(),"lp");
-      c1->Update();
-      
-      // Draw CRs
-      for (int iSys = 0; iSys < nRenfacSys; iSys++)
+      for (int iType = 0; iType < 2; iType++)  // Draw full/normalised
       {
-        sysName = std::get<0>(input_renfac_[iSys]);
-        histoName = varNames[iVar]+"_"+sysName;
+        TCanvas *c1;
+        if ( iType == 0 ) c1 = new TCanvas((varNames[iVar]+"_renfac_overlay").c_str(),(varNames[iVar]+"_renfac_overlay").c_str());
+        else c1 = new TCanvas((varNames[iVar]+"_renfac_norm_overlay").c_str(),(varNames[iVar]+"_renfac_norm_overlay").c_str());
+        c1->cd();
+        
+        
+        /// Make legend
+        TLegend *leg = new TLegend(0.65,0.55,0.89,0.89);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->SetTextSize(0.04);
+        
+        // Draw nominal
+        histoName = varNames[iVar]+suffixes[0];
         histo[histoName]->SetLineWidth(2);
-        histo[histoName]->SetLineColor(listColour[iSys+1]);
-        histo[histoName]->SetMarkerColor(listColour[iSys+1]);
-        //histo[histoName]->SetMarkerStyle(listMarkers[(iSys+1)%8]);
+        histo[histoName]->SetLineColor(listColour[0]);
+        histo[histoName]->SetMarkerColor(listColour[0]);
+        
+        binWidthStr = ConvertDoubleToString(GetBinWidth(histo[histoName], 2));
+        histo[histoName]->SetTitle("");
+        histo[histoName]->GetXaxis()->SetTitle((axisLabels[iVar]).c_str());
+        if ( iType == 0 ) histo[histoName]->GetYaxis()->SetTitle(("Events / "+binWidthStr+" units").c_str());
+        else histo[histoName]->GetYaxis()->SetTitle(("Normalised events / "+binWidthStr+" units").c_str());
+        histo[histoName]->GetYaxis()->SetTitleOffset(1.4);
+        histo[histoName]->SetStats(0);
+        if ( iType == 0 ) histo[histoName]->Draw("e hist");
+        else histo[histoName]->DrawNormalized("e hist");
+        leg->AddEntry(histo[histoName],(suffixNames[0]).c_str(),"lp");
+        c1->Update();
+        
+        // Draw CRs
+        for (int iSys = 0; iSys < nRenfacSys; iSys++)
+        {
+          sysName = std::get<0>(input_renfac_[iSys]);
+          histoName = varNames[iVar]+"_"+sysName;
+          histo[histoName]->SetLineWidth(2);
+          histo[histoName]->SetLineColor(listColour[iSys+1]);
+          histo[histoName]->SetMarkerColor(listColour[iSys+1]);
+          //histo[histoName]->SetMarkerStyle(listMarkers[(iSys+1)%8]);
+          if ( iType == 0 ) histo[histoName]->Draw("e hist same");
+          else histo[histoName]->DrawNormalized("e hist same");
+          leg->AddEntry(histo[histoName],(sysName).c_str(),"lp");
+          c1->Update();
+        }  // end sys
+        
+        // Draw normalised on top, no legend entry
+        histoName = varNames[iVar]+suffixes[0];
+        histo[histoName]->SetLineWidth(2);
+        histo[histoName]->SetLineColor(listColour[0]);
+        histo[histoName]->SetMarkerColor(listColour[0]);
+        //histo[histoName]->SetMarkerStyle(listMarkers[0]);
         if ( iType == 0 ) histo[histoName]->Draw("e hist same");
         else histo[histoName]->DrawNormalized("e hist same");
-        leg->AddEntry(histo[histoName],(sysName).c_str(),"lp");
+        
+        // Draw data with legend entry
+        histoName = varNames[iVar]+suffixes[nSuffixes-1];
+        legendName = suffixNames[nSuffixes-1];
+        histo[histoName]->SetLineColor(kBlack);
+        histo[histoName]->SetMarkerColor(kBlack);
+        histo[histoName]->SetMarkerStyle(20);
+        if ( iType == 0 ) histo[histoName]->Draw("E same");
+        else histo[histoName]->DrawNormalized("E same");
+        leg->AddEntry(histo[histoName],(suffixNames[nSuffixes-1]).c_str(),"lp");
         c1->Update();
-      }  // end sys
+        
+        leg->Draw();
+        c1->Update();
+        c1->Write();
+        if ( iType == 0 ) c1->SaveAs((pathOutput+"Syst_overlay_"+varNames[iVar]+"_renfac.png").c_str());
+        else c1->SaveAs((pathOutput+"Syst_normalised_overlay_"+varNames[iVar]+"_renfac.png").c_str());
+        
+      }  // end full/normalised
       
-      // Draw normalised on top, no legend entry
-      histoName = varNames[iVar]+suffixes[0];
-      histo[histoName]->SetLineWidth(2);
-      histo[histoName]->SetLineColor(listColour[0]);
-      histo[histoName]->SetMarkerColor(listColour[0]);
-      //histo[histoName]->SetMarkerStyle(listMarkers[0]);
-      if ( iType == 0 ) histo[histoName]->Draw("e hist same");
-      else histo[histoName]->DrawNormalized("e hist same");
-      
-      // Draw data with legend entry
-      histoName = varNames[iVar]+suffixes[nSuffixes-1];
-      legendName = suffixNames[nSuffixes-1];
-      histo[histoName]->SetLineColor(kBlack);
-      histo[histoName]->SetMarkerColor(kBlack);
-      histo[histoName]->SetMarkerStyle(20);
-      if ( iType == 0 ) histo[histoName]->Draw("E same");
-      else histo[histoName]->DrawNormalized("E same");
-      leg->AddEntry(histo[histoName],(suffixNames[nSuffixes-1]).c_str(),"lp");
-      c1->Update();
-      
-      leg->Draw();
-      c1->Update();
-      c1->Write();
-      if ( iType == 0 ) c1->SaveAs((pathOutput+"Syst_overlay_"+varNames[iVar]+"_renfac.png").c_str());
-      else c1->SaveAs((pathOutput+"Syst_normalised_overlay_"+varNames[iVar]+"_renfac.png").c_str());
-      
-    }  // end full/normalised
-    
-  }  // end vars
+    }  // end vars
+  }
   
   // end ren/fac
   
+  if (calculateEnvelope)
+  {
+    for (int iVar = 0; iVar < nVars; iVar++)
+    {
+      // real displacement
+      for (int iBin = 0; iBin < nBinsVar[iVar]-1; iBin++)
+      {
+        (binContentsUp[iVar]).at(iBin) = sqrt((binContentsUp[iVar]).at(iBin));
+        (binContentsDown[iVar]).at(iBin) = sqrt((binContentsDown[iVar]).at(iBin));
+      }
+      cout << endl << "For variable " << axisLabels[iVar] << " :" << endl;
+      for (int iBin = 0; iBin < nBinsVar[iVar]-1; iBin++)
+      {
+        cout << (binContentsUp[iVar]).at(iBin) << "   ";
+      }
+      cout << "(upwards)" << endl;
+      for (int iBin = 0; iBin < nBinsVar[iVar]-1; iBin++)
+      {
+        cout << (binContentsDown[iVar]).at(iBin) << "   ";
+      }
+      cout << "(downwards)" << endl;
+    }
+  }
   
-  fileOut->Close();
+  if (makePlots) fileOut->Close();
   fileNom->Close();
   
   return 0;

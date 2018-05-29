@@ -66,7 +66,7 @@ bool test = false;
 bool fillLooseTree = false;
 bool makeCutFlow = true;
 bool runData = false;
-bool runSystematics = false;
+bool runSystematics = true;
 
 
 /// Configuration
@@ -1781,7 +1781,11 @@ int main (int argc, char *argv[])
   if (runSystematics)
   {
     sysString = dName;
-    if ( sysString.find("ext") != std::string::npos )
+    if ( sysString.find("widthx") != std::string::npos )
+    {
+      sysString = "nominal";
+    }
+    else if ( sysString.find("ext") != std::string::npos )
     {
       //sysString.erase(sysString.end()-4,sysString.end());
       size_t found = sysString.find_last_of("_");
